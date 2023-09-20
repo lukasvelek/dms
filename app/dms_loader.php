@@ -1,7 +1,5 @@
 <?php
 
-//include('app/dependencies.php');
-
 $dependencies = array();
 
 function loadDependencies(array &$dependencies, string $dir) {
@@ -64,9 +62,26 @@ if(!$fm->fileExists('config.local.php')) {
 }
 
 include('config.local.php');
+include('modules/modules.php');
 
 unset($fm);
 
 $app = new DMS\Core\Application($cfg);
+
+foreach($modules as $moduleName => $modulePresenters) {
+    $moduleUrl = 'DMS\\Modules\\' . $moduleName . '\\' . $moduleName;
+
+    $module = new $moduleUrl();
+    
+    foreach($modulePresenters as $modulePresenter) {
+        $presenterUrl = 'DMS\\Modules\\' . $moduleName . '\\' . $modulePresenter;
+
+        $presenter = new $presenterUrl();
+
+        $module->registerPresenter($presenter);
+    }
+
+    $app->registerModule($module);
+}
 
 ?>
