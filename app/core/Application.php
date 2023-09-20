@@ -3,26 +3,23 @@
 namespace DMS\Core;
 
 class Application {
-    private $objects;
+    /**
+     * @var array
+     */
+    public $cfg;
 
-    public function __construct() {
-        $this->objects = array();
-    }
+    /**
+     * @var string
+     */
+    private $currentUrl;
 
-    public function registerObject(string $objectName, object $object) {
-        if(!array_key_exists($objectName, $this->objects)) {
-            $this->objects[$objectName] = $object;
-        }
+    /**
+     * @var 
+     */
+    private $user;
 
-        return true;
-    }
-
-    public function getObject(string $objectName) {
-        if(array_key_exists($objectName, $this->objects)) {
-            return $this->objects[$objectName];
-        }
-
-        return false;
+    public function __construct(array $cfg) {
+        $this->cfg = $cfg;
     }
 }
 
