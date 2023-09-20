@@ -11,7 +11,7 @@ $dependencies = array(
     'app/core/logger/Logger.php',
     
     'app/core/Application.php',
-    'app/core/FileManager.php',
+    'app/core/FileManager.php'
 );
 
 ?>
