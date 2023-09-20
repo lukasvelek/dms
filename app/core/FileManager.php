@@ -14,13 +14,13 @@ class FileManager {
     private $cacheFolder;
 
     public function __construct(string $logFolder, string $cacheFolder) {
-        if(is_dir($logFolder)) {
+        if(is_dir($logFolder) || $logFolder == '') {
             $this->logFolder = $logFolder;
         } else {
             die('Log folder does not exist!');
         }
 
-        if(is_dir($cacheFolder)) {
+        if(is_dir($cacheFolder) || $logFolder == '') {
             $this->cacheFolder = $cacheFolder;
         } else {
             die('Cache folder does not exist!');
@@ -108,6 +108,10 @@ class FileManager {
         if(file_exists($file)) return true;
 
         return false;
+    }
+
+    public static function getTemporaryObject() {
+        return new self('', '');
     }
 }
 

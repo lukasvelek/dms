@@ -10,7 +10,7 @@ class Logger implements ILoggerCallable {
      */
     private $fileManager;
 
-    public function __construct(\DMS\Core\FileManager $fm, string $logFolder) {
+    public function __construct(\DMS\Core\FileManager $fm) {
         $this->fileManager = $fm;
     }
 
