@@ -105,10 +105,13 @@ class Application {
     }
 
     public function registerModule(IModule $module) {
-        $module->addComponent('conn', $this->conn);
-        $module->addComponent('logger', $this->logger);
-        $module->addComponent('userAuthenticator', $this->userAuthenticator);
         $this->modules[$module->getName()] = $module;
+    }
+
+    public function getComponent(string $name) {
+        if(isset($this->$name)) {
+            return $this->$name;
+        }
     }
 }
 

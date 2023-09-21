@@ -87,10 +87,10 @@ class LoginPage implements IPresenter {
     public function tryLogin() {
         $username = htmlspecialchars($_POST['username']);
         $password = htmlspecialchars($_POST['password']);
-
-        $userAuthenticator = $this->module->getComponent('userAuthenticator');
-
+        
         global $app;
+
+        $userAuthenticator = $app->getComponent('userAuthenticator');
 
         $authResult = $userAuthenticator->authUser($username, $password);
 
