@@ -84,15 +84,9 @@ class QueryBuilder {
 
     $i = 0;
     foreach($keys as $key) {
-      if($key == '*') {
-        $this->sql .= '*';
-
-        break;
-      }
-
       if(count($keys) != 1) {
         if(($i + 1) == count($keys)) {
-          $this->sql .= '`' . $key . '`) ';
+          $this->sql .= '`' . $key . '`';
         } else {
           $this->sql .= '`' . $key . '`, ';
         }

@@ -82,7 +82,7 @@ class Database implements IDbQueriable {
         return true;
     }
 
-    public function createQueryBuilder(string $sql) {
+    public function createQueryBuilder() {
         return new \QueryBuilder\QueryBuilder($this, $this->logger);
     }
 

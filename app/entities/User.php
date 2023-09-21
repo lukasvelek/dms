@@ -6,11 +6,6 @@ class User extends AEntity {
     /**
      * @var string
      */
-    private $fullname;
-
-    /**
-     * @var string
-     */
     private $firstname;
 
     /**

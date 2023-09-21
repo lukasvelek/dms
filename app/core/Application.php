@@ -5,6 +5,7 @@ namespace DMS\Core;
 use \DMS\Entities\User;
 use \DMS\Modules\IModule;
 use \DMS\App\Core\DB\Database;
+use DMS\Authenticators\UserAuthenticator;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 
@@ -49,6 +50,11 @@ class Application {
      */
     private $conn;
 
+    /**
+     * @var UserAuthenticator
+     */
+    private $userAuthenticator;
+
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
 
@@ -58,6 +64,8 @@ class Application {
         $this->fileManager = new FileManager($this->cfg['log_dir'], $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager);
         $this->conn = new Database($this->cfg['db_server'], $this->cfg['db_user'], $this->cfg['db_pass'], $this->cfg['db_name'], $this->logger);
+
+        $this->userAuthenticator = new UserAuthenticator($this->conn, $this->logger);
     }
 
     public function redirect(string $url) {
@@ -96,6 +104,7 @@ class Application {
     public function registerModule(IModule $module) {
         $module->addComponent('conn', $this->conn);
         $module->addComponent('logger', $this->logger);
+        $module->addComponent('userAuthenticator', $this->userAuthenticator);
         $this->modules[$module->getName()] = $module;
     }
 }

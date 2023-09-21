@@ -88,9 +88,9 @@ class LoginPage implements IPresenter {
         $username = htmlspecialchars($_POST['username']);
         $password = htmlspecialchars($_POST['password']);
 
-        $logger = $this->module->getComponent('logger');
+        $userAuthenticator = $this->module->getComponent('userAuthenticator');
 
-        $logger->log('test', LogCategoryEnum::INFO, __METHOD__);
+        die($userAuthenticator->authUser($username, $password));
     }
 }
 
