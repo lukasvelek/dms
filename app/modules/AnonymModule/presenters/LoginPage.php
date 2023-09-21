@@ -2,6 +2,8 @@
 
 namespace DMS\Modules\AnonymModule;
 
+use DMS\Core\Logger\LogCategoryEnum;
+use \DMS\Modules\IModule;
 use \DMS\Modules\IPresenter;
 use \DMS\Core\TemplateManager;
 use \DMS\UI\FormBuilder\FormBuilder;
@@ -17,10 +19,20 @@ class LoginPage implements IPresenter {
      */
     private $templateManager;
 
+    private $module;
+
     public function __construct() {
         $this->name = 'LoginPage';
 
         $this->templateManager = TemplateManager::getTemporaryObject();
+    }
+
+    public function setModule(IModule $module) {
+        $this->module = $module;
+    }
+
+    public function getModule() {
+        return $this->module;
     }
 
     public function getName() {
@@ -75,6 +87,10 @@ class LoginPage implements IPresenter {
     public function tryLogin() {
         $username = htmlspecialchars($_POST['username']);
         $password = htmlspecialchars($_POST['password']);
+
+        $logger = $this->module->getComponent('logger');
+
+        $logger->log('test', LogCategoryEnum::INFO, __METHOD__);
     }
 }
 

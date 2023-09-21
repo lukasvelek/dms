@@ -94,6 +94,8 @@ class Application {
     }
 
     public function registerModule(IModule $module) {
+        $module->addComponent('conn', $this->conn);
+        $module->addComponent('logger', $this->logger);
         $this->modules[$module->getName()] = $module;
     }
 }

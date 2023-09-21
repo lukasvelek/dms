@@ -7,6 +7,11 @@ use \DMS\Modules\IPresenter;
 
 class AnonymModule implements IModule {
     /**
+     * @var IPresenter
+     */
+    public $currentPresenter;
+
+    /**
      * @var string
      */
     private $name;
@@ -17,12 +22,13 @@ class AnonymModule implements IModule {
     private $presenters;
 
     /**
-     * @var IPresenter
+     * @var array<object>
      */
-    public $currentPresenter;
+    private $components;
 
     public function __construct() {
         $this->name = 'AnonymModule';
+        $this->components = array();
     }
 
     public function getName() {
@@ -40,7 +46,20 @@ class AnonymModule implements IModule {
     }
 
     public function registerPresenter(IPresenter $presenter) {
+        $presenter->setModule($this);
         $this->presenters[$presenter->getName()] = $presenter;
+    }
+
+    public function addComponent(string $name, object $object) {
+        $this->components[$name] = $object;
+    }
+
+    public function getComponent(string $name) {
+        if(array_key_exists($name, $this->components)) {
+            return $this->components[$name];
+        } else {
+            return false;
+        }
     }
 }
 

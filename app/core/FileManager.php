@@ -47,17 +47,13 @@ class FileManager {
      * @return bool true if data was successfully written to the file or false if not
      */
     public function write(string $file, string|array $data, bool $overwrite = true) {
-        if(($this->fileExists($file) && $overwrite) || !$this->fileExists($file)) {
-            if($overwrite) {
-                file_put_contents($file, $data);
-            } else {
-                file_put_contents($file, $data, FILE_APPEND);
-            }
-
-            return true;
+        if($overwrite) {
+            file_put_contents($file, $data);
         } else {
-            return false;
+            file_put_contents($file, $data, FILE_APPEND);
         }
+
+        return true;
     }
 
     /**

@@ -14,8 +14,14 @@ class Logger implements ILoggerCallable {
         $this->fileManager = $fm;
     }
 
-    public function log(string $text, string $category, ?string $filename = null) {
-        $text = $category . ': ' . $text;
+    public function log(string $text, string $category, ?string $method = null, ?string $filename = null) {
+        if(!is_null($method)) {
+            $text = $category . ': ' . $method . '(): ' . $text;
+        } else {
+            $text = $category . ': ' . $text;
+        }
+
+        $text = '[' . date('Y-m-d H:i:s') . '] ' . $text . "\r\n";
 
         if(is_null($filename)) {
             return $this->saveLogEntry(null, $text);
