@@ -90,7 +90,15 @@ class LoginPage implements IPresenter {
 
         $userAuthenticator = $this->module->getComponent('userAuthenticator');
 
-        die($userAuthenticator->authUser($username, $password));
+        global $app;
+
+        $authResult = $userAuthenticator->authUser($username, $password);
+
+        if($authResult != false) {
+            $app->user = $authResult;
+
+            $app->redirect('UserModule:Homepage:showHomepage');
+        }
     }
 }
 

@@ -33,7 +33,7 @@ class Application {
     /**
      * @var string
      */
-    private $currentUrl;
+    public $currentUrl;
 
     /**
      * @var array<IModule>
@@ -60,6 +60,7 @@ class Application {
 
         $this->currentUrl = null;
         $this->modules = array();
+        $this->pageContent = null;
 
         $this->fileManager = new FileManager($this->cfg['log_dir'], $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager);
@@ -69,13 +70,15 @@ class Application {
     }
 
     public function redirect(string $url) {
-        $this->currentUrl = $url;
-
-        $this->renderPage();
+        header('Location: ?page=' . $url);
     }
 
     public function showPage() {
-        return $this->pageContent;
+        if(is_null($this->pageContent)) {
+            $this->renderPage();
+        }
+
+        echo $this->pageContent;
     }
 
     public function renderPage() {

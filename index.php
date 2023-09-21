@@ -20,8 +20,8 @@ include('app/dms_loader.php');
             $app->redirect('AnonymModule:LoginPage:showForm');
         } else {
             $page = htmlspecialchars($_GET['page']);
-
-            $app->redirect($page);
+            
+            $app->currentUrl = $page;
         }
 
         $app->showPage();
