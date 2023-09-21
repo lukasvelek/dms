@@ -2,7 +2,9 @@
 
 namespace DMS\Modules\AnonymModule;
 
-use DMS\Modules\IPresenter;
+use \DMS\Modules\IPresenter;
+use \DMS\Core\TemplateManager;
+use \DMS\UI\FormBuilder\FormBuilder;
 
 class LoginPage implements IPresenter {
     /**
@@ -10,8 +12,15 @@ class LoginPage implements IPresenter {
      */
     private $name;
 
+    /**
+     * @var TemplateManager
+     */
+    private $templateManager;
+
     public function __construct() {
         $this->name = 'LoginPage';
+
+        $this->templateManager = TemplateManager::getTemporaryObject();
     }
 
     public function getName() {
@@ -27,9 +36,45 @@ class LoginPage implements IPresenter {
     }
 
     public function showForm() {
-        $text = '<p>Test</p>';
+        $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/LoginForm.html');
 
-        return $text;
+        $data = array(
+            '$PAGE_TITLE$' => 'Login form',
+            '$LOGIN_FORM$' => $this->internalRenderForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    private function internalRenderForm() {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb = $fb->setAction('?page=AnonymModule:LoginPage:tryLogin')->setMethod('POST')
+                 ->addElement($fb->createLabel()->setText('Username')
+                                                ->setFor('username'))
+                 ->addElement($fb->createInput()->setType('text')
+                                                ->setName('username')
+                                                ->setMaxLength('256')
+                                                ->require())
+                 ->addElement($fb->createLabel()->setText('Password')
+                                                ->setFor('password'))
+                 ->addElement($fb->createInput()->setType('password')
+                                                ->setName('password')
+                                                ->setMaxLength('256')
+                                                ->require())
+                 ->addElement($fb->createSubmit('Login'))
+                ;
+
+        $form = $fb->build();
+
+        return $form;
+    }
+
+    public function tryLogin() {
+        $username = htmlspecialchars($_POST['username']);
+        $password = htmlspecialchars($_POST['password']);
     }
 }
 

@@ -1,0 +1,27 @@
+body {
+    overflow-x: hidden;
+}
+
+#center {
+    text-align: center;
+}
+
+#right {
+    text-align: right;
+}
+
+#left {
+    text-align: left;
+}
+
+#form input, #form select{
+    width: 100%;
+}
+
+#table table {
+    width: 100%;
+}
+
+.page-title {
+    font-size: 26px;
+}

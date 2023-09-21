@@ -11,6 +11,11 @@ function loadDependencies(array &$dependencies, string $dir) {
     $skip = array($dir . '\\dependencies.php', $dir . '\\dms_loader.php');
 
     foreach($content as $c) {
+        /* SKIP TEMPLATES (html files) */
+        $filenameParts = explode('.', $c);
+
+        if($filenameParts[count($filenameParts) - 1] == 'html') continue;
+
         $c = $dir . '\\' . $c;
 
         if(!in_array($c, $skip)) {

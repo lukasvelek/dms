@@ -16,7 +16,17 @@ include('app/dms_loader.php');
     <body>
         <?php
         
-        echo $app->redirect('AnonymModule:LoginPage:showForm');
+        //echo $app->redirect('AnonymModule:LoginPage:showForm');
+
+        if(!isset($_GET['page'])) {
+            $app->redirect('AnonymModule:LoginPage:showForm');
+        } else {
+            $page = htmlspecialchars($_GET['page']);
+
+            $app->redirect($page);
+        }
+
+        $app->showPage();
         
         ?>
     </body>
