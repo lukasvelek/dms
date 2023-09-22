@@ -38,7 +38,7 @@ class Logger implements ILoggerCallable {
 
     private function saveLogEntry(?string $filename, string $text) {
         if(is_null($filename)) {
-            $filename = 'log_' . date('Y-m-d') . '.txt';
+            $filename = 'log_' . date('Y-m-d') . '.log';
         }
 
         return $this->fileManager->writeLog($filename, $text);
