@@ -2,7 +2,7 @@
 
 namespace DMS\Authenticators;
 
-use DMS\App\Core\DB\Database;
+use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 
 class UserAuthenticator extends AAuthenticator {
@@ -11,8 +11,8 @@ class UserAuthenticator extends AAuthenticator {
     }
 
     public function authUser(string $username, string $password) {
-        $qb = $this->qb();
-
+        
+        $qb = $this->qb(__METHOD__);
         $row = $qb->select('id', 'username', 'password')
                   ->from('users')
                   ->where('username=:username')

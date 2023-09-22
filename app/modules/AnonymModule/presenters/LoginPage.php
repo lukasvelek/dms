@@ -48,14 +48,16 @@ class LoginPage implements IPresenter {
     }
 
     public function showForm() {
-        $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/LoginForm.html');
+        $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/GeneralForm.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Login form',
-            '$LOGIN_FORM$' => $this->internalRenderForm()
+            '$FORM$' => $this->internalRenderForm()
         );
 
         $this->templateManager->fill($data, $template);
+
+        $_SESSION['login_in_process'] = true;
 
         return $template;
     }
@@ -95,9 +97,12 @@ class LoginPage implements IPresenter {
         $authResult = $userAuthenticator->authUser($username, $password);
 
         if($authResult != false) {
-            $app->user = $authResult;
+            $_SESSION['id_current_user'] = $authResult;
+            $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60))); // 1 day
 
-            $app->redirect('UserModule:Homepage:showHomepage');
+            unset($_SESSION['login_in_process']);
+
+            $app->redirect('UserModule:HomePage:showHomepage');
         }
     }
 }

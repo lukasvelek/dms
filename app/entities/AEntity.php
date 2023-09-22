@@ -13,7 +13,7 @@ abstract class AEntity {
      */
     protected $dateCreated;
 
-    protected function __construct(int $id, int $dateCreated) {
+    protected function __construct(int $id, string $dateCreated) {
         $this->id = $id;
         $this->dateCreated = $dateCreated;
     }

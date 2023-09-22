@@ -1,6 +1,6 @@
 <?php
 
-namespace DMS\App\Core\DB;
+namespace DMS\Core\DB;
 
 use QueryBuilder\IDbQueriable;
 

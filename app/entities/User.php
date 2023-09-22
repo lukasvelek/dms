@@ -53,7 +53,7 @@ class User extends AEntity {
      */
     private $username;
 
-    public function __construct(int $id, string $dateCreated, string $firstname, string $lastname, string $username, ?string $email, bool $isActive, string $addressStreet, string $addressHouseNumber, string $addressCity, string $addressZipCode, string $addressCountry) {
+    public function __construct(int $id, string $dateCreated, string $firstname, string $lastname, string $username, ?string $email, bool $isActive, ?string $addressStreet, ?string $addressHouseNumber, ?string $addressCity, ?string $addressZipCode, ?string $addressCountry) {
         parent::__construct($id, $dateCreated);
 
         $this->firstname = $firstname;
@@ -150,6 +150,30 @@ class User extends AEntity {
 
     public function setAddressCountry(string $addressCountry) {
         $this->addressCountry = $addressCountry;
+    }
+
+    public static function createUserObjectFromArrayValues(array $values) {
+        $emptyUser = self::createEmptyUser();
+
+        foreach($values as $key => $value) {
+            if($key == 'id') {
+                continue;
+            } else if($key == 'dateCreated') {
+                continue;
+            }
+
+            $methodName = 'set' . $key;
+
+            if(method_exists($emptyUser, $methodName)) {
+                $emptyUser->$methodName($value);
+            }
+        }
+
+        return $emptyUser;
+    }
+
+    public static function createEmptyUser() {
+        return new self(0, date('Y-m-d H:i:s'), '', '', '', '', false, '', '', '', '', '');
     }
 }
 

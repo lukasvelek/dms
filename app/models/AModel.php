@@ -1,18 +1,18 @@
 <?php
 
-namespace DMS\Authenticators;
+namespace DMS\Models;
 
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 
-abstract class AAuthenticator {
+abstract class AModel {
     /**
-     * @var Database
+     * @var \DMS\Core\DB\Database
      */
     private $db;
 
     /**
-     * @var Logger
+     * @var \DMS\Core\Logger\Logger
      */
     private $logger;
 
@@ -24,7 +24,6 @@ abstract class AAuthenticator {
     protected function qb(string $methodName) {
         $qb = $this->db->createQueryBuilder();
         $qb->setMethod($methodName);
-
         return $qb;
     }
 }

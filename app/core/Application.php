@@ -4,12 +4,16 @@ namespace DMS\Core;
 
 use \DMS\Entities\User;
 use \DMS\Modules\IModule;
-use \DMS\App\Core\DB\Database;
+use \DMS\Core\DB\Database;
 use DMS\Authenticators\UserAuthenticator;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
+use DMS\Models\UserModel;
 
 class Application {
+    public const URL_LOGIN_PAGE = 'AnonymModule:LoginPage:showForm';
+    public const URL_HOME_PAGE = 'UserModule:HomePage:showHomepage';
+
     /**
      * @var array
      */
@@ -53,7 +57,12 @@ class Application {
     /**
      * @var UserAuthenticator
      */
-    private $userAuthenticator;
+    public $userAuthenticator;
+
+    /**
+     * @var UserModel
+     */
+    public $userModel;
 
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
@@ -67,6 +76,8 @@ class Application {
         $this->conn = new Database($this->cfg['db_server'], $this->cfg['db_user'], $this->cfg['db_pass'], $this->cfg['db_name'], $this->logger);
 
         $this->userAuthenticator = new UserAuthenticator($this->conn, $this->logger);
+
+        $this->userModel = new UserModel($this->conn, $this->logger);
     }
 
     public function redirect(string $url) {
