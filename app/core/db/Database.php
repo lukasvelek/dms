@@ -22,6 +22,11 @@ class Database implements IDbQueriable {
      */
     private $transactionCount;
 
+    /**
+     * @var DatabaseInstaller
+     */
+    public $installer;
+
     public function __construct(string $dbServer, string $dbUser, string $dbPass, ?string $dbName, \DMS\Core\Logger\Logger $logger) {
         $this->config = array();
         $this->conn = null;
@@ -38,6 +43,8 @@ class Database implements IDbQueriable {
         }
 
         $this->startConnection();
+
+        $this->installer = new DatabaseInstaller($this, $this->logger);
     }
     
     public function query(string $sql) {

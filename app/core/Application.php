@@ -78,6 +78,8 @@ class Application {
         $this->userAuthenticator = new UserAuthenticator($this->conn, $this->logger);
 
         $this->userModel = new UserModel($this->conn, $this->logger);
+
+        $this->conn->installer->install();
     }
 
     public function redirect(string $url) {
