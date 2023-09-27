@@ -32,7 +32,8 @@ include('app/dms_loader.php');
                 $app->redirect($app::URL_LOGIN_PAGE);
             }
 
-            $app->user = $app->userModel->getUserById($_SESSION['id_current_user']);
+            //$app->user = $app->userModel->getUserById($_SESSION['id_current_user']);
+            $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
         } else {
             if(!isset($_SESSION['login_in_process'])) {
                 $app->redirect($app::URL_LOGIN_PAGE);

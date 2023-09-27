@@ -23,6 +23,7 @@ class DatabaseInstaller {
     public function install() {
         $this->createTables();
         $this->insertDefaultUsers();
+        $this->insertDefaultUserPanelRights();
     }
 
     private function createTables() {
@@ -41,6 +42,12 @@ class DatabaseInstaller {
                 'address_zip_code' => 'VARCHAR(256) NULL',
                 'address_country' => 'VARCHAR(256) NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_panel_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'panel_name' => 'VARCHAR(256) NOT NULL',
+                'is_visible' => 'INT(2) DEFAULT 0'
             )
         );
 
@@ -99,6 +106,57 @@ class DatabaseInstaller {
         }
 
         return true;
+    }
+
+    private function insertDefaultUserPanelRights() {
+        $idUsers = array();
+        $panels = array(
+            'settings'
+        );
+
+        $userPanels = array();
+        $dbUserPanels = array();
+
+        $sql = 'SELECT `id` FROM `users`';
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        if($rows->num_rows > 0) {
+            foreach($rows as $row) {
+                $idUsers[] = $row['id'];
+            }
+        }
+
+        $sql = 'SELECT * FROM `user_panel_rights`';
+
+        $rows = $this->db->query($sql);
+
+        if($rows->num_rows > 0) {
+            foreach($rows as $row) {
+                $dbUserPanels[$row['id_user']][] = $row['panel_name'];
+            }
+        }
+
+        foreach($panels as $panel) {
+            foreach($dbUserPanels as $id => $dupanels) {
+                if(!in_array($panel, $dupanels)) {
+                    $userPanels[$id][] = $panel;
+                }
+            }
+        }
+
+        foreach($userPanels as $id => $upanels) {
+            foreach($upanels as $upanel) {
+                $sql = "INSERT INTO `user_panel_rights` (`id_user`, `panel_name`, `is_visible`)
+                VALUES ('$id', '$upanel', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
     }
 }
 

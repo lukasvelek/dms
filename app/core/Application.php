@@ -6,14 +6,17 @@ use \DMS\Entities\User;
 use \DMS\Modules\IModule;
 use \DMS\Core\DB\Database;
 use DMS\Authenticators\UserAuthenticator;
+use DMS\Authorizators\PanelAuthorizator;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\UserModel;
+use DMS\Models\UserRightModel;
 use DMS\Panels\Panels;
 
 class Application {
     public const URL_LOGIN_PAGE = 'AnonymModule:LoginPage:showForm';
     public const URL_HOME_PAGE = 'UserModule:HomePage:showHomepage';
+    public const URL_SETTINGS_PAGE = 'UserModule:Settings:showDashboard';
 
     /**
      * @var array
@@ -65,6 +68,16 @@ class Application {
      */
     public $userModel;
 
+    /**
+     * @var UserRightModel
+     */
+    public $userRightModel;
+
+    /**
+     * @var panelAuthorizator
+     */
+    public $panelAuthorizator;
+
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
 
@@ -79,6 +92,9 @@ class Application {
         $this->userAuthenticator = new UserAuthenticator($this->conn, $this->logger);
 
         $this->userModel = new UserModel($this->conn, $this->logger);
+        $this->userRightModel = new UserRightModel($this->conn, $this->logger);
+
+        $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
 
         $this->conn->installer->install();
     }
@@ -143,6 +159,11 @@ class Application {
         if(isset($this->$name)) {
             return $this->$name;
         }
+    }
+
+    public function setCurrentUser(User $user) {
+        $this->user = $user;
+        $this->panelAuthorizator->setCurrentUser($user);
     }
 }
 
