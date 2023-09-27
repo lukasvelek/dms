@@ -15,11 +15,16 @@ class LoginPage implements IPresenter {
     private $name;
 
     /**
-     * @var TemplateManager
+     * @var \DMS\Core\TemplateManager
      */
     private $templateManager;
 
+    /**
+     * @var \DMS\Modules\IModule
+     */
     private $module;
+
+    public const DRAW_TOPPANEL = true;
 
     public function __construct() {
         $this->name = 'LoginPage';

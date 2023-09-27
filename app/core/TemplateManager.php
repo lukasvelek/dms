@@ -22,7 +22,17 @@ class TemplateManager {
 
     public function fill(array $data, string &$subject) {
         foreach($data as $key => $value) {
-            $subject = str_replace($key, $value, $subject);
+            if(!is_array($value)) {
+                $subject = str_replace($key, $value, $subject);
+            } else {
+                $keyValueData = '';
+
+                foreach($value as $v) {
+                    $keyValueData .= $v;
+                }
+
+                $subject = str_replace($key, $keyValueData, $subject);
+            }
         }
     }
 

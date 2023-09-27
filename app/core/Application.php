@@ -9,6 +9,7 @@ use DMS\Authenticators\UserAuthenticator;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\UserModel;
+use DMS\Panels\Panels;
 
 class Application {
     public const URL_LOGIN_PAGE = 'AnonymModule:LoginPage:showForm';
@@ -95,6 +96,12 @@ class Application {
     }
 
     public function renderPage() {
+        // --- TOPPANEL ---
+
+        $toppanel = $this->renderToppanel();
+
+        // --- TOPPANEL ---
+
         if(is_null($this->currentUrl)) {
             die('Current URL is null!');
         }
@@ -114,7 +121,18 @@ class Application {
 
         $presenter = $module->getPresenterByName($presenter);
         $module->setPresenter($presenter);
-        $this->pageContent = $module->currentPresenter->performAction($action);
+
+        if($presenter::DRAW_TOPPANEL) {
+            $this->pageContent = $toppanel;
+        }
+
+        $this->pageContent .= $module->currentPresenter->performAction($action);
+    }
+
+    public function renderToppanel() {
+        $panel = Panels::createTopPanel();
+
+        return $panel;
     }
 
     public function registerModule(IModule $module) {
