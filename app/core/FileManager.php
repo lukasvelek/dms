@@ -20,11 +20,19 @@ class FileManager {
             die('Log folder does not exist!');
         }
 
-        if(is_dir($cacheFolder) || $logFolder == '') {
+        if(is_dir($cacheFolder) || $cacheFolder == '') {
             $this->cacheFolder = $cacheFolder;
         } else {
             die('Cache folder does not exist!');
         }
+    }
+
+    public function writeCache(string $file, string $data) {
+        return $this->write($this->cacheFolder . $file, $data, true);
+    }
+
+    public function readCache(string $file) {
+        return $this->read($this->cacheFolder . $file);
     }
 
     /**

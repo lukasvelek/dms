@@ -2,6 +2,7 @@
 
 namespace DMS\Authorizators;
 
+use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 
@@ -18,9 +19,27 @@ class PanelAuthorizator extends AAuthorizator {
             return false;
         }
 
-        $rights = $app->userRightModel->getPanelRightsForIdUser($app->user->getId());
+        //$rights = $app->userRightModel->getPanelRightsForIdUser($app->user->getId());
 
-        return $rights[$panelName] ? true : false;
+        $cm = CacheManager::getTemporaryObject();
+
+        //$cm->saveToCache($rights);
+
+        $valFromCache = $cm->loadFromCache($panelName);
+
+        $result = '';
+
+        if(!is_null($valFromCache)) {
+            $result = $valFromCache;
+        } else {
+            $rights = $app->userRightModel->getPanelRightsForIdUser($app->user->getId());
+
+            $cm->saveToCache($rights);
+
+            $result = $rights[$panelName];
+        }
+
+        return /*$rights[$panelName]*/ $result ? true : false;
     }
 }
 
