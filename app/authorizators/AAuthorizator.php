@@ -17,11 +17,6 @@ abstract class AAuthorizator {
      */
     private $logger;
 
-    /**
-     * @var User
-     */
-    protected $currentUser;
-
     protected function __construct(Database $db, Logger $logger) {
         $this->db = $db;
         $this->logger = $logger;
@@ -32,14 +27,6 @@ abstract class AAuthorizator {
         $qb->setMethod($methodName);
 
         return $qb;
-    }
-
-    public function setCurrentUser(User $user) {
-        $this->currentUser = $user;
-    }
-
-    public function getCurrentUser() {
-        return $this->currentUser;
     }
 }
 

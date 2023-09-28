@@ -96,7 +96,9 @@ class Application {
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
 
-        $this->conn->installer->install();
+        $this->installDb();
+
+        $this->conn->installer->updateDefaultUserPanelRights();
     }
 
     public function redirect(string $url) {
@@ -163,7 +165,14 @@ class Application {
 
     public function setCurrentUser(User $user) {
         $this->user = $user;
-        $this->panelAuthorizator->setCurrentUser($user);
+    }
+
+    private function installDb() {
+        if(!file_exists('app/core/install')) {
+            $this->conn->installer->install();
+
+            file_put_contents('app/core/install', 'installed');
+        }
     }
 }
 

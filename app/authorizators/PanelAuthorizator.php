@@ -11,13 +11,14 @@ class PanelAuthorizator extends AAuthorizator {
     }
 
     public function checkPanelRight(string $panelName) {
-        if(is_null($this->currentUser)) {
-            die('User is not set');
+        global $app;
+        
+        if(is_null($app->user)) {
+            //die('User is not set');
+            return false;
         }
 
-        global $app;
-
-        $rights = $app->userRightModel->getPanelRightsForIdUser($this->currentUser->getId());
+        $rights = $app->userRightModel->getPanelRightsForIdUser($app->user->getId());
 
         return $rights[$panelName] ? true : false;
     }

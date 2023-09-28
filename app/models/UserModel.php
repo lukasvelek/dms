@@ -53,7 +53,9 @@ class UserModel extends AModel {
             $values['AddressCountry'] = $row['address_country'];
         }
 
-        return User::createUserObjectFromArrayValues($values);
+        $user = User::createUserObjectFromArrayValues($values);
+
+        return $user;
     }
 }
 

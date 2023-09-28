@@ -157,8 +157,10 @@ class User extends AEntity {
 
         foreach($values as $key => $value) {
             if($key == 'id') {
+                $emptyUser->setId($value);
                 continue;
             } else if($key == 'dateCreated') {
+                $emptyUser->setDateCreated($value);
                 continue;
             }
 

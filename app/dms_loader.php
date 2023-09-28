@@ -8,7 +8,7 @@ function loadDependencies(array &$dependencies, string $dir) {
     unset($content[0]);
     unset($content[1]);
 
-    $skip = array($dir . '\\dependencies.php', $dir . '\\dms_loader.php');
+    $skip = array($dir . '\\dependencies.php', $dir . '\\dms_loader.php', $dir . '\\install');
 
     foreach($content as $c) {
         /* SKIP TEMPLATES (html files) */

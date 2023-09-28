@@ -26,6 +26,10 @@ class DatabaseInstaller {
         $this->insertDefaultUserPanelRights();
     }
 
+    public function updateDefaultUserPanelRights() {
+        $this->insertDefaultUserPanelRights();
+    }
+
     private function createTables() {
         $tables = array(
             'users' => array(
@@ -111,7 +115,8 @@ class DatabaseInstaller {
     private function insertDefaultUserPanelRights() {
         $idUsers = array();
         $panels = array(
-            'settings'
+            'settings',
+            'documents'
         );
 
         $userPanels = array();
@@ -140,9 +145,15 @@ class DatabaseInstaller {
         }
 
         foreach($panels as $panel) {
-            foreach($dbUserPanels as $id => $dupanels) {
-                if(!in_array($panel, $dupanels)) {
+            if(empty($dbUserPanels)) {
+                foreach($idUsers as $id) {
                     $userPanels[$id][] = $panel;
+                }
+            } else {
+                foreach($dbUserPanels as $id => $dupanels) {
+                    if(!in_array($panel, $dupanels)) {
+                        $userPanels[$id][] = $panel;
+                    }
                 }
             }
         }

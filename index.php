@@ -29,14 +29,18 @@ include('app/dms_loader.php');
                 unset($_SESSION['id_current_user']);
                 unset($_SESSION['session_end_date']);
 
-                $app->redirect($app::URL_LOGIN_PAGE);
+                if($app->currentUrl != $app::URL_LOGIN_PAGE) {
+                    $app->redirect($app::URL_LOGIN_PAGE);
+                }
             }
 
             //$app->user = $app->userModel->getUserById($_SESSION['id_current_user']);
             $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
         } else {
             if(!isset($_SESSION['login_in_process'])) {
-                $app->redirect($app::URL_LOGIN_PAGE);
+                if($app->currentUrl != $app::URL_LOGIN_PAGE) {
+                    $app->redirect($app::URL_LOGIN_PAGE);
+                }
             } else {
                 if($app->currentUrl != $app::URL_LOGIN_PAGE) {
                     $app->redirect($app::URL_LOGIN_PAGE);
