@@ -6,7 +6,7 @@ use DMS\Core\TemplateManager;
 use DMS\Modules\IModule;
 use DMS\Modules\IPresenter;
 
-class HomePage implements IPresenter {
+class UserLogout implements IPresenter {
     /**
      * @var string
      */
@@ -25,7 +25,7 @@ class HomePage implements IPresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'HomePage';
+        $this->name = 'UserLogout';
 
         $this->templateManager = TemplateManager::getTemporaryObject();
     }
@@ -42,8 +42,7 @@ class HomePage implements IPresenter {
         return $this->name;
     }
 
-    public function performAction(string $name)
-    {
+    public function performAction(string $name) {
         if(method_exists($this, $name)) {
             return $this->$name();
         } else {
@@ -51,16 +50,11 @@ class HomePage implements IPresenter {
         }
     }
 
-    private function showHomePage() {
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/homepage.html');
+    private function logoutUser() {
+        global $app;
+        $app->userAuthenticator->logoutCurrentUser();
 
-        $data = array(
-            '$PAGE_TITLE$' => 'Home page'
-        );
-
-        $this->templateManager->fill($data, $template);
-
-        return $template;
+        $app->redirect($app::URL_LOGIN_PAGE);
     }
 }
 

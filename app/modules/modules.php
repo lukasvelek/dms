@@ -5,7 +5,8 @@ $modules = array(
         'LoginPage'
     ),
     'UserModule' => array(
-        'HomePage'
+        'HomePage',
+        'UserLogout'
     )
 );
 

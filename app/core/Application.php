@@ -17,6 +17,7 @@ class Application {
     public const URL_LOGIN_PAGE = 'AnonymModule:LoginPage:showForm';
     public const URL_HOME_PAGE = 'UserModule:HomePage:showHomepage';
     public const URL_SETTINGS_PAGE = 'UserModule:Settings:showDashboard';
+    public const URL_DOCUMENTS_PAGE = 'UserModule:Documents:showAll';
 
     /**
      * @var array

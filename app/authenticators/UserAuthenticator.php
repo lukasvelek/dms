@@ -30,6 +30,13 @@ class UserAuthenticator extends AAuthenticator {
             return false;
         }
     }
+
+    public function logoutCurrentUser() {
+        unset($_SESSION['id_current_user']);
+        unset($_SESSION['session_end_date']);
+
+        return true;
+    }
 }
 
 ?>
