@@ -139,7 +139,11 @@ class Application {
         }
 
         $presenter = $module->getPresenterByName($presenter);
-        $module->setPresenter($presenter);
+        if(!is_null($presenter)) {
+            $module->setPresenter($presenter);
+        } else {
+            die('Presenter does not exist');
+        }
 
         if($presenter::DRAW_TOPPANEL) {
             $this->pageContent = $toppanel;

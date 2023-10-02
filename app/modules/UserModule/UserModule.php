@@ -33,6 +33,8 @@ class UserModule implements IModule {
     {
         if(array_key_exists($name, $this->presenters)) {
             return $this->presenters[$name];
+        } else {
+            return null;
         }
     }
 
