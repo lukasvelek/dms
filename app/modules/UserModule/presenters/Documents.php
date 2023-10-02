@@ -119,6 +119,8 @@ class Documents extends APresenter {
 
     protected function showBulk() {
         $id = htmlspecialchars($_GET['id']);
+
+        $bulkActions = [];
     }
 }
 
