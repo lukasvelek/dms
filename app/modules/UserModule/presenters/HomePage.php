@@ -3,10 +3,10 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Core\TemplateManager;
+use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
-use DMS\Modules\IPresenter;
 
-class HomePage implements IPresenter {
+class HomePage extends APresenter {
     /**
      * @var string
      */
@@ -42,16 +42,7 @@ class HomePage implements IPresenter {
         return $this->name;
     }
 
-    public function performAction(string $name)
-    {
-        if(method_exists($this, $name)) {
-            return $this->$name();
-        } else {
-            die('Method does not exist!');
-        }
-    }
-
-    private function showHomePage() {
+    protected function showHomePage() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/homepage.html');
 
         $data = array(

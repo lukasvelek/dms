@@ -4,11 +4,11 @@ namespace DMS\Modules\AnonymModule;
 
 use DMS\Core\Logger\LogCategoryEnum;
 use \DMS\Modules\IModule;
-use \DMS\Modules\IPresenter;
 use \DMS\Core\TemplateManager;
+use DMS\Modules\APresenter;
 use \DMS\UI\FormBuilder\FormBuilder;
 
-class LoginPage implements IPresenter {
+class LoginPage extends APresenter {
     /**
      * @var string
      */
@@ -44,15 +44,7 @@ class LoginPage implements IPresenter {
         return $this->name;
     }
 
-    public function performAction(string $name) {
-        if(method_exists($this, $name)) {
-            return $this->$name();
-        } else {
-            die('Method does not exist!');
-        }
-    }
-
-    public function showForm() {
+    protected function showForm() {
         $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/GeneralForm.html');
 
         $data = array(
@@ -91,7 +83,7 @@ class LoginPage implements IPresenter {
         return $form;
     }
 
-    public function tryLogin() {
+    protected function tryLogin() {
         $username = htmlspecialchars($_POST['username']);
         $password = htmlspecialchars($_POST['password']);
         

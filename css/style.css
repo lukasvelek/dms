@@ -22,6 +22,10 @@ body {
     width: 100%;
 }
 
+#table tr {
+    text-align: center;
+}
+
 .page-title {
     font-size: 26px;
 }

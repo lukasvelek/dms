@@ -52,6 +52,20 @@ class DatabaseInstaller {
                 'id_user' => 'INT(32) NOT NULL',
                 'panel_name' => 'VARCHAR(256) NOT NULL',
                 'is_visible' => 'INT(2) DEFAULT 0'
+            ),
+            'documents' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_author' => 'INT(32) NOT NULL',
+                'id_officer' => 'INT(32) NULL',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'status' => 'INT(32) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_bulk_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'action_name' => 'VARCHAR(256) NOT NULL',
+                'is_executable' => 'INT(2) DEFAULT 0'
             )
         );
 
@@ -162,6 +176,64 @@ class DatabaseInstaller {
             foreach($upanels as $upanel) {
                 $sql = "INSERT INTO `user_panel_rights` (`id_user`, `panel_name`, `is_visible`)
                 VALUES ('$id', '$upanel', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    private function insertDefaultUserBulkActionRights() {
+        $idUsers = array();
+        $actions = array(
+            'settings',
+            'documents'
+        );
+
+        $userActions = array();
+        $dbUserActions = array();
+
+        $sql = 'SELECT `id` FROM `users`';
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        if($rows->num_rows > 0) {
+            foreach($rows as $row) {
+                $idUsers[] = $row['id'];
+            }
+        }
+
+        $sql = 'SELECT * FROM `user_bulk_rights`';
+
+        $rows = $this->db->query($sql);
+
+        if($rows->num_rows > 0) {
+            foreach($rows as $row) {
+                $dbUserActions[$row['id_user']][] = $row['panel_name'];
+            }
+        }
+
+        foreach($actions as $action) {
+            if(empty($dbUserActions)) {
+                foreach($idUsers as $id) {
+                    $userActions[$id][] = $action;
+                }
+            } else {
+                foreach($dbUserActions as $id => $duactions) {
+                    if(!in_array($action, $duactions)) {
+                        $userActions[$id][] = $action;
+                    }
+                }
+            }
+        }
+
+        foreach($userActions as $id => $uactions) {
+            foreach($uactions as $uaction) {
+                $sql = "INSERT INTO `user_bulk_rights` (`id_user`, `action_name`, `is_executable`)
+                VALUES ('$id', '$uaction', '1')";
 
                 $this->logger->sql($sql, __METHOD__);
 

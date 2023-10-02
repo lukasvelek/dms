@@ -3,10 +3,10 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Core\TemplateManager;
+use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
-use DMS\Modules\IPresenter;
 
-class UserLogout implements IPresenter {
+class UserLogout extends APresenter {
     /**
      * @var string
      */
@@ -42,15 +42,7 @@ class UserLogout implements IPresenter {
         return $this->name;
     }
 
-    public function performAction(string $name) {
-        if(method_exists($this, $name)) {
-            return $this->$name();
-        } else {
-            die('Method does not exist!');
-        }
-    }
-
-    private function logoutUser() {
+    protected function logoutUser() {
         global $app;
         $app->userAuthenticator->logoutCurrentUser();
 

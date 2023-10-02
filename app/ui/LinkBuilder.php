@@ -44,7 +44,7 @@ class LinkBuilder {
     }
 
     public static function createAdvLink(array $urlParams, string $name, string $class = 'general-link') {
-        $url = '';
+        $url = '?';
 
         $i = 0;
         foreach($urlParams as $paramKey => $paramVal) {

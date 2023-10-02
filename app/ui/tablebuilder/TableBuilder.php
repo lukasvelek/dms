@@ -74,6 +74,10 @@ class TableBuilder {
   private function clean() {
     $this->border = '';
   }
+
+  public static function getTemporaryObject() {
+    return new self();
+  }
 }
 
 ?>
