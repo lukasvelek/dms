@@ -24,10 +24,12 @@ class DatabaseInstaller {
         $this->createTables();
         $this->insertDefaultUsers();
         $this->insertDefaultUserPanelRights();
+        $this->insertDefaultUserBulkActionRights();
     }
 
     public function updateDefaultUserPanelRights() {
         $this->insertDefaultUserPanelRights();
+        $this->insertDefaultUserBulkActionRights();
     }
 
     private function createTables() {
@@ -59,7 +61,8 @@ class DatabaseInstaller {
                 'id_officer' => 'INT(32) NULL',
                 'name' => 'VARCHAR(256) NOT NULL',
                 'status' => 'INT(32) NOT NULL',
-                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'id_manager' => 'INT(32) NOT NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -211,7 +214,7 @@ class DatabaseInstaller {
 
         if($rows->num_rows > 0) {
             foreach($rows as $row) {
-                $dbUserActions[$row['id_user']][] = $row['panel_name'];
+                $dbUserActions[$row['id_user']][] = $row['action_name'];
             }
         }
 

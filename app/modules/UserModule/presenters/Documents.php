@@ -62,24 +62,43 @@ class Documents extends APresenter {
     }
 
     private function internalPrepareDocumentBulkActions() {
+        global $app;
+
         $bulkActions = array(
-            '-' => '-',
-            'delete' => 'Delete'
+            '-' => '-'
         );
 
-        $select = '<select name="action">';
+        $dbBulkActions = $app->userRightModel->getAllBulkActionRightsForIdUser($app->user->getId());
 
-        foreach($bulkActions as $bAction => $bName) {
-            $select .= '<option value="' . $bAction . '">' . $bName . '</option>';
+        foreach($dbBulkActions as $dba) {
+            $name = '';
+
+            if(!$app->bulkActionAuthorizator->checkBulkActionRight($dba)) {
+                continue;
+            }
+
+            switch($dba) {
+                case 'delete_documents':
+                    $name = 'Delete documents';
+                    break;
+            }
+
+            $bulkActions[$dba] = $name;
         }
 
-        $select .= '</select>';
+        $code = [];
+        $code[] = '<select name="action">';
 
-        $submit = '<input type="submit" value="Perform">';
+        foreach($bulkActions as $bAction => $bName) {
+            $code[] = '<option value="' . $bAction . '">' . $bName . '</option>';
+        }
 
-        $code = $select . $submit;
+        $code[] = '</select>';
+        $code[] = '<input type="submit" value="Perform">';
 
-        return $code;
+        $singleLineCode = ArrayStringHelper::createUnindexedStringFromUnindexedArray($code);
+
+        return $singleLineCode;
     }
 
     private function internalCreateStandardDocumentGrid() {

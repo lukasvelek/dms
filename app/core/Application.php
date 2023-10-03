@@ -6,6 +6,7 @@ use \DMS\Entities\User;
 use \DMS\Modules\IModule;
 use \DMS\Core\DB\Database;
 use DMS\Authenticators\UserAuthenticator;
+use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
@@ -81,9 +82,14 @@ class Application {
     public $documentModel;
 
     /**
-     * @var panelAuthorizator
+     * @var PanelAuthorizator
      */
     public $panelAuthorizator;
+
+    /**
+     * @var BulkActionAuthorizator
+     */
+    public $bulkActionAuthorizator;
 
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
@@ -103,6 +109,7 @@ class Application {
         $this->documentModel = new DocumentModel($this->conn, $this->logger);
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
+        $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);
 
         $this->installDb();
 

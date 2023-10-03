@@ -34,8 +34,9 @@ class DocumentModel extends AModel {
         $idOfficer = $row['id_officer'];
         $name = $row['name'];
         $status = $row['status'];
+        $idManager = $row['id_manager'];
 
-        return new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status);
+        return new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager);
     }
 }
 

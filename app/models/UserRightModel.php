@@ -28,6 +28,44 @@ class UserRightModel extends AModel {
 
         return $rights;
     }
+
+    public function getBulkActionRightsForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('user_bulk_rights')
+                   ->where('id_user=:id_user')
+                   ->setParam(':id_user', $idUser)
+                   ->execute()
+                   ->fetch();
+
+        $rights = array();
+
+        foreach($rows as $row) {
+            $rights[$row['action_name']] = $row['is_executable'];
+        }
+
+        return $rights;
+    }
+
+    public function getAllBulkActionRightsForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('user_bulk_rights')
+                   ->where('id_user=:id_user')
+                   ->setParam(':id_user', $idUser)
+                   ->execute()
+                   ->fetch();
+
+        $rights = array();
+
+        foreach($rows as $row) {
+            $rights[] = $row['action_name'];
+        }
+
+        return $rights;
+    }
 }
 
 ?>
