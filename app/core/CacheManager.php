@@ -15,8 +15,6 @@ class CacheManager {
     public function saveToCache(array $data) {
         $file = $this->createFilename();
 
-        $dataStr = serialize($data);
-
         $cacheData = $this->fm->readCache($file);
 
         $cacheData = unserialize($cacheData);
@@ -25,7 +23,9 @@ class CacheManager {
             $cacheData[$key] = $value;
         }
 
-        $this->fm->writeCache($file, $dataStr);
+        $cacheData = serialize($cacheData);
+
+        $this->fm->writeCache($file, $cacheData);
     }
 
     public function loadFromCache(string $key) {
