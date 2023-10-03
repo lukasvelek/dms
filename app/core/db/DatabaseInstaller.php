@@ -62,13 +62,25 @@ class DatabaseInstaller {
                 'name' => 'VARCHAR(256) NOT NULL',
                 'status' => 'INT(32) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
-                'id_manager' => 'INT(32) NOT NULL'
+                'id_manager' => 'INT(32) NOT NULL',
+                'id_group' => 'INT(32) NOT NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user' => 'INT(32) NOT NULL',
                 'action_name' => 'VARCHAR(256) NOT NULL',
                 'is_executable' => 'INT(2) DEFAULT 0'
+            ),
+            'groups' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'group_users' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'id_group' => 'INT(32) NOT NULL',
+                'is_manager' => 'INT(2) NOT NULL DEFAULT 0'
             )
         );
 

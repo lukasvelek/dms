@@ -24,6 +24,22 @@ class UserModel extends AModel {
         return $this->getUserObjectFromDbRow($row);
     }
 
+    public function getAllUsers() {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('users')
+                   ->execute()
+                   ->fetch();
+        
+        $users = [];
+        foreach($rows as $row) {
+            $users[] = $this->getUserObjectFromDbRow($row);
+        }
+
+        return $users;
+    }
+
     private function getUserObjectFromDbRow($row) {
         $values = array();
 

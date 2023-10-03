@@ -54,7 +54,7 @@ class Documents extends APresenter {
 
         $data['$BULK_ACTION_CONTROLLER$'] = $bulkActions;
         $data['$FORM_ACTION$'] = '?page=UserModule:Documents:performBulkAction';
-        $data['$NEW_DOCUMENT_LINK$'] = LinkBuilder::createLink('UserModule:NewDocument:showForm', 'New document');
+        $data['$NEW_DOCUMENT_LINK$'] = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
 
         $this->templateManager->fill($data, $template);
 
@@ -178,6 +178,126 @@ class Documents extends APresenter {
             $app->redirect('UserModule:Documents:showAll');
         }
 
+        if(method_exists($this, '_' . $action)) {
+            //echo('hello');
+            $this->{'_' . $action}();
+        } else {
+            die('Method does not exist!');
+        }
+    }
+
+    protected function showNewForm() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/new-document-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New document'
+        );
+
+        $users = $app->userModel->getAllUsers();
+
+        $managers = array(
+            array(
+                'value' => $app->user->getId(),
+                'text' => '&lt;&lt;Me&gt;&gt;',
+                'selected'
+            )
+        );
+
+        foreach($users as $user) {
+            $managers[] = array(
+                'value' => $user->getId(),
+                'text' => $user->getFullname()
+            );
+        }
+
+        $statuses = [];
+        foreach(DocumentStatus::$texts as $k => $v) {
+            $statuses[] = array(
+                'value' => $k,
+                'text' => $v
+            );
+        }
+
+        $dbGroups = $app->groupModel->getAllGroups();
+
+        $groups = [];
+        foreach($dbGroups as $dbg) {
+            $groups[] = array(
+                'value' => $dbg->getId(),
+                'text' => $dbg->getName()
+            );
+        }
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')
+           ->addElement($fb->createLabel()->setText('Document name')
+                                          ->setFor('name'))
+           ->addElement($fb->createInput()->setType('text')
+                                          ->setName('name')
+                                          ->require())
+           ->addElement($fb->createLabel()->setText('Manager')
+                                          ->setFor('manager'))
+           ->addElement($fb->createSelect()->setName('manager')
+                                           ->addOptionsBasedOnArray($managers))
+           ->addElement($fb->createLabel()->setText('Status')
+                                          ->setFor('status'))
+           ->addElement($fb->createSelect()->setName('status')
+                                           ->addOptionsBasedOnArray($statuses))
+           ->addElement($fb->createLabel()->setText('Group')
+                                          ->setFor('group'))
+           ->addElement($fb->createSelect()->setName('group')
+                                           ->addOptionsBasedOnArray($groups))
+           ->addElement($fb->createSubmit('Create'))
+           ;
+
+        $form = $fb->build();
+
+        $data['$NEW_DOCUMENT_FORM$'] = $form;
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function createNewDocument() {
+        global $app;
+
+        $name = htmlspecialchars($_POST['name']);
+        $idManager = htmlspecialchars($_POST['manager']);
+        $status = htmlspecialchars($_POST['status']);
+        $idGroup = htmlspecialchars($_POST['group']);
+
+        echo $name . ' ';
+        echo $idManager . ' ';
+        echo $status . ' ';
+        echo $idGroup;
+
+        $app->documentModel->insertNewDocument($name, $idManager, $app->user->getId(), $status, $idGroup);
+
+        $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
+
+        $documentGroupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
+        $documentIdManager = null;
+
+        foreach($documentGroupUsers as $dgu) {
+            if($dgu->getIsManager() == true) {
+                $documentIdManager = $dgu->getIdUser();
+            }
+        }
+
+        if(is_null($documentIdManager)) {
+            die('Document group has no manager!');
+        }
+
+        $app->documentModel->updateOfficer($idDocument, $documentIdManager);
+
+        $app->redirect('UserModule:Documents:showAll');
+    }
+
+    private function _delete_documents() {
 
     }
 }

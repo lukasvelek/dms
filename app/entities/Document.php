@@ -27,8 +27,13 @@ class Document extends AEntity {
      * @var int
      */
     private $status;
+
+    /**
+     * @var int
+     */
+    private $idGroup;
     
-    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager) {
+    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup) {
         parent::__construct($id, $dateCreated);
 
         $this->idAuthor = $idAuthor;
@@ -36,6 +41,7 @@ class Document extends AEntity {
         $this->name = $name;
         $this->status = $status;
         $this->idManager = $idManager;
+        $this->idGroup = $idGroup;
     }
 
     public function getIdAuthor() {
@@ -57,6 +63,10 @@ class Document extends AEntity {
     public function getIdManager() {
         return $this->idManager;
     }
+
+    public function getIdGroup() {
+        return $this->idGroup;
+    }    
 }
 
 ?>

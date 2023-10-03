@@ -11,6 +11,8 @@ use DMS\Authorizators\PanelAuthorizator;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\DocumentModel;
+use DMS\Models\GroupModel;
+use DMS\Models\GroupUserModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
 use DMS\Panels\Panels;
@@ -82,6 +84,16 @@ class Application {
     public $documentModel;
 
     /**
+     * @var GroupModel
+     */
+    public $groupModel;
+
+    /**
+     * @var GroupUserModel
+     */
+    public $groupUserModel;
+
+    /**
      * @var PanelAuthorizator
      */
     public $panelAuthorizator;
@@ -107,6 +119,8 @@ class Application {
         $this->userModel = new UserModel($this->conn, $this->logger);
         $this->userRightModel = new UserRightModel($this->conn, $this->logger);
         $this->documentModel = new DocumentModel($this->conn, $this->logger);
+        $this->groupModel = new GroupModel($this->conn, $this->logger);
+        $this->groupUserModel = new GroupUserModel($this->conn, $this->logger);
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);
