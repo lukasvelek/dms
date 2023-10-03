@@ -9,8 +9,26 @@
         </div>
 
         <div class="row">
-            <div class="col-md" id="table">
-                $DOCUMENT_GRID$
+            <div class="col-md">
+                <form method="POST" action="$FORM_ACTION$">
+                    <div class="row">
+                        <div class="col-md-2">
+                            $BULK_ACTION_CONTROLLER$
+                        </div>
+
+                        <div class="col-md"></div>
+
+                        <div class="col-md-2" id="right">
+                            $NEW_DOCUMENT_LINK$
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md" id="table">
+                            $DOCUMENT_GRID$
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

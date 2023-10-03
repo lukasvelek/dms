@@ -187,8 +187,7 @@ class DatabaseInstaller {
     private function insertDefaultUserBulkActionRights() {
         $idUsers = array();
         $actions = array(
-            'settings',
-            'documents'
+            'delete_documents'
         );
 
         $userActions = array();

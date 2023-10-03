@@ -8,6 +8,7 @@ use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\Modules\IPresenter;
+use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -48,10 +49,37 @@ class Documents extends APresenter {
         $table = $this->internalCreateStandardDocumentGrid();
 
         $data['$DOCUMENT_GRID$'] = $table;
+        
+        $bulkActions = $this->internalPrepareDocumentBulkActions();
+
+        $data['$BULK_ACTION_CONTROLLER$'] = $bulkActions;
+        $data['$FORM_ACTION$'] = '?page=UserModule:Documents:performBulkAction';
+        $data['$NEW_DOCUMENT_LINK$'] = LinkBuilder::createLink('UserModule:NewDocument:showForm', 'New document');
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    private function internalPrepareDocumentBulkActions() {
+        $bulkActions = array(
+            '-' => '-',
+            'delete' => 'Delete'
+        );
+
+        $select = '<select name="action">';
+
+        foreach($bulkActions as $bAction => $bName) {
+            $select .= '<option value="' . $bAction . '">' . $bName . '</option>';
+        }
+
+        $select .= '</select>';
+
+        $submit = '<input type="submit" value="Perform">';
+
+        $code = $select . $submit;
+
+        return $code;
     }
 
     private function internalCreateStandardDocumentGrid() {
@@ -75,9 +103,9 @@ class Documents extends APresenter {
         } else {
             foreach($documents as $document) {
                 $actionLinks = array(
+                    '<input type="checkbox" name="select" value="' . $document->getId() . '">',
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showBulk', 'id' => $document->getid()), 'Bulk actions')
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
                 );
 
                 if(is_null($headerRow)) {
@@ -117,10 +145,21 @@ class Documents extends APresenter {
         return $tb->build();
     }
 
-    protected function showBulk() {
-        $id = htmlspecialchars($_GET['id']);
+    protected function performBulkAction() {
+        global $app;
 
-        $bulkActions = [];
+        if(!isset($_POST['select'])) {
+            $app->redirect('UserModule:Documents:showAll');
+        }
+
+        $ids = htmlspecialchars($_POST['select']);
+        $action = htmlspecialchars($_POST['action']);
+
+        if($action == '-') {
+            $app->redirect('UserModule:Documents:showAll');
+        }
+
+
     }
 }
 
