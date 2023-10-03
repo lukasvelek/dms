@@ -81,6 +81,14 @@ class Documents extends APresenter {
                 case 'delete_documents':
                     $name = 'Delete documents';
                     break;
+
+                case 'approve_archivation':
+                    $name = 'Approve archivation';
+                    break;
+
+                case 'decline_archivation':
+                    $name = 'Decline archivation';
+                    break;
             }
 
             $bulkActions[$dba] = $name;
@@ -122,7 +130,7 @@ class Documents extends APresenter {
         } else {
             foreach($documents as $document) {
                 $actionLinks = array(
-                    '<input type="checkbox" name="select" value="' . $document->getId() . '">',
+                    '<input type="checkbox" name="select[]" value="' . $document->getId() . '" onclick="handle()">',
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
                 );
@@ -171,7 +179,7 @@ class Documents extends APresenter {
             $app->redirect('UserModule:Documents:showAll');
         }
 
-        $ids = htmlspecialchars($_POST['select']);
+        $ids = $_POST['select'];
         $action = htmlspecialchars($_POST['action']);
 
         if($action == '-') {
@@ -179,8 +187,7 @@ class Documents extends APresenter {
         }
 
         if(method_exists($this, '_' . $action)) {
-            //echo('hello');
-            $this->{'_' . $action}();
+            $this->{'_' . $action}($ids);
         } else {
             die('Method does not exist!');
         }
@@ -270,11 +277,6 @@ class Documents extends APresenter {
         $status = htmlspecialchars($_POST['status']);
         $idGroup = htmlspecialchars($_POST['group']);
 
-        echo $name . ' ';
-        echo $idManager . ' ';
-        echo $status . ' ';
-        echo $idGroup;
-
         $app->documentModel->insertNewDocument($name, $idManager, $app->user->getId(), $status, $idGroup);
 
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
@@ -297,8 +299,18 @@ class Documents extends APresenter {
         $app->redirect('UserModule:Documents:showAll');
     }
 
-    private function _delete_documents() {
+    private function _delete_documents(array $ids) {
 
+    }
+
+    private function _decline_archivation(array $ids) {
+        global $app;
+        
+        foreach($ids as $id) {
+            $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVATION_DECLINED);
+        }
+
+        $app->redirect('UserModule:Documents:showAll');
     }
 }
 
