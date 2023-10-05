@@ -12,6 +12,19 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getProcessById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('processes')
+                  ->where('id=:id')
+                  ->setParam(':id', $id)
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createProcessObjectFromDbRow($row);
+    }
+
     public function getProcessesWithIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 

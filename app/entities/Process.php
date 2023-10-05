@@ -65,6 +65,19 @@ class Process extends AEntity {
     public function getStatus() {
         return $this->status;
     }
+
+    public function getWorkflowIdUserPosition(int $idUser) {
+        $i = 0;
+        foreach($this->workflow as $w) {
+            if($w == $idUser) {
+                break;
+            }
+
+            $i++;
+        }
+
+        return $i;
+    }
 }
 
 ?>
