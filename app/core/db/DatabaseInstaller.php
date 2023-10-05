@@ -74,13 +74,26 @@ class DatabaseInstaller {
             'groups' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'name' => 'VARCHAR(256) NOT NULL',
-                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'code' => 'VARCHAR(256) NULL'
             ),
             'group_users' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user' => 'INT(32) NOT NULL',
                 'id_group' => 'INT(32) NOT NULL',
                 'is_manager' => 'INT(2) NOT NULL DEFAULT 0'
+            ),
+            'processes' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_document' => 'INT(32) NOT NULL',
+                'workflow1' => 'INT(32) NULL',
+                'workflow2' => 'INT(32) NULL',
+                'workflow3' => 'INT(32) NULL',
+                'workflow4' => 'INT(32) NULL',
+                'workflow_status' => 'INT(32) NULL',
+                'type' => 'INT(2) NOT NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 
@@ -145,7 +158,8 @@ class DatabaseInstaller {
         $idUsers = array();
         $panels = array(
             'settings',
-            'documents'
+            'documents',
+            'processes'
         );
 
         $userPanels = array();

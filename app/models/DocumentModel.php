@@ -11,6 +11,19 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('documents')
+                  ->where('id=:id')
+                  ->setParam(':id', $id)
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createDocumentObjectFromDbRow($row);
+    }
+
     public function updateStatus(int $id, int $status) {
         $qb = $this->qb(__METHOD__);
 

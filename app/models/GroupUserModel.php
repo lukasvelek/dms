@@ -11,6 +11,20 @@ class GroupUserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getGroupUserByIdGroup(int $idGroup) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('group_users')
+                  ->where('id_group=:id_group')
+                  ->setParam(':id_group', $idGroup)
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createGroupUserObjectFromDbRow($row);
+    }
+
     public function getGroupUsersByGroupId(int $idGroup) {
         $qb = $this->qb(__METHOD__);
 

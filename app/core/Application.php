@@ -7,12 +7,15 @@ use \DMS\Modules\IModule;
 use \DMS\Core\DB\Database;
 use DMS\Authenticators\UserAuthenticator;
 use DMS\Authorizators\BulkActionAuthorizator;
+use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
+use DMS\Components\ProcessComponent;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\DocumentModel;
 use DMS\Models\GroupModel;
 use DMS\Models\GroupUserModel;
+use DMS\Models\ProcessModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
 use DMS\Panels\Panels;
@@ -22,6 +25,7 @@ class Application {
     public const URL_HOME_PAGE = 'UserModule:HomePage:showHomepage';
     public const URL_SETTINGS_PAGE = 'UserModule:Settings:showDashboard';
     public const URL_DOCUMENTS_PAGE = 'UserModule:Documents:showAll';
+    public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
 
     /**
      * @var array
@@ -94,6 +98,11 @@ class Application {
     public $groupUserModel;
 
     /**
+     * @var ProcessModel
+     */
+    public $processModel;
+
+    /**
      * @var PanelAuthorizator
      */
     public $panelAuthorizator;
@@ -102,6 +111,16 @@ class Application {
      * @var BulkActionAuthorizator
      */
     public $bulkActionAuthorizator;
+
+    /**
+     * @var DocumentAuthorizator
+     */
+    public $documentAuthorizator;
+
+    /**
+     * @var ProcessComponent
+     */
+    public $processComponent;
 
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
@@ -121,9 +140,13 @@ class Application {
         $this->documentModel = new DocumentModel($this->conn, $this->logger);
         $this->groupModel = new GroupModel($this->conn, $this->logger);
         $this->groupUserModel = new GroupUserModel($this->conn, $this->logger);
+        $this->processModel = new ProcessModel($this->conn, $this->logger);
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);
+        $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger);
+
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger);
 
         $this->installDb();
 

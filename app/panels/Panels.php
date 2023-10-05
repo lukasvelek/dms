@@ -26,6 +26,10 @@ class Panels {
             $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_DOCUMENTS_PAGE, 'Documents');
         }
 
+        if($panelAuthorizator->checkPanelRight('processes')) {
+            $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_PROCESSES_PAGE, 'Processes');
+        }
+
         if($panelAuthorizator->checkPanelRight('settings')) {
             $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_SETTINGS_PAGE, 'Settings');
         }

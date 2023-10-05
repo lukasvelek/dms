@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\ProcessTypes;
 use DMS\Core\TemplateManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
@@ -219,13 +220,20 @@ class Documents extends APresenter {
             );
         }
 
-        $statuses = [];
-        foreach(DocumentStatus::$texts as $k => $v) {
+        //$statuses = [];
+        /*foreach(DocumentStatus::$texts as $k => $v) {
             $statuses[] = array(
                 'value' => $k,
                 'text' => $v
             );
-        }
+        }*/
+
+        $statuses = array(
+            array(
+                'value' => DocumentStatus::NEW,
+                'text' => DocumentStatus::$texts[DocumentStatus::NEW]
+            )
+        );
 
         $dbGroups = $app->groupModel->getAllGroups();
 
@@ -300,14 +308,34 @@ class Documents extends APresenter {
     }
 
     private function _delete_documents(array $ids) {
+        global $app;
 
+        foreach($ids as $id) {
+            $app->processComponent->startProcess(ProcessTypes::DELETE, $id);
+        }
+
+        //$app->redirect('UserModule:Documents:showAll');
     }
 
     private function _decline_archivation(array $ids) {
         global $app;
         
         foreach($ids as $id) {
-            $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVATION_DECLINED);
+            if($app->documentAuthorizator->canDeclineArchivation($id)) {
+                $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVATION_DECLINED);
+            }
+        }
+
+        $app->redirect('UserModule:Documents:showAll');
+    }
+
+    private function _approve_archivation(array $ids) {
+        global $app;
+
+        foreach($ids as $id) {
+            if($app->documentAuthorizator->canApproveArchivation($id)) {
+                $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVATION_APPROVED);
+            }
         }
 
         $app->redirect('UserModule:Documents:showAll');
