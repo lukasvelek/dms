@@ -159,7 +159,9 @@ class DatabaseInstaller {
         $panels = array(
             'settings',
             'documents',
-            'processes'
+            'processes',
+            'settings.users',
+            'settings.groups'
         );
 
         $userPanels = array();

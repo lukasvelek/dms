@@ -175,7 +175,7 @@ class User extends AEntity {
     }
 
     public static function createEmptyUser() {
-        return new self(0, date('Y-m-d H:i:s'), '', '', '', '', false, '', '', '', '', '');
+        return new self(0, date('Y-m-d H:i:s'), '', '', '', null, false, null, null, null, null, null);
     }
 }
 

@@ -6,6 +6,35 @@ use DMS\Core\TemplateManager;
 use DMS\UI\LinkBuilder;
 
 class Panels {
+    public static function createSettingsPanel() {
+        global $app;
+
+        $templateManager = self::tm();
+
+        $template = $templateManager->loadTemplate('app/panels/templates/settingspanel.html');
+
+        $data = array(
+            '$LINKS$' => array(
+                '&nbsp;',
+                LinkBuilder::createLink('UserModule:Settings:showDashboard', 'Dashboard')
+            )
+        );
+
+        $panelAuthorizator = self::pa();
+
+        if($panelAuthorizator->checkPanelRight('settings.users')) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showUsers', 'Users');
+        }
+
+        if($panelAuthorizator->checkPanelRight('settings.groups')) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showGroups', 'Groups');
+        }
+
+        $templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     public static function createTopPanel() {
         global $app;
 
