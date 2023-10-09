@@ -46,7 +46,7 @@ class Processes extends APresenter {
     }
 
     protected function showAll() {
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/process-grid.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/process-grid.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Processes'

@@ -41,7 +41,7 @@ class Documents extends APresenter {
     }
 
     protected function showAll() {
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/document-grid.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/document-grid.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Documents'
@@ -197,7 +197,7 @@ class Documents extends APresenter {
     protected function showNewForm() {
         global $app;
 
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/new-document-form.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'New document'

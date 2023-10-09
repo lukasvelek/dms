@@ -50,7 +50,7 @@ class Settings extends APresenter {
     }
 
     protected function showDashboard() {
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings-dashboard.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Settings',
@@ -69,7 +69,7 @@ class Settings extends APresenter {
     protected function showUsers() {
         global $app;
 
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings-grid.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Users',
@@ -90,7 +90,7 @@ class Settings extends APresenter {
     protected function showGroups() {
         global $app;
 
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings-grid.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Groups',
@@ -109,7 +109,7 @@ class Settings extends APresenter {
     }
 
     protected function showNewUserForm() {
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings-new-entity-form.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
         $data = array(
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
@@ -123,7 +123,7 @@ class Settings extends APresenter {
     }
 
     protected function showNewGroupForm() {
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings-new-entity-form.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
         $data = array(
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),

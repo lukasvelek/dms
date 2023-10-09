@@ -44,7 +44,7 @@ class SingleProcess extends APresenter {
 
         $process = $app->processModel->getProcessById($id);
 
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/single-process.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/single-process.html');
 
         $data = array(
             '$PROCESS_NAME$' => 'Process #' . $id . ': ' . ProcessTypes::$texts[$process->getType()]
