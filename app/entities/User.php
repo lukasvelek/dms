@@ -24,27 +24,27 @@ class User extends AEntity {
     private $isActive;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $addressStreet;
     
     /**
-     * @var string
+     * @var string|null
      */
     private $addressHouseNumber;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $addressCity;
     
     /**
-     * @var string
+     * @var string|null
      */
     private $addressZipCode;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $addressCountry;
 

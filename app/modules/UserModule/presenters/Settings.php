@@ -7,6 +7,7 @@ use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\Panels\Panels;
+use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 use JetBrains\PhpStorm\ArrayShape;
@@ -92,6 +93,108 @@ class Settings extends APresenter {
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function showNewUserForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings-new-entity-form.html');
+
+        $data = array(
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$PAGE_TITLE$' => 'New user form',
+            '$FORM$' => $this->internalCreateNewUserForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showNewGroupForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings-new-entity-form.html');
+
+        $data = array(
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$PAGE_TITLE$' => 'New group form',
+            '$FORM$' => $this->internalCreateNewGroupForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function createNewGroup() {
+        global $app;
+
+        $name = htmlspecialchars($_POST['name']);
+        $code = null;
+
+        if(isset($_POST['code'])) {
+            $code = htmlspecialchars($_POST['code']);
+        }
+
+        $app->groupModel->insertNewGroup($name, $code);
+        $idGroup = $app->groupModel->getLastInsertedGroup()->getId();
+
+        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+    }
+
+    private function internalCreateNewGroupForm() {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setAction('?page=UserModule:Settings:createNewGroup')->setMethod('POST')
+            ->addElement($fb->createLabel()->setFor('name')->setText('Group name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->require())
+
+            ->addElement($fb->createLabel()->setFor('code')->setText('Code'))
+            ->addElement($fb->createInput()->setType('text')->setName('code'))
+
+            ->addElement($fb->createSubmit('Create'))
+        ;
+
+        $form = $fb->build();
+
+        return $form;
+    }
+
+    private function internalCreateNewUserForm() {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewUser')
+            ->addElement($fb->createLabel()->setFor('firstname')->setText('Firstname'))
+            ->addElement($fb->createInput()->setType('text')->setName('firstname')->require())
+
+            ->addElement($fb->createLabel()->setFor('lastname')->setText('Lastname'))
+            ->addElement($fb->createInput()->setType('text')->setName('lastname')->require())
+
+            ->addElement($fb->createlabel()->setFor('email')->setText('Email'))
+            ->addElement($fb->createInput()->setType('email')->setName('email'))
+
+            ->addElement($fb->createlabel()->setFor('username')->setText('Username'))
+            ->addElement($fb->createInput()->setType('text')->setName('username')->require())
+
+            ->addElement($fb->createlabel()->setText('Address'))
+            ->addElement($fb->createlabel()->setFor('address_street')->setText('Street'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_street'))
+
+            ->addElement($fb->createlabel()->setFor('address_house_number')->setText('House number'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_house_number'))
+
+            ->addElement($fb->createlabel()->setFor('address_city')->setText('City'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_city'))
+
+            ->addElement($fb->createlabel()->setFor('address_zip_code')->setText('Zip code'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_zip_code'))
+
+            ->addElement($fb->createlabel()->setFor('address_country')->setText('Country'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_country'))
+
+            ->addElement($fb->createSubmit('Create'))
+        ;
+
+        $form = $fb->build();
+
+        return $form;
     }
 
     private function internalCreateGroupGrid() {

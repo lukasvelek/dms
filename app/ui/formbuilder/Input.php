@@ -106,6 +106,8 @@ class Input implements IBuildable {
   public function setName(string $name) {
     $this->name = 'name="' . $name . '"';
 
+    $this->setId($name);
+
     return $this;
   }
 

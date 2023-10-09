@@ -11,6 +11,41 @@ class GroupModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getLastInsertedGroup() {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('groups')
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createGroupObjectFromDbRow($row);
+    }
+
+    public function insertNewGroup(string $name, ?string $code) {
+        $qb = $this->qb(__METHOD__);
+
+        $keys = array('name');
+        $values = array(':name');
+        $params = array(':name' => $name);
+
+        if(!is_null($code)) {
+            $keys[] = 'code';
+            $values[] = ':code';
+            $params[':code'] = $code;
+        }
+
+        $result = $qb->insertArr('groups', $keys)
+                     ->valuesArr($values)
+                     ->setParams($params)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getGroupByCode(string $code) {
         $qb = $this->qb(__METHOD__);
 

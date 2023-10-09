@@ -153,8 +153,29 @@ class Application {
         $this->conn->installer->updateDefaultUserPanelRights();
     }
 
-    public function redirect(string $url) {
-        header('Location: ?page=' . $url);
+    public function redirect(string $url, array $params = array()) {
+        $page = '?';
+
+        $newParams = array('page' => $url);
+
+        foreach($params as $k => $v) {
+            $newParams[$k] = $v;
+        }
+
+        $i = 0;
+        foreach($newParams as $paramKey => $paramValue) {
+            if(($i + 1) == count($newParams)) {
+                $page .= $paramKey . '=' . $paramValue;
+            } else {
+                $page .= $paramKey . '=' . $paramValue . '&';
+            }
+
+            $i++;
+        }
+
+        echo $page;
+
+        header('Location: ' . $page);
     }
 
     public function showPage() {

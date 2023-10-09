@@ -9,7 +9,7 @@ class Group extends AEntity {
     private $name;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $code;
 
