@@ -212,10 +212,10 @@ class Settings extends APresenter {
         $fb = FormBuilder::getTemporaryObject();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewUser')
-            ->addElement($fb->createLabel()->setFor('firstname')->setText('Firstname'))
+            ->addElement($fb->createLabel()->setFor('firstname')->setText('First name'))
             ->addElement($fb->createInput()->setType('text')->setName('firstname')->require())
 
-            ->addElement($fb->createLabel()->setFor('lastname')->setText('Lastname'))
+            ->addElement($fb->createLabel()->setFor('lastname')->setText('Last name'))
             ->addElement($fb->createInput()->setType('text')->setName('lastname')->require())
 
             ->addElement($fb->createlabel()->setFor('email')->setText('Email'))

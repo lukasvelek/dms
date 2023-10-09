@@ -68,7 +68,7 @@ class GroupModel extends AModel {
                   ->where('id=:id')
                   ->setParam(':id', $id)
                   ->execute()
-                  ->fetch();
+                  ->fetchSingle();
         
         return $this->createGroupObjectFromDbRow($row);
     }
