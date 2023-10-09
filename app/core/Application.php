@@ -6,6 +6,7 @@ use \DMS\Entities\User;
 use \DMS\Modules\IModule;
 use \DMS\Core\DB\Database;
 use DMS\Authenticators\UserAuthenticator;
+use DMS\Authorizators\ActionAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
@@ -118,6 +119,11 @@ class Application {
     public $documentAuthorizator;
 
     /**
+     * @var ActionAuthorizator
+     */
+    public $actionAuthorizator;
+
+    /**
      * @var ProcessComponent
      */
     public $processComponent;
@@ -145,6 +151,7 @@ class Application {
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger);
+        $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger);
 
         $this->processComponent = new ProcessComponent($this->conn, $this->logger);
 

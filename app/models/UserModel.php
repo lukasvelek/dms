@@ -11,6 +11,41 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getLastInsertedUser() {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('users')
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->getUserObjectFromDbRow($row);
+    }
+
+    public function insertUserFromArray(array $data) {
+        $qb = $this->qb(__METHOD__);
+
+        $keys = [];
+        $values = [];
+        $params = [];
+
+        foreach($data as $k => $v) {
+            $keys[] = $k;
+            $values[] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $result = $qb->insertArr('users', $keys)
+                     ->valuesArr($values)
+                     ->setParams($params)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getUserById(int $id) {
         $qb = $this->qb(__METHOD__);
 
@@ -48,7 +83,7 @@ class UserModel extends AModel {
         $values['Firstname'] = $row['firstname'];
         $values['Lastname'] = $row['lastname'];
         $values['Username'] = $row['username'];
-        $values['IsActive'] = $row['is_active'] ? true : false;
+        $values['Status'] = $row['status'];
         
         if(isset($row['email'])) {
             $values['Email'] = $row['email'];    

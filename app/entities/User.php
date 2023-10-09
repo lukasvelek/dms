@@ -19,9 +19,9 @@ class User extends AEntity {
     private $email;
 
     /**
-     * @var bool
+     * @var int
      */
-    private $isActive;
+    private $status;
 
     /**
      * @var string|null
@@ -53,14 +53,14 @@ class User extends AEntity {
      */
     private $username;
 
-    public function __construct(int $id, string $dateCreated, string $firstname, string $lastname, string $username, ?string $email, bool $isActive, ?string $addressStreet, ?string $addressHouseNumber, ?string $addressCity, ?string $addressZipCode, ?string $addressCountry) {
+    public function __construct(int $id, string $dateCreated, string $firstname, string $lastname, string $username, ?string $email, int $status, ?string $addressStreet, ?string $addressHouseNumber, ?string $addressCity, ?string $addressZipCode, ?string $addressCountry) {
         parent::__construct($id, $dateCreated);
 
         $this->firstname = $firstname;
         $this->lastname = $lastname;
         $this->username = $username;
         $this->email = $email;
-        $this->isActive = $isActive;
+        $this->status = $status;
         $this->addressStreet = $addressStreet;
         $this->addressHouseNumber = $addressHouseNumber;
         $this->addressCity = $addressCity;
@@ -104,12 +104,12 @@ class User extends AEntity {
         $this->email = $email;
     }
 
-    public function getIsActive() {
-        return $this->isActive;
+    public function getStatus() {
+        return $this->status;
     }
 
-    public function setIsActive(bool $isActive) {
-        $this->isActive = $isActive;
+    public function setStatus(int $status) {
+        $this->status = $status;
     }
 
     public function getAddressStreet() {

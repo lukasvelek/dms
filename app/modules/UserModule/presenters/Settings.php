@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\UserStatus;
 use DMS\Core\TemplateManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
@@ -66,14 +67,20 @@ class Settings extends APresenter {
     }
 
     protected function showUsers() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings-grid.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Users',
-            '$NEW_ENTITY_LINK$' => LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user'),
+            '$NEW_ENTITY_LINK$' => '',
             '$SETTINGS_GRID$' => $this->internalCreateUsersGrid(),
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
         );
+
+        if($app->actionAuthorizator->checkActionRight('create_user')) {
+            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user') . '</div></div>';
+        }
 
         $this->templateManager->fill($data, $template);
 
@@ -81,14 +88,20 @@ class Settings extends APresenter {
     }
 
     protected function showGroups() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings-grid.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Groups',
-            '$NEW_ENTITY_LINK$' => LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group'),
+            '$NEW_ENTITY_LINK$' => '',
             '$SETTINGS_GRID$' => $this->internalCreateGroupGrid(),
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
         );
+
+        if($app->actionAuthorizator->checkActionRight('create_group')) {
+            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group') . '</div></div>';
+        }
 
         $this->templateManager->fill($data, $template);
 
@@ -137,6 +150,44 @@ class Settings extends APresenter {
         $idGroup = $app->groupModel->getLastInsertedGroup()->getId();
 
         $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+    }
+
+    protected function createNewUser() {
+        global $app;
+
+        $data = [];
+
+        $required = array('firstname', 'lastname', 'username');
+
+        foreach($required as $r) {
+            $data[$r] = htmlspecialchars($_POST[$r]);
+        }
+
+        if(isset($_POST['email']) && !empty($_POST['email'])) {
+            $data['email'] = htmlspecialchars($_POST['email']);
+        }
+        if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
+            $data['address_street'] = htmlspecialchars($_POST['address_street']);
+        }
+        if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
+            $data['address_house_number'] = htmlspecialchars($_POST['address_house_number']);
+        }
+        if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
+            $data['address_city'] = htmlspecialchars($_POST['address_city']);
+        }
+        if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
+            $data['address_zip_code'] = htmlspecialchars($_POST['address_zip_code']);
+        }
+        if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
+            $data['address_country'] = htmlspecialchars($_POST['address_country']);
+        }
+
+        $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
+
+        $app->userModel->insertUserFromArray($data);
+        $idUser = $app->userModel->getLastInsertedUser();
+
+        $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
     }
 
     private function internalCreateNewGroupForm() {
@@ -272,7 +323,7 @@ class Settings extends APresenter {
             'Lastname',
             'Username',
             'Email',
-            'Is active',
+            'Status',
             'Address Street',
             'Address House number',
             'Address City',
@@ -322,7 +373,7 @@ class Settings extends APresenter {
                     $user->getLastname() ?? '-',
                     $user->getUsername() ?? '-',
                     $user->getEmail() ?? '-',
-                    $user->getIsActive() ? 'Yes' : 'No',
+                    UserStatus::$texts[$user->getStatus()],
                     $user->getAddressStreet() ?? '-',
                     $user->getAddressHouseNumber() ?? '-',
                     $user->getAddressCity() ?? '-',

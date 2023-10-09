@@ -15,6 +15,10 @@ class DatabaseInstaller {
      */
     private $logger;
 
+    public const DEFAULT_USERS = array(
+        'admin'
+    );
+
     public function __construct(Database $db, Logger $logger) {
         $this->db = $db;
         $this->logger = $logger;
@@ -23,13 +27,14 @@ class DatabaseInstaller {
     public function install() {
         $this->createTables();
         $this->insertDefaultUsers();
-        $this->insertDefaultUserPanelRights();
-        $this->insertDefaultUserBulkActionRights();
+
+        $this->updateDefaultUserPanelRights();
     }
 
     public function updateDefaultUserPanelRights() {
         $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
+        $this->insertDefaultUserActionRights();
     }
 
     private function createTables() {
@@ -40,7 +45,7 @@ class DatabaseInstaller {
                 'lastname' => 'VARCHAR(256) NOT NULL',
                 'username' => 'VARCHAR(256) NOT NULL',
                 'password' => 'VARCHAR(256) NOT NULL',
-                'is_active' => 'INT(2) NOT NULL DEFAULT 1',
+                'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'email' => 'VARCHAR(256) NULL',
                 'address_street' => 'VARCHAR(256) NULL',
                 'address_house_number' => 'VARCHAR(256) NULL',
@@ -94,6 +99,12 @@ class DatabaseInstaller {
                 'type' => 'INT(2) NOT NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_action_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'action_name' => 'VARCHAR(256) NOT NULL',
+                'is_executable' => 'INT(2) DEFAULT 0'
             )
         );
 
@@ -167,7 +178,7 @@ class DatabaseInstaller {
         $userPanels = array();
         $dbUserPanels = array();
 
-        $sql = 'SELECT `id` FROM `users`';
+        $sql = 'SELECT * FROM `users`';
 
         $this->logger->sql($sql, __METHOD__);
 
@@ -175,7 +186,9 @@ class DatabaseInstaller {
 
         if($rows->num_rows > 0) {
             foreach($rows as $row) {
-                $idUsers[] = $row['id'];
+                if(in_array($row['username'], self::DEFAULT_USERS)) {
+                    $idUsers[] = $row['id'];
+                }
             }
         }
 
@@ -226,7 +239,7 @@ class DatabaseInstaller {
         $userActions = array();
         $dbUserActions = array();
 
-        $sql = 'SELECT `id` FROM `users`';
+        $sql = 'SELECT * FROM `users`';
 
         $this->logger->sql($sql, __METHOD__);
 
@@ -234,7 +247,9 @@ class DatabaseInstaller {
 
         if($rows->num_rows > 0) {
             foreach($rows as $row) {
-                $idUsers[] = $row['id'];
+                if(in_array($row['username'], self::DEFAULT_USERS)) {
+                    $idUsers[] = $row['id'];
+                }
             }
         }
 
@@ -265,6 +280,66 @@ class DatabaseInstaller {
         foreach($userActions as $id => $uactions) {
             foreach($uactions as $uaction) {
                 $sql = "INSERT INTO `user_bulk_rights` (`id_user`, `action_name`, `is_executable`)
+                VALUES ('$id', '$uaction', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    private function insertDefaultUserActionRights() {
+        $idUsers = array();
+        $actions = array(
+            'create_user',
+            'create_group'
+        );
+
+        $userActions = array();
+        $dbUserActions = array();
+
+        $sql = 'SELECT * FROM `users`';
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        if($rows->num_rows > 0) {
+            foreach($rows as $row) {
+                if(in_array($row['username'], self::DEFAULT_USERS)) {
+                    $idUsers[] = $row['id'];
+                }
+            }
+        }
+
+        $sql = 'SELECT * FROM `user_action_rights`';
+
+        $rows = $this->db->query($sql);
+
+        if($rows->num_rows > 0) {
+            foreach($rows as $row) {
+                $dbUserActions[$row['id_user']][] = $row['action_name'];
+            }
+        }
+
+        foreach($actions as $action) {
+            if(empty($dbUserActions)) {
+                foreach($idUsers as $id) {
+                    $userActions[$id][] = $action;
+                }
+            } else {
+                foreach($dbUserActions as $id => $duactions) {
+                    if(!in_array($action, $duactions)) {
+                        $userActions[$id][] = $action;
+                    }
+                }
+            }
+        }
+
+        foreach($userActions as $id => $uactions) {
+            foreach($uactions as $uaction) {
+                $sql = "INSERT INTO `user_action_rights` (`id_user`, `action_name`, `is_executable`)
                 VALUES ('$id', '$uaction', '1')";
 
                 $this->logger->sql($sql, __METHOD__);
