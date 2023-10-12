@@ -11,6 +11,41 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function nullIdOfficer(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('documents')
+                     ->setNull(array('id_officer'))
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function updateDocument(int $id, array $values) {
+        $qb = $this->qb(__METHOD__);
+
+        $keys = [];
+        $params = [];
+
+        foreach($values as $k => $v) {
+            $keys[$k] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $result = $qb->update('documents')
+                     ->set($keys)
+                     ->setParams($params)
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getAllDocuments() {
         $qb = $this->qb(__METHOD__);
 
@@ -108,6 +143,8 @@ class DocumentModel extends AModel {
 
         $rows = $qb->select('*')
                    ->from('documents')
+                   ->where('is_deleted=:deleted')
+                   ->setParam(':deleted', '0')
                    ->execute()
                    ->fetch();
 
@@ -128,8 +165,9 @@ class DocumentModel extends AModel {
         $status = $row['status'];
         $idManager = $row['id_manager'];
         $idGroup = $row['id_group'];
+        $isDeleted = $row['is_deleted'];
 
-        return new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup);
+        return new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted);
     }
 }
 

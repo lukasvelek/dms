@@ -229,14 +229,6 @@ class Documents extends APresenter {
             );
         }
 
-        //$statuses = [];
-        /*foreach(DocumentStatus::$texts as $k => $v) {
-            $statuses[] = array(
-                'value' => $k,
-                'text' => $v
-            );
-        }*/
-
         $statuses = array(
             array(
                 'value' => DocumentStatus::NEW,
@@ -323,7 +315,7 @@ class Documents extends APresenter {
             $app->processComponent->startProcess(ProcessTypes::DELETE, $id);
         }
 
-        //$app->redirect('UserModule:Documents:showAll');
+        $app->redirect('UserModule:Documents:showAll');
     }
 
     private function _decline_archivation(array $ids) {

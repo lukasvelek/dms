@@ -31,7 +31,9 @@ class ActionAuthorizator extends AAuthorizator {
 
             $cm->saveToCache($rights);
 
-            $result = $rights[$actionName];
+            if(array_key_exists($actionName, $rights)) {
+                $result = $rights[$actionName];
+            }
         }
 
         return $result ? true : false;

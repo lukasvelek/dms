@@ -2,7 +2,9 @@
 
 namespace DMS\Components;
 
+use DMS\Components\Process\DeleteProcess;
 use DMS\Constants\Groups;
+use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -69,6 +71,26 @@ class ProcessComponent extends AComponent {
 
         $app->processModel->insertNewProcess($idDocument, $type, $workflow);
         
+        return true;
+    }
+
+    public function moveProcessToNextWorkflowUser(int $idProcess) {
+        global $app;
+
+        $process = $app->processModel->getProcessById($idProcess);
+
+        $newWfStatus = $process->getStatus() + 1;
+
+        $app->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
+
+        return true;
+    }
+
+    public function endProcess(int $idProcess) {
+        global $app;
+
+        $app->processModel->updateStatus($idProcess, ProcessStatus::FINISHED);
+
         return true;
     }
 

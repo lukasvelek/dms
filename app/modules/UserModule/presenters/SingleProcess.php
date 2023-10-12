@@ -2,6 +2,8 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Components\Process\DeleteProcess;
+use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Process;
@@ -58,6 +60,42 @@ class SingleProcess extends APresenter {
         return $template;
     }
 
+    protected function approve() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $app->processComponent->moveProcessToNextWorkflowUser($id);
+
+        $app->redirect('UserModule:Processes:showAll');
+    }
+
+    protected function decline() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $app->processComponent->endProcess($id);
+
+        $app->redirect('UserModule:Processes:showAll');
+    }
+
+    protected function finish() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+        $process = $app->processModel->getProcessById($id);
+
+        switch($process->getType()) {
+            case ProcessTypes::DELETE:
+                $dp = new DeleteProcess($id);
+                $dp->work();
+                break;
+        }
+
+        $app->redirect('UserModule:Processes:showAll');
+    }
+
     private function internalCreateProcessInfoTable(Process $process) {
         global $app;
 
@@ -70,19 +108,19 @@ class SingleProcess extends APresenter {
         }
 
         if($process->getWorkflowStep(1) != null) {
-            $workflow2User = $app->userModel->getUserById($process->getWorkflowStep(0))->getFullname();
+            $workflow2User = $app->userModel->getUserById($process->getWorkflowStep(1))->getFullname();
         } else {
             $workflow2User = '-';
         }
 
         if($process->getWorkflowStep(2) != null) {
-            $workflow3User = $app->userModel->getUserById($process->getWorkflowStep(0))->getFullname();
+            $workflow3User = $app->userModel->getUserById($process->getWorkflowStep(2))->getFullname();
         } else {
             $workflow3User = '-';
         }
 
         if($process->getWorkflowStep(3) != null) {
-            $workflow4User = $app->userModel->getUserById($process->getWorkflowStep(0))->getFullname();
+            $workflow4User = $app->userModel->getUserById($process->getWorkflowStep(3))->getFullname();
         } else {
             $workflow4User = '-';
         }
@@ -120,7 +158,7 @@ class SingleProcess extends APresenter {
 
                     if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
                         // is last
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:performAction', 'id' => $process->getId()), 'Delete document');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:finish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
                     } else {
                         $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:approve', 'id' => $process->getId()), 'Approve');
                         $actions[] = '<br>';

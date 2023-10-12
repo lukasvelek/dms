@@ -32,8 +32,13 @@ class Document extends AEntity {
      * @var int
      */
     private $idGroup;
+
+    /**
+     * @var int
+     */
+    private $isDeleted;
     
-    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup) {
+    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted) {
         parent::__construct($id, $dateCreated);
 
         $this->idAuthor = $idAuthor;
@@ -42,6 +47,7 @@ class Document extends AEntity {
         $this->status = $status;
         $this->idManager = $idManager;
         $this->idGroup = $idGroup;
+        $this->isDeleted = $isDeleted;
     }
 
     public function getIdAuthor() {
@@ -66,7 +72,11 @@ class Document extends AEntity {
 
     public function getIdGroup() {
         return $this->idGroup;
-    }    
+    }
+
+    public function getIsDeleted() {
+        return $this->isDeleted;
+    }
 }
 
 ?>

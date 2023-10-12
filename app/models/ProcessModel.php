@@ -12,6 +12,38 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateStatus(int $idProcess, int $status) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('processes')
+                     ->set(array(
+                        'status' => ':status'
+                     ))
+                     ->setParam(':status', $status)
+                     ->where('id=:id')
+                     ->setParam(':id', $idProcess)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function updateWorkflowStatus(int $idProcess, int $status) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('processes')
+                     ->set(array(
+                        'workflow_status' => ':status'
+                     ))
+                     ->setParam(':status', $status)
+                     ->where('id=:id')
+                     ->setParam(':id', $idProcess)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getProcessById(int $id) {
         $qb = $this->qb(__METHOD__);
 
@@ -30,10 +62,15 @@ class ProcessModel extends AModel {
 
         $rows = $qb->select('*')
                    ->from('processes')
-                   ->where('workflow1=:id_user')
+                   ->whereNot('status=:status')
+                   ->setParam(':status', ProcessStatus::FINISHED)
+                   ->explicit('AND')
+                   ->leftBracket()
+                   ->where('workflow1=:id_user', false, false)
                    ->orWhere('workflow2=:id_user')
                    ->orWhere('workflow3=:id_user')
                    ->orWhere('workflow4=:id_user')
+                   ->rightBracket()
                    ->setParam(':id_user', $idUser)
                    ->execute()
                    ->fetch();

@@ -268,6 +268,12 @@ class QueryBuilder {
     return $this;
   }
 
+  public function explicit(string $text) {
+    $this->sql .= ' ' . $text . ' ';
+
+    return $this;
+  }
+
   public function orderBy(string $key, string $ascDesc = 'ASC') {
     $this->sql .= ' ORDER BY `' . $key . '` ' . $ascDesc;
 
@@ -286,8 +292,10 @@ class QueryBuilder {
     return $this;
   }
 
-  public function set(array $values) {
-    $this->sql .= ' SET ';
+  public function set(array $values, bool $showText = true) {
+    if($showText) {
+      $this->sql .= ' SET ';
+    }
 
     $i = 0;
     foreach($values as $k => $v) {
@@ -302,6 +310,25 @@ class QueryBuilder {
         }
       } else {
         $this->sql .= '`' . $k . '` = \'' . $value . '\'';
+      }
+
+      $i++;
+    }
+
+    return $this;
+  }
+
+  public function setNull(array $values, bool $showText = true) {
+    if($showText) {
+      $this->sql .= ' SET ';
+    }
+
+    $i = 0;
+    foreach($values as $value) {
+      if(($i + 1) == count($values)) {
+        $this->sql .= '`' . $value . '` = NULL';
+      } else {
+        $this->sql .= '`' . $value . '` = NULL, ';
       }
 
       $i++;

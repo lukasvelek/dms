@@ -36,7 +36,11 @@ class PanelAuthorizator extends AAuthorizator {
 
             $cm->saveToCache($rights);
 
-            $result = $rights[$panelName];
+            if(array_key_exists($panelName, $rights)) {
+                $result = $rights[$panelName];
+            } else {
+                $result = 0;
+            }
         }
 
         return /*$rights[$panelName]*/ $result ? true : false;

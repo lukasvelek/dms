@@ -122,19 +122,19 @@ class Processes extends APresenter {
                 }
 
                 if($process->getWorkflowStep(1) != null) {
-                    $workflow2User = $app->userModel->getUserById($process->getWorkflowStep(0))->getFullname();
+                    $workflow2User = $app->userModel->getUserById($process->getWorkflowStep(1))->getFullname();
                 } else {
                     $workflow2User = '-';
                 }
 
                 if($process->getWorkflowStep(2) != null) {
-                    $workflow3User = $app->userModel->getUserById($process->getWorkflowStep(0))->getFullname();
+                    $workflow3User = $app->userModel->getUserById($process->getWorkflowStep(2))->getFullname();
                 } else {
                     $workflow3User = '-';
                 }
 
                 if($process->getWorkflowStep(3) != null) {
-                    $workflow4User = $app->userModel->getUserById($process->getWorkflowStep(0))->getFullname();
+                    $workflow4User = $app->userModel->getUserById($process->getWorkflowStep(3))->getFullname();
                 } else {
                     $workflow4User = '-';
                 }
