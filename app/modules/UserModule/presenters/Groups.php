@@ -57,8 +57,6 @@ class Groups extends APresenter {
         $id = htmlspecialchars($_GET['id']);
         $group = $app->groupModel->getGroupById($id);
 
-        $users = $app->groupUserModel->getGroupUsersByGroupId($id);
-
         $data = array(
             '$PAGE_TITLE$' => 'Users in group <i>' . $group->getName() . '</i>',
             '$GROUP_GRID$' => $this->internalCreateGroupGrid($id)
