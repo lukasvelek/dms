@@ -340,7 +340,8 @@ class Settings extends APresenter {
         } else {
             foreach($users as $user) {
                 $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile')
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile'),
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId()), 'User rights')
                 );
 
                 if(is_null($headerRow)) {
