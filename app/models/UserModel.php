@@ -11,6 +11,20 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getUserForFirstLoginByUsername(string $username) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('users')
+                  ->where('username=:username')
+                  ->explicit('AND `password` IS NULL')
+                  ->setParam(':username', $username)
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->getUserObjectFromDbRow($row);
+    }
+
     public function getLastInsertedUser() {
         $qb = $this->qb(__METHOD__);
 

@@ -48,7 +48,7 @@ class DatabaseInstaller {
                 'firstname' => 'VARCHAR(256) NOT NULL',
                 'lastname' => 'VARCHAR(256) NOT NULL',
                 'username' => 'VARCHAR(256) NOT NULL',
-                'password' => 'VARCHAR(256) NOT NULL',
+                'password' => 'VARCHAR(256) NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'email' => 'VARCHAR(256) NULL',
                 'address_street' => 'VARCHAR(256) NULL',

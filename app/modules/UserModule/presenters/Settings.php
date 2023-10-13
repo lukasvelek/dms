@@ -185,7 +185,7 @@ class Settings extends APresenter {
         $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
 
         $app->userModel->insertUserFromArray($data);
-        $idUser = $app->userModel->getLastInsertedUser();
+        $idUser = $app->userModel->getLastInsertedUser()->getId();
 
         $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
     }

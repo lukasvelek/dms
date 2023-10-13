@@ -7,6 +7,7 @@ use \DMS\Modules\IModule;
 use \DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
 use \DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\LinkBuilder;
 
 class LoginPage extends APresenter {
     /**
@@ -49,6 +50,7 @@ class LoginPage extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Login form',
+            '$FIRST_LOGIN_LINK$' => LinkBuilder::createLink('AnonymModule:LoginPage:showFirstLoginForm', 'First login'),
             '$FORM$' => $this->internalRenderForm()
         );
 
@@ -57,6 +59,130 @@ class LoginPage extends APresenter {
         $_SESSION['login_in_process'] = true;
 
         return $template;
+    }
+
+    protected function tryLogin() {
+        $username = htmlspecialchars($_POST['username']);
+        $password = htmlspecialchars($_POST['password']);
+        
+        global $app;
+
+        $userAuthenticator = $app->getComponent('userAuthenticator');
+
+        $authResult = $userAuthenticator->authUser($username, $password);
+
+        if($authResult != false) {
+            $_SESSION['id_current_user'] = $authResult;
+            $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60))); // 1 day
+
+            unset($_SESSION['login_in_process']);
+
+            $app->redirect('UserModule:HomePage:showHomepage');
+        }
+    }
+
+    protected function showFirstLoginForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/GeneralForm.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'First login',
+            '$FIRST_LOGIN_LINK$' => LinkBuilder::createLink('AnonymModule:LoginPage:showForm', 'General login'),
+            '$FORM$' => $this->internalCreateFirstLoginForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function findUser() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/GeneralForm.html');
+
+        $username = htmlspecialchars($_POST['username']);
+
+        $user = $app->userModel->getUserForFirstLoginByUsername($username);
+
+        $data = [];
+
+        if($user === NULL) {
+            $data = array(
+                '$PAGE_TITLE$' => '',
+                '$FIRST_LOGIN_LINK$' => '',
+                '$FORM$' => 'User with username \'' . $username . '\' does not exist!'
+            );
+        } else {
+            // check for difference between passwords
+            $script = '
+                <script type="text/javascript">
+                    var pass1 = document.getElementById("password1");
+                    var pass2 = document.getElementById("password2");
+
+                    pass1.oninput = function() {
+                        if(pass2.value != "") {
+                            if(pass1.value != pass2.value) {
+                                alert("passwords do not match");
+                            }
+                        }
+                    }
+                </script>
+            ';
+
+            $data = array(
+                '$PAGE_TITLE$' => 'Create password for user \'' . $username . '\'',
+                '$FIRST_LOGIN_LINK$' => LinkBuilder::createLink('AnonymModule:LoginPage:showForm', 'General login'),
+                '$FORM$' => $this->internalCreatePasswordForm($user->getId()) . $script
+            );
+        }
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    private function internalCreatePasswordForm(int $id) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setAction('?page=AnonymModule:LoginPage:savePassword&id=' . $id)->setMethod('POST')
+            ->addElement($fb->createLabel()->setText('Password')
+                                           ->setFor('password1'))
+            ->addElement($fb->createInput()->setType('password')
+                                           ->setName('password1')
+                                           ->setMaxLength('256')
+                                           ->require()
+                                           ->setId('password1'))
+            ->addElement($fb->createLabel()->setText('Password again')
+                                           ->setFor('password2'))
+            ->addElement($fb->createInput()->setType('password')
+                                           ->setName('password2')
+                                           ->setMaxLength('256')
+                                           ->require()
+                                           ->setId('password2'))
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        $form = $fb->build();
+
+        return $form;
+    }
+
+    private function internalCreateFirstLoginForm() {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setAction('?page=AnonymModule:LoginPage:findUser')->setMethod('POST')
+            ->addElement($fb->createLabel()->setText('Username')
+                                           ->setFor('username'))
+            ->addElement($fb->createInput()->setType('text')
+                                           ->setName('username')
+                                           ->setMaxLength('256')
+                                           ->require())
+            ->addElement($fb->createSubmit('Look up user'))
+        ;
+
+        $form = $fb->build();
+
+        return $form;
     }
 
     private function internalRenderForm() {
@@ -81,26 +207,6 @@ class LoginPage extends APresenter {
         $form = $fb->build();
 
         return $form;
-    }
-
-    protected function tryLogin() {
-        $username = htmlspecialchars($_POST['username']);
-        $password = htmlspecialchars($_POST['password']);
-        
-        global $app;
-
-        $userAuthenticator = $app->getComponent('userAuthenticator');
-
-        $authResult = $userAuthenticator->authUser($username, $password);
-
-        if($authResult != false) {
-            $_SESSION['id_current_user'] = $authResult;
-            $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60))); // 1 day
-
-            unset($_SESSION['login_in_process']);
-
-            $app->redirect('UserModule:HomePage:showHomepage');
-        }
     }
 }
 
