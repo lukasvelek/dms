@@ -3,6 +3,7 @@
 namespace DMS\Modules\AnonymModule;
 
 use DMS\Core\Logger\LogCategoryEnum;
+use DMS\Core\ScriptLoader;
 use \DMS\Modules\IModule;
 use \DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
@@ -113,26 +114,10 @@ class LoginPage extends APresenter {
                 '$FORM$' => 'User with username \'' . $username . '\' does not exist!'
             );
         } else {
-            // check for difference between passwords
-            $script = '
-                <script type="text/javascript">
-                    var pass1 = document.getElementById("password1");
-                    var pass2 = document.getElementById("password2");
-
-                    pass1.oninput = function() {
-                        if(pass2.value != "") {
-                            if(pass1.value != pass2.value) {
-                                alert("passwords do not match");
-                            }
-                        }
-                    }
-                </script>
-            ';
-
             $data = array(
                 '$PAGE_TITLE$' => 'Create password for user \'' . $username . '\'',
-                '$FIRST_LOGIN_LINK$' => LinkBuilder::createLink('AnonymModule:LoginPage:showForm', 'General login'),
-                '$FORM$' => $this->internalCreatePasswordForm($user->getId()) . $script
+                '$FIRST_LOGIN_LINK$' => '<p id="msg"></p>' . LinkBuilder::createLink('AnonymModule:LoginPage:showForm', 'General login'),
+                '$FORM$' => $this->internalCreatePasswordForm($user->getId()) . ScriptLoader::loadJSScript('/dms/js/FirstLoginPage.js')
             );
         }
 
