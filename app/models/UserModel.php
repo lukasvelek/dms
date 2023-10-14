@@ -11,6 +11,19 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateUserPassword(int $id, string $hashedPassword) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('users')
+                     ->set(array('password' => ':password'))
+                     ->where('id=:id')
+                     ->setParams(array(':password' => $hashedPassword, ':id' => $id))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getUserForFirstLoginByUsername(string $username) {
         $qb = $this->qb(__METHOD__);
 

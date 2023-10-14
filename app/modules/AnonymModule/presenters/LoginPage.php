@@ -126,6 +126,25 @@ class LoginPage extends APresenter {
         return $template;
     }
 
+    protected function savePassword() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $password1 = htmlspecialchars($_POST['password1']);
+        $password2 = htmlspecialchars($_POST['password2']);
+
+        if($password1 !== $password2) {
+            die('password do not match!');
+        }
+
+        $password = password_hash($password1, PASSWORD_BCRYPT);
+
+        $app->userModel->updateUserPassword($id, $password);
+
+        $app->redirect('AnonymModule:LoginPage:showForm');
+    }
+
     private function internalCreatePasswordForm(int $id) {
         $fb = FormBuilder::getTemporaryObject();
 
@@ -144,7 +163,7 @@ class LoginPage extends APresenter {
                                            ->setMaxLength('256')
                                            ->require()
                                            ->setId('password2'))
-            ->addElement($fb->createSubmit('Save'))
+            ->addElement($fb->createSubmit()->setId('submit'))
         ;
 
         $form = $fb->build();

@@ -104,6 +104,11 @@ class FormBuilder {
     return $singleLineCode;
   }
 
+  /**
+   * Method returns a temporary object with NULL parameters.
+   * 
+   * @return FormBuilder
+   */
   public static function getTemporaryObject() {
     return new self();
   }
