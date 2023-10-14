@@ -10,6 +10,12 @@ class UserRightModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertActionRightsForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        //$result = $qb->insert('user_action_rights')
+    }
+
     public function getActionRightsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 

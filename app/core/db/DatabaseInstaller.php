@@ -2,6 +2,9 @@
 
 namespace DMS\Core\DB;
 
+use DMS\Constants\BulkActionRights;
+use DMS\Constants\PanelRights;
+use DMS\Constants\UserActionRights;
 use DMS\Core\Logger\Logger;
 
 class DatabaseInstaller {
@@ -172,13 +175,7 @@ class DatabaseInstaller {
 
     private function insertDefaultUserPanelRights() {
         $idUsers = array();
-        $panels = array(
-            'settings',
-            'documents',
-            'processes',
-            'settings.users',
-            'settings.groups'
-        );
+        $panels = PanelRights::$all;
 
         $userPanels = array();
         $dbUserPanels = array();
@@ -235,11 +232,7 @@ class DatabaseInstaller {
 
     private function insertDefaultUserBulkActionRights() {
         $idUsers = array();
-        $actions = array(
-            'delete_documents',
-            'approve_archivation',
-            'decline_archivation'
-        );
+        $actions = BulkActionRights::$all;
 
         $userActions = array();
         $dbUserActions = array();
@@ -296,10 +289,7 @@ class DatabaseInstaller {
 
     private function insertDefaultUserActionRights() {
         $idUsers = array();
-        $actions = array(
-            'create_user',
-            'create_group'
-        );
+        $actions = UserActionRights::$all;
 
         $userActions = array();
         $dbUserActions = array();

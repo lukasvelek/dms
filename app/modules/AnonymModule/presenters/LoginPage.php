@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\AnonymModule;
 
+use DMS\Constants\UserStatus;
 use DMS\Core\Logger\LogCategoryEnum;
 use DMS\Core\ScriptLoader;
 use \DMS\Modules\IModule;
@@ -141,6 +142,7 @@ class LoginPage extends APresenter {
         $password = password_hash($password1, PASSWORD_BCRYPT);
 
         $app->userModel->updateUserPassword($id, $password);
+        $app->userModel->updateUserStatus($id, UserStatus::ACTIVE);
 
         $app->redirect('AnonymModule:LoginPage:showForm');
     }

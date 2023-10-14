@@ -98,11 +98,20 @@ class Users extends APresenter {
 
         $rights = [];
 
-        $actionRights = $app->userRightModel->getActionRightsForIdUser($app->user->getId());
+        $actionRights = $app->userRightModel->getActionRightsForIdUser($idUser);
+        $panelRights = $app->userRightModel->getPanelRightsForIdUser($idUser);
 
         foreach($actionRights as $name => $value) {
             $rights[] = array(
                 'type' => 'action',
+                'name' => $name,
+                'value' => $value
+            );
+        }
+
+        foreach($panelRights as $name => $value) {
+            $rights[] = array(
+                'type' => 'panel',
                 'name' => $name,
                 'value' => $value
             );
@@ -122,6 +131,11 @@ class Users extends APresenter {
                 case 'action':
                     $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowActionRight', 'name' => $name), 'Allow');
                     $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyActionRight', 'name' => $name), 'Deny');
+                    break;
+
+                case 'panel':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowPanelRight', 'name' => $name), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyPanelRight', 'name' => $name), 'Deny');
                     break;
             }
 
