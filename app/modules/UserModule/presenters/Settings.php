@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\TemplateManager;
 use DMS\Helpers\ArrayStringHelper;
@@ -328,9 +329,12 @@ class Settings extends APresenter {
         } else {
             foreach($users as $user) {
                 $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId()), 'User rights')
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile')
                 );
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId()), 'User rights');
+                }
 
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();

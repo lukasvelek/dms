@@ -62,7 +62,7 @@ class CacheManager {
 
         $name = $app->user->getId() . date('Y-m-d');
 
-        $file = md5($name);
+        $file = md5($name) . '.tmp';
 
         return $file;
     }

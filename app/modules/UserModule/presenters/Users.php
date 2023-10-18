@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
 use DMS\Core\TemplateManager;
@@ -61,6 +62,10 @@ class Users extends APresenter {
 
     protected function showUserRights() {
         global $app;
+
+        if(!$app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS)) {
+            $app->redirect('UserModule:Settings:showUsers');
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-rights-grid.html');
 
