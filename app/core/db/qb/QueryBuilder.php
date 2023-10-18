@@ -11,45 +11,35 @@ namespace QueryBuilder;
 class QueryBuilder {
   /**
    * Connection to the database server
-   * 
-   * @var IDbQueriable
    */
-  private $conn;
+  private IDbQueriable $conn;
 
   /**
    * Logger instance
-   * 
-   * @var ILoggerCallable
    */
-  private $logger;
+  private ILoggerCallable $logger;
 
   /**
    * SQL string
-   * 
-   * @var string
    */
-  private $sql;
+  private string $sql;
 
   /**
    * Query result
-   * 
-   * @var array
    */
-  private $queryResult;
+  private array $queryResult;
 
   /**
    * Method the Query Builder is called from
-   * 
-   * @var string
    */
-  private $method;
+  private string $method;
 
   /**
    * Variables array
    * Indexed by variable names and values are variable values
    * E.g.: $variables['foo'] = 'bar'; would be the same as $foo = 'bar';
    */
-  private $variables;
+  private array $variables;
 
   public function __construct(IDbQueriable $conn, ?ILoggerCallable $logger = null, ?string $method = '') {
     if(!($conn instanceof IDbQueriable)) {

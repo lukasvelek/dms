@@ -8,15 +8,8 @@ use DMS\Constants\UserActionRights;
 use DMS\Core\Logger\Logger;
 
 class DatabaseInstaller {
-    /**
-     * @var Database
-     */
-    private $db;
-
-    /**
-     * @var DMS\Core\Logger\Logger
-     */
-    private $logger;
+    private Database $db;
+    private Logger $logger;
 
     public const DEFAULT_USERS = array(
         'admin'

@@ -3,15 +3,8 @@
 namespace DMS\Core;
 
 class FileManager {
-    /**
-     * @var string
-     */
-    private $logFolder;
-
-    /**
-     * @var string
-     */
-    private $cacheFolder;
+    private string $logFolder;
+    private string $cacheFolder;
 
     public function __construct(string $logFolder, string $cacheFolder) {
         if(is_dir($logFolder) || $logFolder == '') {
@@ -27,12 +20,35 @@ class FileManager {
         }
     }
 
+    /**
+     * Saves a cache file to the cache folder
+     * 
+     * @param string $file filename
+     * @param string $data serialized cache data
+     * @return bool true if data was written and false if it was not written
+     */
     public function writeCache(string $file, string $data) {
         return $this->write($this->cacheFolder . $file, $data, true);
     }
 
+    /**
+     * Reads a cache file from the cache folder
+     * 
+     * @param string $file filename
+     * @return string|bool string if file is successfully loaded and false if it does not exist
+     */
     public function readCache(string $file) {
         return $this->read($this->cacheFolder . $file);
+    }
+
+    /**
+     * Invalidates a cache file by deleting it
+     * 
+     * @param string $file filename
+     * @return bool true if the operation was successful and false if it was not
+     */
+    public function invalidateCache(string $file) {
+        return $this->deleteFile($this->cacheFolder . $file);
     }
 
     /**
@@ -114,6 +130,27 @@ class FileManager {
         return false;
     }
 
+    /**
+     * Deletes a defined file
+     * 
+     * @param string $file filename
+     * @return bool returns true if file was deleted and false if it does not exist
+     */
+    public function deleteFile(string $file) {
+        if($this->fileExists($file)) {
+            unlink($file);
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns temporary object with empty parameters -> log folder and cache folder is not set
+     * 
+     * @return FileManager self
+     */
     public static function getTemporaryObject() {
         return new self('', '');
     }

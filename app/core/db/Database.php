@@ -2,31 +2,26 @@
 
 namespace DMS\Core\DB;
 
+use DMS\Core\Logger\Logger;
 use QueryBuilder\IDbQueriable;
 
 class Database implements IDbQueriable {
-    /**
-     * @var array
-     */
-    private $config;
+    public DatabaseInstaller $installer;
 
+    /**
+     * Configuration file
+     */
+    private array $config;
+
+    private int $transactionCount;
+    
+    /**
+     * Connection to the database server
+     */
     private $conn;
-
-    /**
-     * @var \DMS\Core\Logger\Logger
-     */
-    private $logger;
-
-    /**
-     * @var int
-     */
-    private $transactionCount;
-
-    /**
-     * @var DatabaseInstaller
-     */
-    public $installer;
-
+    
+    private Logger $logger;
+    
     public function __construct(string $dbServer, string $dbUser, string $dbPass, ?string $dbName, \DMS\Core\Logger\Logger $logger) {
         $this->config = array();
         $this->conn = null;

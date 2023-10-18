@@ -2,16 +2,12 @@
 
 namespace DMS\Components\Process;
 
-class DeleteProcess implements IProcessComponent {
-    /**
-     * @var Process
-     */
-    private $process;
+use DMS\Entities\Document;
+use DMS\Entities\Process;
 
-    /**
-     * @var Document
-     */
-    private $document;
+class DeleteProcess implements IProcessComponent {
+    private Process $process;
+    private Document $document;
 
     public function __construct(int $idProcess) {
         global $app;

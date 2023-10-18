@@ -3,10 +3,7 @@
 namespace DMS\Core;
 
 class TemplateManager {
-    /**
-     * @var FileManager
-     */
-    private $fileManager;
+    private FileManager $fileManager;
 
     public function __construct(FileManager $fileManager) {
         $this->fileManager = $fileManager;

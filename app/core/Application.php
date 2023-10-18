@@ -28,105 +28,33 @@ class Application {
     public const URL_DOCUMENTS_PAGE = 'UserModule:Documents:showAll';
     public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
 
-    /**
-     * @var array
-     */
-    public $cfg;
+    public array $cfg;
+    public string $currentUrl;
 
-    /**
-     * @var User
-     */
-    public $user;
+    public User $user;
+    public Logger $logger;
+    public FileManager $fileManager;
+    
+    public UserAuthenticator $userAuthenticator;
 
-    /**
-     * @var Logger
-     */
-    public $logger;
+    public UserModel $userModel;
+    public UserRightModel $userRightModel;
+    public DocumentModel $documentModel;
+    public GroupModel $groupModel;
+    public GroupUserModel $groupUserModel;
+    public ProcessModel $processModel;
 
-    /**
-     * @var FileManager
-     */
-    public $fileManager;
+    public PanelAuthorizator $panelAuthorizator;
+    public BulkActionAuthorizator $bulkActionAuthorizator;
+    public DocumentAuthorizator $documentAuthorizator;
+    public ActionAuthorizator $actionAuthorizator;
 
-    /**
-     * @var string
-     */
-    public $currentUrl;
+    public ProcessComponent $processComponent;
 
-    /**
-     * @var array<IModule>
-     */
-    private $modules;
+    private array $modules;
+    private string $pageContent;
 
-    /**
-     * @var string
-     */
-    private $pageContent;
-
-    /**
-     * @var Database
-     */
-    private $conn;
-
-    /**
-     * @var UserAuthenticator
-     */
-    public $userAuthenticator;
-
-    /**
-     * @var UserModel
-     */
-    public $userModel;
-
-    /**
-     * @var UserRightModel
-     */
-    public $userRightModel;
-
-    /**
-     * @var DocumentModel
-     */
-    public $documentModel;
-
-    /**
-     * @var GroupModel
-     */
-    public $groupModel;
-
-    /**
-     * @var GroupUserModel
-     */
-    public $groupUserModel;
-
-    /**
-     * @var ProcessModel
-     */
-    public $processModel;
-
-    /**
-     * @var PanelAuthorizator
-     */
-    public $panelAuthorizator;
-
-    /**
-     * @var BulkActionAuthorizator
-     */
-    public $bulkActionAuthorizator;
-
-    /**
-     * @var DocumentAuthorizator
-     */
-    public $documentAuthorizator;
-
-    /**
-     * @var ActionAuthorizator
-     */
-    public $actionAuthorizator;
-
-    /**
-     * @var ProcessComponent
-     */
-    public $processComponent;
+    private Database $conn;
 
     public function __construct(array $cfg) {
         $this->cfg = $cfg;

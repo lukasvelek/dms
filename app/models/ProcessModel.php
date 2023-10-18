@@ -64,7 +64,7 @@ class ProcessModel extends AModel {
                    ->from('processes')
                    ->whereNot('status=:status')
                    ->setParam(':status', ProcessStatus::FINISHED)
-                   ->explicit('AND')
+                   ->explicit(' AND')
                    ->leftBracket()
                    ->where('workflow1=:id_user', false, false)
                    ->orWhere('workflow2=:id_user')

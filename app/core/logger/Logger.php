@@ -2,15 +2,13 @@
 
 namespace DMS\Core\Logger;
 
+use DMS\Core\FileManager;
 use QueryBuilder\ILoggerCallable;
 
 class Logger implements ILoggerCallable {
-    /**
-     * @var \DMS\Core\FileManager
-     */
-    private $fileManager;
+    private FileManager $fileManager;
 
-    public function __construct(\DMS\Core\FileManager $fm) {
+    public function __construct(FileManager $fm) {
         $this->fileManager = $fm;
     }
 

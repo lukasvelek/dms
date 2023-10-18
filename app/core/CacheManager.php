@@ -3,10 +3,7 @@
 namespace DMS\Core;
 
 class CacheManager {
-    /**
-     * @var FileManager
-     */
-    private $fm;
+    private FileManager $fm;
 
     public function __construct() {
         $this->fm = new FileManager('logs/', 'cache/');
@@ -15,9 +12,7 @@ class CacheManager {
     public function saveToCache(array $data) {
         $file = $this->createFilename();
 
-        $cacheData = $this->fm->readCache($file);
-
-        $cacheData = unserialize($cacheData);
+        $cacheData = unserialize($this->fm->readCache($file));
 
         foreach($data as $key => $value) {
             $cacheData[$key] = $value;
@@ -42,6 +37,20 @@ class CacheManager {
         } else {
             return null;
         }
+    }
+
+    public function invalidateCache() {
+        $file = $this->createFilename();
+        
+        return $this->fm->invalidateCache($file);
+    }
+
+    public function loadCache() {
+        $file = $this->createFilename();
+
+        $data = unserialize($this->fm->readCache($file));
+
+        return $data;
     }
 
     public static function getTemporaryObject() {

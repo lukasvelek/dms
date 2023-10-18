@@ -10,6 +10,66 @@ class UserRightModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateBulkActionRight(int $idUser, string $rightName, bool $status) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('user_bulk_rights')
+                     ->set(array(
+                        'is_executable' => ':execute'
+                     ))
+                     ->where('id_user=:id_user')
+                     ->andWhere('action_name=:name')
+                     ->setParams(array(
+                        ':id_user' => $idUser,
+                        ':name' => $rightName,
+                        ':execute' => $status ? '1' : '0'
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function updatePanelRight(int $idUser, string $rightName, bool $status) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('user_panel_rights')
+                     ->set(array(
+                        'is_visible' => ':visible'
+                     ))
+                     ->where('id_user=:id_user')
+                     ->andWhere('panel_name=:name')
+                     ->setParams(array(
+                        ':id_user' => $idUser,
+                        ':name' => $rightName,
+                        ':visible' => $status ? '1' : '0'
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function updateActionRight(int $idUser, string $rightName, bool $status) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('user_action_rights')
+                     ->set(array(
+                        'is_executable' => ':execute'
+                     ))
+                     ->where('id_user=:id_user')
+                     ->andWhere('action_name=:name')
+                     ->setParams(array(
+                        ':id_user' => $idUser,
+                        ':name' => $rightName,
+                        ':execute' => $status ? '1' : '0'
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function insertActionRightsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 

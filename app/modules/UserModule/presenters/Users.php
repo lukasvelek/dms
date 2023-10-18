@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\UserStatus;
+use DMS\Core\CacheManager;
 use DMS\Core\TemplateManager;
 use DMS\Entities\User;
 use DMS\Modules\APresenter;
@@ -93,6 +94,7 @@ class Users extends APresenter {
         $tb = TableBuilder::getTemporaryObject();
 
         $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('Actions')->setBold()->setColspan('2'))
+                                    ->addCol($tb->createCol()->setText('Type')->setBold())
                                     ->addCol($tb->createCol()->setText('Right name')->setBold())
                                     ->addCol($tb->createCol()->setText('Status')->setBold()));
 
@@ -100,10 +102,19 @@ class Users extends APresenter {
 
         $actionRights = $app->userRightModel->getActionRightsForIdUser($idUser);
         $panelRights = $app->userRightModel->getPanelRightsForIdUser($idUser);
+        $bulkActionRights = $app->userRightModel->getBulkActionRightsForIdUser($idUser);
 
         foreach($actionRights as $name => $value) {
             $rights[] = array(
                 'type' => 'action',
+                'name' => $name,
+                'value' => $value
+            );
+        }
+
+        foreach($bulkActionRights as $name => $value) {
+            $rights[] = array(
+                'type' => 'bulk',
                 'name' => $name,
                 'value' => $value
             );
@@ -137,12 +148,21 @@ class Users extends APresenter {
                     $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowPanelRight', 'name' => $name), 'Allow');
                     $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyPanelRight', 'name' => $name), 'Deny');
                     break;
+
+                case 'bulk':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowBulkActionRight', 'name' => $name), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyBulkActionRight', 'name' => $name), 'Deny');
+                    break;
             }
+
+            $allowedText = '<span style="color: green">Allowed</span>';
+            $deniedText = '<span style="color: red">Denied</span>';
 
             $row->addCol($tb->createCol()->setText($allowLink))
                 ->addCol($tb->createCol()->setText($denyLink))
+                ->addCol($tb->createCol()->setText($type))
                 ->addCol($tb->createCol()->setText($name))
-                ->addCol($tb->createCol()->setText($value ? 'Allowed' : 'Denied'))
+                ->addCol($tb->createCol()->setText($value ? $allowedText : $deniedText))
             ;
 
             $tb->addRow($row);
@@ -151,6 +171,90 @@ class Users extends APresenter {
         $table = $tb->build();
 
         return $table;
+    }
+
+    protected function allowActionRight() {
+        global $app;
+
+        $name = htmlspecialchars($_GET['name']);
+        $idUser = $app->user->getId();
+
+        $app->userRightModel->updateActionRight($idUser, $name, true);
+
+        $cm = CacheManager::getTemporaryObject();
+        $cm->invalidateCache();
+
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+    }
+
+    protected function denyActionRight() {
+        global $app;
+
+        $name = htmlspecialchars($_GET['name']);
+        $idUser = $app->user->getId();
+
+        $app->userRightModel->updateActionRight($idUser, $name, false);
+
+        $cm = CacheManager::getTemporaryObject();
+        $cm->invalidateCache();
+
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+    }
+
+    protected function allowPanelRight() {
+        global $app;
+
+        $name = htmlspecialchars($_GET['name']);
+        $idUser = $app->user->getId();
+
+        $app->userRightModel->updatePanelRight($idUser, $name, true);
+
+        $cm = CacheManager::getTemporaryObject();
+        $cm->invalidateCache();
+
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+    }
+
+    protected function denyPanelRight() {
+        global $app;
+
+        $name = htmlspecialchars($_GET['name']);
+        $idUser = $app->user->getId();
+
+        $app->userRightModel->updatePanelRight($idUser, $name, false);
+
+        $cm = CacheManager::getTemporaryObject();
+        $cm->invalidateCache();
+
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+    }
+
+    protected function allowBulkActionRight() {
+        global $app;
+
+        $name = htmlspecialchars($_GET['name']);
+        $idUser = $app->user->getId();
+
+        $app->userRightModel->updateBulkActionRight($idUser, $name, true);
+
+        $cm = CacheManager::getTemporaryObject();
+        $cm->invalidateCache();
+
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+    }
+
+    protected function denyBulkActionRight() {
+        global $app;
+
+        $name = htmlspecialchars($_GET['name']);
+        $idUser = $app->user->getId();
+
+        $app->userRightModel->updateBulkActionRight($idUser, $name, false);
+
+        $cm = CacheManager::getTemporaryObject();
+        $cm->invalidateCache();
+
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
     }
 
     private function internalCreateUserProfileGrid(int $idUser) {
