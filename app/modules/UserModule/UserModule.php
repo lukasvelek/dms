@@ -6,20 +6,9 @@ use DMS\Modules\IModule;
 use DMS\Modules\IPresenter;
 
 class UserModule implements IModule {
-    /**
-     * @var IPresenter
-     */
-    public $currentPresenter;
-
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * @var array<IPresenters>
-     */
-    private $presenters;
+    public IPresenter $currentPresenter;
+    private string $name;
+    private array $presenters;
 
     public function __construct() {
         $this->name = 'UserModule';

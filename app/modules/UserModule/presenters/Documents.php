@@ -14,20 +14,9 @@ use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 class Documents extends APresenter {
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * @var TemplateManager
-     */
-    private $templateManager;
-
-    /**
-     * @var IModule
-     */
-    private $module;
+    private string $name;
+    private TemplateManager $templateManager;
+    private IModule $module;
 
     public const DRAW_TOPPANEL = true;
 

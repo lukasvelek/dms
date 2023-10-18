@@ -6,15 +6,8 @@ use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 
 abstract class AModel {
-    /**
-     * @var \DMS\Core\DB\Database
-     */
-    private $db;
-
-    /**
-     * @var \DMS\Core\Logger\Logger
-     */
-    private $logger;
+    private Database $db;
+    private Logger $logger;
 
     protected function __construct(Database $db, Logger $logger) {
         $this->db = $db;

@@ -3,15 +3,8 @@
 namespace DMS\Entities;
 
 abstract class AEntity {
-    /**
-     * @var int
-     */
-    protected $id;
-
-    /**
-     * @var string
-     */
-    protected $dateCreated;
+    protected int $id;
+    protected string $dateCreated;
 
     protected function __construct(int $id, string $dateCreated) {
         $this->id = $id;

@@ -12,20 +12,9 @@ use \DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 
 class LoginPage extends APresenter {
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * @var \DMS\Core\TemplateManager
-     */
-    private $templateManager;
-
-    /**
-     * @var \DMS\Modules\IModule
-     */
-    private $module;
+    private string $name;
+    private TemplateManager $templateManager;
+    private IModule $module;
 
     public const DRAW_TOPPANEL = true;
 

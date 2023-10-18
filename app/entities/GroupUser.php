@@ -3,25 +3,10 @@
 namespace DMS\Entities;
 
 class GroupUser {
-    /**
-     * @var int
-     */
-    private $id;
-
-    /**
-     * @var int
-     */
-    private $idGroup;
-
-    /**
-     * @var int
-     */
-    private $idUser;
-
-    /**
-     * @var bool
-     */
-    private $isManager;
+    private int $id;
+    private int $idGroup;
+    private int $idUser;
+    private bool $isManager;
 
     public function __construct(int $id, int $idGroup, int $idUser, bool $isManager) {
         $this->id = $id;

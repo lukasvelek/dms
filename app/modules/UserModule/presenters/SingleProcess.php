@@ -13,11 +13,9 @@ use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 class SingleProcess extends APresenter {
-    private $name;
-
-    private $templateManager;
-
-    private $module;
+    private string $name;
+    private TemplateManager $templateManager;
+    private IModule $module;
 
     public const DRAW_TOPPANEL = true;
 

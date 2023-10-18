@@ -3,40 +3,13 @@
 namespace DMS\Entities;
 
 class Document extends AEntity {
-    /**
-     * @var int
-     */
-    private $idAuthor;
-
-    /**
-     * @var int
-     */
-    private $idOfficer;
-
-    /**
-     * @var int
-     */
-    private $idManager;
-
-    /**
-     * @var string
-     */
-    private $name;
-    
-    /**
-     * @var int
-     */
-    private $status;
-
-    /**
-     * @var int
-     */
-    private $idGroup;
-
-    /**
-     * @var int
-     */
-    private $isDeleted;
+    private string $name;
+    private int $idAuthor;
+    private int $idOfficer;
+    private int $idManager;
+    private int $status;
+    private int $idGroup;
+    private int $isDeleted;
     
     public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted) {
         parent::__construct($id, $dateCreated);

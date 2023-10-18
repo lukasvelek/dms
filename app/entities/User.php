@@ -3,55 +3,16 @@
 namespace DMS\Entities;
 
 class User extends AEntity {
-    /**
-     * @var string
-     */
-    private $firstname;
-
-    /**
-     * @var string
-     */
-    private $lastname;
-
-    /**
-     * @var string|null
-     */
-    private $email;
-
-    /**
-     * @var int
-     */
-    private $status;
-
-    /**
-     * @var string|null
-     */
-    private $addressStreet;
-    
-    /**
-     * @var string|null
-     */
-    private $addressHouseNumber;
-
-    /**
-     * @var string|null
-     */
-    private $addressCity;
-    
-    /**
-     * @var string|null
-     */
-    private $addressZipCode;
-
-    /**
-     * @var string|null
-     */
-    private $addressCountry;
-
-    /**
-     * @var string
-     */
-    private $username;
+    private string $firstname;
+    private string $lastname;
+    private string $username;
+    private ?string $email;
+    private int $status;
+    private ?string $addressStreet;
+    private ?string $addressHouseNumber;
+    private ?string $addressCity;
+    private ?string $addressZipCode;
+    private ?string $addressCountry;
 
     public function __construct(int $id, string $dateCreated, string $firstname, string $lastname, string $username, ?string $email, int $status, ?string $addressStreet, ?string $addressHouseNumber, ?string $addressCity, ?string $addressZipCode, ?string $addressCountry) {
         parent::__construct($id, $dateCreated);

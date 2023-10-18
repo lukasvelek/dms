@@ -3,30 +3,11 @@
 namespace DMS\Entities;
 
 class Process extends AEntity {
-    /**
-     * @var int
-     */
-    private $idDocument;
-
-    /**
-     * @var array
-     */
-    private $workflow;
-
-    /**
-     * @var int
-     */
-    private $workflowStatus;
-
-    /**
-     * @var int
-     */
-    private $type;
-
-    /**
-     * @var int
-     */
-    private $status;
+    private array $workflow;
+    private int $idDocument;
+    private int $workflowStatus;
+    private int $type;
+    private int $status;
 
     public function __construct(int $id, string $dateCreated, int $idDocument, ?int $workflow1, ?int $workflow2, ?int $workflow3, ?int $workflow4, ?int $workflowStatus, int $type, int $status) {
         parent::__construct($id, $dateCreated);

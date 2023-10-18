@@ -7,20 +7,9 @@ use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 
 class UserLogout extends APresenter {
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * @var DMS\Core\TemplateManager
-     */
-    private $templateManager;
-
-    /**
-     * @var DMS\Modules\IModule
-     */
-    private $module;
+    private string $name;
+    private TemplateManager $templateManager;
+    private IModule $module;
 
     public const DRAW_TOPPANEL = true;
 

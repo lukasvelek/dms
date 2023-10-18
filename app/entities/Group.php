@@ -3,15 +3,8 @@
 namespace DMS\Entities;
 
 class Group extends AEntity {
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * @var string|null
-     */
-    private $code;
+    private string $name;
+    private ?string $code;
 
     public function __construct(int $id, string $dateCreated, string $name, ?string $code) {
         parent::__construct($id, $dateCreated);
