@@ -91,7 +91,7 @@ class DatabaseInstaller {
             ),
             'processes' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'id_document' => 'INT(32) NOT NULL',
+                'id_document' => 'INT(32) NULL',
                 'workflow1' => 'INT(32) NULL',
                 'workflow2' => 'INT(32) NULL',
                 'workflow3' => 'INT(32) NULL',

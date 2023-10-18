@@ -58,7 +58,7 @@ class QueryBuilder {
     $this->logger = $logger;
     $this->sql = '';
     $this->variables = array();
-    $this->queryResult = null;
+    //$this->queryResult = null;
   }
 
   public function select(string ...$keys) {

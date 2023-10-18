@@ -6,6 +6,7 @@ use DMS\Constants\ProcessTypes;
 use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
+use DMS\Panels\Panels;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -34,11 +35,29 @@ class Processes extends APresenter {
         return $this->name;
     }
 
+    protected function showMenu() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/process-grid.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Process menu',
+            '$PROCESS_PANEL$' => Panels::createProcessesPanel()
+        );
+
+        $table = $this->internalCreateProcessMenuGrid();
+
+        $data['$PROCESS_GRID$'] = $table;
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showAll() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/process-grid.html');
 
         $data = array(
-            '$PAGE_TITLE$' => 'Processes'
+            '$PAGE_TITLE$' => 'Processes',
+            '$PROCESS_PANEL$' => Panels::createProcessesPanel()
         );
 
         $table = $this->internalCreateStandardProcessGrid();
@@ -48,6 +67,76 @@ class Processes extends APresenter {
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function newProcess() {
+        global $app;
+
+        $type = htmlspecialchars($_GET['type']);
+        $name = ProcessTypes::$texts[$type];
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/new-process.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New process: <i>' . $name . '</i>'
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    private function internalCreateProcessMenuGrid() {
+        global $app;
+
+        $tb = TableBuilder::getTemporaryObject();
+
+        $processes = array(
+            // array(name=>'', link => array(page, name))
+            array('name' => 'Home office', 'link' => array('page' => 'UserModule:Processes:newProcess', 'type' => ProcessTypes::HOME_OFFICE))
+        );
+
+        $cnt = count($processes);
+        $ccnt = 0;
+        for(;;) {
+            // rows
+
+            $row = $tb->createRow();
+
+            $max = 5;
+
+            if($cnt < $max) {
+                $max = count($processes);
+            }
+
+            for($cols = 0; $cols < $max; $cols++) {
+                $col = $tb->createCol();
+
+                $process = $processes[$ccnt];
+                //$name = $process['name'];
+                $link = LinkBuilder::createAdvLink($process['link'], $process['name']);
+
+                $text = $link;
+
+                $col->setText($text);
+
+                $row->addCol($col);
+            }
+
+            $tb->addRow($row);
+
+            $ccnt++;
+            
+            if($ccnt == $cnt) break;
+        }
+
+        foreach($processes as $name => $linkArray) {
+
+        }
+
+        $table = $tb->build();
+
+        return $table;
     }
 
     private function internalCreateStandardProcessGrid() {

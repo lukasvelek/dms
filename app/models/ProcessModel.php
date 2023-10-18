@@ -83,29 +83,77 @@ class ProcessModel extends AModel {
         return $processes;
     }
 
-    public function insertNewProcess(int $idDocument, int $type, ?array $workflow) {
+    public function insertEmptyProcess(int $type) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->insert('processes', 'type')
+                     ->values(':type')
+                     ->setParam(':type', $type)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function updateProcess(int $id, array $data) {
+        $qb = $this->qb(__METHOD__);
+
+        $sets = [];
+        $params = [];
+
+        foreach($data as $k => $v) {
+            $sets[] = $k . '=:' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $result = $qb->update('processes')
+                     ->set($sets)
+                     ->setParams($params)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function getLastInsertedIdProcess() {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('id')
+                  ->from('processes')
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle('id');
+
+        return $row;
+    }
+
+    public function insertNewProcess(?int $idDocument, int $type, ?array $workflow) {
         $qb = $this->qb(__METHOD__);
 
         $keys = array(
-            'id_document',
             'type',
             'status',
             'workflow_status'
         );
 
         $values = array(
-            ':id_document',
             ':type',
             ':status',
             ':workflow_status'
         );
 
         $params = array(
-            ':id_document' => $idDocument,
             ':type' => $type,
             ':status' => ProcessStatus::IN_PROGRESS,
             ':workflow_status' => '1'
         );
+
+        if(!is_null($idDocument)) {
+            $keys[] = 'id_document';
+            $values[] = ':id_document';
+            $params[':id_document'] = $idDocument;
+        }
 
         for($i = 0; $i < count($workflow); $i++) {
             $keys[] = 'workflow' . ($i + 1);

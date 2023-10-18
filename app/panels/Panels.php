@@ -6,12 +6,32 @@ use DMS\Core\TemplateManager;
 use DMS\UI\LinkBuilder;
 
 class Panels {
+    public static function createProcessesPanel() {
+        global $app;
+
+        $templateManager = self::tm();
+
+        $template = $templateManager->loadTemplate('app/panels/templates/general-subpanel.html');
+
+        $data = array(
+            '$LINKS$' => array(
+                '&nbsp;',
+                LinkBuilder::createLink('UserModule:Processes:showMenu', 'Menu'),
+                LinkBuilder::createLink('UserModule:Processes:showAll', 'All processes')
+            )
+        );
+    
+        $templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     public static function createSettingsPanel() {
         global $app;
 
         $templateManager = self::tm();
 
-        $template = $templateManager->loadTemplate('app/panels/templates/settingspanel.html');
+        $template = $templateManager->loadTemplate('app/panels/templates/general-subpanel.html');
 
         $data = array(
             '$LINKS$' => array(
