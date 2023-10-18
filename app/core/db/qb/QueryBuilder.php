@@ -27,7 +27,7 @@ class QueryBuilder {
   /**
    * Query result
    */
-  private array $queryResult;
+  private $queryResult;
 
   /**
    * Method the Query Builder is called from

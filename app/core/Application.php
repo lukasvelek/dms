@@ -29,9 +29,9 @@ class Application {
     public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
 
     public array $cfg;
-    public string $currentUrl;
+    public ?string $currentUrl;
 
-    public User $user;
+    public ?User $user;
     public Logger $logger;
     public FileManager $fileManager;
     
@@ -52,7 +52,7 @@ class Application {
     public ProcessComponent $processComponent;
 
     private array $modules;
-    private string $pageContent;
+    private ?string $pageContent;
 
     private Database $conn;
 
@@ -62,6 +62,7 @@ class Application {
         $this->currentUrl = null;
         $this->modules = array();
         $this->pageContent = null;
+        $this->user = null;
 
         $this->fileManager = new FileManager($this->cfg['log_dir'], $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager);

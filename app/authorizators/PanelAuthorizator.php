@@ -13,7 +13,7 @@ class PanelAuthorizator extends AAuthorizator {
 
     public function checkPanelRight(string $panelName) {
         global $app;
-        
+
         if(is_null($app->user)) {
             //die('User is not set');
             return false;
