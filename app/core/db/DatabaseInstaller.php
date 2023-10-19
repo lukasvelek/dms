@@ -106,6 +106,24 @@ class DatabaseInstaller {
                 'id_user' => 'INT(32) NOT NULL',
                 'action_name' => 'VARCHAR(256) NOT NULL',
                 'is_executable' => 'INT(2) DEFAULT 0'
+            ),
+            'group_action_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_group' => 'INT(32) NOT NULL',
+                'action_name' => 'VARCHAR(256) NOT NULL',
+                'is_executable' => 'INT(2) DEFAULT 0'
+            ),
+            'group_panel_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_group' => 'INT(32) NOT NULL',
+                'panel_name' => 'VARCHAR(256) NOT NULL',
+                'is_visible' => 'INT(2) DEFAULT 0'
+            ),
+            'group_bulk_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_group' => 'INT(32) NOT NULL',
+                'action_name' => 'VARCHAR(256) NOT NULL',
+                'is_executable' => 'INT(2) DEFAULT 0'
             )
         );
 

@@ -15,6 +15,7 @@ use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\DocumentModel;
 use DMS\Models\GroupModel;
+use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\ProcessModel;
 use DMS\Models\UserModel;
@@ -43,6 +44,7 @@ class Application {
     public GroupModel $groupModel;
     public GroupUserModel $groupUserModel;
     public ProcessModel $processModel;
+    public GroupRightModel $groupRightModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -76,6 +78,7 @@ class Application {
         $this->groupModel = new GroupModel($this->conn, $this->logger);
         $this->groupUserModel = new GroupUserModel($this->conn, $this->logger);
         $this->processModel = new ProcessModel($this->conn, $this->logger);
+        $this->groupRightModel = new GroupRightModel($this->conn, $this->logger);
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);

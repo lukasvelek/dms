@@ -138,6 +138,10 @@ class Settings extends APresenter {
         $app->groupModel->insertNewGroup($name, $code);
         $idGroup = $app->groupModel->getLastInsertedGroup()->getId();
 
+        $app->groupRightModel->insertActionRightsForIdGroup($idGroup);
+        $app->groupRightModel->insertPanelRightsForIdGroup($idGroup);
+        $app->groupRightModel->insertBulkActionRightsForIdGroup($idGroup);
+
         $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
     }
 
@@ -175,6 +179,10 @@ class Settings extends APresenter {
 
         $app->userModel->insertUserFromArray($data);
         $idUser = $app->userModel->getLastInsertedUser()->getId();
+
+        $app->userRightModel->insertActionRightsForIdUser($idUser);
+        $app->userRightModel->insertPanelRightsForIdUser($idUser);
+        $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
 
         $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
     }
@@ -259,6 +267,10 @@ class Settings extends APresenter {
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users')
                 );
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId()), 'Group rights');
+                }
 
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();

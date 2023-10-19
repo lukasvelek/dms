@@ -2,8 +2,12 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\BulkActionRights;
+use DMS\Constants\PanelRights;
+use DMS\Constants\UserActionRights;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Panels\Panels;
 
 class UserRightModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
@@ -71,9 +75,57 @@ class UserRightModel extends AModel {
     }
 
     public function insertActionRightsForIdUser(int $idUser) {
-        $qb = $this->qb(__METHOD__);
+        foreach(UserActionRights::$all as $r) {
+            $qb = $this->qb(__METHOD__);
 
-        //$result = $qb->insert('user_action_rights')
+            $result = $qb->insert('user_action_rights', 'id_user', 'action_name', 'is_executable')
+                         ->values(':id_user', ':name', ':execute')
+                         ->setParams(array(
+                            ':id_user' => $idUser,
+                            ':name' => $r,
+                            ':execute' => '0'
+                         ))
+                         ->execute()
+                         ->fetch();
+        }
+
+        return true;
+    }
+
+    public function insertPanelRightsForIdUser(int $idUser) {
+        foreach(PanelRights::$all as $r) {
+            $qb = $this->qb(__METHOD__);
+
+            $result = $qb->insert('user_panel_rights', 'id_user', 'panel_name', 'is_visible')
+                         ->values(':id_user', ':name', ':visible')
+                         ->setParams(array(
+                            ':id_user' => $idUser,
+                            ':name' => $r,
+                            ':visible' => '0'
+                         ))
+                         ->execute()
+                         ->fetch();
+        }
+
+        return true;           
+    }
+
+    public function insertBulkActionRightsForIdUser(int $idUser) {
+        foreach(BulkActionRights::$all as $r) {
+            $qb = $this->qb(__METHOD__);
+
+            $result = $qb->insert('user_bulk_rights', 'id_user', 'action_name', 'is_executable')
+                         ->values(':id_user', ':name', ':execute')
+                         ->setParams(array(
+                            ':id_user' => $idUser,
+                            ':name' => $r,
+                            ':execute' => '0'
+                         ))
+                         ->execute()
+                         ->fetch();
+        }
+
+        return true;                
     }
 
     public function getActionRightsForIdUser(int $idUser) {

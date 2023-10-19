@@ -29,10 +29,43 @@ class ActionAuthorizator extends AAuthorizator {
         } else {
             $rights = $app->userRightModel->getActionRightsForIdUser($app->user->getId());
 
-            $cm->saveToCache($rights);
+            $userGroups = $app->groupUserModel->getGroupsForIdUser($app->user->getId());
 
-            if(array_key_exists($actionName, $rights)) {
+            $groupRights = [];
+            foreach($userGroups as $ug) {
+                $idGroup = $ug->getIdGroup();
+
+                $dbGroupRights = $app->groupRightModel->getPanelRightsForIdGroup($idGroup);
+                
+                foreach($dbGroupRights as $k => $v) {
+                    if(array_key_exists($k, $groupRights)) {
+                        if($groupRights[$k] != $v && $v == '1') {
+                            $groupRights[$k] = $v;
+                        }
+                    } else {
+                        $groupRights[$k] = $v;
+                    }
+                }
+            }
+
+            $finalRights = [];
+
+            foreach($rights as $k => $v) {
+                if(array_key_exists($k, $groupRights)) {
+                    if($groupRights[$k] != $v && $v == '1') {
+                        $finalRights[$k] = $v;
+                    }
+                } else {
+                    $finalRights[$k] = $v;
+                }
+            }
+
+            $cm->saveToCache($finalRights);
+
+            if(array_key_exists($actionName, $finalRights)) {
                 $result = $rights[$actionName];
+            } else {
+                $result = 0;
             }
         }
 

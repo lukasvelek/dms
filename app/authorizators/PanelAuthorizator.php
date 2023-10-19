@@ -15,15 +15,10 @@ class PanelAuthorizator extends AAuthorizator {
         global $app;
 
         if(is_null($app->user)) {
-            //die('User is not set');
             return false;
         }
 
-        //$rights = $app->userRightModel->getPanelRightsForIdUser($app->user->getId());
-
         $cm = CacheManager::getTemporaryObject();
-
-        //$cm->saveToCache($rights);
 
         $valFromCache = $cm->loadFromCache($panelName);
 
@@ -34,16 +29,47 @@ class PanelAuthorizator extends AAuthorizator {
         } else {
             $rights = $app->userRightModel->getPanelRightsForIdUser($app->user->getId());
 
-            $cm->saveToCache($rights);
+            $userGroups = $app->groupUserModel->getGroupsForIdUser($app->user->getId());
 
-            if(array_key_exists($panelName, $rights)) {
+            $groupRights = [];
+            foreach($userGroups as $ug) {
+                $idGroup = $ug->getIdGroup();
+
+                $dbGroupRights = $app->groupRightModel->getPanelRightsForIdGroup($idGroup);
+                
+                foreach($dbGroupRights as $k => $v) {
+                    if(array_key_exists($k, $groupRights)) {
+                        if($groupRights[$k] != $v && $v == '1') {
+                            $groupRights[$k] = $v;
+                        }
+                    } else {
+                        $groupRights[$k] = $v;
+                    }
+                }
+            }
+
+            $finalRights = [];
+
+            foreach($rights as $k => $v) {
+                if(array_key_exists($k, $groupRights)) {
+                    if($groupRights[$k] != $v && $v == '1') {
+                        $finalRights[$k] = $v;
+                    }
+                } else {
+                    $finalRights[$k] = $v;
+                }
+            }
+
+            $cm->saveToCache($finalRights);
+
+            if(array_key_exists($panelName, $finalRights)) {
                 $result = $rights[$panelName];
             } else {
                 $result = 0;
             }
         }
 
-        return /*$rights[$panelName]*/ $result ? true : false;
+        return $result ? true : false;
     }
 }
 

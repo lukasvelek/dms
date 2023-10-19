@@ -29,10 +29,43 @@ class BulkActionAuthorizator extends AAuthorizator {
         } else {
             $rights = $app->userRightModel->getBulkActionRightsForIdUser($app->user->getId());
 
-            $cm->saveToCache($rights);
+            $userGroups = $app->groupUserModel->getGroupsForIdUser($app->user->getId());
 
-            if(array_key_exists($bulkActionName, $rights)) {
+            $groupRights = [];
+            foreach($userGroups as $ug) {
+                $idGroup = $ug->getIdGroup();
+
+                $dbGroupRights = $app->groupRightModel->getBulkActionRightsForIdGroup($idGroup);
+                
+                foreach($dbGroupRights as $k => $v) {
+                    if(array_key_exists($k, $groupRights)) {
+                        if($groupRights[$k] != $v && $v == '1') {
+                            $groupRights[$k] = $v;
+                        }
+                    } else {
+                        $groupRights[$k] = $v;
+                    }
+                }
+            }
+
+            $finalRights = [];
+
+            foreach($rights as $k => $v) {
+                if(array_key_exists($k, $groupRights)) {
+                    if($groupRights[$k] != $v && $v == '1') {
+                        $finalRights[$k] = $v;
+                    }
+                } else {
+                    $finalRights[$k] = $v;
+                }
+            }
+
+            $cm->saveToCache($finalRights);
+
+            if(array_key_exists($bulkActionName, $finalRights)) {
                 $result = $rights[$bulkActionName];
+            } else {
+                $result = 0;
             }
         }
 
