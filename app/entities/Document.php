@@ -5,7 +5,7 @@ namespace DMS\Entities;
 class Document extends AEntity {
     private string $name;
     private int $idAuthor;
-    private int $idOfficer;
+    private ?int $idOfficer;
     private int $idManager;
     private int $status;
     private int $idGroup;

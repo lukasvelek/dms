@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Components\Process\HomeOffice;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
@@ -78,12 +79,28 @@ class Processes extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/new-process.html');
 
         $data = array(
-            '$PAGE_TITLE$' => 'New process: <i>' . $name . '</i>'
+            '$PAGE_TITLE$' => 'New process: <i>' . $name . '</i>',
+            '$PROCESS_PANEL$' => Panels::createProcessesPanel(),
+            '$PROCESS_FORM$' => $this->internalCreateProcessForm($type)
         );
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    private function internalCreateProcessForm(int $type) {
+        $form = '';
+        $action = '?page=UserModule:Processes:startProcess&type=' . $type;
+
+        switch($type) {
+            case ProcessTypes::HOME_OFFICE:
+                $form = HomeOffice::getForm($action);
+
+                break;
+        }
+
+        return $form;
     }
 
     private function internalCreateProcessMenuGrid() {

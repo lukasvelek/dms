@@ -47,7 +47,7 @@ class ProcessComponent extends AComponent {
         return $processes;
     }
 
-    public function startProcess(int $type, ?int $idDocument = null) {
+    public function startProcess(int $type, int $idDocument) {
         global $app;
 
         if($this->checkIfDocumentIsInProcess($idDocument)) {
@@ -55,33 +55,17 @@ class ProcessComponent extends AComponent {
             return false;
         }
 
-        $app->processModel->insertEmptyProcess($type);
-
-        $idProcess = $app->processModel->getLastInsertedIdProcess();
-
-        $data = [];
+        $workflow = [];
 
         switch($type) {
             case ProcessTypes::DELETE:
-                $deleteProcess = new DeleteProcess($idProcess);
-                $workflow = $deleteProcess->getWorkflow();
-
-                $i = 1;
-                foreach($workflow as $w) {
-                    $data['workflow' . $i] = $w;
-
-                    $i++;
-                }
-
-                $data['id_document'] = $deleteProcess->getDocument()->getId();
-                $data['workflow_status'] = '1';
+                $archmanIdGroup = $app->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
+                $workflow[] = $app->groupUserModel->getGroupUserByIdGroup($archmanIdGroup)->getIdUser();
 
                 break;
         }
 
-        $app->processModel->updateProcess($idProcess, $data);
-
-        //$app->processModel->insertNewProcess($idDocument, $type, $workflow);
+        $app->processModel->insertNewProcess($idDocument, $type, $workflow);
         
         return true;
     }

@@ -14,8 +14,12 @@ body {
     text-align: left;
 }
 
-#form input, #form select{
+#form input, #form select, #form textarea {
     width: 100%;
+}
+
+#form textarea {
+    resize: vertical;
 }
 
 #table table {

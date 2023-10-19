@@ -5,7 +5,7 @@ namespace DMS\Entities;
 class Process extends AEntity {
     private array $workflow;
     private ?int $idDocument;
-    private int $workflowStatus;
+    private ?int $workflowStatus;
     private int $type;
     private int $status;
 

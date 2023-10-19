@@ -86,7 +86,7 @@ class FormBuilder {
         if($element->getType() != 'submit') {
           $code[] = '<br><br>';
         }
-      } else if($element instanceof Select) {
+      } else if($element instanceof Select || $element instanceof TextArea) {
         $code[] = '<br><br>';
       }
     }
