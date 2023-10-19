@@ -11,6 +11,31 @@ class GroupUserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateUserInGroup(int $idGroup, int $idUser, array $data) {
+        $qb = $this->qb(__METHOD__);
+
+        $keys = [];
+        $params = [];
+
+        foreach($data as $k => $v) {
+            $keys[$k] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $params[':id_user'] = $idUser;
+        $params[':id_group'] = $idGroup;
+
+        $result = $qb->update('group_users')
+                     ->set($keys)
+                     ->where('id_user=:id_user')
+                     ->andWhere('id_group=:id_group')
+                     ->setParams($params)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function insertUserToGroup(int $idGroup, int $idUser) {
         $qb = $this->qb(__METHOD__);
 

@@ -196,6 +196,42 @@ class Groups extends APresenter {
         $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
     }
 
+    protected function setUserAsManager() {
+        global $app;
+
+        $idGroup = htmlspecialchars($_GET['id_group']);
+        $idUser = htmlspecialchars($_GET['id_user']);
+
+        $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
+
+        $idGroupManager = 0;
+
+        foreach($groupUsers as $gu) {
+            if($gu->getIsManager()) {
+                $idGroupManager = $gu->getId();
+            }
+        }
+
+        if($idGroupManager != 0) {
+            $app->groupUserModel->updateUserInGroup($idGroup, $idGroupManager, array('is_manager' => '0'));
+        }
+
+        $app->groupUserModel->updateUserInGroup($idGroup, $idUser, array('is_manager' => '1'));
+
+        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+    }
+
+    protected function unsetUserAsManager() {
+        global $app;
+
+        $idGroup = htmlspecialchars($_GET['id_group']);
+        $idUser = htmlspecialchars($_GET['id_user']);
+
+        $app->groupUserModel->updateUserInGroup($idGroup, $idUser, array('is_manager' => '0'));
+
+        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+    }
+
     private function internalCreateNewUserForm(int $idGroup) {
         global $app;
 
@@ -379,6 +415,12 @@ class Groups extends APresenter {
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile')
                 );
+
+                if($groupUser->getIsManager()) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:unsetUserAsManager', 'id_group' => $idGroup, 'id_user' => $user->getId()), 'Unset as Manager');
+                } else {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:setUserAsManager', 'id_group' => $idGroup, 'id_user' => $user->getId()), 'Set as Manager');
+                }
 
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();
