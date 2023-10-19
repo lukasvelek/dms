@@ -10,6 +10,7 @@ use DMS\Core\CacheManager;
 use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
+use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -38,6 +39,24 @@ class Groups extends APresenter {
         return $this->name;
     }
 
+    protected function showNewUserForm() {
+        global $app;
+        
+        $idGroup = htmlspecialchars($_GET['id']);
+        $group = $app->groupModel->getGroupById($idGroup);
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/groups/group-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Add user to group <i>' . $group->getName() . '</i>',
+            '$FORM$' => $this->internalCreateNewUserForm($idGroup)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showUsers() {
         global $app;
 
@@ -52,7 +71,8 @@ class Groups extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Users in group <i>' . $group->getName() . '</i>',
-            '$GROUP_GRID$' => $this->internalCreateGroupGrid($id)
+            '$GROUP_GRID$' => $this->internalCreateGroupGrid($id),
+            '$NEW_ENTITY_LINK$' => '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showNewUserForm', 'id' => $id), 'Add user') . '</div></div>'
         );
 
         $this->templateManager->fill($data, $template);
@@ -160,6 +180,57 @@ class Groups extends APresenter {
         $cm->invalidateCache();
 
         $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup));
+    }
+
+    protected function addUserToGroup() {
+        global $app;
+
+        $idGroup = htmlspecialchars($_GET['id_group']);
+        $idUser = htmlspecialchars($_POST['user']);
+
+        $app->groupUserModel->insertUserToGroup($idGroup, $idUser);
+
+        $cm = CacheManager::getTemporaryObject();
+        $cm->invalidateCache();
+        
+        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+    }
+
+    private function internalCreateNewUserForm(int $idGroup) {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $users = $app->userModel->getAllUsers();
+        $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
+
+        $groupUsersId = [];
+        foreach($groupUsers as $gu) {
+            $groupUsersId[] = $gu->getIdUser();
+        }
+
+        $userArr = [];
+        foreach($users as $u) {
+            if(in_array($u->getId(), $groupUsersId)) {
+                continue;
+            }
+
+            $userArr[] = array(
+                'value' => $u->getId(),
+                'text' => $u->getFullname()
+            );
+        }
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Groups:addUserToGroup&id_group=' . $idGroup)
+            ->addElement($fb->createLabel()->setText('User')
+                                           ->setFor('user'))
+            ->addElement($fb->createSelect()->setName('user')
+                                            ->addOptionsBasedOnArray($userArr))
+            ->addElement($fb->createSubmit('Add'));
+
+        $form = $fb->build();
+
+        return $form;
     }
 
     private function internalCreateGroupRightsGrid(int $idGroup) {
