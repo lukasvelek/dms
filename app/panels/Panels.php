@@ -50,6 +50,10 @@ class Panels {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showGroups', 'Groups');
         }
 
+        if($panelAuthorizator->checkPanelRight('settings.metadata')) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showMetadata', 'Metadata');
+        }
+
         $templateManager->fill($data, $template);
 
         return $template;

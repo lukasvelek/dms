@@ -4,9 +4,9 @@ namespace DMS\Entities;
 
 abstract class AEntity {
     protected int $id;
-    protected string $dateCreated;
+    protected ?string $dateCreated;
 
-    protected function __construct(int $id, string $dateCreated) {
+    protected function __construct(int $id, ?string $dateCreated) {
         $this->id = $id;
         $this->dateCreated = $dateCreated;
     }

@@ -97,6 +97,42 @@ class Settings extends APresenter {
         return $template;
     }
 
+    protected function showMetadata() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Metadata manager',
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$SETTINGS_GRID$' => $this->internalCreateMetadataGrid()
+        );
+
+        if($app->actionAuthorizator->checkActionRight('create_metadata')) {
+            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewMetadataForm', 'New metadata') . '</div></div>';
+        }
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showNewMetadataForm() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New metadata form',
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$FORM$' => $this->internalCreateNewMetadataForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showNewUserForm() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
@@ -123,6 +159,18 @@ class Settings extends APresenter {
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function createNewMetadata() {
+        global $app;
+
+        $name = htmlspecialchars($_POST['name']);
+        $text = htmlspecialchars($_POST['text']);
+
+        $app->metadataModel->insertNewMetadata($name, $text);
+        $idMetadata = $app->metadataModel->getLastInsertedMetadata()->getId();
+
+        $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
 
     protected function createNewGroup() {
@@ -243,6 +291,22 @@ class Settings extends APresenter {
         $form = $fb->build();
 
         return $form;
+    }
+
+    private function internalCreateNewMetadataForm() {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewMetadata')
+            ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->require())
+
+            ->addElement($fb->createLabel()->setFor('text')->setText('Text'))
+            ->addElement($fb->createInput()->setType('text')->setName('text')->require())
+
+            ->addElement($fb->createSubmit('Create'))
+        ;
+
+        return $fb->build();
     }
 
     private function internalCreateGroupGrid() {
@@ -438,6 +502,70 @@ class Settings extends APresenter {
                 </div>';
 
         return $code;
+    }
+
+    private function internalCreateMetadataGrid() {
+        global $app;
+
+        $tb = TableBuilder::getTemporaryObject();
+
+        $headers = array(
+            'Actions',
+            'Name',
+            'Text'
+        );
+        
+        $headerRow = null;
+
+        $metadata = $app->metadataModel->getAllMetadata();
+
+        if(empty($metadata)) {
+            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+        } else {
+            foreach($metadata as $m) {
+                $actionLinks = array(
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values')
+                );
+
+                if(is_null($headerRow)) {
+                    $row = $tb->createRow();
+
+                    foreach($headers as $header) {
+                        $col = $tb->createCol()->setText($header)
+                                               ->setBold();
+
+                        if($header == 'Actions') {
+                            $col->setColspan(count($actionLinks));
+                        }
+
+                        $row->addCol($col);
+                    }
+
+                    $headerRow = $row;
+
+                    $tb->addRow($row);
+                }
+
+                $metaRow = $tb->createRow();
+
+                foreach($actionLinks as $actionLink) {
+                    $metaRow->addCol($tb->createCol()->setText($actionLink));
+                }
+
+                $metaArray = array(
+                    $m->getName(),
+                    $m->getText()
+                );
+
+                foreach($metaArray as $ma) {
+                    $metaRow->addCol($tb->createCol()->setText($ma));
+                }
+
+                $tb->addRow($metaRow);
+            }
+        }
+
+        return $tb->build();
     }
 }
 
