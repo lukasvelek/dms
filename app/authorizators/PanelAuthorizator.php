@@ -51,12 +51,14 @@ class PanelAuthorizator extends AAuthorizator {
             $finalRights = [];
 
             foreach($rights as $k => $v) {
-                if(array_key_exists($k, $groupRights)) {
-                    if($groupRights[$k] != $v && $v == '1') {
+                $finalRights[$k] = $v;
+            }
+
+            foreach($groupRights as $k => $v) {
+                if(array_key_exists($k, $finalRights)) {
+                    if($v == '1' && $finalRights[$k] != $v) {
                         $finalRights[$k] = $v;
                     }
-                } else {
-                    $finalRights[$k] = $v;
                 }
             }
 

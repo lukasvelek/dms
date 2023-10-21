@@ -275,9 +275,10 @@ class Groups extends APresenter {
         $tb = TableBuilder::getTemporaryObject();
 
         $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('Actions')->setBold()->setColspan('2'))
-                                    ->addCol($tb->createCol()->setText('Type')->setBold())
+                                    ->addCol($tb->createCol()->setText('Status')->setBold())
                                     ->addCol($tb->createCol()->setText('Right name')->setBold())
-                                    ->addCol($tb->createCol()->setText('Status')->setBold()));
+                                    ->addCol($tb->createCol()->setText('Type')->setBold()))
+        ;
 
         $rights = [];
 
@@ -375,9 +376,9 @@ class Groups extends APresenter {
 
             $row->addCol($tb->createCol()->setText($allowLink))
                 ->addCol($tb->createCol()->setText($denyLink))
-                ->addCol($tb->createCol()->setText($type))
-                ->addCol($tb->createCol()->setText($name))
                 ->addCol($tb->createCol()->setText($value ? $allowedText : $deniedText))
+                ->addCol($tb->createCol()->setText($name))
+                ->addCol($tb->createCol()->setText($type))
             ;
 
             $tb->addRow($row);
