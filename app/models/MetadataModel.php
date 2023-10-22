@@ -12,6 +12,35 @@ class MetadataModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertMetadataValueForIdMetadata(int $idMetadata, string $name, string $value) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->insert('metadata_values', 'id_metadata', 'name', 'value')
+                     ->values(':id_metadata', ':name', ':value')
+                     ->setParams(array(
+                        ':id_metadata' => $idMetadata,
+                        ':name' => $name,
+                        ':value' => $value
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function getMetadataById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('metadata')
+                  ->where('id=:id')
+                  ->setParam(':id', $id)
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createMetadataObjectFromDbRow($row);
+    }
+
     public function insertNewMetadata(string $name, string $text) {
         $qb = $this->qb(__METHOD__);
 
