@@ -92,7 +92,28 @@ class TableBuilder {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText($emptyText)));
         } else {
             foreach($data as $dk => $dv) {
+                if(is_null($headerRow)) {
+                    $row = $tb->createRow();
 
+                    foreach($headers as $hk => $hv) {
+                        $col = $tb->createCol()->setText($hv)
+                                               ->setBold();
+                        
+                        if(count($data[$hk]) > 1) {
+                            $col->setColspan(count($data[$hk]));
+                        }
+
+                        $row->addCol($col);
+                    }
+
+                    $headerRow = $row;
+
+                    $tb->addRow($row);
+                }
+
+                $dataRow = $row;
+
+                
             }
         }
     }
