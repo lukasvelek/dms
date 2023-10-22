@@ -10,8 +10,9 @@ class Document extends AEntity {
     private int $status;
     private int $idGroup;
     private int $isDeleted;
+    private array $metadata;
     
-    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted) {
+    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted, array $metadata) {
         parent::__construct($id, $dateCreated);
 
         $this->idAuthor = $idAuthor;
@@ -21,6 +22,7 @@ class Document extends AEntity {
         $this->idManager = $idManager;
         $this->idGroup = $idGroup;
         $this->isDeleted = $isDeleted;
+        $this->metadata = $metadata;
     }
 
     public function getIdAuthor() {
@@ -49,6 +51,18 @@ class Document extends AEntity {
 
     public function getIsDeleted() {
         return $this->isDeleted;
+    }
+
+    public function getMetadata(string $key = '') {
+        if($key != '') {
+            if(array_key_exists($key, $this->metadata)) {
+                return $this->metadata[$key];
+            } else {
+                return null;
+            }
+        } else {
+            return $this->metadata;
+        }
     }
 }
 

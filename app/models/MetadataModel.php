@@ -12,6 +12,24 @@ class MetadataModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllMetadataForTableName(string $tableName) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('metadata')
+                   ->where('table_name=:table_name')
+                   ->setParam(':table_name', $tableName)
+                   ->execute()
+                   ->fetch();
+
+        $metadata = [];
+        foreach($rows as $row) {
+            $metadata[] = $this->createMetadataObjectFromDbRow($row);
+        }
+
+        return $metadata;
+    }
+
     public function insertMetadataValueForIdMetadata(int $idMetadata, string $name, string $value) {
         $qb = $this->qb(__METHOD__);
 
@@ -41,14 +59,15 @@ class MetadataModel extends AModel {
         return $this->createMetadataObjectFromDbRow($row);
     }
 
-    public function insertNewMetadata(string $name, string $text) {
+    public function insertNewMetadata(string $name, string $text, string $tableName) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->insert('metadata', 'name', 'text')
-                     ->values(':name', ':text')
+        $result = $qb->insert('metadata', 'name', 'text', 'table_name')
+                     ->values(':name', ':text', ':table_name')
                      ->setParams(array(
                         ':name' => $name,
-                        ':text' => $text
+                        ':text' => $text,
+                        ':table_name' => $tableName
                      ))
                      ->execute()
                      ->fetch();
@@ -107,8 +126,9 @@ class MetadataModel extends AModel {
         $id = $row['id'];
         $name = $row['name'];
         $text = $row['text'];
+        $tableName = $row['table_name'];
 
-        return new Metadata($id, $name, $text);
+        return new Metadata($id, $name, $text, $tableName);
     }
 
     private function createMetadataValueObjectFromDbRow($row) {

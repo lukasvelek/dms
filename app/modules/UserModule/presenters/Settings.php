@@ -12,6 +12,7 @@ use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
+use DMS\UI\FormBuilder\Option;
 
 class Settings extends APresenter {
     private string $name;
@@ -166,9 +167,14 @@ class Settings extends APresenter {
 
         $name = htmlspecialchars($_POST['name']);
         $text = htmlspecialchars($_POST['text']);
+        $tableName = htmlspecialchars($_POST['table_name']);
+        $type = htmlspecialchars($_POST['type']);
+        $length = htmlspecialchars($_POST['length']);
 
-        $app->metadataModel->insertNewMetadata($name, $text);
+        $app->metadataModel->insertNewMetadata($name, $text, $tableName);
         $idMetadata = $app->metadataModel->getLastInsertedMetadata()->getId();
+
+        $app->tableModel->addColToTable($tableName, $name, $type, $length);
 
         $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
@@ -302,6 +308,18 @@ class Settings extends APresenter {
 
             ->addElement($fb->createLabel()->setFor('text')->setText('Text'))
             ->addElement($fb->createInput()->setType('text')->setName('text')->require())
+
+            ->addElement($fb->createLabel()->setFor('table_name')->setText('Database table name'))
+            ->addElement($fb->createInput()->setType('text')->setName('table_name')->require())
+
+            ->addElement($fb->createLabel()->setFor('type')->setText('Type'))
+            ->addElement($fb->createSelect()->setName('type')->addOptions(array(
+                (new Option())->setValue('INT')->setText('int'),
+                (new Option())->setValue('VARCHAR')->setText('varchar')
+            )))
+
+            ->addElement($fb->createLabel()->setFor('length')->setText('Length'))
+            ->addElement($fb->createInput()->setType('text')->setName('length')->require())
 
             ->addElement($fb->createSubmit('Create'))
         ;
@@ -512,7 +530,8 @@ class Settings extends APresenter {
         $headers = array(
             'Actions',
             'Name',
-            'Text'
+            'Text',
+            'Database table'
         );
         
         $headerRow = null;
@@ -554,7 +573,8 @@ class Settings extends APresenter {
 
                 $metaArray = array(
                     $m->getName(),
-                    $m->getText()
+                    $m->getText(),
+                    $m->getTableName()
                 );
 
                 foreach($metaArray as $ma) {

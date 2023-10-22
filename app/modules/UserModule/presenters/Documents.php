@@ -235,6 +235,26 @@ class Documents extends APresenter {
             );
         }
 
+        $customMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
+        // name = array('text' => 'text', 'options' => 'options from metadata_values')
+        $metadata = [];
+
+        foreach($customMetadata as $cm) {
+            $name = $cm->getName();
+            $text = $cm->getText();
+            $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
+
+            $options = [];
+            foreach($values as $v) {
+                $options[] = array(
+                    'value' => $v->getValue(),
+                    'text' => $v->getName()
+                );
+            }
+
+            $metadata[$name] = array('text' => $text, 'options' => $options);
+        }
+
         $fb = FormBuilder::getTemporaryObject();
 
         $fb->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')
@@ -255,8 +275,18 @@ class Documents extends APresenter {
                                           ->setFor('group'))
            ->addElement($fb->createSelect()->setName('group')
                                            ->addOptionsBasedOnArray($groups))
-           ->addElement($fb->createSubmit('Create'))
            ;
+
+        foreach($metadata as $name => $d) {
+            $text = $d['text'];
+            $options = $d['options'];
+
+            $fb->addElement($fb->createLabel()->setText($text)->setFor($name))
+               ->addElement($fb->createSelect()->setName($name)->addOptionsBasedOnArray($options))
+            ;
+        }
+
+        $fb->addElement($fb->createSubmit('Create'));
 
         $form = $fb->build();
 
