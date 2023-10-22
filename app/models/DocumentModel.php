@@ -5,6 +5,7 @@ namespace DMS\Models;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
+use DMS\Helpers\ArrayHelper;
 
 class DocumentModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
@@ -120,18 +121,42 @@ class DocumentModel extends AModel {
         return $result;
     }
 
-    public function insertNewDocument(string $name, int $idManager, int $idAuthor, int $status, int $idGroup) {
+    public function insertNewDocument(string $name, int $idManager, int $idAuthor, int $status, int $idGroup, array $customMetadata) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->insert('documents', 'name', 'id_manager', 'id_author', 'status', 'id_group')
-                     ->values(':name', ':id_manager', ':id_author', ':status', ':id_group')
-                     ->setParams(array(
-                        ':name' => $name,
-                        ':id_manager' => $idManager,
-                        ':id_author' => $idAuthor,
-                        ':status' => $status,
-                        ':id_group' => $idGroup
-                     ))
+        $keys = array(
+            'name',
+            'id_manager',
+            'id_author',
+            'status',
+            'id_group'
+        );
+
+        $values = array(
+            ':name',
+            ':id_manager',
+            ':id_author',
+            ':status',
+            ':id_group'
+        );
+
+        $params = array(
+            ':name' => $name,
+            ':id_manager' => $idManager,
+            ':id_author' => $idAuthor,
+            ':id_group' => $idGroup,
+            ':status' => $status
+        );
+
+        foreach($customMetadata as $k => $v) {
+            $keys[] = $k;
+            $values[] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $result = $qb->insertArr('documents', $keys)
+                     ->valuesArr($values)
+                     ->setParams($params)
                      ->execute()
                      ->fetch();
 
@@ -167,7 +192,9 @@ class DocumentModel extends AModel {
         $idGroup = $row['id_group'];
         $isDeleted = $row['is_deleted'];
 
-        return new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted);
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_maanger', 'id_group', 'is_deleted'));
+
+        return new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $row);
     }
 }
 

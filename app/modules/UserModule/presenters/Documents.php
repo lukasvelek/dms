@@ -305,7 +305,14 @@ class Documents extends APresenter {
         $status = htmlspecialchars($_POST['status']);
         $idGroup = htmlspecialchars($_POST['group']);
 
-        $app->documentModel->insertNewDocument($name, $idManager, $app->user->getId(), $status, $idGroup);
+        unset($_POST['name']);
+        unset($_POST['manager']);
+        unset($_POST['status']);
+        unset($_POST['group']);
+
+        $customMetadata = $_POST;
+
+        $app->documentModel->insertNewDocument($name, $idManager, $app->user->getId(), $status, $idGroup, $customMetadata);
 
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
 
