@@ -564,12 +564,14 @@ class Settings extends APresenter {
                     'delete' => '-'
                 );
 
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
-                    $actionLinks['values'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values');
+                if(!$app->metadataAuthorizator->canUserViewMetadata($app->user->getId(), $m->getId())) continue;
+
+                if($app->metadataAuthorizator->canUserEditMetadata($app->user->getId(), $m->getId()) && !$m->getIsSystem()) {
+                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete');
                 }
 
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA) && !$m->getIsSystem()) {
-                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete');
+                if($app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId())) {
+                    $actionLinks['values'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values');
                 }
 
                 if(is_null($headerRow)) {

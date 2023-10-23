@@ -47,7 +47,7 @@ class Metadata extends APresenter {
             '$METADATA_GRID$' => $this->internalCreateValuesGrid($idMetadata, $metadata->getIsSystem())
         );
 
-        if(!$metadata->getIsSystem()) {
+        if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $idMetadata) && !$metadata->getIsSystem()) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value') . '</div></div>';
         } else {
             $data['$NEW_ENTITY_LINK$'] = '';
@@ -123,12 +123,10 @@ class Metadata extends APresenter {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($values as $v) {
-                $actionLinks = [];
+                $actionLinks = array('new' => '-');
 
-                if(!$isSystem) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
-                } else {
-                    $actionLinks[] = '-';
+                if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $id) && !$isSystem) {
+                    $actionLinks['new'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
                 }
 
                 if(is_null($headerRow)) {

@@ -9,6 +9,7 @@ use DMS\Authenticators\UserAuthenticator;
 use DMS\Authorizators\ActionAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
+use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
 use \DMS\Core\Logger\Logger;
@@ -54,6 +55,7 @@ class Application {
     public BulkActionAuthorizator $bulkActionAuthorizator;
     public DocumentAuthorizator $documentAuthorizator;
     public ActionAuthorizator $actionAuthorizator;
+    public MetadataAuthorizator $metadataAuthorizator;
 
     public ProcessComponent $processComponent;
 
@@ -90,6 +92,7 @@ class Application {
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger);
+        $this->metadataAuthorizator= new MetadataAuthorizator($this->conn, $this->logger);
 
         $this->processComponent = new ProcessComponent($this->conn, $this->logger);
 
