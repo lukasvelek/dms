@@ -33,10 +33,10 @@ class DatabaseInstaller {
         $this->insertDefaultUserMetadataRights();
     }
 
-    public function updateDefaultUserPanelRights() {
-        /*$this->insertDefaultUserPanelRights();
+    public function updateDefaultUserRights() {
+        $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
-        $this->insertDefaultUserActionRights();*/
+        $this->insertDefaultUserActionRights();
     }
 
     private function createTables() {

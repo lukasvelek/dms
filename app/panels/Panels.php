@@ -2,6 +2,7 @@
 
 namespace DMS\Panels;
 
+use DMS\Constants\PanelRights;
 use DMS\Core\TemplateManager;
 use DMS\UI\LinkBuilder;
 
@@ -42,16 +43,20 @@ class Panels {
 
         $panelAuthorizator = self::pa();
 
-        if($panelAuthorizator->checkPanelRight('settings.users')) {
+        if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_USERS)) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showUsers', 'Users');
         }
 
-        if($panelAuthorizator->checkPanelRight('settings.groups')) {
+        if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_GROUPS)) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showGroups', 'Groups');
         }
 
-        if($panelAuthorizator->checkPanelRight('settings.metadata')) {
+        if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_METADATA)) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showMetadata', 'Metadata');
+        }
+
+        if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_SYSTEM)) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showSystem', 'System');
         }
 
         $templateManager->fill($data, $template);

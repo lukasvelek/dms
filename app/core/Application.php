@@ -98,7 +98,7 @@ class Application {
 
         $this->installDb();
 
-        $this->conn->installer->updateDefaultUserPanelRights();
+        //$this->conn->installer->updateDefaultUserPanelRights();
     }
 
     public function redirect(string $url, array $params = array()) {
@@ -190,6 +190,10 @@ class Application {
 
     public function setCurrentUser(User $user) {
         $this->user = $user;
+    }
+
+    public function getConn() {
+        return $this->conn;
     }
 
     private function installDb() {

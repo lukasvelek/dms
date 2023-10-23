@@ -118,6 +118,30 @@ class Settings extends APresenter {
         return $template;
     }
 
+    protected function showSystem() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'System',
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$WIDGETS$' => LinkBuilder::createLink('UserModule:Settings:updateDefaultUserRights', 'Update default user rights')
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function updateDefaultUserRights() {
+        global $app;
+
+        $app->getConn()->installer->updateDefaultUserRights();
+
+        $app->redirect('UserModule:Settings:showSystem');
+    }
+
     protected function showNewMetadataForm() {
         global $app;
 
@@ -561,17 +585,22 @@ class Settings extends APresenter {
             foreach($metadata as $m) {
                 $actionLinks = array(
                     'values' => '-',
-                    'delete' => '-'
+                    'delete' => '-',
+                    'edit_user_rights' => '-'
                 );
 
                 if(!$app->metadataAuthorizator->canUserViewMetadata($app->user->getId(), $m->getId())) continue;
 
-                if($app->metadataAuthorizator->canUserEditMetadata($app->user->getId(), $m->getId()) && !$m->getIsSystem()) {
+                if($app->metadataAuthorizator->canUserEditMetadata($app->user->getId(), $m->getId()) && !$m->getIsSystem() && $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA)) {
                     $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete');
                 }
 
-                if($app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId())) {
+                if($app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId()) && $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
                     $actionLinks['values'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values');
+                }
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER_METADATA_RIGHTS)) {
+                    $actionLinks['edit_user_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showUserRights', 'id' => $m->getId()), 'User rights');
                 }
 
                 if(is_null($headerRow)) {
