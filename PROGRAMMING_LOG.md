@@ -5,3 +5,5 @@
 ## TODO
 - MetadataAuthorizator
     - cache the result of the queries
+
+- Folders

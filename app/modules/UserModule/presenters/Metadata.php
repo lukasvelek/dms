@@ -43,7 +43,7 @@ class Metadata extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-grid.html');
 
         $data = array(
-            '$PAGE_TITLE$' => 'Metadata <i>' . $metadata->getName() . '</i> values',
+            '$PAGE_TITLE$' => 'Metadata <i>' . $metadata->getTableName() . '.' . $metadata->getName() . '</i> values',
             '$METADATA_GRID$' => $this->internalCreateValuesGrid($idMetadata, $metadata->getIsSystem())
         );
 
