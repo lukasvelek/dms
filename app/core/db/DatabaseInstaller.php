@@ -460,7 +460,7 @@ class DatabaseInstaller {
                     );
                     break;
 
-                case 'document.status':
+                case 'documents.status':
                     $values[$id] = array(
                         array(
                             'name' => 'New',

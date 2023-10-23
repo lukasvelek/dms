@@ -24,7 +24,7 @@ class Document extends AEntity {
         $this->idManager = $idManager;
         $this->idGroup = $idGroup;
         $this->isDeleted = $isDeleted;
-        //$this->metadata = $metadata;
+        $this->rank = $rank;
     }
 
     public function getIdAuthor() {
