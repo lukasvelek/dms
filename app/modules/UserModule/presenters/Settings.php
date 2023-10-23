@@ -559,10 +559,15 @@ class Settings extends APresenter {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($metadata as $m) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete')
-                );
+                $actionLinks = [];
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values');
+                }
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete');
+                }
 
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();

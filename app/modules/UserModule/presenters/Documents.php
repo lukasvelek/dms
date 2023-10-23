@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\TemplateManager;
@@ -235,6 +236,14 @@ class Documents extends APresenter {
             );
         }
 
+        $ranks = [];
+        foreach(DocumentRank::$texts as $k => $v) {
+            $ranks[] = array(
+                'value' => $k,
+                'text' => $v
+            );
+        }
+
         $customMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
         // name = array('text' => 'text', 'options' => 'options from metadata_values')
         $metadata = [];
@@ -257,24 +266,29 @@ class Documents extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $fb->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')
-           ->addElement($fb->createLabel()->setText('Document name')
-                                          ->setFor('name'))
-           ->addElement($fb->createInput()->setType('text')
-                                          ->setName('name')
-                                          ->require())
-           ->addElement($fb->createLabel()->setText('Manager')
-                                          ->setFor('manager'))
-           ->addElement($fb->createSelect()->setName('manager')
-                                           ->addOptionsBasedOnArray($managers))
-           ->addElement($fb->createLabel()->setText('Status')
-                                          ->setFor('status'))
-           ->addElement($fb->createSelect()->setName('status')
-                                           ->addOptionsBasedOnArray($statuses))
-           ->addElement($fb->createLabel()->setText('Group')
-                                          ->setFor('group'))
-           ->addElement($fb->createSelect()->setName('group')
-                                           ->addOptionsBasedOnArray($groups))
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')
+            ->addElement($fb->createLabel()->setText('Document name')
+                                           ->setFor('name'))
+            ->addElement($fb->createInput()->setType('text')
+                                           ->setName('name')
+                                           ->require())
+            ->addElement($fb->createLabel()->setText('Manager')
+                                           ->setFor('manager'))
+            ->addElement($fb->createSelect()->setName('manager')
+                                            ->addOptionsBasedOnArray($managers))
+            ->addElement($fb->createLabel()->setText('Status')
+                                           ->setFor('status'))
+            ->addElement($fb->createSelect()->setName('status')
+                                            ->addOptionsBasedOnArray($statuses))
+            ->addElement($fb->createLabel()->setText('Group')
+                                           ->setFor('group'))
+            ->addElement($fb->createSelect()->setName('group')
+                                            ->addOptionsBasedOnArray($groups))
+            ->addElement($fb->createLabel()->setFor('rank')
+                                           ->setText('Rank'))
+            ->addElement($fb->createSelect()->setName('rank')
+                                            ->addOptionsBasedOnArray($ranks))
+            
            ;
 
         foreach($metadata as $name => $d) {

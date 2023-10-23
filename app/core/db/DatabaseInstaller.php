@@ -69,7 +69,8 @@ class DatabaseInstaller {
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'id_manager' => 'INT(32) NOT NULL',
                 'id_group' => 'INT(32) NOT NULL',
-                'is_deleted' => 'INT(2) NOT NULL DEFAULT 0'
+                'is_deleted' => 'INT(2) NOT NULL DEFAULT 0',
+                'rank' => 'VARCHAR(256) NOT NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',

@@ -191,10 +191,14 @@ class DocumentModel extends AModel {
         $idManager = $row['id_manager'];
         $idGroup = $row['id_group'];
         $isDeleted = $row['is_deleted'];
+        $rank = $row['rank'];
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted'));
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank'));
 
-        return new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $row);
+        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank);
+        $document->setMetadata($row);
+
+        return $document;
     }
 }
 
