@@ -27,7 +27,7 @@ class FileManager {
      * @param string $data serialized cache data
      * @return bool true if data was written and false if it was not written
      */
-    public function writeCache(string $file, string $data) {
+    public function writeCache(string $file, string|array $data) {
         return $this->write($this->cacheFolder . $file, $data, true);
     }
 
@@ -35,10 +35,15 @@ class FileManager {
      * Reads a cache file from the cache folder
      * 
      * @param string $file filename
-     * @return string|bool string if file is successfully loaded and false if it does not exist
+     * @param bool $returnArray true if array should be returned and false if string should be returned
+     * @return string|array|bool string or array if file is successfully loaded and false if it does not exist
      */
-    public function readCache(string $file) {
-        return $this->read($this->cacheFolder . $file);
+    public function readCache(string $file, bool $returnArray = false) {
+        if($returnArray) {
+            return $this->readArray($this->cacheFolder . $file);
+        } else {
+            return $this->read($this->cacheFolder . $file);
+        }
     }
 
     /**

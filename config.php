@@ -7,5 +7,6 @@ $cfg['db_name'] = '';
 
 $cfg['log_dir'] = '';
 $cfg['cache_dir'] = '';
+$cfg['serialize_cache'] = true; // false does not work yet
 
 ?>
