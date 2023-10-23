@@ -87,6 +87,116 @@ class Metadata extends APresenter {
         $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
 
+    protected function showUserRights() {
+        global $app;
+
+        $idMetadata = htmlspecialchars($_GET['id_metadata']);
+        $metadata = $app->metadataModel->getMetadataById($idMetadata);
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-rights-grid.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Metadata <i>' . $metadata->getName() . '</i> user rights',
+            '$METADATA_RIGHTS_GRID$' => $this->internalCreateRightsGrid($idMetadata)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function updateRight() {
+        global $app;
+
+        $idMetadata = htmlspecialchars($_GET['id_metadata']);
+        $idUser = htmlspecialchars($_GET['id_user']);
+        $name = htmlspecialchars($_GET['name']);
+        $action = htmlspecialchars($_GET['action']);
+
+        switch($action) {
+            case 'enable':
+                $app->userRightModel->enableRight($idUser, $idMetadata, $name);
+                break;
+
+            case 'disable':
+                $app->userRightModel->disableRight($idUser, $idMetadata, $name);
+                break;
+        }
+
+        $app->redirect('UserModule:Metadata:showUserRights', array('id_metadata' => $idMetadata));
+    }
+
+    private function internalCreateRightsGrid(int $idMetadata) {
+        global $app;
+
+        $tb = TableBuilder::getTemporaryObject();
+
+        $headers = array(
+            'User',
+            'View',
+            'Edit',
+            'View values',
+            'Edit values'
+        );
+
+        $headerRow = null;
+
+        $users = $app->userModel->getAllUsers();
+
+        if(empty($users)) {
+            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+        } else {
+            foreach($users as $user) {
+                $idUser = $user->getId();
+
+                if(is_null($headerRow)) {
+                    $row = $tb->createRow();
+
+                    foreach($headers as $header) {
+                        $col = $tb->createCol()->setText($header)
+                                               ->setBold();
+
+                        $row->addCol($col);
+                    }
+
+                    $headerRow = $row;
+
+                    $tb->addRow($row);
+                }
+
+                $userRow = $tb->createRow();
+
+                $rights = $app->userRightModel->getMetadataRights($idUser, $idMetadata);
+
+                $enableLink = function (string $name) use ($idMetadata, $idUser) {
+                    $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'enable'), 'No', 'general-link', 'color: red');
+                    return $link;
+                };
+
+                $disableLink = function (string $name) use ($idMetadata, $idUser) {
+                    $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'disable'), 'Yes', 'general-link', 'color: green');
+                    return $link;
+                };
+
+                $data = array(
+                    $user->getFullname(),
+                    $rights['view'] ? $disableLink('view') : $enableLink('view'),
+                    $rights['edit'] ? $disableLink('edit') : $enableLink('edit'),
+                    $rights['view_values'] ? $disableLink('view_values') : $enableLink('view_values'),
+                    $rights['edit_values'] ? $disableLink('edit_values') : $enableLink('edit_values')
+                );
+
+                foreach($data as $d) {
+                    $userRow->addCol($tb->createCol()->setText($d));
+                }
+
+                $tb->addRow($userRow);
+            }
+        }
+
+        return $tb->build();
+    }
+
     private function internalCreateNewValueForm(int $idMetadata) {
         $fb = FormBuilder::getTemporaryObject();
 

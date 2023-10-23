@@ -3,39 +3,44 @@
 namespace DMS\UI;
 
 class LinkBuilder {
-    /**
-     * @var string
-     */
-    private $url;
-
-    /**
-     * @var string
-     */
-    private $class;
-
-    /**
-     * @var string
-     */
-    private $name;
+    private string $url;
+    private string $class;
+    private string $name;
+    private string $style;
     
-    public function __construct(string $url, string $class, string $name) {
+    public function __construct(string $url, string $class, string $name, string $style = '') {
         $this->url = $url;
         $this->class = $class;
         $this->name = $name;
+        $this->style = $style;
     }
 
     public function render() {
-        $template = $this->getTemplate();
+        $hasStyle = false;
+
+        if($this->style != '') {
+            $hasStyle = true;
+        }
+
+        $template = $this->getTemplate($hasStyle);
 
         $template = str_replace('$CLASS$', $this->class, $template);
         $template = str_replace('$URL$', $this->url, $template);
         $template = str_replace('$NAME$', $this->name, $template);
 
+        if($this->style != '') {
+            $template = str_replace('$STYLE$', $this->style, $template);
+        }
+
         return $template;
     }
 
-    private function getTemplate() {
-        return '<a class="$CLASS$" href="$URL$">$NAME$</a>';
+    private function getTemplate(bool $style = false) {
+        if(!$style) {
+            return '<a class="$CLASS$" href="$URL$">$NAME$</a>';
+        } else {
+            return '<a class="$CLASS$" href="$URL$" style="$STYLE$">$NAME$</a>';
+        }
     }
 
     public static function createLink(string $url, string $name, string $class = 'general-link') {
@@ -43,7 +48,7 @@ class LinkBuilder {
         return $obj->render();
     }
 
-    public static function createAdvLink(array $urlParams, string $name, string $class = 'general-link') {
+    public static function createAdvLink(array $urlParams, string $name, string $class = 'general-link', string $style = '') {
         $url = '?';
 
         $i = 0;
@@ -57,7 +62,7 @@ class LinkBuilder {
             $i++;
         }
 
-        $obj = new self($url, $class, $name);
+        $obj = new self($url, $class, $name, $style);
         return $obj->render();
     }
 }

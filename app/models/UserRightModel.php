@@ -14,6 +14,63 @@ class UserRightModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function enableRight(int $idUser, int $idMetadata, string $name) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('user_metadata_rights')
+                     ->set(array(
+                        $name => ':' . $name
+                     ))
+                     ->where('id_user=:id_user')
+                     ->andWhere('id_metadata=:id_metadata')
+                     ->setParams(array(
+                        ':id_user' => $idUser,
+                        ':id_metadata' => $idMetadata,
+                        ':' . $name => '1'
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function disableRight(int $idUser, int $idMetadata, string $name) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('user_metadata_rights')
+                     ->set(array(
+                        $name => ':' . $name
+                     ))
+                     ->where('id_user=:id_user')
+                     ->andWhere('id_metadata=:id_metadata')
+                     ->setParams(array(
+                        ':id_user' => $idUser,
+                        ':id_metadata' => $idMetadata,
+                        ':' . $name => '0'
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function getMetadataRights(int $idUser, int $idMetadata) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('user_metadata_rights')
+                  ->where('id_user=:id_user')
+                  ->andWhere('id_metadata=:id_metadata')
+                  ->setParams(array(
+                    ':id_user' => $idUser,
+                    ':id_metadata' => $idMetadata
+                  ))
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
     public function updateBulkActionRight(int $idUser, string $rightName, bool $status) {
         $qb = $this->qb(__METHOD__);
 
