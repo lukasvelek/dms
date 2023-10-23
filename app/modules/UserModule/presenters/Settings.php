@@ -179,6 +179,23 @@ class Settings extends APresenter {
         $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
 
+    protected function deleteMetadata() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+        $metadata = $app->metadataModel->getMetadataById($id);
+
+        // delete table column
+        // delete values
+        // delete metadata
+
+        $app->tableModel->removeColFromTable($metadata->getTableName(), $metadata->getName());
+        $app->metadataModel->deleteMetadataValues($id);
+        $app->metadataModel->deleteMetadata($id);
+
+        $app->redirect('UserModule:Settings:showMetadata');
+    }
+
     protected function createNewGroup() {
         global $app;
 
@@ -543,7 +560,8 @@ class Settings extends APresenter {
         } else {
             foreach($metadata as $m) {
                 $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values')
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values'),
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete')
                 );
 
                 if(is_null($headerRow)) {

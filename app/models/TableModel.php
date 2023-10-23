@@ -17,6 +17,14 @@ class TableModel extends AModel {
 
         return $result;
     }
+
+    public function removeColFromTable(string $tableName, string $colName) {
+        $sql = "ALTER TABLE `$tableName` DROP COLUMN `$colName`";
+
+        $result = $this->db->query($sql);
+
+        return $result;
+    }
 }
 
 ?>
