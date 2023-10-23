@@ -23,12 +23,14 @@ class DatabaseInstaller {
     public function install() {
         $this->createTables();
         $this->insertDefaultUsers();
+        $this->insertDefaultMetadata();
 
-        $this->updateDefaultUserPanelRights();
+        //$this->updateDefaultUserPanelRights();
 
         $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
+        $this->insertDefaultUserMetadataRights();
     }
 
     public function updateDefaultUserPanelRights() {
@@ -138,6 +140,24 @@ class DatabaseInstaller {
                 'id_metadata' => 'INT(32) NOT NULL',
                 'name' => 'VARCHAR(256) NOT NULL',
                 'value' => 'VARCHAR(256) NOT NULL'
+            ),
+            'user_metadata_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_metadata' => 'INT(32) NOT NULL',
+                'id_user' => 'INT(32) NOT NULL',
+                'view' => 'INT(2) NOT NULL DEFAULT 0',
+                'edit' => 'INT(2) NOT NULL DEFAULT 0',
+                'view_values' => 'INT(2) NOT NULL DEFAULT 0',
+                'edit_values' => 'INT(2) NOT NULL DEFAULT 0'
+            ),
+            'group_metadata_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_metadata' => 'INT(32) NOT NULL',
+                'id_group' => 'INT(32) NOT NULL',
+                'view' => 'INT(2) NOT NULL DEFAULT 0',
+                'edit' => 'INT(2) NOT NULL DEFAULT 0',
+                'view_values' => 'INT(2) NOT NULL DEFAULT 0',
+                'edit_values' => 'INT(2) NOT NULL DEFAULT 0'
             )
         );
 
@@ -361,6 +381,188 @@ class DatabaseInstaller {
             foreach($uactions as $uaction) {
                 $sql = "INSERT INTO `user_action_rights` (`id_user`, `action_name`, `is_executable`)
                 VALUES ('$id', '$uaction', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    public function insertDefaultMetadata() {
+        $metadata = array(
+            array(
+                'table_name' => 'documents',
+                'name' => 'rank',
+                'text' => 'Rank'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'status',
+                'text' => 'Status'
+            ),
+            array(
+                'table_name' => 'users',
+                'name' => 'status',
+                'text' => 'Status'
+            ),
+            array(
+                'table_name' => 'processes',
+                'name' => 'status',
+                'text' => 'Status'
+            ),
+            array(
+                'table_name' => 'processes',
+                'name' => 'type',
+                'text' => 'Type'
+            )
+        );
+
+        $idsMetadata = [];
+        
+        foreach($metadata as $m) {
+            $name = $m['name'];
+            $tableName = $m['table_name'];
+            $text = $m['text'];
+
+            $sql = "INSERT INTO `metadata` (`name`, `text`, `table_name`, `is_system`)
+                    VALUES ('$name', '$text', '$tableName', '1')";
+
+            $this->logger->sql($sql, __METHOD__);
+
+            $this->db->query($sql);
+
+            $sql = "SELECT `id` FROM `metadata` WHERE `name` = '$name' AND `table_name` = '$tableName'";
+            
+            $this->logger->sql($sql, __METHOD__);
+
+            $rows = $this->db->query($sql);
+
+            foreach($rows as $row) {
+                $idsMetadata[$tableName . '.' . $name] = $row['id'];
+            }
+        }
+
+        foreach($idsMetadata as $name => $id) {
+            $values = [];
+
+            switch($name) {
+                case 'documents.rank':
+                    $values[$id] = array(
+                        array(
+                            'name' => 'Public',
+                            'value' => 'public'
+                        ),
+                        array(
+                            'name' => 'Private',
+                            'value' => 'private'
+                        )
+                    );
+                    break;
+
+                case 'document.status':
+                    $values[$id] = array(
+                        array(
+                            'name' => 'New',
+                            'value' => '1'
+                        ),
+                        array(
+                            'name' => 'Deleted',
+                            'value' => '2'
+                        ),
+                        array(
+                            'name' => 'Archivation approved',
+                            'value' => '3'
+                        ),
+                        array(
+                            'name' => 'Archivation declined',
+                            'value' => '4'
+                        )
+                    );
+                    break;
+
+                case 'users.status':
+                    $values[$id] = array(
+                        array(
+                            'name' => 'Inactive',
+                            'value' => '0'
+                        ),
+                        array(
+                            'name' => 'Active',
+                            'value' => '1'
+                        )
+                    );
+                    break;
+
+                case 'processes.status':
+                    $values[$id] = array(
+                        array(
+                            'name' => 'In progress',
+                            'value' => '1'
+                        ),
+                        array(
+                            'name' => 'Finished',
+                            'value' => '2'
+                        )
+                    );
+                    break;
+
+                case 'processes.type':
+                    $values[$id] = array(
+                        array(
+                            'name' => 'Delete',
+                            'value' => '1'
+                        )
+                    );
+                    break;
+            }
+
+            foreach($values as $id => $values) {
+                /*$name = $value['name'];
+                $value = $value['value'];*/
+
+                foreach($values as $value) {
+                    $n = $value['name'];
+                    $v = $value['value'];
+
+                    $sql = "INSERT INTO `metadata_values` (`id_metadata`, `name`, `value`)
+                        VALUES ('$id', '$n', '$v')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+                }
+            }
+        }
+    }
+
+    public function insertDefaultUserMetadataRights() {
+        $sql = "SELECT `id` FROM `users`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $idUsers = [];
+        foreach($rows as $row) {
+            $idUsers[] = $row['id'];
+        }
+
+        $sql = "SELECT `id` FROM `metadata`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $idMetadata = [];
+        foreach($rows as $row) {
+            $idMetadata[] = $row['id'];
+        }
+
+        foreach($idUsers as $idUser) {
+            foreach($idMetadata as $idMeta) {
+                $sql = "INSERT INTO `user_metadata_rights` (`id_metadata`, `id_user`, `view`, `edit`, `view_values`, `edit_values`)
+                        VALUES ('$idMeta', '$idUser', '1', '1', '1', '1')";
 
                 $this->logger->sql($sql, __METHOD__);
 
