@@ -2,6 +2,7 @@
 
 namespace DMS\Authorizators;
 
+use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 
@@ -36,6 +37,10 @@ class MetadataAuthorizator extends AAuthorizator {
 
     private function getRightRow(int $idUser, int $idMetadata) {
         $qb = $this->qb(__METHOD__);
+
+        //$cm = CacheManager::getTemporaryObject('metadata_authorizator');
+
+        
 
         $row = $qb->select('*')
                   ->from('user_metadata_rights')

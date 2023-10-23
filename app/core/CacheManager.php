@@ -5,11 +5,13 @@ namespace DMS\Core;
 class CacheManager {
     private FileManager $fm;
     private bool $serialize;
+    private string $special;
 
-    public function __construct(bool $serialize) {
+    public function __construct(bool $serialize, string $special = '') {
         $this->fm = new FileManager('logs/', 'cache/');
 
         $this->serialize = $serialize;
+        $this->special = $special;
     }
 
     public function saveToCache(array $data) {
@@ -66,16 +68,20 @@ class CacheManager {
         return $data;
     }
 
-    public static function getTemporaryObject() {
+    public static function getTemporaryObject(string $special = '') {
         global $app;
 
-        return new self($app->cfg['serialize_cache']);
+        return new self($app->cfg['serialize_cache'], $special);
     }
 
     private function createFilename() {
         global $app;
 
         $name = $app->user->getId() . date('Y-m-d');
+
+        if($this->special != '') {
+            $name .= $this->special;
+        }
 
         $file = md5($name) . '.tmp';
 
