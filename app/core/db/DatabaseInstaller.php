@@ -130,7 +130,8 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'name' => 'VARCHAR(256) NOT NULL',
                 'text' => 'VARCHAR(256) NOT NULL',
-                'table_name' => 'VARCHAR(256) NOT NULL'
+                'table_name' => 'VARCHAR(256) NOT NULL',
+                'is_system' => 'INT(2) NOT NULL DEFAULT 0'
             ),
             'metadata_values' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',

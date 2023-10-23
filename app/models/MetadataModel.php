@@ -38,13 +38,15 @@ class MetadataModel extends AModel {
         return $result;
     }
 
-    public function getMetadataByName(string $name) {
+    public function getMetadataByName(string $name, string $tableName) {
         $qb = $this->qb(__METHOD__);
 
         $row = $qb->select('*')
                   ->from('metadata')
                   ->where('name=:name')
+                  ->andWhere('table_name=:table_name')
                   ->setParam(':name', $name)
+                  ->setParam(':table_name', $tableName)
                   ->execute()
                   ->fetchSingle();
 
@@ -166,8 +168,15 @@ class MetadataModel extends AModel {
         $name = $row['name'];
         $text = $row['text'];
         $tableName = $row['table_name'];
+        $isSystem = $row['is_system'];
 
-        return new Metadata($id, $name, $text, $tableName);
+        if($isSystem == '1') {
+            $isSystem = true;
+        } else {
+            $isSystem = false;
+        }
+
+        return new Metadata($id, $name, $text, $tableName, $isSystem);
     }
 
     private function createMetadataValueObjectFromDbRow($row) {

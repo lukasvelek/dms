@@ -162,8 +162,16 @@ class Documents extends APresenter {
 
                 $docuRow->addCol($tb->createCol()->setText($document->getName()))
                         ->addCol($tb->createCol()->setText($app->userModel->getUserById($document->getIdAuthor())->getFullname()))
-                        ->addCol($tb->createCol()->setText(DocumentStatus::$texts[$document->getStatus()]))
+                        /*->addCol($tb->createCol()->setText(DocumentStatus::$texts[$document->getStatus()]))*/
                 ;
+
+                $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($app->metadataModel->getMetadataByName('status', 'documents')->getId());
+
+                foreach($dbStatuses as $dbs) {
+                    if($dbs->getValue() == $document->getStatus()) {
+                        $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
+                    }
+                }
 
                 $tb->addRow($docuRow);
             }
@@ -219,12 +227,23 @@ class Documents extends APresenter {
             );
         }
 
-        $statuses = array(
+        /*$statuses = array(
             array(
                 'value' => DocumentStatus::NEW,
                 'text' => DocumentStatus::$texts[DocumentStatus::NEW]
             )
-        );
+        );*/
+
+        $statusMetadata = $app->metadataModel->getMetadataByName('status', 'documents');
+        $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($statusMetadata->getId());
+
+        $statuses = [];
+        foreach($dbStatuses as $dbs) {
+            $statuses[] = array(
+                'value' => $dbs->getValue(),
+                'text' => $dbs->getName()
+            );
+        }
 
         $dbGroups = $app->groupModel->getAllGroups();
 
@@ -236,11 +255,14 @@ class Documents extends APresenter {
             );
         }
 
+        $rankMetadata = $app->metadataModel->getMetadataByName('rank', 'documents');
+        $dbRanks = $app->metadataModel->getAllValuesForIdMetadata($rankMetadata->getId());
+
         $ranks = [];
-        foreach(DocumentRank::$texts as $k => $v) {
+        foreach($dbRanks as $dbr) {
             $ranks[] = array(
-                'value' => $k,
-                'text' => $v
+                'value' => $dbr->getValue(),
+                'text' => $dbr->getName()
             );
         }
 
@@ -249,6 +271,10 @@ class Documents extends APresenter {
         $metadata = [];
 
         foreach($customMetadata as $cm) {
+            if($cm->getIsSystem()) {
+                continue;
+            }
+
             $name = $cm->getName();
             $text = $cm->getText();
             $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());

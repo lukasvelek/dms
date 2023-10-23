@@ -58,17 +58,27 @@ class SingleDocument extends APresenter {
 
         $tb = TableBuilder::getTemporaryObject();
 
+        $status = '-';
+        $statusMetadata = $app->metadataModel->getMetadataByName('status', 'documents');
+        $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($statusMetadata->getId());
+
+        foreach($dbStatuses as $dbs) {
+            if($dbs->getValue() == $document->getStatus()) {
+                $status = $dbs->getName();
+            }
+        }
+
         $data = array(
             'Name' => $document->getName(),
             'Author' => $this->createUserLink($document->getIdAuthor()),
             'Manager' => $this->createUserLink($document->getIdManager()),
-            'Status' => DocumentStatus::$texts[$document->getStatus()],
+            'Status' => $status,
             'Group' => $this->createGroupLink($document->getIdGroup()),
             'Deleted?' => $document->getIsDeleted() ? 'Yes' : 'No'
         );
 
         foreach($document->getMetadata() as $k => $v) {
-            $m = $app->metadataModel->getMetadataByName($k);
+            $m = $app->metadataModel->getMetadataByName($k, 'documents');
             $mValues = $app->metadataModel->getAllValuesForIdMetadata($m->getId());
 
             $vText = '-';

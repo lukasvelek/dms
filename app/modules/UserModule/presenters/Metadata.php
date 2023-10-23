@@ -44,9 +44,14 @@ class Metadata extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Metadata <i>' . $metadata->getName() . '</i> values',
-            '$METADATA_GRID$' => $this->internalCreateValuesGrid($idMetadata),
-            '$NEW_ENTITY_LINK$' => '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value') . '</div></div>'
+            '$METADATA_GRID$' => $this->internalCreateValuesGrid($idMetadata, $metadata->getIsSystem())
         );
+
+        if(!$metadata->getIsSystem()) {
+            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value') . '</div></div>';
+        } else {
+            $data['$NEW_ENTITY_LINK$'] = '';
+        }
 
         $this->templateManager->fill($data, $template);
 
@@ -99,7 +104,7 @@ class Metadata extends APresenter {
         return $fb->build();
     }
 
-    private function internalCreateValuesGrid(int $id) {
+    private function internalCreateValuesGrid(int $id, bool $isSystem = false) {
         global $app;
 
         $tb = TableBuilder::getTemporaryObject();
@@ -118,9 +123,13 @@ class Metadata extends APresenter {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($values as $v) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete')
-                );
+                $actionLinks = [];
+
+                if(!$isSystem) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
+                } else {
+                    $actionLinks[] = '-';
+                }
 
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();
