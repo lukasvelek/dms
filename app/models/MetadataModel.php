@@ -12,6 +12,19 @@ class MetadataModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getMetadataByName(string $name) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('metadata')
+                  ->where('name=:name')
+                  ->setParam(':name', $name)
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createMetadataObjectFromDbRow($row);
+    }
+
     public function getAllMetadataForTableName(string $tableName) {
         $qb = $this->qb(__METHOD__);
 

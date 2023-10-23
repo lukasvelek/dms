@@ -124,6 +124,18 @@ class DatabaseInstaller {
                 'id_group' => 'INT(32) NOT NULL',
                 'action_name' => 'VARCHAR(256) NOT NULL',
                 'is_executable' => 'INT(2) DEFAULT 0'
+            ),
+            'metadata' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'text' => 'VARCHAR(256) NOT NULL',
+                'table_name' => 'VARCHAR(256) NOT NULL'
+            ),
+            'metadata_values' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_metadata' => 'INT(32) NOT NULL',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'value' => 'VARCHAR(256) NOT NULL'
             )
         );
 

@@ -87,10 +87,10 @@ class Metadata extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Metadata:createNewValue&id_metadata=' . $idMetadata)
 
-            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createLabel()->setText('Text')->setFor('name'))
             ->addElement($fb->createInput()->setType('text')->setName('name')->require())
 
-            ->addElement($fb->createLabel()->setText('Value')->setFor('value'))
+            ->addElement($fb->createLabel()->setText('Database value')->setFor('value'))
             ->addElement($fb->createInput()->setType('text')->setName('value')->require())
 
             ->addElement($fb->createSubmit('Create'))

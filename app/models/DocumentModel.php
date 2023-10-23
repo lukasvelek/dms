@@ -192,7 +192,7 @@ class DocumentModel extends AModel {
         $idGroup = $row['id_group'];
         $isDeleted = $row['is_deleted'];
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_maanger', 'id_group', 'is_deleted'));
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted'));
 
         return new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $row);
     }
