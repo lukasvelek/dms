@@ -134,7 +134,8 @@ class DatabaseInstaller {
                 'text' => 'VARCHAR(256) NOT NULL',
                 'table_name' => 'VARCHAR(256) NOT NULL',
                 'is_system' => 'INT(2) NOT NULL DEFAULT 0',
-                'input_type' => 'VARCHAR(256) NOT NULL'
+                'input_type' => 'VARCHAR(256) NOT NULL',
+                'length' => 'VARCHAR(256) NOT NULL'
             ),
             'metadata_values' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',

@@ -227,13 +227,6 @@ class Documents extends APresenter {
             );
         }
 
-        /*$statuses = array(
-            array(
-                'value' => DocumentStatus::NEW,
-                'text' => DocumentStatus::$texts[DocumentStatus::NEW]
-            )
-        );*/
-
         $statusMetadata = $app->metadataModel->getMetadataByName('status', 'documents');
         $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($statusMetadata->getId());
 
@@ -287,7 +280,7 @@ class Documents extends APresenter {
                 );
             }
 
-            $metadata[$name] = array('text' => $text, 'options' => $options);
+            $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
         }
 
         $fb = FormBuilder::getTemporaryObject();
@@ -320,10 +313,33 @@ class Documents extends APresenter {
         foreach($metadata as $name => $d) {
             $text = $d['text'];
             $options = $d['options'];
+            $inputType = $d['type'];
+            $inputLength = $d['length'];
 
-            $fb->addElement($fb->createLabel()->setText($text)->setFor($name))
-               ->addElement($fb->createSelect()->setName($name)->addOptionsBasedOnArray($options))
-            ;
+            switch($inputType) {
+                case 'select':
+                    $fb ->addElement($fb->createLabel()->setText($text)->setFor($name))
+                        ->addElement($fb->createSelect()->setName($name)->addOptionsBasedOnArray($options))
+                    ;
+                    break;
+
+                case 'text':
+                    $fb ->addElement($fb->createLabel()->setText($text)->setFor($name));
+
+                    if($inputLength > 256) {
+                        $fb->addElement($fb->createTextArea()->setName($name));
+                    } else {
+                        $fb->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength));
+                    }
+
+                    break;
+
+                case 'number':
+                    $fb ->addElement($fb->createLabel()->setText($text)->setFor($name))
+                        ->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength))
+                    ;
+                    break;
+            }
         }
 
         $fb->addElement($fb->createSubmit('Create'));

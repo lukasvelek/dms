@@ -197,7 +197,7 @@ class Settings extends APresenter {
         $length = htmlspecialchars($_POST['length']);
         $inputType = htmlspecialchars($_POST['input_type']);
 
-        $app->metadataModel->insertNewMetadata($name, $text, $tableName, $inputType);
+        $app->metadataModel->insertNewMetadata($name, $text, $tableName, $inputType, $length);
         $idMetadata = $app->metadataModel->getLastInsertedMetadata()->getId();
 
         $app->tableModel->addColToTable($tableName, $name, 'VARCHAR', $length);

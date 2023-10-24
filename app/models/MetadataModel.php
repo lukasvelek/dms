@@ -100,16 +100,17 @@ class MetadataModel extends AModel {
         return $this->createMetadataObjectFromDbRow($row);
     }
 
-    public function insertNewMetadata(string $name, string $text, string $tableName, string $inputType) {
+    public function insertNewMetadata(string $name, string $text, string $tableName, string $inputType, string $inputLength) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->insert('metadata', 'name', 'text', 'table_name', 'input_type')
-                     ->values(':name', ':text', ':table_name', ':input_type')
+        $result = $qb->insert('metadata', 'name', 'text', 'table_name', 'input_type', 'input_length')
+                     ->values(':name', ':text', ':table_name', ':input_type', ':input_length')
                      ->setParams(array(
                         ':name' => $name,
                         ':text' => $text,
                         ':table_name' => $tableName,
-                        ':input_type' => $inputType
+                        ':input_type' => $inputType,
+                        ':input_length' => $inputLength
                      ))
                      ->execute()
                      ->fetch();
@@ -171,6 +172,7 @@ class MetadataModel extends AModel {
         $tableName = $row['table_name'];
         $isSystem = $row['is_system'];
         $inputType = $row['input_type'];
+        $inputLength = $row['input_length'];
 
         if($isSystem == '1') {
             $isSystem = true;
@@ -178,7 +180,7 @@ class MetadataModel extends AModel {
             $isSystem = false;
         }
 
-        return new Metadata($id, $name, $text, $tableName, $isSystem, $inputType);
+        return new Metadata($id, $name, $text, $tableName, $isSystem, $inputType, $inputLength);
     }
 
     private function createMetadataValueObjectFromDbRow($row) {
