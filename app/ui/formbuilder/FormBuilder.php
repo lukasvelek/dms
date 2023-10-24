@@ -7,6 +7,7 @@ class FormBuilder {
   private string $method;
   private array $elements;
   private string $internalCode;
+  private string $id;
 
   public function __construct() {
     $this->clean();
@@ -20,6 +21,12 @@ class FormBuilder {
 
   public function setMethod(string $method) {
     $this->method = $method;
+
+    return $this;
+  }
+
+  public function setId(string $id) {
+    $this->id = $id;
 
     return $this;
   }
@@ -69,7 +76,7 @@ class FormBuilder {
   public function build() {
     $code = [];
 
-    $code[] = '<form action="' . $this->action . '" method="' . $this->method . '">';
+    $code[] = '<form action="' . $this->action . '" method="' . $this->method . '" id="' . $this->id . '">';
 
     foreach($this->elements as $element) {
       $code[] = $element->build()->script;
@@ -114,6 +121,7 @@ class FormBuilder {
     $this->method = '';
     $this->elements = array();
     $this->internalCode = '';
+    $this->id = '';
   }
 }
 

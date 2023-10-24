@@ -197,12 +197,21 @@ class Settings extends APresenter {
         $length = htmlspecialchars($_POST['length']);
         $inputType = htmlspecialchars($_POST['input_type']);
 
+        if($inputType == 'boolean') {
+            $length = '2';
+        } else if($inputType == 'select') {
+            $length = '256';
+        }
+
         $app->metadataModel->insertNewMetadata($name, $text, $tableName, $inputType, $length);
         $idMetadata = $app->metadataModel->getLastInsertedMetadata()->getId();
 
         $app->tableModel->addColToTable($tableName, $name, 'VARCHAR', $length);
 
         $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata, 'view', '1');
+        $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata, 'edit', '1');
+        $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata, 'view_values', '1');
+        $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata, 'edit_values', '1');
 
         $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
@@ -357,7 +366,7 @@ class Settings extends APresenter {
             );
         }
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewMetadata')
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewMetadata')->setId('new_metadata_form')
             ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
             ->addElement($fb->createInput()->setType('text')->setName('name')->require())
 
@@ -371,7 +380,7 @@ class Settings extends APresenter {
             ->addElement($fb->createSelect()->setName('input_type')->addOptionsBasedOnArray($metadataInputTypes)->setId('input_type'))
 
             ->addElement($fb->createLabel()->setFor('length')->setText('Length'))
-            ->addElement($fb->createInput()->setType('text')->setName('length')->require()->setId('length'))
+            ->addElement($fb->createInput()->setType('text')->setName('length')->require()->setId('length')->setValue(''))
 
             ->addElement($fb->createSubmit('Create'))
         ;

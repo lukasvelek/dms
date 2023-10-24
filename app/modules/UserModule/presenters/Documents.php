@@ -316,28 +316,31 @@ class Documents extends APresenter {
             $inputType = $d['type'];
             $inputLength = $d['length'];
 
+            $fb->addElement($fb->createLabel()->setText($text)->setFor($name));
+
             switch($inputType) {
                 case 'select':
-                    $fb ->addElement($fb->createLabel()->setText($text)->setFor($name))
-                        ->addElement($fb->createSelect()->setName($name)->addOptionsBasedOnArray($options))
-                    ;
+                    $fb ->addElement($fb->createSelect()->setName($name)->addOptionsBasedOnArray($options));
+                    
                     break;
 
                 case 'text':
-                    $fb ->addElement($fb->createLabel()->setText($text)->setFor($name));
-
                     if($inputLength > 256) {
                         $fb->addElement($fb->createTextArea()->setName($name));
                     } else {
-                        $fb->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength));
+                        $fb->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength)->setName($name));
                     }
 
                     break;
 
                 case 'number':
-                    $fb ->addElement($fb->createLabel()->setText($text)->setFor($name))
-                        ->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength))
-                    ;
+                    $fb ->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength)->setName($name));
+
+                    break;
+
+                case 'boolean':
+                    $fb ->addElement($fb->createInput()->setType('checkbox')->setName($name));
+
                     break;
             }
         }
