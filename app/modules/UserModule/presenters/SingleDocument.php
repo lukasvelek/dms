@@ -80,12 +80,17 @@ class SingleDocument extends APresenter {
         foreach($document->getMetadata() as $k => $v) {
             $m = $app->metadataModel->getMetadataByName($k, 'documents');
             $mValues = $app->metadataModel->getAllValuesForIdMetadata($m->getId());
-
+            
             $vText = '-';
 
-            foreach($mValues as $mv) {
-                if($mv->getValue() == $v) {
-                    $vText = $mv->getName();
+            if(empty($mValues)) {
+                // not select
+                $vText = $v;
+            } else {
+                foreach($mValues as $mv) {
+                    if($mv->getValue() == $v) {
+                        $vText = $mv->getName();
+                    }
                 }
             }
 
