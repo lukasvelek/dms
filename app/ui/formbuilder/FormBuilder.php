@@ -3,20 +3,10 @@
 namespace DMS\UI\FormBuilder;
 
 class FormBuilder {
-  /**
-   * @var string
-   */
-  private $action;
-
-  /**
-   * @var string
-   */
-  private $method;
-
-  /**
-   * @var array
-   */
-  private $elements;
+  private string $action;
+  private string $method;
+  private array $elements;
+  private string $internalCode;
 
   public function __construct() {
     $this->clean();
@@ -72,8 +62,12 @@ class FormBuilder {
     return new TextArea();
   }
 
+  public function addJSScript(string $jsScript) {
+    $this->internalCode .= $jsScript;
+  }
+
   public function build() {
-    $code = array();
+    $code = [];
 
     $code[] = '<form action="' . $this->action . '" method="' . $this->method . '">';
 
@@ -92,6 +86,8 @@ class FormBuilder {
     }
 
     $code[] ='</form>';
+
+    $code[] = $this->internalCode;
 
     $singleLineCode = '';
 
@@ -117,6 +113,7 @@ class FormBuilder {
     $this->action = '';
     $this->method = '';
     $this->elements = array();
+    $this->internalCode = '';
   }
 }
 

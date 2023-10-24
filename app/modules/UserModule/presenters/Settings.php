@@ -2,8 +2,10 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\MetadataInputType;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
+use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
@@ -192,13 +194,15 @@ class Settings extends APresenter {
         $name = htmlspecialchars($_POST['name']);
         $text = htmlspecialchars($_POST['text']);
         $tableName = htmlspecialchars($_POST['table_name']);
-        $type = htmlspecialchars($_POST['type']);
         $length = htmlspecialchars($_POST['length']);
+        $inputType = htmlspecialchars($_POST['input_type']);
 
-        $app->metadataModel->insertNewMetadata($name, $text, $tableName);
+        $app->metadataModel->insertNewMetadata($name, $text, $tableName, $inputType);
         $idMetadata = $app->metadataModel->getLastInsertedMetadata()->getId();
 
-        $app->tableModel->addColToTable($tableName, $name, $type, $length);
+        $app->tableModel->addColToTable($tableName, $name, 'VARCHAR', $length);
+
+        $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata, 'view', '1');
 
         $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
@@ -343,6 +347,16 @@ class Settings extends APresenter {
     private function internalCreateNewMetadataForm() {
         $fb = FormBuilder::getTemporaryObject();
 
+        $metadataTypesConst = MetadataInputType::$texts;
+
+        $metadataInputTypes = [];
+        foreach($metadataTypesConst as $k => $v) {
+            $metadataInputTypes[] = array(
+                'value' => $k,
+                'text' => $v
+            );
+        }
+
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewMetadata')
             ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
             ->addElement($fb->createInput()->setType('text')->setName('name')->require())
@@ -353,17 +367,18 @@ class Settings extends APresenter {
             ->addElement($fb->createLabel()->setFor('table_name')->setText('Database table name'))
             ->addElement($fb->createInput()->setType('text')->setName('table_name')->require())
 
-            ->addElement($fb->createLabel()->setFor('type')->setText('Type'))
-            ->addElement($fb->createSelect()->setName('type')->addOptions(array(
-                (new Option())->setValue('INT')->setText('int'),
-                (new Option())->setValue('VARCHAR')->setText('varchar')
-            )))
+            ->addElement($fb->createLabel()->setFor('input_type')->setText('Metadata input type'))
+            ->addElement($fb->createSelect()->setName('input_type')->addOptionsBasedOnArray($metadataInputTypes)->setId('input_type'))
 
             ->addElement($fb->createLabel()->setFor('length')->setText('Length'))
-            ->addElement($fb->createInput()->setType('text')->setName('length')->require())
+            ->addElement($fb->createInput()->setType('text')->setName('length')->require()->setId('length'))
 
             ->addElement($fb->createSubmit('Create'))
         ;
+
+        $formJS = ScriptLoader::loadJSScript('js/MetadataForm.js');
+
+        $fb->addJSScript($formJS);
 
         return $fb->build();
     }
@@ -572,7 +587,8 @@ class Settings extends APresenter {
             'Actions',
             'Name',
             'Text',
-            'Database table'
+            'Database table',
+            'Input type'
         );
         
         $headerRow = null;
@@ -595,7 +611,7 @@ class Settings extends APresenter {
                     $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete');
                 }
 
-                if($app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId()) && $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
+                if($m->getInputType() == 'select' && $app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId()) && $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
                     $actionLinks['values'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values');
                 }
 
@@ -631,7 +647,8 @@ class Settings extends APresenter {
                 $metaArray = array(
                     $m->getName(),
                     $m->getText(),
-                    $m->getTableName()
+                    $m->getTableName(),
+                    MetadataInputType::$texts[$m->getInputType()]
                 );
 
                 foreach($metaArray as $ma) {

@@ -14,6 +14,22 @@ class UserRightModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertMetadataRight(int $idUser, int $idMetadata, string $name, int $value) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->insert('user_metadata_rights', 'id_user', 'id_metadata', $name)
+                     ->values(':id_user', ':id_metadata', ':' . $name)
+                     ->setParams(array(
+                        ':id_user' => $idUser,
+                        ':id_metadata' => $idMetadata,
+                        ':' . $name => $value
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function enableRight(int $idUser, int $idMetadata, string $name) {
         $qb = $this->qb(__METHOD__);
 

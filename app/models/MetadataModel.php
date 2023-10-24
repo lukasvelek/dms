@@ -100,15 +100,16 @@ class MetadataModel extends AModel {
         return $this->createMetadataObjectFromDbRow($row);
     }
 
-    public function insertNewMetadata(string $name, string $text, string $tableName) {
+    public function insertNewMetadata(string $name, string $text, string $tableName, string $inputType) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->insert('metadata', 'name', 'text', 'table_name')
-                     ->values(':name', ':text', ':table_name')
+        $result = $qb->insert('metadata', 'name', 'text', 'table_name', 'input_type')
+                     ->values(':name', ':text', ':table_name', ':input_type')
                      ->setParams(array(
                         ':name' => $name,
                         ':text' => $text,
-                        ':table_name' => $tableName
+                        ':table_name' => $tableName,
+                        ':input_type' => $inputType
                      ))
                      ->execute()
                      ->fetch();
@@ -169,6 +170,7 @@ class MetadataModel extends AModel {
         $text = $row['text'];
         $tableName = $row['table_name'];
         $isSystem = $row['is_system'];
+        $inputType = $row['input_type'];
 
         if($isSystem == '1') {
             $isSystem = true;
@@ -176,7 +178,7 @@ class MetadataModel extends AModel {
             $isSystem = false;
         }
 
-        return new Metadata($id, $name, $text, $tableName, $isSystem);
+        return new Metadata($id, $name, $text, $tableName, $isSystem, $inputType);
     }
 
     private function createMetadataValueObjectFromDbRow($row) {

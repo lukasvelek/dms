@@ -18,6 +18,8 @@ class Select implements IBuildable {
    */
   private $disable;
 
+  private string $id;
+
   public $script;
 
   public function __construct() {
@@ -25,12 +27,19 @@ class Select implements IBuildable {
     $this->options = array();
     $this->script = '';
     $this->disable = '';
+    $this->id = '';
 
     return $this;
   }
 
   public function setName(string $name) {
     $this->name = $name;
+
+    return $this;
+  }
+
+  public function setId(string $id) {
+    $this->id = $id;
 
     return $this;
   }
@@ -79,7 +88,7 @@ class Select implements IBuildable {
   }
 
   public function build() {
-    $script = '<select name="' . $this->name . '" ' . $this->disable . '>';
+    $script = '<select name="' . $this->name . '" ' . $this->disable . ' id="' . $this->id . '">';
 
     foreach($this->options as $o) {
       $script .= $o->build()->script;

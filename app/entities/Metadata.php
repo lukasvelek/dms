@@ -7,14 +7,16 @@ class Metadata extends AEntity {
     private string $text;
     private string $tableName;
     private bool $isSystem;
+    private string $inputType;
 
-    public function __construct(int $id, string $name, string $text, string $tableName, bool $isSystem) {
+    public function __construct(int $id, string $name, string $text, string $tableName, bool $isSystem, string $inputType) {
         parent::__construct($id, null);
 
         $this->name = $name;
         $this->text = $text;
         $this->tableName = $tableName;
         $this->isSystem = $isSystem;
+        $this->inputType = $inputType;
     }
 
     public function getName() {
@@ -31,6 +33,10 @@ class Metadata extends AEntity {
 
     public function getIsSystem() {
         return $this->isSystem;
+    }
+
+    public function getInputType() {
+        return $this->inputType;
     }
 }
 

@@ -14,11 +14,19 @@ class MetadataAuthorizator extends AAuthorizator {
     public function canUserViewMetadata(int $idUser, int $idMetadata) {
         $row = $this->getRightRow($idUser, $idMetadata);
 
+        if(is_null($row)) {
+            return false;
+        }
+
         return $row['view'] ? true : false;
     }
 
     public function canUserEditMetadata(int $idUser, int $idMetadata) {
         $row = $this->getRightRow($idUser, $idMetadata);
+
+        if(is_null($row)) {
+            return false;
+        }
 
         return $row['edit'] ? true : false;
     }
@@ -26,11 +34,19 @@ class MetadataAuthorizator extends AAuthorizator {
     public function canUserViewMetadataValues(int $idUser, int $idMetadata) {
         $row = $this->getRightRow($idUser, $idMetadata);
 
+        if(is_null($row)) {
+            return false;
+        }
+
         return $row['view_values'] ? true : false;
     }
 
     public function canUserEditMetadataValues(int $idUser, int $idMetadata) {
         $row = $this->getRightRow($idUser, $idMetadata);
+
+        if(is_null($row)) {
+            return false;
+        }
 
         return $row['edit_values'] ? true : false;
     }
