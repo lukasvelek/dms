@@ -86,6 +86,13 @@ class SingleDocument extends APresenter {
             if(empty($mValues)) {
                 // not select
                 $vText = $v;
+
+                if($m->getInputType() == 'boolean') {
+                    $checkboxTrue = '<input type="checkbox" checked disabled>';
+                    $checkboxFalse = '<input type="checkbox" disabled>';
+
+                    $vText = $v ? $checkboxTrue : $checkboxFalse;
+                }
             } else {
                 foreach($mValues as $mv) {
                     if($mv->getValue() == $v) {

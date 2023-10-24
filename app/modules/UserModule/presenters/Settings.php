@@ -201,6 +201,8 @@ class Settings extends APresenter {
             $length = '2';
         } else if($inputType == 'select') {
             $length = '256';
+        } else if($inputType == 'date') {
+            $length = '10';
         }
 
         $app->metadataModel->insertNewMetadata($name, $text, $tableName, $inputType, $length);
@@ -208,12 +210,18 @@ class Settings extends APresenter {
 
         $app->tableModel->addColToTable($tableName, $name, 'VARCHAR', $length);
 
-        $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata, 'view', '1');
-        $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata, 'edit', '1');
-        $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata, 'view_values', '1');
-        $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata, 'edit_values', '1');
+        $app->userRightModel->insertMetadataRight($app->user->getId(), $idMetadata);
 
-        $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
+        $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'view');
+        $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'edit');
+        $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'view_values');
+        $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'edit_values');
+
+        if($inputType == 'select') {
+            $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
+        } else {
+            $app->redirect('UserModule:Settings:showMetadata');
+        }
     }
 
     protected function deleteMetadata() {

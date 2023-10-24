@@ -342,6 +342,16 @@ class Documents extends APresenter {
                     $fb ->addElement($fb->createInput()->setType('checkbox')->setName($name));
 
                     break;
+
+                case 'date':
+                    $fb ->addElement($fb->createInput()->setType('date')->setName($name));
+
+                    break;
+
+                case 'datetime':
+                    $fb ->addElement($fb->createInput()->setType('datetime')->setName($name));
+
+                    break;
             }
         }
 

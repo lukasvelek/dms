@@ -7,6 +7,12 @@ if(type.value == "select") {
 } else if(type.value == "boolean") {
     lengthElem.disabled = true;
     lengthElem.value = "2";
+} else if(type.value == "date") {
+    lengthElem.disabled = true;
+    lengthElem.value = "10";
+} else if(type.value == "datetime") {
+    lengthElem.disabled = true;
+    lengthElem.value = "16";
 } else {
     lengthElem.disabled = false;
     lengthElem.value = "";
@@ -21,6 +27,12 @@ type.onchange = function() {
     } else if(type.value == "boolean") {
         lengthElem.disabled = true;
         lengthElem.value = "2";
+    } else if(type.value == "date") {
+        lengthElem.disabled = true;
+        lengthElem.value = "10";
+    } else if(type.value == "datetime") {
+        lengthElem.disabled = true;
+        lengthElem.value = "16";
     } else {
         lengthElem.disabled = false;
         lengthElem.value = "";
