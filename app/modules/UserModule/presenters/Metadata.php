@@ -47,10 +47,13 @@ class Metadata extends APresenter {
             '$METADATA_GRID$' => $this->internalCreateValuesGrid($idMetadata, $metadata->getIsSystem())
         );
 
+        $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value');
+        $backLink = LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-');
+
         if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $idMetadata) && !$metadata->getIsSystem()) {
-            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value') . '</div></div>';
+            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>';
         } else {
-            $data['$NEW_ENTITY_LINK$'] = '';
+            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . $backLink . '</div></div>';
         }
 
         $this->templateManager->fill($data, $template);
@@ -59,15 +62,16 @@ class Metadata extends APresenter {
     }
 
     protected function showNewValueForm() {
-        global $app;
-
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-new-entity-form.html');
 
+        $backLink = LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-');
+
         $data = array(
             '$PAGE_TITLE$' => 'New value form',
-            '$FORM$' => $this->internalCreateNewValueForm($idMetadata)
+            '$FORM$' => $this->internalCreateNewValueForm($idMetadata),
+            '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '</div></div>'
         );
 
         $this->templateManager->fill($data, $template);
@@ -95,9 +99,12 @@ class Metadata extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-rights-grid.html');
 
+        $backLink = LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-');
+
         $data = array(
             '$PAGE_TITLE$' => 'Metadata <i>' . $metadata->getName() . '</i> user rights',
-            '$METADATA_RIGHTS_GRID$' => $this->internalCreateRightsGrid($idMetadata)
+            '$METADATA_RIGHTS_GRID$' => $this->internalCreateRightsGrid($idMetadata),
+            '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '</div></div>'
         );
 
         $this->templateManager->fill($data, $template);

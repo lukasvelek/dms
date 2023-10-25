@@ -396,27 +396,37 @@ class DatabaseInstaller {
             array(
                 'table_name' => 'documents',
                 'name' => 'rank',
-                'text' => 'Rank'
+                'text' => 'Rank',
+                'input_type' => 'select',
+                'length' => '256'
             ),
             array(
                 'table_name' => 'documents',
                 'name' => 'status',
-                'text' => 'Status'
+                'text' => 'Status',
+                'input_type' => 'select',
+                'length' => '256'
             ),
             array(
                 'table_name' => 'users',
                 'name' => 'status',
-                'text' => 'Status'
+                'text' => 'Status',
+                'input_type' => 'select',
+                'length' => '256'
             ),
             array(
                 'table_name' => 'processes',
                 'name' => 'status',
-                'text' => 'Status'
+                'text' => 'Status',
+                'input_type' => 'select',
+                'length' => '256'
             ),
             array(
                 'table_name' => 'processes',
                 'name' => 'type',
-                'text' => 'Type'
+                'text' => 'Type',
+                'input_type' => 'select',
+                'length' => '256'
             )
         );
 
@@ -426,9 +436,11 @@ class DatabaseInstaller {
             $name = $m['name'];
             $tableName = $m['table_name'];
             $text = $m['text'];
+            $inputType = $m['input_type'];
+            $length = $m['length'];
 
-            $sql = "INSERT INTO `metadata` (`name`, `text`, `table_name`, `is_system`)
-                    VALUES ('$name', '$text', '$tableName', '1')";
+            $sql = "INSERT INTO `metadata` (`name`, `text`, `table_name`, `is_system`, `input_type`, `length`)
+                    VALUES ('$name', '$text', '$tableName', '1', '$inputType', '$length')";
 
             $this->logger->sql($sql, __METHOD__);
 

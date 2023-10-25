@@ -103,7 +103,7 @@ class MetadataModel extends AModel {
     public function insertNewMetadata(string $name, string $text, string $tableName, string $inputType, string $inputLength) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->insert('metadata', 'name', 'text', 'table_name', 'input_type', 'input_length')
+        $result = $qb->insert('metadata', 'name', 'text', 'table_name', 'input_type', 'length')
                      ->values(':name', ':text', ':table_name', ':input_type', ':input_length')
                      ->setParams(array(
                         ':name' => $name,
@@ -172,7 +172,7 @@ class MetadataModel extends AModel {
         $tableName = $row['table_name'];
         $isSystem = $row['is_system'];
         $inputType = $row['input_type'];
-        $inputLength = $row['input_length'];
+        $inputLength = $row['length'];
 
         if($isSystem == '1') {
             $isSystem = true;
