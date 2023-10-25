@@ -149,6 +149,14 @@ class QueryBuilder {
     return $this;
   }
 
+  public function whereNull(string $text) {
+    $text = trim($text);
+
+    $this->sql .= ' WHERE `' . $text . '` IS NULL';
+
+    return $this;
+  }
+
   public function whereNot(string $text, bool $like = false, bool $renderText = true) {
     $text = trim($text);
 

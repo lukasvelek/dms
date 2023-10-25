@@ -72,7 +72,8 @@ class DatabaseInstaller {
                 'id_manager' => 'INT(32) NOT NULL',
                 'id_group' => 'INT(32) NOT NULL',
                 'is_deleted' => 'INT(2) NOT NULL DEFAULT 0',
-                'rank' => 'VARCHAR(256) NOT NULL'
+                'rank' => 'VARCHAR(256) NOT NULL',
+                'id_folder' => 'INT(32) NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -160,6 +161,13 @@ class DatabaseInstaller {
                 'edit' => 'INT(2) NOT NULL DEFAULT 0',
                 'view_values' => 'INT(2) NOT NULL DEFAULT 0',
                 'edit_values' => 'INT(2) NOT NULL DEFAULT 0'
+            ),
+            'folders' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_parent_folder' => 'INT(32) NULL',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'description' => 'VARCHAR(256) NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 

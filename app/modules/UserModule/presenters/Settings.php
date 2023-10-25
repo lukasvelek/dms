@@ -41,6 +41,72 @@ class Settings extends APresenter {
         return $this->name;
     }
 
+    protected function showFolders() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-folders.html');
+
+        $newEntityLink = LinkBuilder::createLink('UserModule:Settings:showNewFolderForm', 'New folder');
+        $backLink = '';
+
+        $idFolder = null;
+        if(isset($_GET['id_folder'])) {
+            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $folder = $app->folderModel->getFolderById($idFolder);
+
+            if($folder->getIdParentFolder() != NULL) {
+                $backLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getIdParentFolder()), '<-');
+            } else {
+                $backLink = LinkBuilder::createLink('UserModule:Settings:showFolders', '<-');
+            }
+        }
+
+        $data = array(
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$PAGE_TITLE$' => 'Document folders',
+            '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>',
+            '$FOLDERS_GRID$' => $this->internalCreateFolderGrid()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showNewFolderForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $data = array(
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$PAGE_TITLE$' => 'New document folder form',
+            '$FORM$' => $this->internalCreateNewFolderForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function createNewFolder() {
+        global $app;
+
+        $name = htmlspecialchars($_POST['name']);
+        $parentFolder = htmlspecialchars($_POST['parent_folder']);
+        $description = null;
+
+        if(isset($_POST['description']) || $_POST['description'] == '') {
+            $description = htmlspecialchars($_POST['description']);
+        }
+
+        if($parentFolder == '-1') {
+            $parentFolder = null;
+        }
+
+        $app->folderModel->insertNewFolder($name, $description, $parentFolder);
+
+        $app->redirect('UserModule:Settings:showFolders');
+    }
+
     protected function showDashboard() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
 
@@ -677,6 +743,105 @@ class Settings extends APresenter {
         }
 
         return $tb->build();
+    }
+
+    private function internalCreateFolderGrid() {
+        global $app;
+
+        $tb = TableBuilder::getTemporaryObject();
+
+        $idFolder = null;
+
+        if(isset($_GET['id_folder'])) {
+            $idFolder = htmlspecialchars($_GET['id_folder']);
+        }
+
+        $headers = array(
+            'Actions',
+            'Name',
+            'Description'
+        );
+
+        $headerRow = null;
+
+        $folders = $app->folderModel->getFoldersForIdParentFolder($idFolder);
+
+        if(empty($folders)) {
+            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+        } else {
+            foreach($folders as $folder) {
+                $actionLinks = array(
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open')
+                );
+
+                if(is_null($headerRow)) {
+                    $row = $tb->createRow();
+
+                    foreach($headers as $header) {
+                        $col = $tb->createCol()->setText($header)
+                                               ->setBold();
+
+                        if($header == 'Actions') {
+                            $col->setColspan(count($actionLinks));
+                        }
+
+                        $row->addCol($col);
+                    }
+
+                    $headerRow = $row;
+
+                    $tb->addRow($row);
+                }
+
+                $folderRow = $tb->createRow();
+
+                foreach($actionLinks as $actionLink) {
+                    $folderRow->addCol($tb->createCol()->setText($actionLink));
+                }
+
+                $folderRow->addCol($tb->createCol()->setText($folder->getName()))
+                          ->addCol($tb->createCol()->setText($folder->getDescription() ?? '-'));
+
+                $tb->addRow($folderRow);
+            }
+        }
+
+        return $tb->build();
+    }
+
+    private function internalCreateNewFolderForm() {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $foldersDb = $app->folderModel->getAllFolders();
+
+        $foldersArr = array(array(
+            'value' => '-1',
+            'text' => 'None'
+        ));
+        foreach($foldersDb as $fdb) {
+            $foldersArr[] = array(
+                'value' => $fdb->getId(),
+                'text' => $fdb->getName()
+            );
+        }
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewFolder')
+
+            ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
+            ->addElement($fb->createInput()->setType('input')->setName('name')->require())
+
+            ->addElement($fb->createLabel()->setFor('parent_folder')->setText('Parent folder'))
+            ->addElement($fb->createSelect()->setName('parent_folder')->addOptionsBasedOnArray($foldersArr))
+
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createTextArea()->setName('description'))
+
+            ->addElement($fb->createSubmit('Create'))
+        ;
+
+        return $fb->build();
     }
 }
 

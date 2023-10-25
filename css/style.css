@@ -34,6 +34,10 @@ body {
     font-size: 26px;
 }
 
+.page-subtitle {
+    font-size: 24px;
+}
+
 #toppanel, #toppanel-right {
     padding: 5px;
 

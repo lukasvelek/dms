@@ -43,6 +43,10 @@ class Panels {
 
         $panelAuthorizator = self::pa();
 
+        if($panelAuthorizator->checkPanelRight(PanelRights::FOLDERS)) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showFolders', 'Document folders');
+        }
+
         if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_USERS)) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showUsers', 'Users');
         }
