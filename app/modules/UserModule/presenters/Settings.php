@@ -48,22 +48,27 @@ class Settings extends APresenter {
 
         $newEntityLink = LinkBuilder::createLink('UserModule:Settings:showNewFolderForm', 'New folder');
         $backLink = '';
+        $pageTitle = 'Document folders';
 
         $idFolder = null;
         if(isset($_GET['id_folder'])) {
             $idFolder = htmlspecialchars($_GET['id_folder']);
             $folder = $app->folderModel->getFolderById($idFolder);
 
+            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showNewFolderForm', 'id_parent_folder' => $idFolder), 'New folder');
+
             if($folder->getIdParentFolder() != NULL) {
                 $backLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getIdParentFolder()), '<-');
             } else {
                 $backLink = LinkBuilder::createLink('UserModule:Settings:showFolders', '<-');
             }
+
+            $pageTitle .= ' in <i>' . $folder->getName() . '</i>';
         }
 
         $data = array(
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
-            '$PAGE_TITLE$' => 'Document folders',
+            '$PAGE_TITLE$' => $pageTitle,
             '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>',
             '$FOLDERS_GRID$' => $this->internalCreateFolderGrid()
         );
@@ -76,10 +81,16 @@ class Settings extends APresenter {
     protected function showNewFolderForm() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
+        $idParentFolder = null;
+
+        if(isset($_GET['id_parent_folder'])) {
+            $idParentFolder = htmlspecialchars($_GET['id_parent_folder']);
+        }
+
         $data = array(
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'New document folder form',
-            '$FORM$' => $this->internalCreateNewFolderForm()
+            '$FORM$' => $this->internalCreateNewFolderForm($idParentFolder)
         );
 
         $this->templateManager->fill($data, $template);
@@ -93,18 +104,36 @@ class Settings extends APresenter {
         $name = htmlspecialchars($_POST['name']);
         $parentFolder = htmlspecialchars($_POST['parent_folder']);
         $description = null;
+        $nestLevel = 0;
+        $defParentFolder = $parentFolder;
 
-        if(isset($_POST['description']) || $_POST['description'] == '') {
+        if(isset($_POST['description']) && $_POST['description'] != '') {
             $description = htmlspecialchars($_POST['description']);
         }
 
         if($parentFolder == '-1') {
             $parentFolder = null;
+        } else {
+            $run = true;
+            while($run) {
+                $folder = $app->folderModel->getFolderById((int)($parentFolder));
+                $nestLevel++;
+
+                if($folder->getIdParentFolder() == NULL) {
+                    $run = false;
+                } else {
+                    $parentFolder = $folder->getIdParentFolder();
+                }
+            }
         }
 
-        $app->folderModel->insertNewFolder($name, $description, $parentFolder);
+        $app->folderModel->insertNewFolder($name, $description, $defParentFolder, $nestLevel);
 
-        $app->redirect('UserModule:Settings:showFolders');
+        if($defParentFolder != '-1') {
+            $app->redirect('UserModule:Settings:showFolders', array('id_folder' => $defParentFolder));
+        } else {
+            $app->redirect('UserModule:Settings:showFolders');
+        }
     }
 
     protected function showDashboard() {
@@ -809,7 +838,7 @@ class Settings extends APresenter {
         return $tb->build();
     }
 
-    private function internalCreateNewFolderForm() {
+    private function internalCreateNewFolderForm(?int $idParentFolder) {
         global $app;
 
         $fb = FormBuilder::getTemporaryObject();
@@ -821,10 +850,16 @@ class Settings extends APresenter {
             'text' => 'None'
         ));
         foreach($foldersDb as $fdb) {
-            $foldersArr[] = array(
+            $temp = array(
                 'value' => $fdb->getId(),
                 'text' => $fdb->getName()
             );
+
+            if(!is_null($idParentFolder) && $fdb->getId() == $idParentFolder) {
+                $temp['selected'] = 'selected';
+            }
+
+            $foldersArr[] = $temp;
         }
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewFolder')

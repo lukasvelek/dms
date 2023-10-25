@@ -6,6 +6,7 @@ use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\TemplateManager;
+use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
@@ -13,6 +14,7 @@ use DMS\Modules\IPresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
+use PgSql\Lob;
 
 class Documents extends APresenter {
     private string $name;
@@ -40,21 +42,28 @@ class Documents extends APresenter {
     }
 
     protected function showAll() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/document-grid.html');
 
+        $idFolder = null;
+        $folderName = 'Main folder';
+
+        if(isset($_GET['id_folder'])) {
+            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $folder = $app->folderModel->getFolderById($idFolder);
+            $folderName = $folder->getName();
+        }
+
         $data = array(
-            '$PAGE_TITLE$' => 'Documents'
+            '$PAGE_TITLE$' => 'Documents',
+            '$DOCUMENT_GRID$' => $this->internalCreateStandardDocumentGrid(),
+            '$BULK_ACTION_CONTROLLER$' => $this->internalPrepareDocumentBulkActions(),
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$NEW_DOCUMENT_LINK$' => LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document'),
+            '$CURRENT_FOLDER_TITLE$' => $folderName,
+            '$FOLDER_LIST$' => $this->internalCreateFolderList($idFolder)
         );
-
-        $table = $this->internalCreateStandardDocumentGrid();
-
-        $data['$DOCUMENT_GRID$'] = $table;
-        
-        $bulkActions = $this->internalPrepareDocumentBulkActions();
-
-        $data['$BULK_ACTION_CONTROLLER$'] = $bulkActions;
-        $data['$FORM_ACTION$'] = '?page=UserModule:Documents:performBulkAction';
-        $data['$NEW_DOCUMENT_LINK$'] = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
 
         $this->templateManager->fill($data, $template);
 
@@ -130,7 +139,7 @@ class Documents extends APresenter {
         } else {
             foreach($documents as $document) {
                 $actionLinks = array(
-                    '<input type="checkbox" name="select[]" value="' . $document->getId() . '" onclick="handle()">',
+                    '<input type="checkbox" name="select[]" value="' . $document->getId() . '">',
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
                 );
@@ -259,6 +268,24 @@ class Documents extends APresenter {
             );
         }
 
+        $dbFolders = $app->folderModel->getAllFolders();
+
+        $folders = [];
+        foreach($dbFolders as $dbf) {
+            $text = $dbf->getName();
+
+            if($dbf->getIdParentFolder() != '') {
+                $parentFolder = $app->folderModel->getFolderById($dbf->getIdParentFolder());
+
+                $text .= ' (' . $parentFolder->getName() . ')';
+            }
+
+            $folders[] = array(
+                'value' => $dbf->getId(),
+                'text' => $text
+            );
+        }
+
         $customMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
         // name = array('text' => 'text', 'options' => 'options from metadata_values')
         $metadata = [];
@@ -307,6 +334,10 @@ class Documents extends APresenter {
                                            ->setText('Rank'))
             ->addElement($fb->createSelect()->setName('rank')
                                             ->addOptionsBasedOnArray($ranks))
+            ->addElement($fb->createLabel()->setFor('folder')
+                                           ->setText('Folder'))
+            ->addElement($fb->createSelect()->setName('folder')
+                                            ->addOptionsBasedOnArray($folders))
             
            ;
 
@@ -435,6 +466,46 @@ class Documents extends APresenter {
         }
 
         $app->redirect('UserModule:Documents:showAll');
+    }
+
+    private function internalCreateFolderList(?int $idFolder) {
+        global $app;
+        
+        $list = array(
+            '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Document:showAll', 'Main folder') . '<br>',
+            '<hr>'
+        );
+        
+        $folders = $app->folderModel->getAllFolders();
+        foreach($folders as $folder) {
+            $this->_createFolderList($folder, $list, 0);
+        }
+
+        return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
+    }
+
+    private function _createFolderList(Folder $folder, array &$list, int $level) {
+        global $app;
+
+        $childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
+        $folderLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showAll', 'id_folder' => $folder->getId()), $folder->getName());
+        
+        $spaces = '&nbsp;&nbsp;';
+
+        if($level > 0) {
+            for($i = 0; $i < $level; $i++) {
+                $spaces .= '&nbsp;&nbsp;';
+            }
+        }
+
+        if(!array_key_exists($folder->getId(), $list)) {
+
+            $list[$folder->getId()] = $spaces . $folderLink . '<br>';
+        }
+
+        foreach($childFolders as $cf) {
+            $this->_createFolderList($cf, $list, $level + 1);
+        }
     }
 }
 

@@ -167,7 +167,8 @@ class DatabaseInstaller {
                 'id_parent_folder' => 'INT(32) NULL',
                 'name' => 'VARCHAR(256) NOT NULL',
                 'description' => 'VARCHAR(256) NULL',
-                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'nest_level' => 'INT(32) NOT NULL'
             )
         );
 

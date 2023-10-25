@@ -11,17 +11,20 @@ class FolderModel extends AModel {
         parent::__construct($db, $logger);
     }
 
-    public function insertNewFolder(string $name, ?string $description, ?int $idParentFolder) {
+    public function insertNewFolder(string $name, ?string $description, ?int $idParentFolder, int $nestLevel) {
         $qb = $this->qb(__METHOD__);
 
         $keys = array(
-            'name'
+            'name',
+            'nest_level'
         );
         $values = array(
-            ':name'
+            ':name',
+            ':nest_level'
         );
         $params = array(
-            ':name' => $name
+            ':name' => $name,
+            ':nest_level' => $nestLevel
         );
 
         if(!is_null($description)) {
@@ -103,6 +106,7 @@ class FolderModel extends AModel {
         $dateCreated = $row['date_created'];
         $idParentFolder = null;
         $description = null;
+        $nestLevel = $row['nest_level'];
 
         if(isset($row['id_parent_folder'])) {
             $idParentFolder = $row['id_parent_folder'];
@@ -112,7 +116,7 @@ class FolderModel extends AModel {
             $description = $row['description'];
         }
 
-        return new Folder($id, $dateCreated, $idParentFolder, $name, $description);
+        return new Folder($id, $dateCreated, $idParentFolder, $name, $description, $nestLevel);
     }
 }
 
