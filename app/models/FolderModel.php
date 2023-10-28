@@ -11,6 +11,19 @@ class FolderModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getLastInsertedFolder() {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('folders')
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createFolderObjectFromDbRow($row);
+    }
+
     public function insertNewFolder(string $name, ?string $description, ?int $idParentFolder, int $nestLevel) {
         $qb = $this->qb(__METHOD__);
 

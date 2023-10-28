@@ -55,7 +55,11 @@ class Settings extends APresenter {
             $idFolder = htmlspecialchars($_GET['id_folder']);
             $folder = $app->folderModel->getFolderById($idFolder);
 
-            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showNewFolderForm', 'id_parent_folder' => $idFolder), 'New folder');
+            if(($folder->getNestLevel() + 1) < 6) {
+                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showNewFolderForm', 'id_parent_folder' => $idFolder), 'New folder');
+            } else {
+                $newEntityLink = '';
+            }
 
             if($folder->getIdParentFolder() != NULL) {
                 $backLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getIdParentFolder()), '<-');
@@ -105,7 +109,8 @@ class Settings extends APresenter {
         $parentFolder = htmlspecialchars($_POST['parent_folder']);
         $description = null;
         $nestLevel = 0;
-        $defParentFolder = $parentFolder;
+
+        $create = true;
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
             $description = htmlspecialchars($_POST['description']);
@@ -114,23 +119,23 @@ class Settings extends APresenter {
         if($parentFolder == '-1') {
             $parentFolder = null;
         } else {
-            $run = true;
-            while($run) {
-                $folder = $app->folderModel->getFolderById((int)($parentFolder));
-                $nestLevel++;
+            $nestLevelParentFolder = $app->folderModel->getFolderById($parentFolder);
 
-                if($folder->getIdParentFolder() == NULL) {
-                    $run = false;
-                } else {
-                    $parentFolder = $folder->getIdParentFolder();
-                }
+            $nestLevel = $nestLevelParentFolder->getNestLevel() + 1;
+
+            if($nestLevel == 6) {
+                $create = false;
             }
         }
 
-        $app->folderModel->insertNewFolder($name, $description, $defParentFolder, $nestLevel);
+        if($create == true) {
+            $app->folderModel->insertNewFolder($name, $description, $parentFolder, $nestLevel);
+        }
+        
+        $idFolder = $app->folderModel->getLastInsertedFolder()->getId();
 
-        if($defParentFolder != '-1') {
-            $app->redirect('UserModule:Settings:showFolders', array('id_folder' => $defParentFolder));
+        if($parentFolder != '-1') {
+            $app->redirect('UserModule:Settings:showFolders', array('id_folder' => $idFolder));
         } else {
             $app->redirect('UserModule:Settings:showFolders');
         }

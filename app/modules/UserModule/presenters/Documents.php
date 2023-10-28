@@ -48,11 +48,13 @@ class Documents extends APresenter {
 
         $idFolder = null;
         $folderName = 'Main folder';
+        $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
 
         if(isset($_GET['id_folder'])) {
             $idFolder = htmlspecialchars($_GET['id_folder']);
             $folder = $app->folderModel->getFolderById($idFolder);
             $folderName = $folder->getName();
+            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
         }
 
         $data = array(
@@ -60,7 +62,7 @@ class Documents extends APresenter {
             '$DOCUMENT_GRID$' => $this->internalCreateStandardDocumentGrid(),
             '$BULK_ACTION_CONTROLLER$' => $this->internalPrepareDocumentBulkActions(),
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
-            '$NEW_DOCUMENT_LINK$' => LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document'),
+            '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $this->internalCreateFolderList($idFolder)
         );
@@ -472,7 +474,7 @@ class Documents extends APresenter {
         global $app;
         
         $list = array(
-            '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Document:showAll', 'Main folder') . '<br>',
+            '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showAll', 'Main folder') . '<br>',
             '<hr>'
         );
         
