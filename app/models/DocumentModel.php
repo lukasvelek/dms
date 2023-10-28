@@ -121,7 +121,7 @@ class DocumentModel extends AModel {
         return $result;
     }
 
-    public function insertNewDocument(string $name, int $idManager, int $idAuthor, int $status, int $idGroup, array $customMetadata) {
+    public function insertNewDocument(string $name, int $idManager, int $idAuthor, int $status, int $idGroup, int $idFolder, array $customMetadata) {
         $qb = $this->qb(__METHOD__);
 
         $keys = array(
@@ -129,7 +129,8 @@ class DocumentModel extends AModel {
             'id_manager',
             'id_author',
             'status',
-            'id_group'
+            'id_group',
+            'id_folder'
         );
 
         $values = array(
@@ -137,7 +138,8 @@ class DocumentModel extends AModel {
             ':id_manager',
             ':id_author',
             ':status',
-            ':id_group'
+            ':id_group',
+            ':id_folder'
         );
 
         $params = array(
@@ -145,7 +147,8 @@ class DocumentModel extends AModel {
             ':id_manager' => $idManager,
             ':id_author' => $idAuthor,
             ':id_group' => $idGroup,
-            ':status' => $status
+            ':status' => $status,
+            ':id_folder' => $idFolder
         );
 
         foreach($customMetadata as $k => $v) {
@@ -181,6 +184,26 @@ class DocumentModel extends AModel {
         return $documents;
     }
 
+    public function getStandardDocumentsInIdFolder(int $idFolder) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('documents')
+                   ->where('is_deleted=:deleted')
+                   ->andWhere('id_folder=:id_folder')
+                   ->setParam(':deleted', '0')
+                   ->setParam(':id_folder', $idFolder)
+                   ->execute()
+                   ->fetch();
+
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     private function createDocumentObjectFromDbRow($row) {
         $id = $row['id'];
         $dateCreated = $row['date_created'];
@@ -192,10 +215,15 @@ class DocumentModel extends AModel {
         $idGroup = $row['id_group'];
         $isDeleted = $row['is_deleted'];
         $rank = $row['rank'];
+        $idFolder = null;
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank'));
+        if(isset($row['id_folder'])) {
+            $idFolder = $row['id_folder'];
+        }
 
-        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank);
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder'));
+
+        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder);
         $document->setMetadata($row);
 
         return $document;

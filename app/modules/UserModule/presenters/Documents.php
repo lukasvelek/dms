@@ -59,7 +59,7 @@ class Documents extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Documents',
-            '$DOCUMENT_GRID$' => $this->internalCreateStandardDocumentGrid(),
+            '$DOCUMENT_GRID$' => $this->internalCreateStandardDocumentGrid($idFolder),
             '$BULK_ACTION_CONTROLLER$' => $this->internalPrepareDocumentBulkActions(),
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
@@ -120,7 +120,7 @@ class Documents extends APresenter {
         return $singleLineCode;
     }
 
-    private function internalCreateStandardDocumentGrid() {
+    private function internalCreateStandardDocumentGrid(?int $idFolder) {
         global $app;
 
         $tb = TableBuilder::getTemporaryObject();
@@ -133,8 +133,12 @@ class Documents extends APresenter {
         );
 
         $headerRow = null;
-
-        $documents = $app->documentModel->getStandardDocuments();
+        
+        if($idFolder != null) {
+            $documents = $app->documentModel->getStandardDocumentsInIdFolder($idFolder);
+        } else {
+            $documents = $app->documentModel->getStandardDocuments($idFolder);
+        }
 
         if(empty($documents)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
@@ -217,6 +221,12 @@ class Documents extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
 
+        $idFolder = null;
+
+        if(isset($_GET['id_folder'])) {
+            $idFolder = htmlspecialchars($_GET['id_folder']);
+        }
+
         $data = array(
             '$PAGE_TITLE$' => 'New document'
         );
@@ -282,10 +292,16 @@ class Documents extends APresenter {
                 $text .= ' (' . $parentFolder->getName() . ')';
             }
 
-            $folders[] = array(
+            $folder = array(
                 'value' => $dbf->getId(),
                 'text' => $text
             );
+
+            if($idFolder != null && $idFolder == $dbf->getId()) {
+                $folder['selected'] = 'selected';
+            }
+
+            $folders[] = $folder;
         }
 
         $customMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
@@ -406,15 +422,17 @@ class Documents extends APresenter {
         $idManager = htmlspecialchars($_POST['manager']);
         $status = htmlspecialchars($_POST['status']);
         $idGroup = htmlspecialchars($_POST['group']);
+        $idFolder = htmlspecialchars($_POST['folder']);
 
         unset($_POST['name']);
         unset($_POST['manager']);
         unset($_POST['status']);
         unset($_POST['group']);
+        unset($_POST['folder']);
 
         $customMetadata = $_POST;
 
-        $app->documentModel->insertNewDocument($name, $idManager, $app->user->getId(), $status, $idGroup, $customMetadata);
+        $app->documentModel->insertNewDocument($name, $idManager, $app->user->getId(), $status, $idGroup, $idFolder, $customMetadata);
 
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
 
