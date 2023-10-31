@@ -3,6 +3,7 @@
 namespace DMS\Core;
 
 use DMS\Core\Logger\Logger;
+use DMS\Entities\FileStorageFile;
 
 class FileStorageManager {
     private string $fileFolder;
@@ -23,6 +24,47 @@ class FileStorageManager {
         $this->fileFolder = $fileFolder;
         $this->fm = $fm;
         $this->logger = $logger;
+    }
+
+    /**
+     * Returns count of stored files
+     * 
+     * @return int count of stored files
+     */
+    public function getStoredFileCount() {
+        return count($this->getStoredFiles());
+    }
+
+    /**
+     * Returns an array of stored files
+     * 
+     * @return array<FileStorageFile> array of stored files
+     */
+    public function getStoredFiles() {
+        $files = [];
+        
+        $this->fm->readFilesInFolder($this->fileFolder, $files);
+
+        $fileObjects = [];
+
+        foreach($files as $f) {
+            $fileParts = explode('/', $f);
+            $filename = $fileParts[count($fileParts) - 1];
+            $explode = explode('.', $filename);
+
+            $name = '';
+            $extension = '';
+            $path = $f;
+
+            if(!empty($explode)) {
+                $name = $explode[0];
+                $extension = $explode[count($explode) - 1];
+            }
+
+            $fileObjects[] = new FileStorageFile($name, $path, $extension);
+        }
+
+        return $fileObjects;
     }
 
     /**

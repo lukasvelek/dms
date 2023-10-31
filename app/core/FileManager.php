@@ -20,6 +20,18 @@ class FileManager {
         }
     }
 
+    public function readFilesInFolder(string $dir, array &$files) {
+        $contents = scandir($dir);
+
+        foreach($contents as $c) {
+            if(!is_file($c)) {
+                $this->readFilesInFolder($dir . '/' . $c, $files);
+            } else {
+                $files[] = $dir . '/' . $c;
+            }
+        }
+    }
+
     /**
      * Saves a cache file to the cache folder
      * 
