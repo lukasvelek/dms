@@ -12,6 +12,18 @@ class Logger implements ILoggerCallable {
         $this->fileManager = $fm;
     }
 
+    public function error(string $text, ?string $method = null) {
+        return $this->log($text, LogCategoryEnum::ERROR, $method);
+    }
+
+    public function info(string $text, ?string $method = null) {
+        return $this->log($text, LogCategoryEnum::INFO, $method);
+    }
+
+    public function warn(string $text, ?string $method = null) {
+        return $this->log($text, LogCategoryEnum::WARN, $method);
+    }
+
     public function log(string $text, string $category, ?string $method = null, ?string $filename = null) {
         if(!is_null($method)) {
             $text = $category . ': ' . $method . '(): ' . $text;

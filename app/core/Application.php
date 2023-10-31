@@ -39,6 +39,7 @@ class Application {
     public ?User $user;
     public Logger $logger;
     public FileManager $fileManager;
+    public FileStorageManager $fsManager;
     
     public UserAuthenticator $userAuthenticator;
 
@@ -98,6 +99,8 @@ class Application {
         $this->metadataAuthorizator= new MetadataAuthorizator($this->conn, $this->logger);
 
         $this->processComponent = new ProcessComponent($this->conn, $this->logger);
+
+        $this->fsManager = new FileStorageManager($this->cfg['file_dir'], $this->fileManager, $this->logger);
 
         $this->installDb();
 
