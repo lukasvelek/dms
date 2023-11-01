@@ -99,6 +99,10 @@ class Documents extends APresenter {
                 case 'decline_archivation':
                     $name = 'Decline archivation';
                     break;
+
+                case 'archive':
+                    $name = 'Archive';
+                    break;
             }
 
             $bulkActions[$dba] = $name;
@@ -503,6 +507,18 @@ class Documents extends APresenter {
         foreach($ids as $id) {
             if($app->documentAuthorizator->canApproveArchivation($id)) {
                 $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVATION_APPROVED);
+            }
+        }
+
+        $app->redirect('UserModule:Documents:showAll');
+    }
+
+    private function _archive(array $ids) {
+        global $app;
+
+        foreach($ids as $id) {
+            if($app->documentAuthorizator->canArchive($id)) {
+                $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVED);
             }
         }
 

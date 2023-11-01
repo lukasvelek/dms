@@ -3,8 +3,13 @@
 namespace DMS\Core\DB;
 
 use DMS\Constants\BulkActionRights;
+use DMS\Constants\DocumentRank;
+use DMS\Constants\DocumentStatus;
 use DMS\Constants\PanelRights;
+use DMS\Constants\ProcessStatus;
+use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
+use DMS\Constants\UserStatus;
 use DMS\Core\Logger\Logger;
 
 class DatabaseInstaller {
@@ -471,7 +476,7 @@ class DatabaseInstaller {
 
             switch($name) {
                 case 'documents.rank':
-                    $values[$id] = array(
+                    /*$values[$id] = array(
                         array(
                             'name' => 'Public',
                             'value' => 'public'
@@ -480,11 +485,16 @@ class DatabaseInstaller {
                             'name' => 'Private',
                             'value' => 'private'
                         )
-                    );
+                    );*/
+
+                    foreach(DocumentRank::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
                     break;
 
                 case 'documents.status':
-                    $values[$id] = array(
+                    /*$values[$id] = array(
                         array(
                             'name' => 'New',
                             'value' => '1'
@@ -501,11 +511,16 @@ class DatabaseInstaller {
                             'name' => 'Archivation declined',
                             'value' => '4'
                         )
-                    );
+                    );*/
+
+                    foreach(DocumentStatus::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
                     break;
 
                 case 'users.status':
-                    $values[$id] = array(
+                    /*$values[$id] = array(
                         array(
                             'name' => 'Inactive',
                             'value' => '0'
@@ -514,11 +529,16 @@ class DatabaseInstaller {
                             'name' => 'Active',
                             'value' => '1'
                         )
-                    );
+                    );*/
+
+                    foreach(UserStatus::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
                     break;
 
                 case 'processes.status':
-                    $values[$id] = array(
+                    /*$values[$id] = array(
                         array(
                             'name' => 'In progress',
                             'value' => '1'
@@ -527,16 +547,26 @@ class DatabaseInstaller {
                             'name' => 'Finished',
                             'value' => '2'
                         )
-                    );
+                    );*/
+
+                    foreach(ProcessStatus::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
                     break;
 
                 case 'processes.type':
-                    $values[$id] = array(
+                    /*$values[$id] = array(
                         array(
                             'name' => 'Delete',
                             'value' => '1'
                         )
-                    );
+                    );*/
+
+                    foreach(ProcessTypes::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
                     break;
             }
 

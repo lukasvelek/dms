@@ -11,6 +11,18 @@ class DocumentAuthorizator extends AAuthorizator {
         parent::__construct($db, $logger);
     }
 
+    public function canArchive(int $id) {
+        global $app;
+
+        $document = $app->documentModel->getDocumentById($id);
+
+        if($document->getStatus() != DocumentStatus::ARCHIVATION_APPROVED) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function canApproveArchivation(int $id) {
         global $app;
 

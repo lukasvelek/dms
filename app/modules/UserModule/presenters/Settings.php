@@ -406,6 +406,30 @@ class Settings extends APresenter {
         $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
     }
 
+    protected function deleteFolder() {
+        global $app;
+
+        $idFolder = htmlspecialchars($_GET['id_folder']);
+        $folder = $app->folderModel->getFolderById($idFolder);
+
+        $childFolders = [];
+        $this->_getChildFolderList($childFolders, $folder);
+        
+        foreach($childFolders as $cf) {
+            $docs = $app->documentModel->getStandardDocumentsInIdFolder($cf->getId());
+            
+            foreach($docs as $doc) {
+                $app->documentModel->nullIdFolder($doc->getId());
+            }
+        }
+
+        foreach($childFolders as $cf) {
+            $app->folderModel->deleteFolder($cf->getId());
+        }
+
+        $app->redirect('UserModule:Settings:showFolders');
+    }
+
     private function internalCreateNewGroupForm() {
         $fb = FormBuilder::getTemporaryObject();
 
@@ -845,7 +869,8 @@ class Settings extends APresenter {
         } else {
             foreach($folders as $folder) {
                 $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open')
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open'),
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteFolder', 'id_folder' => $folder->getId()), 'Delete')
                 );
 
                 if(is_null($headerRow)) {
@@ -938,6 +963,20 @@ class Settings extends APresenter {
         
         foreach($childFolders as $cf) {
             $this->_getFolderCount($count, $cf);
+        }
+    }
+
+    private function _getChildFolderList(array &$list, Folder $folder) {
+        global $app;
+
+        $childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
+
+        if(!array_key_exists($folder->getId(), $list)) {
+            $list[$folder->getId()] = $folder;
+        }
+
+        foreach($childFolders as $cf) {
+            $this->_getChildFolderList($list, $cf);
         }
     }
 }

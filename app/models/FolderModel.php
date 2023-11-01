@@ -11,6 +11,19 @@ class FolderModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteFolder(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('folders')
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getLastInsertedFolder() {
         $qb = $this->qb(__METHOD__);
 
