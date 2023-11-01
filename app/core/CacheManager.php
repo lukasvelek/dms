@@ -14,7 +14,7 @@ class CacheManager {
         $this->special = $special;
     }
 
-    public function saveToCache(array $data) {
+    public function saveToCache(string $category, array $data) {
         $file = $this->createFilename();
 
         if($this->serialize) {
@@ -23,9 +23,11 @@ class CacheManager {
             $cacheData = $this->fm->readCache($file, !$this->serialize);
         }
 
-        foreach($data as $key => $value) {
+        $cacheData[$category] = $data;
+
+        /*foreach($data as $key => $value) {
             $cacheData[$key] = $value;
-        }
+        }*/
 
         if($this->serialize) {
             $cacheData = serialize($cacheData);
@@ -34,7 +36,7 @@ class CacheManager {
         $this->fm->writeCache($file, $cacheData);
     }
 
-    public function loadFromCache(string $key) {
+    public function loadFromCache(string $category, string $key) {
         $file = $this->createFilename();
 
         if($this->serialize) {
@@ -47,8 +49,12 @@ class CacheManager {
             return null;
         }
 
-        if(array_key_exists($key, $data)) {
-            return $data[$key];
+        if(array_key_exists($category, $data)) {
+            $cacheData = $data[$category];
+
+            if(array_key_exists($key, $cacheData)) {
+                return $cacheData[$key];
+            }
         } else {
             return null;
         }

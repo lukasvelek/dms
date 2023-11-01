@@ -2,6 +2,7 @@
 
 namespace DMS\Authorizators;
 
+use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -20,7 +21,7 @@ class PanelAuthorizator extends AAuthorizator {
 
         $cm = CacheManager::getTemporaryObject();
 
-        $valFromCache = $cm->loadFromCache($panelName);
+        $valFromCache = $cm->loadFromCache(CacheCategories::PANELS, $panelName);
 
         $result = '';
 
@@ -62,7 +63,7 @@ class PanelAuthorizator extends AAuthorizator {
                 }
             }
 
-            $cm->saveToCache($finalRights);
+            $cm->saveToCache(CacheCategories::PANELS, $finalRights);
 
             if(array_key_exists($panelName, $finalRights)) {
                 $result = $rights[$panelName];
