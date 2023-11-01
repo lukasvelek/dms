@@ -14,7 +14,6 @@ use DMS\Modules\IPresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
-use PgSql\Lob;
 
 class Documents extends APresenter {
     private string $name;
@@ -129,7 +128,8 @@ class Documents extends APresenter {
             'Actions',
             'Name',
             'Author',
-            'Status'
+            'Status',
+            'Folder'
         );
 
         $headerRow = null;
@@ -177,7 +177,6 @@ class Documents extends APresenter {
 
                 $docuRow->addCol($tb->createCol()->setText($document->getName()))
                         ->addCol($tb->createCol()->setText($app->userModel->getUserById($document->getIdAuthor())->getFullname()))
-                        /*->addCol($tb->createCol()->setText(DocumentStatus::$texts[$document->getStatus()]))*/
                 ;
 
                 $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($app->metadataModel->getMetadataByName('status', 'documents')->getId());
@@ -187,6 +186,15 @@ class Documents extends APresenter {
                         $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
                     }
                 }
+
+                $folderName = '-';
+
+                if($document->getIdFolder() !== NULL) {
+                    $folder = $app->folderModel->getFolderById($document->getIdFolder());
+                    $folderName = $folder->getName();
+                }
+
+                $docuRow->addCol($tb->createCol()->setText($folderName));
 
                 $tb->addRow($docuRow);
             }
@@ -283,13 +291,22 @@ class Documents extends APresenter {
         $dbFolders = $app->folderModel->getAllFolders();
 
         $folders = [];
+        $folders[] = array(
+            'value' => '-1',
+            'text' => '-'
+        );
+
         foreach($dbFolders as $dbf) {
             $text = $dbf->getName();
 
-            if($dbf->getIdParentFolder() != '') {
+            /*if($dbf->getIdParentFolder() != '') {
                 $parentFolder = $app->folderModel->getFolderById($dbf->getIdParentFolder());
 
                 $text .= ' (' . $parentFolder->getName() . ')';
+            }*/
+
+            for($i = 0; $i < $dbf->getNestLevel(); $i++) {
+                $text = '&nbsp;&nbsp;' . $text;
             }
 
             $folder = array(
@@ -432,6 +449,10 @@ class Documents extends APresenter {
 
         $customMetadata = $_POST;
 
+        if($idFolder == '-1') {
+            $idFolder = NULL;
+        }
+
         $app->documentModel->insertNewDocument($name, $idManager, $app->user->getId(), $status, $idGroup, $idFolder, $customMetadata);
 
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
@@ -492,7 +513,7 @@ class Documents extends APresenter {
         global $app;
         
         $list = array(
-            '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showAll', 'Main folder') . '<br>',
+            '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showAll', 'Main folder (All files)') . '<br>',
             '<hr>'
         );
         
@@ -519,7 +540,6 @@ class Documents extends APresenter {
         }
 
         if(!array_key_exists($folder->getId(), $list)) {
-
             $list[$folder->getId()] = $spaces . $folderLink . '<br>';
         }
 

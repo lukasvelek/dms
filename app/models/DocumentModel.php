@@ -121,7 +121,7 @@ class DocumentModel extends AModel {
         return $result;
     }
 
-    public function insertNewDocument(string $name, int $idManager, int $idAuthor, int $status, int $idGroup, int $idFolder, array $customMetadata) {
+    public function insertNewDocument(string $name, int $idManager, int $idAuthor, int $status, int $idGroup, ?int $idFolder, array $customMetadata) {
         $qb = $this->qb(__METHOD__);
 
         $keys = array(
@@ -129,8 +129,7 @@ class DocumentModel extends AModel {
             'id_manager',
             'id_author',
             'status',
-            'id_group',
-            'id_folder'
+            'id_group'
         );
 
         $values = array(
@@ -138,8 +137,7 @@ class DocumentModel extends AModel {
             ':id_manager',
             ':id_author',
             ':status',
-            ':id_group',
-            ':id_folder'
+            ':id_group'
         );
 
         $params = array(
@@ -147,9 +145,14 @@ class DocumentModel extends AModel {
             ':id_manager' => $idManager,
             ':id_author' => $idAuthor,
             ':id_group' => $idGroup,
-            ':status' => $status,
-            ':id_folder' => $idFolder
+            ':status' => $status
         );
+
+        if($idFolder != NULL) {
+            $keys[] = 'id_folder';
+            $values[] = ':id_folder';
+            $params[':id_folder'] = $idFolder;
+        }
 
         foreach($customMetadata as $k => $v) {
             $keys[] = $k;

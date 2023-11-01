@@ -9,6 +9,7 @@ use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
+use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
@@ -678,6 +679,7 @@ class Settings extends APresenter {
         $users = count($app->userModel->getAllUsers());
         $groups = count($app->groupModel->getAllGroups());
         $documents = count($app->documentModel->getAllDocuments());
+        $folders = count($app->folderModel->getAllFolders());
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -690,6 +692,7 @@ class Settings extends APresenter {
                             <p><b>Total users: </b>' . $users . '</p>
                             <p><b>Total groups: </b>' . $groups . '</p>
                             <p><b>Total documents: </b>' . $documents . '</p>
+                            <p><b>Total folders: </b>' . $folders . '</p>
                         </div>
                     </div>
                 </div>';
@@ -795,7 +798,8 @@ class Settings extends APresenter {
         $headers = array(
             'Actions',
             'Name',
-            'Description'
+            'Description',
+            'Child entities'
         );
 
         $headerRow = null;
@@ -846,6 +850,12 @@ class Settings extends APresenter {
                 $folderRow->addCol($tb->createCol()->setText($folder->getName()))
                           ->addCol($tb->createCol()->setText($folder->getDescription() ?? '-'));
 
+                $childEntities = 0;
+
+                $this->_getFolderCount($childEntities, $folder);
+
+                $folderRow->addCol($tb->createCol()->setText($childEntities));
+
                 $tb->addRow($folderRow);
             }
         }
@@ -892,6 +902,17 @@ class Settings extends APresenter {
         ;
 
         return $fb->build();
+    }
+
+    private function _getFolderCount(int &$count, Folder $folder) {
+        global $app;
+
+        $childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
+        $count += count($childFolders);
+        
+        foreach($childFolders as $cf) {
+            $this->_getFolderCount($count, $cf);
+        }
     }
 }
 
