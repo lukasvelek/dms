@@ -656,7 +656,10 @@ class Settings extends APresenter {
     }
 
     private function internalDashboardCreateWidgets() {
-        $widgets = array($this->internalCreateCountWidget());
+        $widgets = array(
+            $this->internalCreateCountWidget(),
+            $this->internalCreateSystemInfoWidget()
+        );
 
         $code = array();
         $code[] = '<div class="row">';
@@ -665,12 +668,35 @@ class Settings extends APresenter {
         foreach($widgets as $widget) {
             $code[] = $widget;
 
-            if(($i + 1) == count($widgets) || ($i % 2) == 0) {
+            if(($i + 1) == count($widgets) || ((($i % 2) == 0) && ($i > 0))) {
                 $code[] = '</div>';
             }
+
+            $i++;
         }
 
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($code);
+    }
+
+    private function internalCreateSystemInfoWidget() {
+        global $app;
+
+        $systemVersion = $app::SYSTEM_VERSION;
+
+        $code = '<div class="col-md">
+                    <div class="row">
+                        <div class="col-md" id="center">
+                            <p class="page-title">System information</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md">
+                            <p><b>System version: </b>' . $systemVersion . '</p>
+                        </div>
+                    </div>
+                 </div>';
+
+        return $code;
     }
 
     private function internalCreateCountWidget() {
