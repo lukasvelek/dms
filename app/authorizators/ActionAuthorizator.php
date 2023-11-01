@@ -2,6 +2,7 @@
 
 namespace DMS\Authorizators;
 
+use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -20,7 +21,7 @@ class ActionAuthorizator extends AAuthorizator {
 
         $cm = CacheManager::getTemporaryObject();
 
-        $valFromCache = $cm->loadFromCache($actionName);
+        $valFromCache = $cm->loadFromCache(CacheCategories::ACTIONS, $actionName);
 
         $result = '';
 
@@ -60,7 +61,7 @@ class ActionAuthorizator extends AAuthorizator {
                 }
             }
 
-            $cm->saveToCache($finalRights);
+            $cm->saveToCache(CacheCategories::ACTIONS, $finalRights);
 
             if(array_key_exists($actionName, $finalRights)) {
                 $result = $rights[$actionName];

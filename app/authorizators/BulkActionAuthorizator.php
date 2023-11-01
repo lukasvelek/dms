@@ -2,6 +2,7 @@
 
 namespace DMS\Authorizators;
 
+use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -20,7 +21,7 @@ class BulkActionAuthorizator extends AAuthorizator {
 
         $cm = CacheManager::getTemporaryObject();
 
-        $valFromCache = $cm->loadFromCache($bulkActionName);
+        $valFromCache = $cm->loadFromCache(CacheCategories::BULK_ACTIONS, $bulkActionName);
 
         $result = '';
 
@@ -60,7 +61,7 @@ class BulkActionAuthorizator extends AAuthorizator {
                 }
             }
 
-            $cm->saveToCache($finalRights);
+            $cm->saveToCache(CacheCategories::BULK_ACTIONS, $finalRights);
 
             if(array_key_exists($bulkActionName, $finalRights)) {
                 $result = $rights[$bulkActionName];

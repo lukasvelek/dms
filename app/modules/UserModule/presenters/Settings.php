@@ -2,9 +2,11 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
+use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Helpers\ArrayStringHelper;
@@ -799,6 +801,14 @@ class Settings extends APresenter {
         $headerRow = null;
 
         $folders = $app->folderModel->getFoldersForIdParentFolder($idFolder);
+        $cacheFolders = [];
+
+        foreach($folders as $folder) {
+            $cacheFolders[$folder->getId()] = array('name' => $folder->getName(), 'description' => $folder->getDescription());
+        }
+
+        $cm = CacheManager::getTemporaryObject();
+        $cm->saveToCache(CacheCategories::FOLDERS, $cacheFolders);
 
         if(empty($folders)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
