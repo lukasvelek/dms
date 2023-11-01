@@ -11,6 +11,7 @@ class PanelRights {
     public const SETTINGS_METADATA = 'settings.metadata';
     public const SETTINGS_SYSTEM = 'settings.system';
     public const FOLDERS = 'folders';
+    public const SETTINGS_SERVICES = 'settings.services';
 
     public static $all = array(
         self::SETTINGS,
@@ -20,7 +21,8 @@ class PanelRights {
         self::SETTINGS_GROUPS,
         self::SETTINGS_METADATA,
         self::SETTINGS_SYSTEM,
-        self::FOLDERS
+        self::FOLDERS,
+        self::SETTINGS_SERVICES
     );
 }
 

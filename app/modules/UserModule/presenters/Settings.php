@@ -44,6 +44,21 @@ class Settings extends APresenter {
         return $this->name;
     }
 
+    protected function showServices() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
+
+        $data = array(
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$PAGE_TITLE$' => 'Services',
+            '$SETTINGS_GRID$' => $this->internalCreateServicesGrid(),
+            '$NEW_ENTITY_LINK$' => ''
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showFolders() {
         global $app;
 
@@ -953,6 +968,61 @@ class Settings extends APresenter {
         ;
 
         return $fb->build();
+    }
+
+    private function internalCreateServicesGrid() {
+        global $app;
+
+        $tb = TableBuilder::getTemporaryObject();
+
+        $headers = array(
+            'Actions',
+            'Name',
+            'Description'
+        );
+
+        $headerRow = null;
+
+        $services = $app->serviceManager->services;
+
+        foreach($services as $serviceName => $service) {
+            $actionLinks = array(
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:runService', 'name' => $service->name), 'Run')
+            );
+
+            if(is_null($headerRow)) {
+                $row = $tb->createRow();
+
+                foreach($headers as $header) {
+                    $col = $tb->createCol()->setText($header)
+                                           ->setBold();
+
+                    if($header == 'Actions') {
+                        $col->setColspan(count($actionLinks));
+                    }
+
+                    $row->addCol($col);
+                }
+
+                $headerRow = $row;
+
+                $tb->addRow($row);
+            }
+
+            $serviceRow = $tb->createRow();
+
+            foreach($actionLinks as $actionLink) {
+                $serviceRow->addCoL($tb->createCol()->setText($actionLink));
+            }
+
+            $serviceRow ->addCol($tb->createCol()->setText($serviceName))
+                        ->addCol($tb->createCol()->setText($service->description))
+            ;
+
+            $tb->addRow($serviceRow);
+        }
+
+        return $tb->build();
     }
 
     private function _getFolderCount(int &$count, Folder $folder) {

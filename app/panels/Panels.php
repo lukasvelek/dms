@@ -63,6 +63,10 @@ class Panels {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showSystem', 'System');
         }
 
+        if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_SERVICES)) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showServices', 'Services');
+        }
+
         $templateManager->fill($data, $template);
 
         return $template;
