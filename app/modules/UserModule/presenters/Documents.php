@@ -2,7 +2,6 @@
 
 namespace DMS\Modules\UserModule;
 
-use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\TemplateManager;
@@ -10,7 +9,6 @@ use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
-use DMS\Modules\IPresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;

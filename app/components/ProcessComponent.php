@@ -60,7 +60,18 @@ class ProcessComponent extends AComponent {
         switch($type) {
             case ProcessTypes::DELETE:
                 $archmanIdGroup = $app->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
-                $workflow[] = $app->groupUserModel->getGroupUserByIdGroup($archmanIdGroup)->getIdUser();
+                $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
+
+                $document = $app->documentModel->getDocumentById($idDocument);
+                $workflow[] = $document->getIdManager();
+
+                foreach($groupUsers as $gu) {
+                    if($gu->getIsManager()) {
+                        $workflow[] = $gu->getIdUser();
+                        
+                        break;
+                    }
+                }
 
                 break;
         }
