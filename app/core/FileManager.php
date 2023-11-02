@@ -23,8 +23,11 @@ class FileManager {
     public function readFilesInFolder(string $dir, array &$files) {
         $contents = scandir($dir);
 
+        unset($contents[0]);
+        unset($contents[1]);
+
         foreach($contents as $c) {
-            if(!is_file($c)) {
+            if(is_file($c)) {
                 $this->readFilesInFolder($dir . '/' . $c, $files);
             } else {
                 $files[] = $dir . '/' . $c;

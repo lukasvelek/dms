@@ -59,6 +59,21 @@ class Settings extends APresenter {
         return $template;
     }
 
+    protected function runService() {
+        global $app;
+
+        $name = htmlspecialchars($_GET['name']);
+
+        foreach($app->serviceManager->services as $service) {
+            if($service->name == $name) {
+                $service->run();
+                break;
+            }
+        }
+
+        $app->redirect('UserModule:Settings:showServices');
+    }
+
     protected function showFolders() {
         global $app;
 
@@ -863,8 +878,8 @@ class Settings extends APresenter {
         $headers = array(
             'Actions',
             'Name',
-            'Description',
-            'Child entities'
+            'Description'/*,
+            'Child entities'*/
         );
 
         $headerRow = null;
@@ -916,11 +931,11 @@ class Settings extends APresenter {
                 $folderRow->addCol($tb->createCol()->setText($folder->getName()))
                           ->addCol($tb->createCol()->setText($folder->getDescription() ?? '-'));
 
-                $childEntities = 0;
+                /*$childEntities = 0;
 
                 $this->_getFolderCount($childEntities, $folder);
 
-                $folderRow->addCol($tb->createCol()->setText($childEntities));
+                $folderRow->addCol($tb->createCol()->setText($childEntities));*/
 
                 $tb->addRow($folderRow);
             }
@@ -977,6 +992,7 @@ class Settings extends APresenter {
 
         $headers = array(
             'Actions',
+            'System name',
             'Name',
             'Description'
         );
@@ -1015,7 +1031,8 @@ class Settings extends APresenter {
                 $serviceRow->addCoL($tb->createCol()->setText($actionLink));
             }
 
-            $serviceRow ->addCol($tb->createCol()->setText($serviceName))
+            $serviceRow ->addCol($tb->createCol()->setText($service->name))
+                        ->addCol($tb->createCol()->setText($serviceName))
                         ->addCol($tb->createCol()->setText($service->description))
             ;
 

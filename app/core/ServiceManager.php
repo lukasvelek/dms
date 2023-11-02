@@ -7,19 +7,19 @@ use DMS\Services\LogRotateService;
 
 class ServiceManager {
     private Logger $logger;
+    private array $cfg;
 
     public array $services;
 
-    public function __construct(Logger $logger) {
+    public function __construct(Logger $logger, array $cfg) {
         $this->logger = $logger;
+        $this->cfg = $cfg;
         
         $this->loadServices();
     }
 
     private function loadServices() {
-        global $app;
-
-        $this->services['Log Rotate'] = new LogRotateService($this->logger);
+        $this->services['Log Rotate'] = new LogRotateService($this->logger, $this->cfg);
     }
 }
 
