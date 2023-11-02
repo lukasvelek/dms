@@ -17,7 +17,6 @@ use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
-use DMS\UI\FormBuilder\Option;
 
 class Settings extends APresenter {
     private string $name;
@@ -57,6 +56,23 @@ class Settings extends APresenter {
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function askToRunService() {
+        $name = htmlspecialchars($_GET['name']);
+
+        $urlConfirm = array(
+            'page' => 'UserModule:Settings:runService',
+            'name' => $name
+        );
+
+        $urlClose = array(
+            'page' => 'UserModule:Settings:showServices'
+        );
+
+        $code = ScriptLoader::confirmUser('Do you want to run service ' . $name . '?', $urlConfirm, $urlClose);
+
+        return $code;
     }
 
     protected function runService() {
@@ -434,6 +450,23 @@ class Settings extends APresenter {
         $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
 
         $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
+    }
+
+    protected function askToDeleteFolder() {
+        $id = htmlspecialchars($_GET['id_folder']);
+
+        $urlConfirm = array(
+            'page' => 'UserModule:Settings:deleteFolder',
+            'id_folder' => $id
+        );
+
+        $urlClose = array(
+            'page' => 'UserModule:Settings:showFolders'
+        );
+
+        $code = ScriptLoader::confirmUser('Do you want to delete folder #' . $id . '?', $urlConfirm, $urlClose);
+
+        return $code;
     }
 
     protected function deleteFolder() {
@@ -878,8 +911,7 @@ class Settings extends APresenter {
         $headers = array(
             'Actions',
             'Name',
-            'Description'/*,
-            'Child entities'*/
+            'Description'
         );
 
         $headerRow = null;
@@ -900,7 +932,8 @@ class Settings extends APresenter {
             foreach($folders as $folder) {
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteFolder', 'id_folder' => $folder->getId()), 'Delete')
+                    //LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteFolder', 'id_folder' => $folder->getId()), 'Delete')
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete')
                 );
 
                 if(is_null($headerRow)) {
@@ -930,12 +963,6 @@ class Settings extends APresenter {
 
                 $folderRow->addCol($tb->createCol()->setText($folder->getName()))
                           ->addCol($tb->createCol()->setText($folder->getDescription() ?? '-'));
-
-                /*$childEntities = 0;
-
-                $this->_getFolderCount($childEntities, $folder);
-
-                $folderRow->addCol($tb->createCol()->setText($childEntities));*/
 
                 $tb->addRow($folderRow);
             }
@@ -1003,7 +1030,7 @@ class Settings extends APresenter {
 
         foreach($services as $serviceName => $service) {
             $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:runService', 'name' => $service->name), 'Run')
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run')
             );
 
             if(is_null($headerRow)) {
