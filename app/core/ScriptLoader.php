@@ -14,6 +14,48 @@ class ScriptLoader {
 
         return $code;
     }
+
+    public static function confirmUser(string $text, array $urlConfirm, array $urlClose) {
+        $urlCo = '?';
+        $urlCl = '?';
+
+        $i = 0;
+        foreach($urlConfirm as $k => $v) {
+            if(($i + 1) == count($urlConfirm)) {
+                $urlCo .= $k . '=' . $v;
+            } else {
+                $urlCo .= $k . '=' . $v . '&';
+            }
+
+            $i++;
+        }
+
+        $i = 0;
+        foreach($urlClose as $k => $v) {
+            if(($i + 1) == count($urlClose)) {
+                $urlCl .= $k . '=' . $v;
+            } else {
+                $urlCl .= $k . '=' . $v . '&';
+            }
+
+            $i++;
+        }
+
+
+        $code = '
+            <script type="text/javascript">
+                let result = confirm("' . $text . '");
+
+                if(result == true) {
+                    location.replace("' . $urlCo . '");
+                } else {
+                    location.replace("' . $urlCl . '");
+                }
+            </script>
+        ';
+
+        return $code;
+    }
 }
 
 ?>

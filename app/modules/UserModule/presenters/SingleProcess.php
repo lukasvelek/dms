@@ -5,6 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Components\Process\DeleteProcess;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Process;
 use DMS\Modules\APresenter;
@@ -56,6 +57,60 @@ class SingleProcess extends APresenter {
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function askToFinish() {
+        $id = htmlspecialchars($_GET['id']);
+
+        $urlConfirm = array(
+            'page' => 'UserModule:SingleProcess:finish',
+            'id' => $id
+        );
+
+        $urlClose = array(
+            'page' => 'UserModule:SingleProcess:showProcess',
+            'id' => $id
+        );
+
+        $code = ScriptLoader::confirmUser('Finish process?', $urlConfirm, $urlClose);
+
+        return $code;
+    }
+
+    protected function askToApprove() {
+        $id = htmlspecialchars($_GET['id']);
+
+        $urlConfirm = array(
+            'page' => 'UserModule:SingleProcess:approve',
+            'id' => $id
+        );
+
+        $urlClose = array(
+            'page' => 'UserModule:SingleProcess:showProcess',
+            'id' => $id
+        );
+
+        $code = ScriptLoader::confirmUser('Approve?', $urlConfirm, $urlClose);
+
+        return $code;
+    }
+
+    protected function askToDecline() {
+        $id = htmlspecialchars($_GET['id']);
+
+        $urlConfirm = array(
+            'page' => 'UserModule:SingleProcess:decline',
+            'id' => $id
+        );
+
+        $urlClose = array(
+            'page' => 'UserModule:SingleProcess:showProcess',
+            'id' => $id
+        );
+
+        $code = ScriptLoader::confirmUser('Decline?', $urlConfirm, $urlClose);
+
+        return $code;
     }
 
     protected function approve() {
@@ -156,11 +211,11 @@ class SingleProcess extends APresenter {
 
                     if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
                         // is last
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:finish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToFinish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
                     } else {
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:approve', 'id' => $process->getId()), 'Approve');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToApprove', 'id' => $process->getId()), 'Approve');
                         $actions[] = '<br>';
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:decline', 'id' => $process->getId()), 'Decline');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToDecline', 'id' => $process->getId()), 'Decline');
                     }
                 }
 
