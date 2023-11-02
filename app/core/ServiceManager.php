@@ -3,6 +3,7 @@
 namespace DMS\Core;
 
 use DMS\Core\Logger\Logger;
+use DMS\Services\CacheRotateService;
 use DMS\Services\LogRotateService;
 
 class ServiceManager {
@@ -20,6 +21,7 @@ class ServiceManager {
 
     private function loadServices() {
         $this->services['Log Rotate'] = new LogRotateService($this->logger, $this->cfg);
+        $this->services['Cache Rotate'] = new CacheRotateService($this->logger, $this->cfg);
     }
 }
 

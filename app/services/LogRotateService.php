@@ -9,7 +9,7 @@ class LogRotateService extends AService {
     private array $cfg;
 
     public function __construct(Logger $logger, array $cfg) {
-        parent::__construct('LogRotateService', 'Deletes old logs', $logger);
+        parent::__construct('LogRotateService', 'Deletes old log files', $logger);
 
         $this->cfg = $cfg;
     }
@@ -17,10 +17,10 @@ class LogRotateService extends AService {
     public function run() {
         $fm = FileManager::getTemporaryObject();
 
-        $this->logger->info('Starting service \'' . $this->name . '\'', __METHOD__);
+        $this->startService();
 
         $files = [];
-        $fm->readFilesInFolder('logs', $files);
+        $fm->readFilesInFolder($this->cfg['log_dir'], $files);
 
         $toDelete = [];
         foreach($files as $f) {
@@ -37,13 +37,13 @@ class LogRotateService extends AService {
             }
         }
 
-        $this->logger->info('Found ' . count($toDelete) . ' log files to delete', __METHOD__);
+        $this->log('Found ' . count($toDelete) . ' log files to delete', __METHOD__);
 
         foreach($toDelete as $td) {
             unlink($td);
         }
 
-        $this->logger->info('Stopping service \'' . $this->name . '\'', __METHOD__);
+        $this->stopService();
     }
 }
 

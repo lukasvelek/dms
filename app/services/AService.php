@@ -15,6 +15,18 @@ abstract class AService implements IServiceRunnable {
         $this->description = $description;
         $this->logger = $logger;
     }
+
+    protected function startService() {
+        $this->logger->info('Starting service \'' . $this->name . '\'', __METHOD__);
+    }
+
+    protected function stopService() {
+        $this->logger->info('Stopping service \'' . $this->name . '\'', __METHOD__);
+    }
+
+    protected function log(string $text, string $method) {
+        $this->logger->info($text, $method);
+    }
 }
 
 ?>

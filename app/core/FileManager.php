@@ -30,7 +30,7 @@ class FileManager {
             if(is_file($c)) {
                 $this->readFilesInFolder($dir . '/' . $c, $files);
             } else {
-                $files[] = $dir . '/' . $c;
+                $files[] = $dir . $c;
             }
         }
     }

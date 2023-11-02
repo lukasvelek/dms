@@ -25,10 +25,6 @@ class CacheManager {
 
         $cacheData[$category] = $data;
 
-        /*foreach($data as $key => $value) {
-            $cacheData[$key] = $value;
-        }*/
-
         if($this->serialize) {
             $cacheData = serialize($cacheData);
         }
@@ -80,7 +76,7 @@ class CacheManager {
         return new self($app->cfg['serialize_cache'], $special);
     }
 
-    private function createFilename() {
+    public function createFilename() {
         global $app;
 
         $name = $app->user->getId() . date('Y-m-d');
