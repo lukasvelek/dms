@@ -434,12 +434,17 @@ class Documents extends APresenter {
         $data = [];
 
         $idGroup = htmlspecialchars($_POST['group']);
+        $idFolder = htmlspecialchars($_POST['folder']);
         
         $data['name'] = htmlspecialchars($_POST['name']);
         $data['id_manager'] = htmlspecialchars($_POST['manager']);
         $data['status'] = htmlspecialchars($_POST['status']);
         $data['id_group'] = htmlspecialchars($idGroup);
         $data['id_author'] = $app->user->getId();
+
+        if($idFolder != '-1') {
+            $data['id_folder'] = $idFolder;
+        }
 
         unset($_POST['name']);
         unset($_POST['manager']);
