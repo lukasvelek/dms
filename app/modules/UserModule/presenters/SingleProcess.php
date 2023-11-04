@@ -120,6 +120,8 @@ class SingleProcess extends APresenter {
 
         $app->processComponent->moveProcessToNextWorkflowUser($id);
 
+        $app->logger->info('User #' . $app->user->getId() . ' approved process #' . $id, __METHOD__);
+
         $app->redirect('UserModule:Processes:showAll');
     }
 
@@ -129,6 +131,8 @@ class SingleProcess extends APresenter {
         $id = htmlspecialchars($_GET['id']);
 
         $app->processComponent->endProcess($id);
+
+        $app->logger->info('User #' . $app->user->getId() . ' declined process #' . $id, __METHOD__);
 
         $app->redirect('UserModule:Processes:showAll');
     }
@@ -145,6 +149,8 @@ class SingleProcess extends APresenter {
                 $dp->work();
                 break;
         }
+
+        $app->logger->info('User #' . $app->user->getId() . ' finished process #' . $id, __METHOD__);
 
         $app->redirect('UserModule:Processes:showAll');
     }

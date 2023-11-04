@@ -63,12 +63,10 @@ class ProcessComponent extends AComponent {
                 $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
 
                 $document = $app->documentModel->getDocumentById($idDocument);
-                //$workflow[] = $document->getIdManager();
                 $data['workflow1'] = $document->getIdManager();
 
                 foreach($groupUsers as $gu) {
                     if($gu->getIsManager()) {
-                        //$workflow[] = $gu->getIdUser();
                         $data['workflow2'] = $gu->getIdUser();
                         
                         break;
@@ -84,6 +82,8 @@ class ProcessComponent extends AComponent {
 
         $app->processModel->insertNewProcess($data);
         
+        $app->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
+        
         return true;
     }
 
@@ -96,6 +96,8 @@ class ProcessComponent extends AComponent {
 
         $app->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
 
+        $app->logger->info('Updated workflow status of process #' . $idProcess, __METHOD__);
+
         return true;
     }
 
@@ -103,6 +105,8 @@ class ProcessComponent extends AComponent {
         global $app;
 
         $app->processModel->updateStatus($idProcess, ProcessStatus::FINISHED);
+
+        $app->logger->info('Ended process #' . $idProcess, __METHOD__);
 
         return true;
     }

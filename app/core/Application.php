@@ -79,7 +79,7 @@ class Application {
         $this->user = null;
 
         $this->fileManager = new FileManager($this->cfg['log_dir'], $this->cfg['cache_dir']);
-        $this->logger = new Logger($this->fileManager);
+        $this->logger = new Logger($this->fileManager, $this->cfg);
         $this->conn = new Database($this->cfg['db_server'], $this->cfg['db_user'], $this->cfg['db_pass'], $this->cfg['db_name'], $this->logger);
 
         $this->userAuthenticator = new UserAuthenticator($this->conn, $this->logger);
