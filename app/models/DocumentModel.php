@@ -134,52 +134,8 @@ class DocumentModel extends AModel {
         return $result;
     }
 
-    public function insertNewDocument(string $name, int $idManager, int $idAuthor, int $status, int $idGroup, ?int $idFolder, array $customMetadata) {
-        $qb = $this->qb(__METHOD__);
-
-        $keys = array(
-            'name',
-            'id_manager',
-            'id_author',
-            'status',
-            'id_group'
-        );
-
-        $values = array(
-            ':name',
-            ':id_manager',
-            ':id_author',
-            ':status',
-            ':id_group'
-        );
-
-        $params = array(
-            ':name' => $name,
-            ':id_manager' => $idManager,
-            ':id_author' => $idAuthor,
-            ':id_group' => $idGroup,
-            ':status' => $status
-        );
-
-        if($idFolder != NULL) {
-            $keys[] = 'id_folder';
-            $values[] = ':id_folder';
-            $params[':id_folder'] = $idFolder;
-        }
-
-        foreach($customMetadata as $k => $v) {
-            $keys[] = $k;
-            $values[] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        $result = $qb->insertArr('documents', $keys)
-                     ->valuesArr($values)
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;
+    public function insertNewDocument(array $data) {
+        return $this->insertNew($data, 'documents');
     }
 
     public function getStandardDocuments() {

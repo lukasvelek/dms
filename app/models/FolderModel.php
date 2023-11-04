@@ -37,41 +37,8 @@ class FolderModel extends AModel {
         return $this->createFolderObjectFromDbRow($row);
     }
 
-    public function insertNewFolder(string $name, ?string $description, ?int $idParentFolder, int $nestLevel) {
-        $qb = $this->qb(__METHOD__);
-
-        $keys = array(
-            'name',
-            'nest_level'
-        );
-        $values = array(
-            ':name',
-            ':nest_level'
-        );
-        $params = array(
-            ':name' => $name,
-            ':nest_level' => $nestLevel
-        );
-
-        if(!is_null($description)) {
-            $keys[] = 'description';
-            $values[] = ':description';
-            $params[':description'] = $description;
-        }
-
-        if(!is_null($idParentFolder)) {
-            $keys[] = 'id_parent_folder';
-            $values[] = ':id_parent_folder';
-            $params[':id_parent_folder'] = $idParentFolder;
-        }
-
-        $result = $qb->insertArr('folders', $keys)
-                     ->valuesArr($values)
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;
+    public function insertNewFolder(array $data) {
+        return $this->insertNew($data, 'folders');
     }
 
     public function getAllFolders() {

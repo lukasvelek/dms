@@ -154,20 +154,24 @@ class Settings extends APresenter {
     protected function createNewFolder() {
         global $app;
 
-        $name = htmlspecialchars($_POST['name']);
+        $data = [];
+
         $parentFolder = htmlspecialchars($_POST['parent_folder']);
-        $description = null;
         $nestLevel = 0;
+
+        $data['name'] = htmlspecialchars($_POST['name']);
 
         $create = true;
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $description = htmlspecialchars($_POST['description']);
+            $data['description'] = htmlspecialchars($_POST['description']);
         }
 
         if($parentFolder == '-1') {
             $parentFolder = null;
         } else {
+            $data['id_parent_folder'] = $parentFolder;
+
             $nestLevelParentFolder = $app->folderModel->getFolderById($parentFolder);
 
             $nestLevel = $nestLevelParentFolder->getNestLevel() + 1;
@@ -177,8 +181,10 @@ class Settings extends APresenter {
             }
         }
 
+        $data['nest_level'] = $nestLevel;
+
         if($create == true) {
-            $app->folderModel->insertNewFolder($name, $description, $parentFolder, $nestLevel);
+            $app->folderModel->insertNewFolder($data);
         }
         
         $idFolder = $app->folderModel->getLastInsertedFolder()->getId();
@@ -340,11 +346,17 @@ class Settings extends APresenter {
     protected function createNewMetadata() {
         global $app;
 
+        $data = [];
+
         $name = htmlspecialchars($_POST['name']);
-        $text = htmlspecialchars($_POST['text']);
         $tableName = htmlspecialchars($_POST['table_name']);
         $length = htmlspecialchars($_POST['length']);
         $inputType = htmlspecialchars($_POST['input_type']);
+
+        $data['name'] = htmlspecialchars($_POST['name']);
+        $data['text'] = htmlspecialchars($_POST['text']);
+        $data['table_name'] = htmlspecialchars($_POST['table_name']);
+        $data['input_type'] = $inputType;
 
         if($inputType == 'boolean') {
             $length = '2';
@@ -354,7 +366,10 @@ class Settings extends APresenter {
             $length = '10';
         }
 
-        $app->metadataModel->insertNewMetadata($name, $text, $tableName, $inputType, $length);
+        $data['length'] = $length;
+
+        $app->metadataModel->insertNewMetadata($data);
+
         $idMetadata = $app->metadataModel->getLastInsertedMetadata()->getId();
 
         $app->tableModel->addColToTable($tableName, $name, 'VARCHAR', $length);
@@ -442,7 +457,7 @@ class Settings extends APresenter {
 
         $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
 
-        $app->userModel->insertUserFromArray($data);
+        $app->userModel->insertUser($data);
         $idUser = $app->userModel->getLastInsertedUser()->getId();
 
         $app->userRightModel->insertActionRightsForIdUser($idUser);

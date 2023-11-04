@@ -50,12 +50,12 @@ class ProcessComponent extends AComponent {
     public function startProcess(int $type, int $idDocument) {
         global $app;
 
+        $data = [];
+
         if($this->checkIfDocumentIsInProcess($idDocument)) {
             // is in process
             return false;
         }
-
-        $workflow = [];
 
         switch($type) {
             case ProcessTypes::DELETE:
@@ -63,11 +63,13 @@ class ProcessComponent extends AComponent {
                 $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
 
                 $document = $app->documentModel->getDocumentById($idDocument);
-                $workflow[] = $document->getIdManager();
+                //$workflow[] = $document->getIdManager();
+                $data['workflow1'] = $document->getIdManager();
 
                 foreach($groupUsers as $gu) {
                     if($gu->getIsManager()) {
-                        $workflow[] = $gu->getIdUser();
+                        //$workflow[] = $gu->getIdUser();
+                        $data['workflow2'] = $gu->getIdUser();
                         
                         break;
                     }
@@ -76,7 +78,11 @@ class ProcessComponent extends AComponent {
                 break;
         }
 
-        $app->processModel->insertNewProcess($idDocument, $type, $workflow);
+        $data['id_document'] = $idDocument;
+        $data['type'] = $type;
+        $data['workflow_status'] = '1';
+
+        $app->processModel->insertNewProcess($data);
         
         return true;
     }

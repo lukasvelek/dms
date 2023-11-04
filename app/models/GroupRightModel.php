@@ -14,6 +14,8 @@ class GroupRightModel extends AModel {
     }
 
     public function insertActionRightsForIdGroup(int $idGroup) {
+        $totalResult = true;
+
         foreach(UserActionRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
@@ -26,12 +28,18 @@ class GroupRightModel extends AModel {
                          ))
                          ->execute()
                          ->fetch();
+            
+            if($totalResult === TRUE) {
+                $totalResult = $result;
+            }
         }
 
-        return true;
+        return $totalResult;
     }
 
     public function insertPanelRightsForIdGroup(int $idGroup) {
+        $totalResult = true;
+
         foreach(PanelRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
@@ -44,12 +52,18 @@ class GroupRightModel extends AModel {
                          ))
                          ->execute()
                          ->fetch();
+
+            if($totalResult === TRUE) {
+                $totalResult = $result;
+            }
         }
 
-        return true;
+        return $totalResult;
     }
 
     public function insertBulkActionRightsForIdGroup(int $idGroup) {
+        $totalResult = true;
+
         foreach(BulkActionRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
@@ -62,9 +76,13 @@ class GroupRightModel extends AModel {
                          ))
                          ->execute()
                          ->fetch();
+
+            if($totalResult === TRUE) {
+                $totalResult = $result;
+            }
         }
 
-        return true;
+        return $totalResult;
     }
 
     public function updatePanelRight(int $idGroup, string $rightName, bool $status) {
