@@ -301,12 +301,6 @@ class Documents extends APresenter {
         foreach($dbFolders as $dbf) {
             $text = $dbf->getName();
 
-            /*if($dbf->getIdParentFolder() != '') {
-                $parentFolder = $app->folderModel->getFolderById($dbf->getIdParentFolder());
-
-                $text .= ' (' . $parentFolder->getName() . ')';
-            }*/
-
             for($i = 0; $i < $dbf->getNestLevel(); $i++) {
                 $text = '&nbsp;&nbsp;' . $text;
             }
@@ -439,10 +433,6 @@ class Documents extends APresenter {
 
         $data = [];
 
-        /*$name = htmlspecialchars($_POST['name']);
-        $idManager = htmlspecialchars($_POST['manager']);
-        $status = htmlspecialchars($_POST['status']);
-        $idFolder = htmlspecialchars($_POST['folder']);*/
         $idGroup = htmlspecialchars($_POST['group']);
         
         $data['name'] = htmlspecialchars($_POST['name']);
@@ -451,10 +441,6 @@ class Documents extends APresenter {
         $data['id_group'] = htmlspecialchars($idGroup);
         $data['id_author'] = $app->user->getId();
 
-        /*if($idFolder != '-1') {
-            $data['id_folder'] = htmlspecialchars($_POST['folder']);
-        }*/
-
         unset($_POST['name']);
         unset($_POST['manager']);
         unset($_POST['status']);
@@ -462,12 +448,6 @@ class Documents extends APresenter {
         unset($_POST['folder']);
 
         $customMetadata = $_POST;
-
-        /*if($idFolder == '-1') {
-            $idFolder = NULL;
-        }*/
-
-        //$app->documentModel->insertNewDocument($name, $idManager, $app->user->getId(), $status, $idGroup, $idFolder, $customMetadata);
 
         $data = array_merge($data, $customMetadata);
 

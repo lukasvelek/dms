@@ -38,26 +38,6 @@ class FolderModel extends AModel {
     }
 
     public function insertNewFolder(array $data) {
-        /*$qb =  $this->qb(__METHOD__);
-
-        $keys = [];
-        $values = [];
-        $params = [];
-
-        foreach($data as $k => $v) {
-            $keys[] = $k;
-            $values[] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        $result = $qb->insertArr('folders', $keys)
-                     ->valuesArr($values)
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         return $this->insertNew($data, 'folders');
     }
 

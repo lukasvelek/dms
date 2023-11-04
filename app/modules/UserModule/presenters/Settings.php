@@ -156,9 +156,7 @@ class Settings extends APresenter {
 
         $data = [];
 
-        //$name = htmlspecialchars($_POST['name']);
         $parentFolder = htmlspecialchars($_POST['parent_folder']);
-        //$description = null;
         $nestLevel = 0;
 
         $data['name'] = htmlspecialchars($_POST['name']);
@@ -166,7 +164,6 @@ class Settings extends APresenter {
         $create = true;
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            //$description = htmlspecialchars($_POST['description']);
             $data['description'] = htmlspecialchars($_POST['description']);
         }
 
@@ -187,7 +184,6 @@ class Settings extends APresenter {
         $data['nest_level'] = $nestLevel;
 
         if($create == true) {
-            //$app->folderModel->insertNewFolder($name, $description, $parentFolder, $nestLevel);
             $app->folderModel->insertNewFolder($data);
         }
         
@@ -353,7 +349,6 @@ class Settings extends APresenter {
         $data = [];
 
         $name = htmlspecialchars($_POST['name']);
-        //$text = htmlspecialchars($_POST['text']);
         $tableName = htmlspecialchars($_POST['table_name']);
         $length = htmlspecialchars($_POST['length']);
         $inputType = htmlspecialchars($_POST['input_type']);
@@ -373,8 +368,8 @@ class Settings extends APresenter {
 
         $data['length'] = $length;
 
-        $app->metadataModel->insertNewMetadata2($data);
-        //$app->metadataModel->insertNewMetadata($name, $text, $tableName, $inputType, $length);
+        $app->metadataModel->insertNewMetadata($data);
+
         $idMetadata = $app->metadataModel->getLastInsertedMetadata()->getId();
 
         $app->tableModel->addColToTable($tableName, $name, 'VARCHAR', $length);

@@ -135,26 +135,6 @@ class DocumentModel extends AModel {
     }
 
     public function insertNewDocument(array $data) {
-        /*$qb = $this->qb(__METHOD__);
-
-        $keys = [];
-        $values = [];
-        $params = [];
-
-        foreach($data as $k => $v) {
-            $keys[] = $k;
-            $values[] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        $result = $qb->insertArr('documents', $keys)
-                     ->valuesArr($values)
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         return $this->insertNew($data, 'documents');
     }
 
