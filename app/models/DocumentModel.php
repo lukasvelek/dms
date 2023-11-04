@@ -134,40 +134,14 @@ class DocumentModel extends AModel {
         return $result;
     }
 
-    public function insertNewDocument(string $name, int $idManager, int $idAuthor, int $status, int $idGroup, ?int $idFolder, array $customMetadata) {
-        $qb = $this->qb(__METHOD__);
+    public function insertNewDocument(array $data) {
+        /*$qb = $this->qb(__METHOD__);
 
-        $keys = array(
-            'name',
-            'id_manager',
-            'id_author',
-            'status',
-            'id_group'
-        );
+        $keys = [];
+        $values = [];
+        $params = [];
 
-        $values = array(
-            ':name',
-            ':id_manager',
-            ':id_author',
-            ':status',
-            ':id_group'
-        );
-
-        $params = array(
-            ':name' => $name,
-            ':id_manager' => $idManager,
-            ':id_author' => $idAuthor,
-            ':id_group' => $idGroup,
-            ':status' => $status
-        );
-
-        if($idFolder != NULL) {
-            $keys[] = 'id_folder';
-            $values[] = ':id_folder';
-            $params[':id_folder'] = $idFolder;
-        }
-
-        foreach($customMetadata as $k => $v) {
+        foreach($data as $k => $v) {
             $keys[] = $k;
             $values[] = ':' . $k;
             $params[':' . $k] = $v;
@@ -179,7 +153,9 @@ class DocumentModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        return $this->insertNew($data, 'documents');
     }
 
     public function getStandardDocuments() {

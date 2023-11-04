@@ -19,6 +19,28 @@ abstract class AModel {
         $qb->setMethod($methodName);
         return $qb;
     }
+
+    protected function insertNew(array $data, string $tableName) {
+        $qb =  $this->qb(__METHOD__);
+
+        $keys = [];
+        $values = [];
+        $params = [];
+
+        foreach($data as $k => $v) {
+            $keys[] = $k;
+            $values[] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $result = $qb->insertArr($tableName, $keys)
+                     ->valuesArr($values)
+                     ->setParams($params)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
 }
 
 ?>

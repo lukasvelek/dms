@@ -37,32 +37,17 @@ class FolderModel extends AModel {
         return $this->createFolderObjectFromDbRow($row);
     }
 
-    public function insertNewFolder(string $name, ?string $description, ?int $idParentFolder, int $nestLevel) {
-        $qb = $this->qb(__METHOD__);
+    public function insertNewFolder(array $data) {
+        /*$qb =  $this->qb(__METHOD__);
 
-        $keys = array(
-            'name',
-            'nest_level'
-        );
-        $values = array(
-            ':name',
-            ':nest_level'
-        );
-        $params = array(
-            ':name' => $name,
-            ':nest_level' => $nestLevel
-        );
+        $keys = [];
+        $values = [];
+        $params = [];
 
-        if(!is_null($description)) {
-            $keys[] = 'description';
-            $values[] = ':description';
-            $params[':description'] = $description;
-        }
-
-        if(!is_null($idParentFolder)) {
-            $keys[] = 'id_parent_folder';
-            $values[] = ':id_parent_folder';
-            $params[':id_parent_folder'] = $idParentFolder;
+        foreach($data as $k => $v) {
+            $keys[] = $k;
+            $values[] = ':' . $k;
+            $params[':' . $k] = $v;
         }
 
         $result = $qb->insertArr('folders', $keys)
@@ -71,7 +56,9 @@ class FolderModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        return $this->insertNew($data, 'folders');
     }
 
     public function getAllFolders() {

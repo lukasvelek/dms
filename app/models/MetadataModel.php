@@ -100,6 +100,10 @@ class MetadataModel extends AModel {
         return $this->createMetadataObjectFromDbRow($row);
     }
 
+    public function insertNewMetadata2(array $data) {
+        return $this->insertNew($data, 'metadata');
+    }
+
     public function insertNewMetadata(string $name, string $text, string $tableName, string $inputType, string $inputLength) {
         $qb = $this->qb(__METHOD__);
 
