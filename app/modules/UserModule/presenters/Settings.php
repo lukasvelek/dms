@@ -82,6 +82,8 @@ class Settings extends APresenter {
 
         foreach($app->serviceManager->services as $service) {
             if($service->name == $name) {
+                $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
+
                 $service->run();
                 break;
             }
@@ -186,8 +188,10 @@ class Settings extends APresenter {
         if($create == true) {
             $app->folderModel->insertNewFolder($data);
         }
-        
+
         $idFolder = $app->folderModel->getLastInsertedFolder()->getId();
+        
+        $app->logger->info('Inserted new folder #' . $idFolder, __METHOD__);
 
         if($parentFolder != '-1') {
             $app->redirect('UserModule:Settings:showFolders', array('id_folder' => $idFolder));
@@ -380,6 +384,12 @@ class Settings extends APresenter {
         $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'edit');
         $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'view_values');
         $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'edit_values');
+        
+        $app->logger->info('Created new metadata #' . $idMetadata, __METHOD__);
+        $app->logger->info('Enabled right \'view\' for metadata #' . $idMetadata, __METHOD__);
+        $app->logger->info('Enabled right \'edit\' for metadata #' . $idMetadata, __METHOD__);
+        $app->logger->info('Enabled right \'view_values\' for metadata #' . $idMetadata, __METHOD__);
+        $app->logger->info('Enabled right \'edit_values\' for metadata #' . $idMetadata, __METHOD__);
 
         if($inputType == 'select') {
             $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
@@ -402,6 +412,8 @@ class Settings extends APresenter {
         $app->metadataModel->deleteMetadataValues($id);
         $app->metadataModel->deleteMetadata($id);
 
+        $app->logger->info('Deleted metadata #' . $id, __METHOD__);
+
         $app->redirect('UserModule:Settings:showMetadata');
     }
 
@@ -417,6 +429,8 @@ class Settings extends APresenter {
 
         $app->groupModel->insertNewGroup($name, $code);
         $idGroup = $app->groupModel->getLastInsertedGroup()->getId();
+
+        $app->logger->info('Created new group #' . $idGroup, __METHOD__);
 
         $app->groupRightModel->insertActionRightsForIdGroup($idGroup);
         $app->groupRightModel->insertPanelRightsForIdGroup($idGroup);
@@ -459,6 +473,8 @@ class Settings extends APresenter {
 
         $app->userModel->insertUser($data);
         $idUser = $app->userModel->getLastInsertedUser()->getId();
+
+        $app->logger->info('Created new user #' . $idUser, __METHOD__);
 
         $app->userRightModel->insertActionRightsForIdUser($idUser);
         $app->userRightModel->insertPanelRightsForIdUser($idUser);
@@ -503,6 +519,8 @@ class Settings extends APresenter {
 
         foreach($childFolders as $cf) {
             $app->folderModel->deleteFolder($cf->getId());
+
+            $app->logger->info('Deleted folder #' . $cf->getId(), __METHOD__);
         }
 
         $app->redirect('UserModule:Settings:showFolders');

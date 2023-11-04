@@ -103,6 +103,8 @@ class SingleDocument extends APresenter {
 
         $app->documentModel->updateDocument($id, $data);
 
+        $app->logger->info('Updated document #' . $id, __METHOD__);
+
         $app->redirect('UserModule:SingleDocument:showInfo', array('id' => $id));
     }
 

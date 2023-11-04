@@ -460,6 +460,8 @@ class Documents extends APresenter {
 
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
 
+        $app->logger->info('Created document #' . $idDocument, __METHOD__);
+
         $documentGroupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
         $documentIdManager = null;
 

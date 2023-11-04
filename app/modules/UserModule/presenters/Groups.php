@@ -106,6 +106,8 @@ class Groups extends APresenter {
 
         $app->groupRightModel->updateActionRight($idGroup, $name, true);
 
+        $app->logger->info('Allowed action right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
+
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
 
@@ -119,6 +121,8 @@ class Groups extends APresenter {
         $idGroup = htmlspecialchars($_GET['id']);
 
         $app->groupRightModel->updateActionRight($idGroup, $name, false);
+
+        $app->logger->info('Denied action right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
 
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
@@ -134,6 +138,8 @@ class Groups extends APresenter {
 
         $app->groupRightModel->updatePanelRight($idGroup, $name, true);
 
+        $app->logger->info('Allowed panel right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
+
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
 
@@ -147,6 +153,8 @@ class Groups extends APresenter {
         $idGroup = htmlspecialchars($_GET['id']);
 
         $app->groupRightModel->updatePanelRight($idGroup, $name, false);
+
+        $app->logger->info('Denied panel right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
 
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
@@ -162,6 +170,8 @@ class Groups extends APresenter {
 
         $app->groupRightModel->updateBulkActionRight($idGroup, $name, true);
 
+        $app->logger->info('Allowed bulk action right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
+
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
 
@@ -175,6 +185,8 @@ class Groups extends APresenter {
         $idGroup = htmlspecialchars($_GET['id']);
 
         $app->groupRightModel->updateBulkActionRight($idGroup, $name, false);
+
+        $app->logger->info('Denied bulk action right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
 
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
@@ -190,6 +202,8 @@ class Groups extends APresenter {
 
         $app->groupUserModel->insertUserToGroup($idGroup, $idUser);
 
+        $app->logger->info('Added user #' . $idUser . ' to group #' . $idGroup, __METHOD__);
+
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
         
@@ -203,6 +217,8 @@ class Groups extends APresenter {
         $idUser = htmlspecialchars($_GET['id_user']);
 
         $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
+
+        $app->logger->info('Set user #' . $idUser . ' as the manager of group #' . $idGroup, __METHOD__);
 
         $idGroupManager = 0;
 
@@ -228,6 +244,8 @@ class Groups extends APresenter {
         $idUser = htmlspecialchars($_GET['id_user']);
 
         $app->groupUserModel->updateUserInGroup($idGroup, $idUser, array('is_manager' => '0'));
+
+        $app->logger->info('Unset user #' . $idUser . ' as the manager of group #' . $idGroup, __METHOD__);
 
         $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
     }
