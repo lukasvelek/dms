@@ -17,7 +17,6 @@ use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
-use DMS\UI\FormBuilder\Option;
 
 class Settings extends APresenter {
     private string $name;
@@ -44,6 +43,41 @@ class Settings extends APresenter {
         return $this->name;
     }
 
+    protected function editService() {
+        global $app;
+
+        $name = htmlspecialchars($_GET['name']);
+        
+        $values = $_POST;
+
+        unset($values['name']);
+        unset($values['description']);
+
+        foreach($values as $k => $v) {
+            $app->serviceModel->updateService($name, $k, $v);
+        }
+
+        $app->logger->info('Updated configuration for service \'' . $name . '\'', __METHOD__);
+
+        $app->redirect('UserModule:Settings:showServices');
+    }
+
+    protected function editServiceForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $name = htmlspecialchars($_GET['name']);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$FORM$' => $this->internalCreateEditServiceForm($name)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showServices() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
@@ -59,6 +93,23 @@ class Settings extends APresenter {
         return $template;
     }
 
+    protected function askToRunService() {
+        $name = htmlspecialchars($_GET['name']);
+
+        $urlConfirm = array(
+            'page' => 'UserModule:Settings:runService',
+            'name' => $name
+        );
+
+        $urlClose = array(
+            'page' => 'UserModule:Settings:showServices'
+        );
+
+        $code = ScriptLoader::confirmUser('Do you want to run service ' . $name . '?', $urlConfirm, $urlClose);
+
+        return $code;
+    }
+
     protected function runService() {
         global $app;
 
@@ -66,6 +117,8 @@ class Settings extends APresenter {
 
         foreach($app->serviceManager->services as $service) {
             if($service->name == $name) {
+                $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
+
                 $service->run();
                 break;
             }
@@ -138,20 +191,24 @@ class Settings extends APresenter {
     protected function createNewFolder() {
         global $app;
 
-        $name = htmlspecialchars($_POST['name']);
+        $data = [];
+
         $parentFolder = htmlspecialchars($_POST['parent_folder']);
-        $description = null;
         $nestLevel = 0;
+
+        $data['name'] = htmlspecialchars($_POST['name']);
 
         $create = true;
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $description = htmlspecialchars($_POST['description']);
+            $data['description'] = htmlspecialchars($_POST['description']);
         }
 
         if($parentFolder == '-1') {
             $parentFolder = null;
         } else {
+            $data['id_parent_folder'] = $parentFolder;
+
             $nestLevelParentFolder = $app->folderModel->getFolderById($parentFolder);
 
             $nestLevel = $nestLevelParentFolder->getNestLevel() + 1;
@@ -161,11 +218,15 @@ class Settings extends APresenter {
             }
         }
 
+        $data['nest_level'] = $nestLevel;
+
         if($create == true) {
-            $app->folderModel->insertNewFolder($name, $description, $parentFolder, $nestLevel);
+            $app->folderModel->insertNewFolder($data);
         }
-        
+
         $idFolder = $app->folderModel->getLastInsertedFolder()->getId();
+        
+        $app->logger->info('Inserted new folder #' . $idFolder, __METHOD__);
 
         if($parentFolder != '-1') {
             $app->redirect('UserModule:Settings:showFolders', array('id_folder' => $idFolder));
@@ -324,11 +385,17 @@ class Settings extends APresenter {
     protected function createNewMetadata() {
         global $app;
 
+        $data = [];
+
         $name = htmlspecialchars($_POST['name']);
-        $text = htmlspecialchars($_POST['text']);
         $tableName = htmlspecialchars($_POST['table_name']);
         $length = htmlspecialchars($_POST['length']);
         $inputType = htmlspecialchars($_POST['input_type']);
+
+        $data['name'] = htmlspecialchars($_POST['name']);
+        $data['text'] = htmlspecialchars($_POST['text']);
+        $data['table_name'] = htmlspecialchars($_POST['table_name']);
+        $data['input_type'] = $inputType;
 
         if($inputType == 'boolean') {
             $length = '2';
@@ -338,7 +405,10 @@ class Settings extends APresenter {
             $length = '10';
         }
 
-        $app->metadataModel->insertNewMetadata($name, $text, $tableName, $inputType, $length);
+        $data['length'] = $length;
+
+        $app->metadataModel->insertNewMetadata($data);
+
         $idMetadata = $app->metadataModel->getLastInsertedMetadata()->getId();
 
         $app->tableModel->addColToTable($tableName, $name, 'VARCHAR', $length);
@@ -349,6 +419,12 @@ class Settings extends APresenter {
         $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'edit');
         $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'view_values');
         $app->userRightModel->enableRight($app->user->getId(), $idMetadata, 'edit_values');
+        
+        $app->logger->info('Created new metadata #' . $idMetadata, __METHOD__);
+        $app->logger->info('Enabled right \'view\' for metadata #' . $idMetadata, __METHOD__);
+        $app->logger->info('Enabled right \'edit\' for metadata #' . $idMetadata, __METHOD__);
+        $app->logger->info('Enabled right \'view_values\' for metadata #' . $idMetadata, __METHOD__);
+        $app->logger->info('Enabled right \'edit_values\' for metadata #' . $idMetadata, __METHOD__);
 
         if($inputType == 'select') {
             $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
@@ -371,6 +447,8 @@ class Settings extends APresenter {
         $app->metadataModel->deleteMetadataValues($id);
         $app->metadataModel->deleteMetadata($id);
 
+        $app->logger->info('Deleted metadata #' . $id, __METHOD__);
+
         $app->redirect('UserModule:Settings:showMetadata');
     }
 
@@ -386,6 +464,8 @@ class Settings extends APresenter {
 
         $app->groupModel->insertNewGroup($name, $code);
         $idGroup = $app->groupModel->getLastInsertedGroup()->getId();
+
+        $app->logger->info('Created new group #' . $idGroup, __METHOD__);
 
         $app->groupRightModel->insertActionRightsForIdGroup($idGroup);
         $app->groupRightModel->insertPanelRightsForIdGroup($idGroup);
@@ -426,14 +506,33 @@ class Settings extends APresenter {
 
         $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
 
-        $app->userModel->insertUserFromArray($data);
+        $app->userModel->insertUser($data);
         $idUser = $app->userModel->getLastInsertedUser()->getId();
+
+        $app->logger->info('Created new user #' . $idUser, __METHOD__);
 
         $app->userRightModel->insertActionRightsForIdUser($idUser);
         $app->userRightModel->insertPanelRightsForIdUser($idUser);
         $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
 
         $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
+    }
+
+    protected function askToDeleteFolder() {
+        $id = htmlspecialchars($_GET['id_folder']);
+
+        $urlConfirm = array(
+            'page' => 'UserModule:Settings:deleteFolder',
+            'id_folder' => $id
+        );
+
+        $urlClose = array(
+            'page' => 'UserModule:Settings:showFolders'
+        );
+
+        $code = ScriptLoader::confirmUser('Do you want to delete folder #' . $id . '?', $urlConfirm, $urlClose);
+
+        return $code;
     }
 
     protected function deleteFolder() {
@@ -455,6 +554,8 @@ class Settings extends APresenter {
 
         foreach($childFolders as $cf) {
             $app->folderModel->deleteFolder($cf->getId());
+
+            $app->logger->info('Deleted folder #' . $cf->getId(), __METHOD__);
         }
 
         $app->redirect('UserModule:Settings:showFolders');
@@ -878,8 +979,7 @@ class Settings extends APresenter {
         $headers = array(
             'Actions',
             'Name',
-            'Description'/*,
-            'Child entities'*/
+            'Description'
         );
 
         $headerRow = null;
@@ -900,7 +1000,8 @@ class Settings extends APresenter {
             foreach($folders as $folder) {
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteFolder', 'id_folder' => $folder->getId()), 'Delete')
+                    //LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteFolder', 'id_folder' => $folder->getId()), 'Delete')
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete')
                 );
 
                 if(is_null($headerRow)) {
@@ -930,12 +1031,6 @@ class Settings extends APresenter {
 
                 $folderRow->addCol($tb->createCol()->setText($folder->getName()))
                           ->addCol($tb->createCol()->setText($folder->getDescription() ?? '-'));
-
-                /*$childEntities = 0;
-
-                $this->_getFolderCount($childEntities, $folder);
-
-                $folderRow->addCol($tb->createCol()->setText($childEntities));*/
 
                 $tb->addRow($folderRow);
             }
@@ -1003,7 +1098,8 @@ class Settings extends APresenter {
 
         foreach($services as $serviceName => $service) {
             $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:runService', 'name' => $service->name), 'Run')
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run'),
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->name), 'Edit')
             );
 
             if(is_null($headerRow)) {
@@ -1065,6 +1161,40 @@ class Settings extends APresenter {
         foreach($childFolders as $cf) {
             $this->_getChildFolderList($list, $cf);
         }
+    }
+    
+    private function internalCreateEditServiceForm(string $name) {
+        global $app;
+
+        $service = $app->serviceManager->getServiceByName($name);
+        $serviceCfg = $app->serviceModel->getConfigForServiceName($name);
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name)
+            
+            ->addElement($fb->createLabel()->setText('Service name')->setFor('name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->disable()->setValue($name))
+
+            ->addElement($fb->createLabel()->setText('Description')->setFor('description'))
+            ->addElement($fb->createInput()->setType('text')->setName('description')->disable()->setValue($service->description))
+        ;
+
+        foreach($serviceCfg as $key => $value) {
+            $fb ->addElement($fb->createLabel()->setText($key)->setFor($key));
+
+            if($key == 'files_keep_length') {
+                $fb
+                ->addElement($fb->createSpecial('<span id="files_keep_length_text_value">__VAL__</span>'))
+                ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))
+                ;
+            }
+        }
+
+        $fb ->loadJSScript('js/EditServiceForm.js')
+            ->addElement($fb->createSubmit('Save'));
+
+        return $fb->build();
     }
 }
 

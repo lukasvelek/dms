@@ -64,26 +64,8 @@ class UserModel extends AModel {
         return $this->getUserObjectFromDbRow($row);
     }
 
-    public function insertUserFromArray(array $data) {
-        $qb = $this->qb(__METHOD__);
-
-        $keys = [];
-        $values = [];
-        $params = [];
-
-        foreach($data as $k => $v) {
-            $keys[] = $k;
-            $values[] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        $result = $qb->insertArr('users', $keys)
-                     ->valuesArr($values)
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;
+    public function insertUser(array $data) {
+        return $this->insertNew($data, 'users');
     }
 
     public function getUserById(int $id) {

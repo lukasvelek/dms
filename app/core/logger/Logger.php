@@ -7,9 +7,11 @@ use QueryBuilder\ILoggerCallable;
 
 class Logger implements ILoggerCallable {
     private FileManager $fileManager;
+    private array $cfg;
 
-    public function __construct(FileManager $fm) {
+    public function __construct(FileManager $fm, array $cfg) {
         $this->fileManager = $fm;
+        $this->cfg = $cfg;
     }
 
     public function error(string $text, ?string $method = null) {
@@ -33,11 +35,45 @@ class Logger implements ILoggerCallable {
 
         $text = '[' . date('Y-m-d H:i:s') . '] ' . $text . "\r\n";
 
-        if(is_null($filename)) {
-            return $this->saveLogEntry(null, $text);
-        } else {
-            return $this->saveLogEntry($filename, $text);
+        $result = true;
+
+        //$result = $this->saveLogEntry($filename, $text);
+
+        /*if($this->cfg['log_level'] == '3') {
+            $result = $this->saveLogEntry($filename, $text);
+        } else if($this->cfg[''])*/
+
+        switch($category) {
+            case LogCategoryEnum::INFO:
+                if($this->cfg['log_level'] == 3) {
+                    $result = $this->saveLogEntry($filename, $text);
+                }
+
+                break;
+
+            case LogCategoryEnum::WARN:
+                if($this->cfg['log_level'] >= 2) {
+                    $result = $this->saveLogEntry($filename, $text);
+                }
+
+                break;
+
+            case LogCategoryEnum::ERROR:
+                if($this->cfg['log_level'] >= 1) {
+                    $result = $this->saveLogEntry($filename, $text);
+                }
+
+                break;
+
+            case LogCategoryEnum::SQL:
+                if($this->cfg['sql_log_level'] == 1) {
+                    $result = $this->saveLogEntry($filename, $text);
+                }
+
+                break;
         }
+
+        return $result;
     }
 
     public function sql(string $sql, string $method) {

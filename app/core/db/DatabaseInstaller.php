@@ -36,6 +36,7 @@ class DatabaseInstaller {
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
+        $this->insertDefaultServiceConfig();
     }
 
     public function updateDefaultUserRights() {
@@ -174,6 +175,12 @@ class DatabaseInstaller {
                 'description' => 'VARCHAR(256) NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'nest_level' => 'INT(32) NOT NULL'
+            ),
+            'service_config' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'key' => 'VARCHAR(256) NOT NULL',
+                'value' => 'VARCHAR(256) NOT NULL'
             )
         );
 
@@ -616,6 +623,24 @@ class DatabaseInstaller {
             foreach($idMetadata as $idMeta) {
                 $sql = "INSERT INTO `user_metadata_rights` (`id_metadata`, `id_user`, `view`, `edit`, `view_values`, `edit_values`)
                         VALUES ('$idMeta', '$idUser', '1', '1', '1', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    public function insertDefaultServiceConfig() {
+        $serviceCfg = array(
+            'LogRotateService' => array(
+                'files_keep_length' => '7'
+            )
+        );
+
+        foreach($serviceCfg as $serviceName => $serviceData) {
+            foreach($serviceData as $key => $value) {
+                $sql = "INSERT INTO `service_config` (`name`, `key`, `value`) VALUES ('$serviceName', '$key', '$value')";
 
                 $this->logger->sql($sql, __METHOD__);
 

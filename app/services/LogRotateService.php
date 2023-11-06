@@ -4,23 +4,26 @@ namespace DMS\Services;
 
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
+use DMS\Models\ServiceModel;
 
 class LogRotateService extends AService {
     private array $cfg;
 
-    public function __construct(Logger $logger, array $cfg) {
-        parent::__construct('LogRotateService', 'Deletes old logs', $logger);
+    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg) {
+        parent::__construct('LogRotateService', 'Deletes old log files', $logger, $serviceModel);
 
         $this->cfg = $cfg;
+        
+        $this->loadCfg();
     }
 
     public function run() {
         $fm = FileManager::getTemporaryObject();
 
-        $this->logger->info('Starting service \'' . $this->name . '\'', __METHOD__);
+        $this->startService();
 
         $files = [];
-        $fm->readFilesInFolder('logs', $files);
+        $fm->readFilesInFolder($this->cfg['log_dir'], $files);
 
         $toDelete = [];
         foreach($files as $f) {
@@ -28,7 +31,7 @@ class LogRotateService extends AService {
             $filename = explode('.', $filename)[0];
             $date = explode('_', $filename)[1];
 
-            $days = 2;
+            $days = /*7*/ $this->scfg['file_keep_length'];
 
             $maxOldDate = time() - (60 * 60 * 24 * $days);
 
@@ -37,13 +40,13 @@ class LogRotateService extends AService {
             }
         }
 
-        $this->logger->info('Found ' . count($toDelete) . ' log files to delete', __METHOD__);
+        $this->log('Found ' . count($toDelete) . ' log files to delete', __METHOD__);
 
         foreach($toDelete as $td) {
             unlink($td);
         }
 
-        $this->logger->info('Stopping service \'' . $this->name . '\'', __METHOD__);
+        $this->stopService();
     }
 }
 

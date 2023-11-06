@@ -50,22 +50,39 @@ class ProcessComponent extends AComponent {
     public function startProcess(int $type, int $idDocument) {
         global $app;
 
+        $data = [];
+
         if($this->checkIfDocumentIsInProcess($idDocument)) {
             // is in process
             return false;
         }
 
-        $workflow = [];
-
         switch($type) {
             case ProcessTypes::DELETE:
                 $archmanIdGroup = $app->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
-                $workflow[] = $app->groupUserModel->getGroupUserByIdGroup($archmanIdGroup)->getIdUser();
+                $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
+
+                $document = $app->documentModel->getDocumentById($idDocument);
+                $data['workflow1'] = $document->getIdManager();
+
+                foreach($groupUsers as $gu) {
+                    if($gu->getIsManager()) {
+                        $data['workflow2'] = $gu->getIdUser();
+                        
+                        break;
+                    }
+                }
 
                 break;
         }
 
-        $app->processModel->insertNewProcess($idDocument, $type, $workflow);
+        $data['id_document'] = $idDocument;
+        $data['type'] = $type;
+        $data['workflow_status'] = '1';
+
+        $app->processModel->insertNewProcess($data);
+        
+        $app->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
         
         return true;
     }
@@ -79,6 +96,8 @@ class ProcessComponent extends AComponent {
 
         $app->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
 
+        $app->logger->info('Updated workflow status of process #' . $idProcess, __METHOD__);
+
         return true;
     }
 
@@ -86,6 +105,8 @@ class ProcessComponent extends AComponent {
         global $app;
 
         $app->processModel->updateStatus($idProcess, ProcessStatus::FINISHED);
+
+        $app->logger->info('Ended process #' . $idProcess, __METHOD__);
 
         return true;
     }

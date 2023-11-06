@@ -128,46 +128,8 @@ class ProcessModel extends AModel {
         return $row;
     }
 
-    public function insertNewProcess(?int $idDocument, int $type, ?array $workflow) {
-        $qb = $this->qb(__METHOD__);
-
-        $keys = array(
-            'type',
-            'status',
-            'workflow_status'
-        );
-
-        $values = array(
-            ':type',
-            ':status',
-            ':workflow_status'
-        );
-
-        $params = array(
-            ':type' => $type,
-            ':status' => ProcessStatus::IN_PROGRESS,
-            ':workflow_status' => '1'
-        );
-
-        if(!is_null($idDocument)) {
-            $keys[] = 'id_document';
-            $values[] = ':id_document';
-            $params[':id_document'] = $idDocument;
-        }
-
-        for($i = 0; $i < count($workflow); $i++) {
-            $keys[] = 'workflow' . ($i + 1);
-            $values[] = ':workflow' . ($i + 1);
-            $params[':workflow' . ($i + 1)] = $workflow[$i];
-        }
-
-        $result = $qb->insertArr('processes', $keys)
-                     ->valuesArr($values)
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;
+    public function insertNewProcess(array $data) {
+        return $this->insertNew($data, 'processes');
     }
 
     public function getProcessForIdDocument(int $idDocument) {

@@ -92,6 +92,8 @@ class Users extends APresenter {
 
         $app->userRightModel->updateActionRight($idUser, $name, true);
 
+        $app->logger->info('Allowed action right to user #' . $idUser, __METHOD__);
+
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
 
@@ -105,6 +107,8 @@ class Users extends APresenter {
         $idUser = htmlspecialchars($_GET['id']);
 
         $app->userRightModel->updateActionRight($idUser, $name, false);
+
+        $app->logger->info('Denied action right to user #' . $idUser, __METHOD__);
 
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
@@ -120,6 +124,8 @@ class Users extends APresenter {
 
         $app->userRightModel->updatePanelRight($idUser, $name, true);
 
+        $app->logger->info('Allowed panel right to user #' . $idUser, __METHOD__);
+
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
 
@@ -133,6 +139,8 @@ class Users extends APresenter {
         $idUser = htmlspecialchars($_GET['id']);
 
         $app->userRightModel->updatePanelRight($idUser, $name, false);
+
+        $app->logger->info('Denied panel right to user #' . $idUser, __METHOD__);
 
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
@@ -148,6 +156,8 @@ class Users extends APresenter {
 
         $app->userRightModel->updateBulkActionRight($idUser, $name, true);
 
+        $app->logger->info('Allowed bulk action right to user #' . $idUser, __METHOD__);
+
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();
 
@@ -161,6 +171,8 @@ class Users extends APresenter {
         $idUser = htmlspecialchars($_GET['id']);
 
         $app->userRightModel->updateBulkActionRight($idUser, $name, false);
+
+        $app->logger->info('Denied bulk action right to user #' . $idUser, __METHOD__);
 
         $cm = CacheManager::getTemporaryObject();
         $cm->invalidateCache();

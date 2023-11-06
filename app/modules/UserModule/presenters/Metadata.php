@@ -88,6 +88,8 @@ class Metadata extends APresenter {
 
         $app->metadataModel->insertMetadataValueForIdMetadata($idMetadata, $name, $value);
 
+        $app->logger->info('Created new value for metadata #' . $idMetadata, __METHOD__);
+
         $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
 
@@ -129,6 +131,8 @@ class Metadata extends APresenter {
                 $app->userRightModel->disableRight($idUser, $idMetadata, $name);
                 break;
         }
+
+        $app->logger->info('Updated metadata right for user #' . $idUser . ' and metadata #' . $idMetadata, __METHOD__);
 
         $app->redirect('UserModule:Metadata:showUserRights', array('id_metadata' => $idMetadata));
     }
@@ -174,6 +178,13 @@ class Metadata extends APresenter {
                 $userRow = $tb->createRow();
 
                 $rights = $app->userRightModel->getMetadataRights($idUser, $idMetadata);
+
+                if(is_null($rights)) {
+                    $rights['view'] = '0';
+                    $rights['edit'] = '0';
+                    $rights['view_values'] = '0';
+                    $rights['edit_values'] = '0';
+                }
 
                 $enableLink = function (string $name) use ($idMetadata, $idUser) {
                     $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'enable'), 'No', 'general-link', 'color: red');

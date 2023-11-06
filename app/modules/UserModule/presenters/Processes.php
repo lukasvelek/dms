@@ -71,8 +71,6 @@ class Processes extends APresenter {
     }
 
     protected function newProcess() {
-        global $app;
-
         $type = htmlspecialchars($_GET['type']);
         $name = ProcessTypes::$texts[$type];
 
@@ -109,7 +107,6 @@ class Processes extends APresenter {
         $tb = TableBuilder::getTemporaryObject();
 
         $processes = array(
-            // array(name=>'', link => array(page, name))
             array('name' => 'Home office', 'link' => array('page' => 'UserModule:Processes:newProcess', 'type' => ProcessTypes::HOME_OFFICE))
         );
 
@@ -130,7 +127,7 @@ class Processes extends APresenter {
                 $col = $tb->createCol();
 
                 $process = $processes[$ccnt];
-                //$name = $process['name'];
+
                 $link = LinkBuilder::createAdvLink($process['link'], $process['name']);
 
                 $text = $link;
@@ -145,10 +142,6 @@ class Processes extends APresenter {
             $ccnt++;
             
             if($ccnt == $cnt) break;
-        }
-
-        foreach($processes as $name => $linkArray) {
-
         }
 
         $table = $tb->build();
