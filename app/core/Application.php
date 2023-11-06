@@ -21,6 +21,7 @@ use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\MetadataModel;
 use DMS\Models\ProcessModel;
+use DMS\Models\ServiceModel;
 use DMS\Models\TableModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
@@ -56,6 +57,7 @@ class Application {
     public MetadataModel $metadataModel;
     public TableModel $tableModel;
     public FolderModel $folderModel;
+    public ServiceModel $serviceModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -94,17 +96,18 @@ class Application {
         $this->metadataModel = new MetadataModel($this->conn, $this->logger);
         $this->tableModel = new TableModel($this->conn, $this->logger);
         $this->folderModel = new FolderModel($this->conn, $this->logger);
+        $this->serviceModel = new ServiceModel($this->conn, $this->logger);
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger);
-        $this->metadataAuthorizator= new MetadataAuthorizator($this->conn, $this->logger);
+        $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger);
 
         $this->processComponent = new ProcessComponent($this->conn, $this->logger);
 
         $this->fsManager = new FileStorageManager($this->cfg['file_dir'], $this->fileManager, $this->logger);
-        $this->serviceManager = new ServiceManager($this->logger, $this->cfg);
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg);
 
         $this->installDb();
 
