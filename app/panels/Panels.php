@@ -7,7 +7,7 @@ use DMS\Core\TemplateManager;
 use DMS\UI\LinkBuilder;
 
 class Panels {
-    private CONST TOPPANEL_USE_TEXT = TRUE;
+    private CONST TOPPANEL_USE_TEXT = FALSE;
 
     public static function createProcessesPanel() {
         $templateManager = self::tm();

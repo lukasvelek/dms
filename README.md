@@ -10,6 +10,7 @@ It also enables users to manage metadata or their select values.
 - added document editing
 - updated core functions
 - updated logger
+- updated processes
 
 ### v1.0
 - document management
