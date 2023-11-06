@@ -1063,7 +1063,8 @@ class Settings extends APresenter {
 
         foreach($services as $serviceName => $service) {
             $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run')
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run'),
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editService', 'name' => $service->name), 'Edit')
             );
 
             if(is_null($headerRow)) {
