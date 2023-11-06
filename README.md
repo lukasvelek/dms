@@ -4,6 +4,13 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata or their select values.
 
 ## Changelog
+### v1.1
+- added service configuration in-system edit
+- added user prompts
+- added document editing
+- updated core functions
+- updated logger
+
 ### v1.0
 - document management
 - metadata management
