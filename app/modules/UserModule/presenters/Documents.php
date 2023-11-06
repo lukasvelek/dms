@@ -487,7 +487,7 @@ class Documents extends APresenter {
             $app->processComponent->startProcess(ProcessTypes::DELETE, $id);
         }
 
-        $app->redirect('UserModule:Documents:showAll');
+        echo('<script type="text/javascript">alert("Process has started"); location.href = "?page=UserModule:Documents:showAll";</script>');
     }
 
     private function _decline_archivation(array $ids) {
