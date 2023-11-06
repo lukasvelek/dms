@@ -22,6 +22,16 @@ class ServiceManager {
         $this->loadServices();
     }
 
+    public function getServiceByName(string $name) {
+        foreach($this->services as $k => $v) {
+            if($v->name == $name) {
+                return $v;
+            }
+        }
+
+        return null;
+    }
+
     private function loadServices() {
         $this->services['Log Rotate'] = new LogRotateService($this->logger, $this->serviceModel, $this->cfg);
         $this->services['Cache Rotate'] = new CacheRotateService($this->logger, $this->serviceModel, $this->cfg);

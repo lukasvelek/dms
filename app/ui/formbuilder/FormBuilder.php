@@ -71,6 +71,14 @@ class FormBuilder {
 
   public function addJSScript(string $jsScript) {
     $this->internalCode .= $jsScript;
+
+    return $this;
+  }
+
+  public function loadJSScript(string $jsScript) {
+    $this->internalCode .= '<script type="text/javascript" src="' . $jsScript . '"></script>';
+
+    return $this;
   }
 
   public function build() {

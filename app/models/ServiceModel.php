@@ -10,6 +10,24 @@ class ServiceModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateService(string $name, string $key, string $value) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('service_config')
+                     ->set(array('value' => ':value'))
+                     ->where('name=:name')
+                     ->andWhere('key=:key')
+                     ->setParams(array(
+                        ':value' => $value,
+                        ':key' => $key,
+                        ':name' => $name
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getConfigForServiceName(string $name) {
         $qb = $this->qb(__METHOD__);
 
