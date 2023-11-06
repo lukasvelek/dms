@@ -43,6 +43,41 @@ class Settings extends APresenter {
         return $this->name;
     }
 
+    protected function editService() {
+        global $app;
+
+        $name = htmlspecialchars($_GET['name']);
+        
+        $values = $_POST;
+
+        unset($values['name']);
+        unset($values['description']);
+
+        foreach($values as $k => $v) {
+            $app->serviceModel->updateService($name, $k, $v);
+        }
+
+        $app->logger->info('Updated configuration for service \'' . $name . '\'', __METHOD__);
+
+        $app->redirect('UserModule:Settings:showServices');
+    }
+
+    protected function editServiceForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $name = htmlspecialchars($_GET['name']);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$FORM$' => $this->internalCreateEditServiceForm($name)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showServices() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
@@ -1063,7 +1098,8 @@ class Settings extends APresenter {
 
         foreach($services as $serviceName => $service) {
             $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run')
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run'),
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->name), 'Edit')
             );
 
             if(is_null($headerRow)) {
@@ -1125,6 +1161,40 @@ class Settings extends APresenter {
         foreach($childFolders as $cf) {
             $this->_getChildFolderList($list, $cf);
         }
+    }
+    
+    private function internalCreateEditServiceForm(string $name) {
+        global $app;
+
+        $service = $app->serviceManager->getServiceByName($name);
+        $serviceCfg = $app->serviceModel->getConfigForServiceName($name);
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name)
+            
+            ->addElement($fb->createLabel()->setText('Service name')->setFor('name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->disable()->setValue($name))
+
+            ->addElement($fb->createLabel()->setText('Description')->setFor('description'))
+            ->addElement($fb->createInput()->setType('text')->setName('description')->disable()->setValue($service->description))
+        ;
+
+        foreach($serviceCfg as $key => $value) {
+            $fb ->addElement($fb->createLabel()->setText($key)->setFor($key));
+
+            if($key == 'files_keep_length') {
+                $fb
+                ->addElement($fb->createSpecial('<span id="files_keep_length_text_value">__VAL__</span>'))
+                ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))
+                ;
+            }
+        }
+
+        $fb ->loadJSScript('js/EditServiceForm.js')
+            ->addElement($fb->createSubmit('Save'));
+
+        return $fb->build();
     }
 }
 
