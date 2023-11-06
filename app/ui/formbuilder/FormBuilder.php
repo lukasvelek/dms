@@ -8,9 +8,16 @@ class FormBuilder {
   private array $elements;
   private string $internalCode;
   private string $id;
+  private string $encType;
 
   public function __construct() {
     $this->clean();
+  }
+
+  public function setEncType(string $encType = 'multipart/form-data') {
+    $this->encType = $encType;
+
+    return $this;
   }
 
   public function setAction(string $action) {
@@ -84,7 +91,12 @@ class FormBuilder {
   public function build() {
     $code = [];
 
-    $code[] = '<form action="' . $this->action . '" method="' . $this->method . '" id="' . $this->id . '">';
+    $code[] = '<form action="' . $this->action . '" method="' . $this->method . '" id="' . $this->id . '"';
+
+    if($this->encType != '') {
+      $code[] = 'enctype="' . $this->encType . '"';
+      $code[] = '>';
+    }
 
     foreach($this->elements as $element) {
       $code[] = $element->build()->script;
@@ -130,6 +142,7 @@ class FormBuilder {
     $this->elements = array();
     $this->internalCode = '';
     $this->id = '';
+    $this->encType = '';
   }
 }
 

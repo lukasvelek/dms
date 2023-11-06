@@ -24,6 +24,10 @@ class FileStorageFile {
     public function getExtension() {
         return $this->extension;
     }
+
+    public static function createObject(string $filename) {
+        
+    }
 }
 
 ?>

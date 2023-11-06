@@ -188,14 +188,19 @@ class DocumentModel extends AModel {
         $isDeleted = $row['is_deleted'];
         $rank = $row['rank'];
         $idFolder = null;
+        $file = null;
 
         if(isset($row['id_folder'])) {
             $idFolder = $row['id_folder'];
         }
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder'));
+        if(isset($row['file'])) {
+            $file = $row['file'];
+        }
 
-        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder);
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file'));
+
+        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file);
         $document->setMetadata($row);
 
         return $document;
