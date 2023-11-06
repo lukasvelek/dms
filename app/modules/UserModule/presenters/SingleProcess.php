@@ -212,7 +212,7 @@ class SingleProcess extends APresenter {
 
         switch($process->getType()) {
             case ProcessTypes::DELETE:
-                if(($process->getWorkflowIdUserPosition($idCurrentUser) + 1) == $process->getWorkflowStatus()) {
+                if($idCurrentUser == ($process->getWorkflowStep($process->getWorkflowStatus() - 1))) {
                     // current officer
 
                     if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {

@@ -7,6 +7,8 @@ use DMS\Core\TemplateManager;
 use DMS\UI\LinkBuilder;
 
 class Panels {
+    private CONST TOPPANEL_USE_TEXT = TRUE;
+
     public static function createProcessesPanel() {
         global $app;
 
@@ -81,36 +83,50 @@ class Panels {
 
         $data = array(
             '$LINKS$' => array(
-                '&nbsp;',
-                //LinkBuilder::createLink($app::URL_HOME_PAGE, 'Home')
-                LinkBuilder::createImgLink($app::URL_HOME_PAGE, '', 'img/home-icon.png')
+                '&nbsp;'
             )
         );
+
+        if(self::TOPPANEL_USE_TEXT) {
+            $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_HOME_PAGE, 'Home');
+        } else {
+            $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_HOME_PAGE, '', 'img/home-icon.png');
+        }
 
         $panelAuthorizator = self::pa();
 
         if($panelAuthorizator->checkPanelRight('documents')) {
-            //$data['$LINKS$'][] = LinkBuilder::createLink($app::URL_DOCUMENTS_PAGE, 'Documents');
-            $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_DOCUMENTS_PAGE, '', 'img/documents-icon.png');
+            if(self::TOPPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_DOCUMENTS_PAGE, 'Documents');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_DOCUMENTS_PAGE, '', 'img/documents-icon.png');
+            }
         }
 
         if($panelAuthorizator->checkPanelRight('processes')) {
-            //$data['$LINKS$'][] = LinkBuilder::createLink($app::URL_PROCESSES_PAGE, 'Processes');
-            $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_PROCESSES_PAGE, '', 'img/processes-icon.png');
+            if(self::TOPPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_PROCESSES_PAGE, 'Processes');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_PROCESSES_PAGE, '', 'img/processes-icon.png');
+            }
         }
 
         if($panelAuthorizator->checkPanelRight('settings')) {
-            //$data['$LINKS$'][] = LinkBuilder::createLink($app::URL_SETTINGS_PAGE, 'Settings');
-            $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_SETTINGS_PAGE, '', 'img/settings-icon.png');
+            if(self::TOPPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_SETTINGS_PAGE, 'Settings');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_SETTINGS_PAGE, '', 'img/settings-icon.png');
+            }
         }
 
         if(!is_null($app->user)) {
-            //$data['$USER_PROFILE_LINK$'] = '<a class="general-link" href="?page=UserModule:UserProfile:showProfile&id=' . $app->user->getId() . '">' . $app->user->getFullname() . '</a>';
-            //$data['$USER_PROFILE_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname());
-            $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user-icon.png');
-            //$data['$USER_LOGOUT_LINK$'] = '<a class="general-link" href="?page=UserModule:UserLogout:logoutUser">Logout</a>';
-            //$data['$USER_LOGOUT_LINK$'] = LinkBuilder::createLink('UserModule:UserLogout:logoutUser', 'Logout');
-            $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', '', 'img/logout-icon.png');
+            if(self::TOPPANEL_USE_TEXT) {
+                $data['$USER_PROFILE_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname());
+                $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createLink('UserModule:UserLogout:logoutUser', 'Logout');
+            } else {
+                $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user-icon.png');
+                $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', '', 'img/logout-icon.png');
+            }
         } else {
             $data['$LINKS$'] = '';
             $data['$USER_PROFILE_LINK$'] = '';
