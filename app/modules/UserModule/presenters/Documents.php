@@ -343,7 +343,7 @@ class Documents extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')->setEncType()
             ->addElement($fb->createLabel()->setText('Document name')
                                            ->setFor('name'))
             ->addElement($fb->createInput()->setType('text')
@@ -369,7 +369,9 @@ class Documents extends APresenter {
                                            ->setText('Folder'))
             ->addElement($fb->createSelect()->setName('folder')
                                             ->addOptionsBasedOnArray($folders))
-            
+            ->addElement($fb->createLabel()->setFor('file')
+                                           ->setText('File'))
+            ->addElement($fb->createInput()->setType('file')->setName('file'))
            ;
 
         foreach($metadata as $name => $d) {
@@ -446,6 +448,10 @@ class Documents extends APresenter {
             $data['id_folder'] = $idFolder;
         }
 
+        if(isset($_FILES['file'])) {
+            $data['file'] = $_FILES['file']['name'];
+        }
+
         unset($_POST['name']);
         unset($_POST['manager']);
         unset($_POST['status']);
@@ -457,6 +463,10 @@ class Documents extends APresenter {
         $data = array_merge($data, $customMetadata);
 
         $app->documentModel->insertNewDocument($data);
+
+        if(isset($data['file'])) {
+            $app->fsManager->uploadFile($_FILES['file']);
+        }
 
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
 

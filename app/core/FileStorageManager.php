@@ -79,10 +79,22 @@ class FileStorageManager {
             return date($text) . '/';
         };
 
-        $targetFile = $this->fileFolder . $d('Y') . $d('m') . $d('d') . $d('H') . $d('i') . $d('s') . $file['name'];
+        $targetFile = $this->fileFolder . $d('Y') . $d('m') . $d('d') . $d('H') . $d('i') . $file['name'];
         $ok = true;
 
-        $this->fm->fileExists($targetFile);
+        if(!is_dir($this->fileFolder . $d('Y') . $d('m') . $d('d') . $d('H') . $d('i'))) {
+            $this->logger->warn('Specified folder does not exist! Creating...', __METHOD__);
+            $ok = mkdir($this->fileFolder . $d('Y') . $d('m') . $d('d') . $d('H') . $d('i'), 0777, true);
+            if($ok == true) {
+                $this->logger->info('Folder has been created!', __METHOD__);
+            } else {
+                $this->logger->error('Folder could not be created!', __METHOD__);
+            }
+        }
+
+        if($this->fm->fileExists($targetFile)) {
+            return false;
+        }
 
         $fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
 
