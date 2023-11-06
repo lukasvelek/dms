@@ -79,7 +79,8 @@ class DatabaseInstaller {
                 'id_group' => 'INT(32) NOT NULL',
                 'is_deleted' => 'INT(2) NOT NULL DEFAULT 0',
                 'rank' => 'VARCHAR(256) NOT NULL',
-                'id_folder' => 'INT(32) NULL'
+                'id_folder' => 'INT(32) NULL',
+                'file' => 'VARCHAR(256) NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',

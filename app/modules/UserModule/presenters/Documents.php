@@ -462,11 +462,11 @@ class Documents extends APresenter {
 
         $data = array_merge($data, $customMetadata);
 
-        $app->documentModel->insertNewDocument($data);
-
         if(isset($data['file'])) {
-            $app->fsManager->uploadFile($_FILES['file']);
+            $app->fsManager->uploadFile($_FILES['file'], $data['file']);
         }
+        
+        $app->documentModel->insertNewDocument($data);
 
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
 

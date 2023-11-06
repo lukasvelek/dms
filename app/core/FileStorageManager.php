@@ -74,7 +74,7 @@ class FileStorageManager {
      * @param mixed $file File variable passed from the form
      * @return bool True if upload was successful and false if not
      */
-    public function uploadFile($file) {
+    public function uploadFile($file, string &$filePath) {
         $d = function(string $text) {
             return date($text) . '/';
         };
@@ -114,6 +114,8 @@ class FileStorageManager {
                 $ok = false;
             }
         }
+
+        $filePath = $targetFile;
 
         return $ok;
     }
