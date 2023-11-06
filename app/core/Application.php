@@ -34,7 +34,7 @@ class Application {
     public const URL_DOCUMENTS_PAGE = 'UserModule:Documents:showAll';
     public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
 
-    public const SYSTEM_VERSION = '1.1_beta';
+    public const SYSTEM_VERSION = '1.2_beta';
 
     public array $cfg;
     public ?string $currentUrl;
