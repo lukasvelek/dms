@@ -15,7 +15,8 @@ class DocumentStatus {
         self::DELETED => 'Deleted',
         self::ARCHIVATION_APPROVED => 'Archivation approved',
         self::ARCHIVATION_DECLINED => 'Archivation declined',
-        self::SHREDDED => 'Shredded'
+        self::SHREDDED => 'Shredded',
+        self::ARCHIVED => 'Archived'
     );
 }
 
