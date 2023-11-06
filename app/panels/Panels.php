@@ -10,8 +10,6 @@ class Panels {
     private CONST TOPPANEL_USE_TEXT = TRUE;
 
     public static function createProcessesPanel() {
-        global $app;
-
         $templateManager = self::tm();
 
         $template = $templateManager->loadTemplate('app/panels/templates/general-subpanel.html');
@@ -30,8 +28,6 @@ class Panels {
     }
 
     public static function createSettingsPanel() {
-        global $app;
-
         $templateManager = self::tm();
 
         $template = $templateManager->loadTemplate('app/panels/templates/general-subpanel.html');
