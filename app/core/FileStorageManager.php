@@ -61,7 +61,7 @@ class FileStorageManager {
                 $extension = $explode[count($explode) - 1];
             }
 
-            $fileObjects[] = new FileStorageFile($name, $path, $extension);
+            $fileObjects[] = new FileStorageFile($f, $name, $path, $extension);
         }
 
         return $fileObjects;

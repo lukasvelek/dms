@@ -12,6 +12,24 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentsForFilename(string $filename) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('documents')
+                   ->where('file=:file')
+                   ->setParam(':file', $filename)
+                   ->execute()
+                   ->fetch();
+
+        $documents = [];
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function nullIdFolder(int $id) {
         $qb = $this->qb(__METHOD__);
 

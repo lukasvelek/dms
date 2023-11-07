@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\MetadataInputType;
+use DMS\Constants\ServiceMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
@@ -11,6 +12,7 @@ use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Models\ServiceModel;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\Panels\Panels;
@@ -1181,9 +1183,10 @@ class Settings extends APresenter {
         ;
 
         foreach($serviceCfg as $key => $value) {
-            $fb ->addElement($fb->createLabel()->setText($key)->setFor($key));
+            $text = ServiceMetadata::$texts[$key];
+            $fb ->addElement($fb->createLabel()->setText($text)->setFor($key));
 
-            if($key == 'files_keep_length') {
+            if($key == ServiceMetadata::FILES_KEEP_LENGTH) {
                 $fb
                 ->addElement($fb->createSpecial('<span id="files_keep_length_text_value">__VAL__</span>'))
                 ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))
