@@ -19,9 +19,9 @@ class PanelAuthorizator extends AAuthorizator {
             return false;
         }
 
-        $cm = CacheManager::getTemporaryObject();
+        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
 
-        $valFromCache = $cm->loadFromCache(CacheCategories::PANELS, $panelName);
+        $valFromCache = $cm->loadPanelRight($app->user->getId(), $panelName);
 
         $result = '';
 
@@ -63,10 +63,10 @@ class PanelAuthorizator extends AAuthorizator {
                 }
             }
 
-            $cm->saveToCache(CacheCategories::PANELS, $finalRights);
+            $cm->savePanelRight($app->user->getId(), $panelName, $finalRights[$panelName]);
 
             if(array_key_exists($panelName, $finalRights)) {
-                $result = $rights[$panelName];
+                $result = $finalRights[$panelName];
             } else {
                 $result = 0;
             }

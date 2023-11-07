@@ -19,9 +19,9 @@ class BulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        $cm = CacheManager::getTemporaryObject();
+        $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
 
-        $valFromCache = $cm->loadFromCache(CacheCategories::BULK_ACTIONS, $bulkActionName);
+        $valFromCache = $cm->loadBulkActionRight($app->user->getId(), $bulkActionName);
 
         $result = '';
 
@@ -61,7 +61,7 @@ class BulkActionAuthorizator extends AAuthorizator {
                 }
             }
 
-            $cm->saveToCache(CacheCategories::BULK_ACTIONS, $finalRights);
+            //$cm->saveToCache(CacheCategories::BULK_ACTIONS, $finalRights);
 
             if(array_key_exists($bulkActionName, $finalRights)) {
                 $result = $rights[$bulkActionName];

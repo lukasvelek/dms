@@ -19,9 +19,11 @@ class ActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        $cm = CacheManager::getTemporaryObject();
+        //$cm = CacheManager::getTemporaryObject();
 
-        $valFromCache = $cm->loadFromCache(CacheCategories::ACTIONS, $actionName);
+        $valFromCache = null;
+
+        //$valFromCache = $cm->loadFromCache(CacheCategories::ACTIONS, $actionName);
 
         $result = '';
 
@@ -61,7 +63,7 @@ class ActionAuthorizator extends AAuthorizator {
                 }
             }
 
-            $cm->saveToCache(CacheCategories::ACTIONS, $finalRights);
+            //$cm->saveToCache(CacheCategories::ACTIONS, $finalRights);
 
             if(array_key_exists($actionName, $finalRights)) {
                 $result = $rights[$actionName];

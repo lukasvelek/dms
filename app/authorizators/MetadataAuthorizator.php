@@ -2,6 +2,7 @@
 
 namespace DMS\Authorizators;
 
+use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -12,51 +13,55 @@ class MetadataAuthorizator extends AAuthorizator {
     }
 
     public function canUserViewMetadata(int $idUser, int $idMetadata) {
-        $row = $this->getRightRow($idUser, $idMetadata);
+        $row = $this->getRightRow($idUser, $idMetadata, 'view');
 
         if(is_null($row)) {
             return false;
         }
 
-        return $row['view'] ? true : false;
+        return $row ? true : false;
     }
 
     public function canUserEditMetadata(int $idUser, int $idMetadata) {
-        $row = $this->getRightRow($idUser, $idMetadata);
+        $row = $this->getRightRow($idUser, $idMetadata, 'edit');
 
         if(is_null($row)) {
             return false;
         }
 
-        return $row['edit'] ? true : false;
+        return $row ? true : false;
     }
 
     public function canUserViewMetadataValues(int $idUser, int $idMetadata) {
-        $row = $this->getRightRow($idUser, $idMetadata);
+        $row = $this->getRightRow($idUser, $idMetadata, 'view_values');
 
         if(is_null($row)) {
             return false;
         }
 
-        return $row['view_values'] ? true : false;
+        return $row ? true : false;
     }
 
     public function canUserEditMetadataValues(int $idUser, int $idMetadata) {
-        $row = $this->getRightRow($idUser, $idMetadata);
+        $row = $this->getRightRow($idUser, $idMetadata, 'edit_values');
 
         if(is_null($row)) {
             return false;
         }
 
-        return $row['edit_values'] ? true : false;
+        return $row ? true : false;
     }
 
-    private function getRightRow(int $idUser, int $idMetadata) {
+    private function getRightRow(int $idUser, int $idMetadata, string $key) {
         $qb = $this->qb(__METHOD__);
 
-        //$cm = CacheManager::getTemporaryObject('metadata_authorizator');
+        $cm = CacheManager::getTemporaryObject(CacheCategories::METADATA);
 
-        
+        $valFromCache = $cm->loadMetadataRight($idUser, $idMetadata, $key);
+
+        if($valFromCache != null) {
+            return $valFromCache;
+        }
 
         $row = $qb->select('*')
                   ->from('user_metadata_rights')
@@ -69,7 +74,11 @@ class MetadataAuthorizator extends AAuthorizator {
                   ->execute()
                   ->fetchSingle();
 
-        return $row;
+        $result = $row[$key];
+
+        $cm->saveMetadataRight($idUser, $idMetadata, $key, $result);
+
+        return $result;
     }
 }
 
