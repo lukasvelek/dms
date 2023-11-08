@@ -47,7 +47,7 @@ class ProcessComponent extends AComponent {
         return $processes;
     }
 
-    public function startProcess(int $type, int $idDocument) {
+    public function startProcess(int $type, int $idDocument, int $idAuthor) {
         global $app;
 
         $data = [];
@@ -79,6 +79,7 @@ class ProcessComponent extends AComponent {
         $data['id_document'] = $idDocument;
         $data['type'] = $type;
         $data['workflow_status'] = '1';
+        $data['id_author'] = $idAuthor;
 
         $app->processModel->insertNewProcess($data);
         

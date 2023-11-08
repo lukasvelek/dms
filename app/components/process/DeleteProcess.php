@@ -9,6 +9,7 @@ use DMS\Entities\Process;
 class DeleteProcess implements IProcessComponent {
     private Process $process;
     private Document $document;
+    private int $idAuthor;
 
     public function __construct(int $idProcess) {
         global $app;
@@ -40,6 +41,10 @@ class DeleteProcess implements IProcessComponent {
 
     public function getDocument() {
         return $this->document;
+    }
+
+    public function getIdAuthor() {
+        return $this->idAuthor;
     }
 
     private function createWorkflow() {
