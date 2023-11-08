@@ -200,6 +200,24 @@ class UserRightModel extends AModel {
         return true;                
     }
 
+    public function insertMetadataRightsForIdUser(int $idUser, array $metadata) {
+        foreach($metadata as $m) {
+            $qb = $this->qb(__METHOD__);
+
+            $result = $qb->insert('user_metadata_rights', 'id_user', 'id_metadata', 'view')
+                         ->values(':id_user', ':id_metadata', ':view')
+                         ->setParams(array(
+                            ':id_user' => $idUser,
+                            ':id_metadata' => $m->getId(),
+                            ':view' => '1'
+                         ))
+                         ->execute()
+                         ->fetch();
+        }
+
+        return true;
+    }
+
     public function getActionRightsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 

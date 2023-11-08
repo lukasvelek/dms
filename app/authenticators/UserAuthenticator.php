@@ -2,6 +2,7 @@
 
 namespace DMS\Authenticators;
 
+use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -33,8 +34,10 @@ class UserAuthenticator extends AAuthenticator {
     }
 
     public function logoutCurrentUser() {
-        $cm = CacheManager::getTemporaryObject();
-        $cm->invalidateCache();
+        /*$cm = CacheManager::getTemporaryObject();
+        $cm->invalidateCache();*/
+
+        CacheManager::invalidateAllCache();
 
         unset($_SESSION['id_current_user']);
         unset($_SESSION['session_end_date']);

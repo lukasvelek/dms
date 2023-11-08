@@ -513,6 +513,7 @@ class Settings extends APresenter {
         $app->userRightModel->insertActionRightsForIdUser($idUser);
         $app->userRightModel->insertPanelRightsForIdUser($idUser);
         $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
+        $app->userRightModel->insertMetadataRightsForIdUser($idUser, $app->metadataModel->getAllMetadata());
 
         $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
     }

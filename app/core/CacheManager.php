@@ -2,6 +2,8 @@
 
 namespace DMS\Core;
 
+use DMS\Constants\CacheCategories;
+
 /**
  * CacheManager allows the application to cache data
  * 
@@ -312,6 +314,16 @@ class CacheManager {
         global $app;
 
         return new self($app->cfg['serialize_cache'], $category);
+    }
+
+    public static function invalidateAllCache() {
+        global $app;
+
+        foreach(CacheCategories::$all as $cc) {
+            $cm = new self($app->cfg['serialize_cache'], $cc);
+
+            $cm->invalidateCache();
+        }
     }
 }
 
