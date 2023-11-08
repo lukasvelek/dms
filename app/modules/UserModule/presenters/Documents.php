@@ -494,7 +494,7 @@ class Documents extends APresenter {
         global $app;
 
         foreach($ids as $id) {
-            $app->processComponent->startProcess(ProcessTypes::DELETE, $id);
+            $app->processComponent->startProcess(ProcessTypes::DELETE, $id, $app->user->getId());
         }
 
         echo('<script type="text/javascript">alert("Process has started"); location.href = "?page=UserModule:Documents:showAll";</script>');
