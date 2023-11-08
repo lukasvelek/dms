@@ -112,7 +112,8 @@ class DatabaseInstaller {
                 'workflow_status' => 'INT(32) NULL',
                 'type' => 'INT(2) NOT NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
-                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'id_author' => 'INT(32) NOT NULL'
             ),
             'user_action_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
