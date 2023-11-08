@@ -106,10 +106,10 @@ class Application {
 
         $this->processComponent = new ProcessComponent($this->conn, $this->logger);
 
-        $this->fsManager = new FileStorageManager($this->cfg['file_dir'], $this->fileManager, $this->logger);
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg);
-
         $this->installDb();
+        
+        $this->fsManager = new FileStorageManager($this->cfg['file_dir'], $this->fileManager, $this->logger);
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel);
 
         //$this->conn->installer->updateDefaultUserPanelRights();
     }

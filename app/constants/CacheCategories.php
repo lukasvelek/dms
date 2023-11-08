@@ -7,6 +7,7 @@ class CacheCategories {
     public const PANELS = 'panels';
     public const ACTIONS = 'actions';
     public const FOLDERS = 'folders';
+    public const METADATA = 'metadata';
 }
 
 ?>

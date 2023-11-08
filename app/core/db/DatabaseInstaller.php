@@ -28,6 +28,8 @@ class DatabaseInstaller {
     public function install() {
         $this->createTables();
         $this->insertDefaultUsers();
+        $this->insertDefaultGroups();
+        $this->insertDefaultUserGroups();
         $this->insertDefaultMetadata();
 
         //$this->updateDefaultUserPanelRights();
@@ -237,6 +239,83 @@ class DatabaseInstaller {
             $this->logger->sql($sql, __METHOD__);
 
             $this->db->query($sql);
+        }
+
+        return true;
+    }
+
+    private function insertDefaultGroups() {
+        $defaultGroups = array(
+            'ARCHMAN' => 'Archive Manager',
+            'ADMINISTRATORS' => 'Administrators'
+        );
+
+        $insertGroups = array();
+
+        $sql = 'SELECT * FROM `groups`';
+        $rows = $this->db->query($sql);
+
+        if($rows->num_rows > 0) {
+            foreach($rows as $row) {
+                if(!array_key_exists($row['code'], $defaultGroups)) {
+                    $insertGroups[$row['code']] = $row['name'];
+                }
+            }
+        } else {
+            $insertGroups = $defaultGroups;
+        }
+
+        foreach($insertGroups as $code => $name) {
+            $sql = "INSERT INTO `groups` (`name`, `code`) VALUES ('$name', '$code')";
+            
+            $this->logger->sql($sql, __METHOD__);
+
+            $this->db->query($sql);
+        }
+
+        return true;
+    }
+
+    private function insertDefaultUserGroups() {
+        $groupCodes = array(
+            'ADMINISTRATORS' => 'admin'
+        );
+
+        $managers = array(
+            'admin' => '1'
+        );
+
+        $idGroup = null;
+        $idUser = null;
+
+        foreach($groupCodes as $groupCode => $username) {
+            $idGroup = null;
+            $idUser = null;
+
+            $sql = "SELECT * FROM `groups` WHERE `code` = '$groupCode'";
+            $rows = $this->db->query($sql);
+
+            if($rows->num_rows > 0) {
+                foreach($rows as $row) {
+                    $idGroup = $row['id'];
+                }
+            }
+
+            $sql = "SELECT * FROM `users` WHERE `username` = '$username'";
+            $rows = $this->db->query($sql);
+
+            if($rows->num_rows > 0) {
+                foreach($rows as $row) {
+                    $idUser = $row['id'];
+                }
+            }
+
+            if($idUser != NULL && $idGroup != NULL) {
+                $manager = $managers[$username];
+
+                $sql = "INSERT INTO `group_users` (`id_user`, `id_group`, `is_manager`) VALUES ('$idUser', '$idGroup', '$manager')";
+                $this->db->query($sql);
+            }
         }
 
         return true;
@@ -484,17 +563,6 @@ class DatabaseInstaller {
 
             switch($name) {
                 case 'documents.rank':
-                    /*$values[$id] = array(
-                        array(
-                            'name' => 'Public',
-                            'value' => 'public'
-                        ),
-                        array(
-                            'name' => 'Private',
-                            'value' => 'private'
-                        )
-                    );*/
-
                     foreach(DocumentRank::$texts as $v => $n) {
                         $values[$id][] = array('name' => $n, 'value' => $v);
                     }
@@ -502,25 +570,6 @@ class DatabaseInstaller {
                     break;
 
                 case 'documents.status':
-                    /*$values[$id] = array(
-                        array(
-                            'name' => 'New',
-                            'value' => '1'
-                        ),
-                        array(
-                            'name' => 'Deleted',
-                            'value' => '2'
-                        ),
-                        array(
-                            'name' => 'Archivation approved',
-                            'value' => '3'
-                        ),
-                        array(
-                            'name' => 'Archivation declined',
-                            'value' => '4'
-                        )
-                    );*/
-
                     foreach(DocumentStatus::$texts as $v => $n) {
                         $values[$id][] = array('name' => $n, 'value' => $v);
                     }
@@ -528,17 +577,6 @@ class DatabaseInstaller {
                     break;
 
                 case 'users.status':
-                    /*$values[$id] = array(
-                        array(
-                            'name' => 'Inactive',
-                            'value' => '0'
-                        ),
-                        array(
-                            'name' => 'Active',
-                            'value' => '1'
-                        )
-                    );*/
-
                     foreach(UserStatus::$texts as $v => $n) {
                         $values[$id][] = array('name' => $n, 'value' => $v);
                     }
@@ -546,17 +584,6 @@ class DatabaseInstaller {
                     break;
 
                 case 'processes.status':
-                    /*$values[$id] = array(
-                        array(
-                            'name' => 'In progress',
-                            'value' => '1'
-                        ),
-                        array(
-                            'name' => 'Finished',
-                            'value' => '2'
-                        )
-                    );*/
-
                     foreach(ProcessStatus::$texts as $v => $n) {
                         $values[$id][] = array('name' => $n, 'value' => $v);
                     }
@@ -564,13 +591,6 @@ class DatabaseInstaller {
                     break;
 
                 case 'processes.type':
-                    /*$values[$id] = array(
-                        array(
-                            'name' => 'Delete',
-                            'value' => '1'
-                        )
-                    );*/
-
                     foreach(ProcessTypes::$texts as $v => $n) {
                         $values[$id][] = array('name' => $n, 'value' => $v);
                     }
@@ -579,9 +599,6 @@ class DatabaseInstaller {
             }
 
             foreach($values as $id => $values) {
-                /*$name = $value['name'];
-                $value = $value['value'];*/
-
                 foreach($values as $value) {
                     $n = $value['name'];
                     $v = $value['value'];
