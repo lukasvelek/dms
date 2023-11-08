@@ -29,6 +29,13 @@ use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
 use DMS\Panels\Panels;
 
+/**
+ * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
+ * All necessary classes are constructed here and kept in the variables.
+ * The loaded application config file is also kept here.
+ * 
+ * @author Lukas Velek
+ */
 class Application {
     public const URL_LOGIN_PAGE = 'AnonymModule:LoginPage:showForm';
     public const URL_HOME_PAGE = 'UserModule:HomePage:showHomepage';
@@ -75,6 +82,11 @@ class Application {
 
     private Database $conn;
 
+    /**
+     * This is the application class constructor. Here are all other classes constructed and assigned to their respective variables.
+     * 
+     * @param array $cfg The application configuration file contents
+     */
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
 
@@ -121,6 +133,12 @@ class Application {
         //$this->conn->installer->updateDefaultUserPanelRights();
     }
 
+    /**
+     * Redirects the application page to different page using constructed URL that is based on passed parameters.
+     * 
+     * @param string $url The default page URL
+     * @param array $params All other parameters that should be passed to the presenter
+     */
     public function redirect(string $url, array $params = array()) {
         $page = '?';
 
@@ -146,6 +164,9 @@ class Application {
         header('Location: ' . $page);
     }
 
+    /**
+     * Shows the current page to the user
+     */
     public function showPage() {
         if(is_null($this->pageContent)) {
             $this->renderPage();
@@ -154,6 +175,9 @@ class Application {
         echo $this->pageContent;
     }
 
+    /**
+     * Renders the current page and saves it to the $pageContent variable
+     */
     public function renderPage() {
         // --- TOPPANEL ---
 
@@ -192,30 +216,62 @@ class Application {
         $this->pageContent .= $module->currentPresenter->performAction($action);
     }
 
+    /**
+     * Renders the toppanel
+     * 
+     * @return string HTML code of the toppanel
+     */
     public function renderToppanel() {
         $panel = Panels::createTopPanel();
 
         return $panel;
     }
 
+    /**
+     * Registers the passed module to the module system
+     * 
+     * @param IModule $module Module to be saved
+     */
     public function registerModule(IModule $module) {
         $this->modules[$module->getName()] = $module;
     }
 
+    /**
+     * Returns a component based on its name
+     * 
+     * @param string $name Component name
+     * @param mixed|null Mixed if the component exists and null if it does not exist
+     */
     public function getComponent(string $name) {
         if(isset($this->$name)) {
             return $this->$name;
+        } else {
+            return null;
         }
     }
 
+    /**
+     * Sets the current user
+     * 
+     * @param User $user Current user
+     */
     public function setCurrentUser(User $user) {
         $this->user = $user;
     }
 
+    /**
+     * Returns the database connection
+     * 
+     * @return Database $conn Database connection
+     */
     public function getConn() {
         return $this->conn;
     }
 
+    /**
+     * Performs the initial database installation.
+     * After installing, it creates a file that shows whether the database has been installed or not.
+     */
     private function installDb() {
         if(!file_exists('app/core/install')) {
             $this->conn->installer->install();
