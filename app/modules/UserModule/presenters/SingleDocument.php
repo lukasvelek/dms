@@ -5,6 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\DocumentStatus;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Document;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -36,6 +37,24 @@ class SingleDocument extends APresenter {
         return $this->name;
     }
 
+    protected function saveComment() {
+        global $app;
+
+        $idDocument = htmlspecialchars($_GET['id_document']);
+        $idAuthor = $app->user->getId();
+        $text = htmlspecialchars($_POST['text']);
+
+        $data = array(
+            'id_document' => $idDocument,
+            'id_author' => $idAuthor,
+            'text' => $text
+        );
+
+        $app->documentCommentModel->insertComment($data);
+
+        $app->redirect('UserModule:SingleDocument:showInfo', array('id' => $idDocument));
+    }
+
     protected function showInfo() {
         global $app;
 
@@ -46,7 +65,9 @@ class SingleDocument extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Document <i>' . $document->getName() . '</i>',
-            '$DOCUMENT_GRID$' => $this->internalCreateDocumentInfoGrid($document)
+            '$DOCUMENT_GRID$' => $this->internalCreateDocumentInfoGrid($document),
+            '$NEW_COMMENT_FORM$' => $this->internalCreateNewDocumentCommentForm($document),
+            '$DOCUMENT_COMMENTS$' => $this->internalCreateDocumentComments($document)
         );
 
         $this->templateManager->fill($data, $template);
@@ -450,6 +471,46 @@ class SingleDocument extends APresenter {
         $folder = $app->folderModel->getFolderById($id);
 
         return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id' => $id), $folder->getName());
+    }
+
+    private function internalCreateNewDocumentCommentForm(Document $document) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:SingleDocument:saveComment&id_document=' . $document->getId())
+
+            ->addElement($fb->createLabel()->setText('Text')->setFor('text'))
+            ->addElement($fb->createTextArea()->setName('text')->require())
+
+            ->addElement($fb->createSubmit('Create new comment'));
+
+        return $fb->build();
+    }
+
+    private function internalCreateDocumentComments(Document $document) {
+        global $app;
+
+        $codeArr = [];
+
+        $comments = $app->documentCommentModel->getCommentsForIdDocument($document->getId());
+
+        if(empty($comments)) {
+            $codeArr[] = '<hr>';
+            $codeArr[] = 'No comments found!';
+        } else {
+            foreach($comments as $comment) {
+                $author = $app->userModel->getUserById($comment->getIdAuthor());
+    
+                $authorLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $comment->getIdAuthor()), $author->getFullname());
+                
+                $codeArr[] = '<hr>';
+                $codeArr[] = '<article id="comment' . $comment->getId() . '">';
+                $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
+                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
+                $codeArr[] = '</article>';
+            }
+        }
+
+        return ArrayStringHelper::createUnindexedStringFromUnindexedArray($codeArr);
     }
 }
 
