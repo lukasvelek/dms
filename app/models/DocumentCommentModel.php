@@ -11,6 +11,19 @@ class DocumentCommentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteComment(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('document_comments')
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function insertComment(array $data) {
         return $this->insertNew($data, 'document_comments');
     }

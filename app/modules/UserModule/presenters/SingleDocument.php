@@ -3,6 +3,8 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\UserActionRights;
+use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Document;
 use DMS\Helpers\ArrayStringHelper;
@@ -35,6 +37,39 @@ class SingleDocument extends APresenter {
 
     public function getName() {
         return $this->name;
+    }
+
+    protected function deleteComment() {
+        global $app;
+
+        $idComment = htmlspecialchars($_GET['id_comment']);
+        $idDocument = htmlspecialchars($_GET['id_document']);
+
+        $app->documentCommentModel->deleteComment($idComment);
+
+        $app->logger->info('Deleted comment #' . $idComment, __METHOD__);
+
+        $app->redirect('UserModule:SingleDocument:showInfo', array('id' => $idDocument));
+    }
+
+    protected function askToDeleteComment() {
+        $idDocument = htmlspecialchars($_GET['id_document']);
+        $idComment = htmlspecialchars($_GET['id_comment']);
+
+        $urlConfirm = array(
+            'page' => 'UserModule:SingleDocument:deleteComment',
+            'id_comment' => $idComment,
+            'id_document' => $idDocument
+        );
+
+        $urlClose = array(
+            'page' => 'UserModule:SingleDocument:showInfo',
+            'id' => $idDocument
+        );
+
+        $code = ScriptLoader::confirmUser('Do you want to delete the comment?', $urlConfirm, $urlClose);
+
+        return $code;
     }
 
     protected function saveComment() {
@@ -505,7 +540,15 @@ class SingleDocument extends APresenter {
                 $codeArr[] = '<hr>';
                 $codeArr[] = '<article id="comment' . $comment->getId() . '">';
                 $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
-                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS)) {
+                    $deleteLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:askToDeleteComment', 'id_document' => $document->getId(), 'id_comment' => $comment->getId()), 'Delete');
+
+                    $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
+                } else {
+                    $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
+                }
+
                 $codeArr[] = '</article>';
             }
         }
