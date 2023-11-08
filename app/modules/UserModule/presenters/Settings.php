@@ -12,7 +12,6 @@ use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
-use DMS\Models\ServiceModel;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\Panels\Panels;
@@ -999,7 +998,6 @@ class Settings extends APresenter {
             foreach($folders as $folder) {
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open'),
-                    //LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteFolder', 'id_folder' => $folder->getId()), 'Delete')
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete')
                 );
 
@@ -1180,8 +1178,7 @@ class Settings extends APresenter {
         ;
 
         foreach($serviceCfg as $key => $value) {
-            $text = ServiceMetadata::$texts[$key];
-            $fb ->addElement($fb->createLabel()->setText($text)->setFor($key));
+            $fb ->addElement($fb->createLabel()->setText($key)->setFor($key));
 
             if($key == ServiceMetadata::FILES_KEEP_LENGTH) {
                 $fb
