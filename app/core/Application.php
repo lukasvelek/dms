@@ -12,6 +12,7 @@ use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
+use DMS\Constants\CacheCategories;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\DocumentCommentModel;
@@ -112,7 +113,10 @@ class Application {
         $this->installDb();
         
         $this->fsManager = new FileStorageManager($this->cfg['file_dir'], $this->fileManager, $this->logger);
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel);
+        
+        $serviceManagerCacheManager = new CacheManager($this->cfg['serialize_cache'], CacheCategories::SERVICE_CONFIG);
+
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager);
 
         //$this->conn->installer->updateDefaultUserPanelRights();
     }

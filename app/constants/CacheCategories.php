@@ -8,6 +8,7 @@ class CacheCategories {
     public const ACTIONS = 'actions';
     public const FOLDERS = 'folders';
     public const METADATA = 'metadata';
+    public const SERVICE_CONFIG = 'service_config';
 }
 
 ?>

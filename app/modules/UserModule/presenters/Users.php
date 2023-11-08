@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\BulkActionRights;
+use DMS\Constants\CacheCategories;
 use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
@@ -94,7 +95,7 @@ class Users extends APresenter {
 
         $app->logger->info('Allowed action right to user #' . $idUser, __METHOD__);
 
-        $cm = CacheManager::getTemporaryObject();
+        $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
         $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
@@ -110,7 +111,7 @@ class Users extends APresenter {
 
         $app->logger->info('Denied action right to user #' . $idUser, __METHOD__);
 
-        $cm = CacheManager::getTemporaryObject();
+        $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
         $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
@@ -126,7 +127,7 @@ class Users extends APresenter {
 
         $app->logger->info('Allowed panel right to user #' . $idUser, __METHOD__);
 
-        $cm = CacheManager::getTemporaryObject();
+        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
         $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
@@ -142,7 +143,7 @@ class Users extends APresenter {
 
         $app->logger->info('Denied panel right to user #' . $idUser, __METHOD__);
 
-        $cm = CacheManager::getTemporaryObject();
+        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
         $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
@@ -158,7 +159,7 @@ class Users extends APresenter {
 
         $app->logger->info('Allowed bulk action right to user #' . $idUser, __METHOD__);
 
-        $cm = CacheManager::getTemporaryObject();
+        $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
         $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
@@ -174,7 +175,7 @@ class Users extends APresenter {
 
         $app->logger->info('Denied bulk action right to user #' . $idUser, __METHOD__);
 
-        $cm = CacheManager::getTemporaryObject();
+        $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
         $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));

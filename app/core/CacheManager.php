@@ -26,6 +26,56 @@ class CacheManager {
     }
 
     /**
+     * Saves a service config to cache
+     * 
+     * @param string $serviceName Service name
+     * @param array $data Data
+     */
+    public function saveServiceConfig(string $serviceName, array $data) {
+        $cacheData = $this->loadFromCache();
+
+        foreach($data as $k => $v) {
+            $cacheData[$serviceName][$k] = $v;
+        }
+
+        $this->saveToCache($cacheData);
+    }
+
+    /**
+     * Loads the action right from cache
+     * 
+     * @param int $idUser ID user
+     * @param string $key Action name
+     * @return mixed|null True if action right is allowed, false if it is not allowed, null if the entry does not exist
+     */
+    public function loadServiceConfigForService(string $serviceName) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(!array_key_exists($serviceName, $cacheData)) {
+            return null;
+        }
+
+        if(array_key_exists($serviceName, $cacheData)) {
+            return $cacheData[$serviceName];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Invalidates cache of some category by deleting the file.
+     */
+    public function invalidateCache() {
+        $filename = $this->createFilename();
+
+        $this->fm->deleteFile($filename);
+    }
+
+    /**
      * Saves a action right to cache
      * 
      * @param int $idUser ID user

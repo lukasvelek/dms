@@ -2,6 +2,7 @@
 
 namespace DMS\Services;
 
+use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
 use DMS\Core\FileStorageManager;
 use DMS\Core\Logger\Logger;
@@ -13,8 +14,8 @@ class FileManagerService extends AService {
     private FileStorageManager $fsm;
     private DocumentModel $documentModel;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg, FileStorageManager $fsm, DocumentModel $documentModel) {
-        parent::__construct('FileManagerService', 'Deletes old unused files', $logger, $serviceModel);
+    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm) {
+        parent::__construct('FileManagerService', 'Deletes old unused files', $logger, $serviceModel, $cm);
 
         $this->cfg = $cfg;
         $this->fsm = $fsm;

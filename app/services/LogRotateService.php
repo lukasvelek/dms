@@ -2,6 +2,7 @@
 
 namespace DMS\Services;
 
+use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
 use DMS\Models\ServiceModel;
@@ -9,8 +10,8 @@ use DMS\Models\ServiceModel;
 class LogRotateService extends AService {
     private array $cfg;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg) {
-        parent::__construct('LogRotateService', 'Deletes old log files', $logger, $serviceModel);
+    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg, CacheManager $cm) {
+        parent::__construct('LogRotateService', 'Deletes old log files', $logger, $serviceModel, $cm);
 
         $this->cfg = $cfg;
         
