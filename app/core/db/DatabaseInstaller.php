@@ -184,6 +184,13 @@ class DatabaseInstaller {
                 'name' => 'VARCHAR(256) NOT NULL',
                 'key' => 'VARCHAR(256) NOT NULL',
                 'value' => 'VARCHAR(256) NOT NULL'
+            ),
+            'document_comments' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_author' => 'INT(32) NOT NULL',
+                'id_document' => 'INT(32) NOT NULL',
+                'text' => 'VARCHAR(256)',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 

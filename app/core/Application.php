@@ -14,6 +14,7 @@ use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
+use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
@@ -58,6 +59,7 @@ class Application {
     public TableModel $tableModel;
     public FolderModel $folderModel;
     public ServiceModel $serviceModel;
+    public DocumentCommentModel $documentCommentModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -97,6 +99,7 @@ class Application {
         $this->tableModel = new TableModel($this->conn, $this->logger);
         $this->folderModel = new FolderModel($this->conn, $this->logger);
         $this->serviceModel = new ServiceModel($this->conn, $this->logger);
+        $this->documentCommentModel = new DocumentCommentModel($this->conn, $this->logger);
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);

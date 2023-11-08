@@ -67,3 +67,13 @@ body {
     color: black;
     text-decoration: none;
 }
+
+.comment-text {
+    color: black;
+    font-size: 18px;
+}
+
+.comment-info {
+    color: black;
+    font-size: 16px;
+}
