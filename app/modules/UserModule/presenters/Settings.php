@@ -993,9 +993,6 @@ class Settings extends APresenter {
             $cacheFolders[$folder->getId()] = array('name' => $folder->getName(), 'description' => $folder->getDescription());
         }
 
-        /*$cm = CacheManager::getTemporaryObject();
-        $cm->saveToCache(CacheCategories::FOLDERS, $cacheFolders);*/
-
         if(empty($folders)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
