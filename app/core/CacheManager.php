@@ -26,6 +26,48 @@ class CacheManager {
     }
 
     /**
+     * Saves a action right to cache
+     * 
+     * @param int $idUser ID user
+     * @param string $key Action name
+     * @param int $value 1 if action right is allowed and 0 if not
+     */
+    public function saveActionRight(int $idUser, string $key, int $value) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[$idUser][$key] = $value;
+
+        $this->saveToCache($cacheData);
+    }
+
+    /**
+     * Loads the action right from cache
+     * 
+     * @param int $idUser ID user
+     * @param string $key Action name
+     * @return bool|null True if action right is allowed, false if it is not allowed, null if the entry does not exist
+     */
+    public function loadActionRight(int $idUser, string $key) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(!array_key_exists($idUser, $cacheData)) {
+            return null;
+        }
+
+        foreach($cacheData as $idUser => $keys) {
+            if(!array_key_exists($key, $keys)) {
+                return null;
+            } else {
+                return $keys[$key] ? true : false;
+            }
+        }
+    }
+
+    /**
      * Saves a bulk action right to cache
      * 
      * @param int $idUser ID user
@@ -167,7 +209,7 @@ class CacheManager {
     public function createFilename() {
         global $app;
 
-        $name = $app->user->getId() . date('Y-m-d') . $this->category;
+        $name = /*$app->user->getId() . */date('Y-m-d') . $this->category;
 
         $file = md5($name) . '.tmp';
 
