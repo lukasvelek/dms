@@ -1,5 +1,7 @@
 body {
     overflow-x: hidden;
+
+    font-size: 16px;
 }
 
 #center {
@@ -14,8 +16,14 @@ body {
     text-align: left;
 }
 
+#form label {
+    font-size: 16px;
+}
+
 #form input, #form select, #form textarea {
     width: 100%;
+
+    font-size: 16px;
 }
 
 #form textarea {
@@ -24,26 +32,32 @@ body {
 
 #table table {
     width: 100%;
+
+    font-size: 16px;
 }
 
 #table tr {
     text-align: center;
 }
 
+#table .even {
+    background-color: lightgrey;
+}
+
 .page-title {
-    font-size: 26px;
+    font-size: 22px;
 }
 
 .page-subtitle {
-    font-size: 24px;
+    font-size: 20px;
 }
 
 #toppanel, #toppanel-right {
     padding: 5px;
 
-    background-color: lightblue;
+    background-color: /*lightblue*/ lightgrey;
 
-    font-size: 24px;
+    font-size: 20px;
 }
 
 #toppanel-right {
@@ -61,6 +75,8 @@ body {
 .general-link {
     color: black;
     text-decoration: underline;
+
+    font-size: 16px;
 }
 
 .general-link:hover {
@@ -70,10 +86,10 @@ body {
 
 .comment-text {
     color: black;
-    font-size: 18px;
+    font-size: 14px;
 }
 
 .comment-info {
     color: black;
-    font-size: 16px;
+    font-size: 14px;
 }

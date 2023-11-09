@@ -145,6 +145,8 @@ class Documents extends APresenter {
         if(empty($documents)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
+            $i = 0;
+
             foreach($documents as $document) {
                 $actionLinks = array(
                     '<input type="checkbox" name="select[]" value="' . $document->getId() . '">',
@@ -173,6 +175,10 @@ class Documents extends APresenter {
 
                 $docuRow = $tb->createRow();
 
+                /*if((($i % 2) != 0) && ($i > 0)) {
+                    $docuRow->setClass('even');
+                }*/
+
                 foreach($actionLinks as $actionLink) {
                     $docuRow->addCol($tb->createCol()->setText($actionLink));
                 }
@@ -198,6 +204,7 @@ class Documents extends APresenter {
 
                 $docuRow->addCol($tb->createCol()->setText($folderName));
 
+                $i++;
                 $tb->addRow($docuRow);
             }
         }

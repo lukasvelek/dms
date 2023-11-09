@@ -3,21 +3,22 @@
 namespace DMS\UI\TableBuilder;
 
 class TableRow implements IBuildable {
-  /**
-   * @var array
-   */
-  private $cols;
-
-  /**
-   * @var string
-   */
-  private $colspan;
+  private array $cols;
+  private string $colspan;
+  private string $class;
 
   public $script;
 
   public function __construct() {
     $this->cols = array();
     $this->colspan = '';
+    $this->class = '';
+
+    return $this;
+  }
+
+  public function setClass(string $class) {
+    $this->class = 'class="' . $class . '"';
 
     return $this;
   }
@@ -49,7 +50,7 @@ class TableRow implements IBuildable {
   }
 
   public function build() {
-    $code[] = '<tr ' . $this->colspan . '>';
+    $code[] = '<tr ' . $this->colspan . ' ' . $this->class . '>';
 
     foreach($this->cols as $col) {
       $code[] = $col->build()->script;

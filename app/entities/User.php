@@ -30,7 +30,7 @@ class User extends AEntity {
     }
 
     public function getFullname() {
-        return $this->firstname . ' ' . $this->lastname;
+        return trim($this->firstname . ' ' . $this->lastname);
     }
 
     public function getFirstname() {

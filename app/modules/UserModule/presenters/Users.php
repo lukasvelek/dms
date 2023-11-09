@@ -54,7 +54,7 @@ class Users extends APresenter {
         $user = $app->userModel->getUserById($id);
 
         $data = array(
-            '$PAGE_TITLE$' => '<i>' . $user->getFullname() . '</i>',
+            '$PAGE_TITLE$' => '<i>' . $user->getFullname() . '</i>\'s profile',
             '$USER_PROFILE_GRID$' => $this->internalCreateUserProfileGrid($id)
         );
 
