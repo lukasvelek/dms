@@ -22,14 +22,19 @@ async function sendComment(id_author, id_document, can_delete) {
     }
 }
 
+function showLoading() {
+    $("#comments").append('<br><p style="text-align: center">Loading...</p>');
+}
+
 async function loadComments(id_document, can_delete) {
     await sleep(500);
-
+    
     $.get("app/ajax/get-comments.php", {
         idDocument: id_document,
         canDelete: can_delete
     },
     function(data) {
+        $("#comments").empty();
         $('#comments').append(data);
     });
 }

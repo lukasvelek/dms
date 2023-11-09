@@ -525,7 +525,8 @@ class SingleDocument extends APresenter {
         $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
         return '<script type="text/javascript">
-            $(document).ready(loadComments("' . $document->getId() . '", "' . $canDelete . '"));
+            $(document).on("load", showLoading())
+                       .ready(loadComments("' . $document->getId() . '", "' . $canDelete . '"));
         </script>';
     }
 }
