@@ -79,6 +79,7 @@ class Application {
 
     private array $modules;
     private ?string $pageContent;
+    private string $baseDir;
 
     private Database $conn;
 
@@ -87,15 +88,16 @@ class Application {
      * 
      * @param array $cfg The application configuration file contents
      */
-    public function __construct(array $cfg) {
+    public function __construct(array $cfg, string $baseDir = '', bool $install = true) {
         $this->cfg = $cfg;
+        $this->baseDir = $baseDir;
 
         $this->currentUrl = null;
         $this->modules = array();
         $this->pageContent = null;
         $this->user = null;
 
-        $this->fileManager = new FileManager($this->cfg['log_dir'], $this->cfg['cache_dir']);
+        $this->fileManager = new FileManager($this->baseDir . $this->cfg['log_dir'], $this->baseDir . $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager, $this->cfg);
         $this->conn = new Database($this->cfg['db_server'], $this->cfg['db_user'], $this->cfg['db_pass'], $this->cfg['db_name'], $this->logger);
 
@@ -122,9 +124,11 @@ class Application {
 
         $this->processComponent = new ProcessComponent($this->conn, $this->logger);
 
-        $this->installDb();
+        if($install) {
+            $this->installDb();
+        }
         
-        $this->fsManager = new FileStorageManager($this->cfg['file_dir'], $this->fileManager, $this->logger);
+        $this->fsManager = new FileStorageManager($this->baseDir . $this->cfg['file_dir'], $this->fileManager, $this->logger);
         
         $serviceManagerCacheManager = new CacheManager($this->cfg['serialize_cache'], CacheCategories::SERVICE_CONFIG);
 

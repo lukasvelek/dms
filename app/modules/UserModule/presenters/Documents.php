@@ -65,6 +65,11 @@ class Documents extends APresenter {
             $folderList = $this->internalCreateFolderList($idFolder);
         }, __METHOD__);
 
+        $searchField = '
+            <input type="text" id="q" oninput="ajaxSearch(this.value)">
+            <script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
+        ';
+
         $data = array(
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
@@ -72,7 +77,8 @@ class Documents extends APresenter {
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
-            '$FOLDER_LIST$' => $folderList
+            '$FOLDER_LIST$' => $folderList,
+            '$SEARCH_FIELD$' => $searchField
         );
 
         $this->templateManager->fill($data, $template);

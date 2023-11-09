@@ -12,6 +12,24 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentsForName(string $name) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('documents')
+                   ->where('name=:name', true)
+                   ->setParam(':name', $name)
+                   ->execute()
+                   ->fetch();
+
+        $documents = [];
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function getDocumentsForFilename(string $filename) {
         $qb = $this->qb(__METHOD__);
 
