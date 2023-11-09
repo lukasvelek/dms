@@ -73,7 +73,7 @@ class Documents extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
-            '$BULK_ACTION_CONTROLLER$' => $this->internalPrepareDocumentBulkActions(),
+            '$BULK_ACTION_CONTROLLER$' => ''/*$this->internalPrepareDocumentBulkActions()*/,
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,

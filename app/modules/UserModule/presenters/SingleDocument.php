@@ -510,21 +510,11 @@ class SingleDocument extends APresenter {
 
     private function internalCreateNewDocumentCommentForm(Document $document) {
         global $app;
-        /*$fb = FormBuilder::getTemporaryObject();
-
-        $fb ->setMethod('POST')->setAction('?page=UserModule:SingleDocument:saveComment&id_document=' . $document->getId())
-
-            ->addElement($fb->createLabel()->setText('Text')->setFor('text'))
-            ->addElement($fb->createTextArea()->setName('text')->require())
-
-            ->addElement($fb->createSubmit('Create new comment'));
-
-        return $fb->build();*/
 
         $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
         return '<script type="text/javascript" src="js/DocumentAjaxComment.js"></script>
-        <textarea name="text" id="text" required></textarea>
+        <textarea name="text" id="text" required></textarea><br><br>
         <button onclick="sendComment(' . $app->user->getId() . ', ' . $document->getId() . ', ' . $canDelete . ')">Send</button>
         ';
     }
