@@ -2,10 +2,12 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
+use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Folder;
@@ -55,6 +57,9 @@ class Settings extends APresenter {
         foreach($values as $k => $v) {
             $app->serviceModel->updateService($name, $k, $v);
         }
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_CONFIG);
+        $cm->invalidateCache();
 
         $app->logger->info('Updated configuration for service \'' . $name . '\'', __METHOD__);
 
@@ -513,6 +518,7 @@ class Settings extends APresenter {
         $app->userRightModel->insertActionRightsForIdUser($idUser);
         $app->userRightModel->insertPanelRightsForIdUser($idUser);
         $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
+        $app->userRightModel->insertMetadataRightsForIdUser($idUser, $app->metadataModel->getAllMetadata());
 
         $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
     }

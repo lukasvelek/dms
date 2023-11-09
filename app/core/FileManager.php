@@ -157,8 +157,10 @@ class FileManager {
      * @return bool returns true if file was deleted and false if it does not exist
      */
     public function deleteFile(string $file) {
-        if($this->fileExists($file)) {
-            unlink($file);
+        $fullfile = $this->cacheFolder . $file;
+
+        if($this->fileExists($fullfile)) {
+            unlink($fullfile);
         } else {
             return false;
         }

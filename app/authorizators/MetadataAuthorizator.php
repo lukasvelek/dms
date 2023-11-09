@@ -76,7 +76,9 @@ class MetadataAuthorizator extends AAuthorizator {
 
         $result = $row[$key];
 
-        $cm->saveMetadataRight($idUser, $idMetadata, $key, $result);
+        if(!is_null($result)) {
+            $cm->saveMetadataRight($idUser, $idMetadata, $key, $result);
+        }
 
         return $result;
     }

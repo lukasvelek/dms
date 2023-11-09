@@ -61,10 +61,10 @@ class BulkActionAuthorizator extends AAuthorizator {
                 }
             }
 
-            //$cm->saveToCache(CacheCategories::BULK_ACTIONS, $finalRights);
+            $cm->saveBulkActionRight($app->user->getId(), $bulkActionName, $finalRights[$bulkActionName]);
 
             if(array_key_exists($bulkActionName, $finalRights)) {
-                $result = $rights[$bulkActionName];
+                $result = $finalRights[$bulkActionName];
             } else {
                 $result = 0;
             }
