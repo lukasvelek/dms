@@ -3,25 +3,11 @@
 namespace DMS\UI\TableBuilder;
 
 class TableCol implements IBuildable {
-  /**
-   * @var string
-   */
-  private $text;
-
-  /**
-   * @var string
-   */
-  private $colspan;
-
-  /**
-   * @var string
-   */
-  private $bold;
-
-  /**
-   * @var string
-   */
-  private $textColor;
+  private string $text;
+  private string $colspan;
+  private string $bold;
+  private string $textColor;
+  private string $width;
 
   /**
    * @var string
@@ -34,6 +20,13 @@ class TableCol implements IBuildable {
     $this->script = '';
     $this->textColor = 'black';
     $this->bold = 'td';
+    $this->width = '';
+
+    return $this;
+  }
+
+  public function setWidth(string $width) {
+    $this->width = 'width: ' . $width . 'px';
 
     return $this;
   }
@@ -63,7 +56,7 @@ class TableCol implements IBuildable {
   }
 
   public function build() {
-    $this->script = '<' . $this->bold . ' style="color: ' . $this->textColor . '" ' . $this->colspan . '>' . $this->text . '</' . $this->bold . '>';
+    $this->script = '<' . $this->bold . ' style="color: ' . $this->textColor . '; ' . $this->width . '" ' . $this->colspan . '>' . $this->text . '</' . $this->bold . '>';
 
     return $this;
   }

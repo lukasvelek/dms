@@ -40,6 +40,10 @@ body {
     text-align: center;
 }
 
+#table .even {
+    background-color: lightgrey;
+}
+
 .page-title {
     font-size: 22px;
 }
@@ -51,7 +55,7 @@ body {
 #toppanel, #toppanel-right {
     padding: 5px;
 
-    background-color: lightblue;
+    background-color: /*lightblue*/ lightgrey;
 
     font-size: 20px;
 }
