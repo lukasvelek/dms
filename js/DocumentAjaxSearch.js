@@ -3,7 +3,7 @@ async function ajaxSearch(query) {
 
     //console.log(query);
     $.ajax({
-        url: 'app/search.php',
+        url: 'app/ajax/search.php',
         type: 'POST',
         data: {
             q: query

@@ -75,22 +75,22 @@ function sortDependencies2(array &$dependencies) {
     $dependencies = array_merge($interfaces, $abstractClasses, $classes);
 }
 
-loadDependencies2($dependencies, __DIR__);
+loadDependencies2($dependencies, '../');
 sortDependencies2($dependencies);
 
 foreach($dependencies as $dependency) {
     require_once($dependency);
 }
 
-if(!file_exists('../config.local.php')) {
+if(!file_exists('../../config.local.php')) {
     die('Config file does not exist!');
 }
 
-include('../config.local.php');
+include('../../config.local.php');
 
 //$app = new Application($cfg, '../', false);
 
-$fm = new FileManager('../' . $cfg['log_dir'], '../' . $cfg['cache_dir']);
+$fm = new FileManager('../../' . $cfg['log_dir'], '../../' . $cfg['cache_dir']);
 
 $logger = new Logger($fm, $cfg);
 $db = new Database($cfg['db_server'], $cfg['db_user'], $cfg['db_pass'], $cfg['db_name'], $logger);

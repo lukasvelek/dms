@@ -12,12 +12,7 @@ function loadDependencies(array &$dependencies, string $dir) {
         $dir . '\\dependencies.php',
         $dir . '\\dms_loader.php',
         $dir . '\\install',
-        $dir . '\\dependencies.txt',
-        $dir . '\\Ajax.php',
-        $dir . '\\search.php',
-        $dir . '\\send-comment.php',
-        $dir . '\\get-comments.php',
-        $dir . '\\delete-comment.php'
+        $dir . '\\ajax'
     );
 
     foreach($content as $c) {
