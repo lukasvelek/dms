@@ -225,6 +225,10 @@ class SingleProcess extends APresenter {
 
         $actions = [];
 
+        if($process->getStatus() == ProcessStatus::FINISHED) {
+            return $actions;
+        }
+
         switch($process->getType()) {
             case ProcessTypes::DELETE:
                 if($idCurrentUser == ($process->getWorkflowStep($process->getWorkflowStatus() - 1))) {

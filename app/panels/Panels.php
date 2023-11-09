@@ -17,8 +17,11 @@ class Panels {
         $data = array(
             '$LINKS$' => array(
                 '&nbsp;',
-                LinkBuilder::createLink('UserModule:Processes:showMenu', 'Menu'),
-                LinkBuilder::createLink('UserModule:Processes:showAll', 'All processes')
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'startedByMe'), 'Processes started by me'),
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'waitingForMe'), 'Processes waiting for me'),
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'finished'), 'Finished processes'),
+                /*LinkBuilder::createLink('UserModule:Processes:showList', 'Processes started by me'),
+                LinkBuilder::createLink()*/
             )
         );
     

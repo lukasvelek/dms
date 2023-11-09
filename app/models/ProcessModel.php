@@ -12,6 +12,52 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getFinishedProcessesWithIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->where('status=:status')
+                   ->setParam(':status', ProcessStatus::FINISHED)
+                   ->explicit(' AND')
+                   ->leftBracket()
+                   ->where('workflow1=:id_user', false, false)
+                   ->orWhere('workflow2=:id_user')
+                   ->orWhere('workflow3=:id_user')
+                   ->orWhere('workflow4=:id_user')
+                   ->rightBracket()
+                   ->setParam(':id_user', $idUser)
+                   ->execute()
+                   ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
+    public function getProcessesWhereIdUserIsAuthor(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->where('id_author=:id_author')
+                   ->andWhereNot('status=:status')
+                   ->setParam(':id_author', $idUser)
+                   ->setParam(':status', ProcessStatus::FINISHED)
+                   ->execute()
+                   ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
     public function updateStatus(int $idProcess, int $status) {
         $qb = $this->qb(__METHOD__);
 

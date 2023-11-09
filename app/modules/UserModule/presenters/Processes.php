@@ -56,14 +56,17 @@ class Processes extends APresenter {
     protected function showAll() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/process-grid.html');
 
+        $filter = null;
+
+        if(isset($_GET['filter'])) {
+            $filter = htmlspecialchars($_GET['filter']);
+        }
+
         $data = array(
             '$PAGE_TITLE$' => 'Processes',
-            '$PROCESS_PANEL$' => Panels::createProcessesPanel()
+            '$PROCESS_PANEL$' => Panels::createProcessesPanel(),
+            '$PROCESS_GRID$' => $this->internalCreateStandardProcessGrid($filter)
         );
-
-        $table = $this->internalCreateStandardProcessGrid();
-
-        $data['$PROCESS_GRID$'] = $table;
 
         $this->templateManager->fill($data, $template);
 
@@ -149,7 +152,7 @@ class Processes extends APresenter {
         return $table;
     }
 
-    private function internalCreateStandardProcessGrid() {
+    private function internalCreateStandardProcessGrid(?string $filter) {
         global $app;
 
         $tb = TableBuilder::getTemporaryObject();
@@ -168,7 +171,25 @@ class Processes extends APresenter {
 
         $headerRow = null;
 
-        $processes = $app->processModel->getProcessesWithIdUser($app->user->getId());
+        $processes = [];
+
+        if(is_null($filter)) {
+            $processes = $app->processModel->getProcessesWithIdUser($app->user->getId());
+        } else {
+            switch($filter) {
+                case 'startedByMe':
+                    $processes = $app->processModel->getProcessesWhereIdUserIsAuthor($app->user->getId());
+                    break;
+                default:
+                case 'waitingForMe':
+                    // default
+                    $processes = $app->processModel->getProcessesWithIdUser($app->user->getId());
+                    break;
+                case 'finished':
+                    $processes = $app->processModel->getFinishedProcessesWithIdUser($app->user->getId());
+                    break;
+            }
+        }
 
         if(empty($processes)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
