@@ -1,4 +1,6 @@
-function ajaxSearch(query) {
+async function ajaxSearch(query) {
+    await sleep(250);
+
     //console.log(query);
     $.ajax({
         url: 'app/search.php',

@@ -66,7 +66,7 @@ class Documents extends APresenter {
         }, __METHOD__);
 
         $searchField = '
-            <input type="text" id="q" oninput="ajaxSearch(this.value)">
+            <input type="text" id="q" placeholder="Search" oninput="ajaxSearch(this.value)">
             <script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
         ';
 
