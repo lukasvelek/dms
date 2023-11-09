@@ -83,7 +83,9 @@ class Logger implements ILoggerCallable {
                 break;
 
             case LogCategoryEnum::STOPWATCH:
-                $result = $this->saveLogEntry($filename, $text);
+                if($this->cfg['log_stopwatch'] == 1) {
+                    $result = $this->saveLogEntry($filename, $text);
+                }
 
                 break;
         }
