@@ -6,10 +6,11 @@ use DMS\UI\LinkBuilder;
 
 require_once('Ajax.php');
 
-if(isset($_POST['commentText']) && isset($_POST['idAuthor']) && isset($_POST['idDocument'])) {
+if(isset($_POST['commentText']) && isset($_POST['idAuthor']) && isset($_POST['idDocument']) && isset($_POST['canDelete'])) {
     $text = htmlspecialchars($_POST['commentText']);
     $idAuthor = htmlspecialchars($_POST['idAuthor']);
     $idDocument = htmlspecialchars($_POST['idDocument']);
+    $canDelete = htmlspecialchars($_POST['canDelete']);
 
     $data = array(
         'id_author' => $idAuthor,
@@ -27,7 +28,14 @@ if(isset($_POST['commentText']) && isset($_POST['idAuthor']) && isset($_POST['id
     $codeArr[] = '<hr>';
     $codeArr[] = '<article id="comment' . $comment->getId() . '">';
     $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
-    $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
+
+    if($canDelete == '1') {
+        $deleteLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:askToDeleteComment', 'id_document' => $idDocument, 'id_comment' => $comment->getId()), 'Delete');
+
+        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
+    } else {
+        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
+    }
 
     $codeArr[] = '</article>';
 
