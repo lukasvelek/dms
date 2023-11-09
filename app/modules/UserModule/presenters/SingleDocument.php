@@ -509,7 +509,8 @@ class SingleDocument extends APresenter {
     }
 
     private function internalCreateNewDocumentCommentForm(Document $document) {
-        $fb = FormBuilder::getTemporaryObject();
+        global $app;
+        /*$fb = FormBuilder::getTemporaryObject();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:SingleDocument:saveComment&id_document=' . $document->getId())
 
@@ -518,7 +519,12 @@ class SingleDocument extends APresenter {
 
             ->addElement($fb->createSubmit('Create new comment'));
 
-        return $fb->build();
+        return $fb->build();*/
+
+        return '<script type="text/javascript" src="js/DocumentAjaxComment.js"></script>
+        <textarea name="text" id="text" required></textarea>
+        <button onclick="sendComment(' . $app->user->getId() . ', ' . $document->getId() . ')">Send</button>
+        ';
     }
 
     private function internalCreateDocumentComments(Document $document) {

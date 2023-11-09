@@ -12,25 +12,25 @@ class ActionAuthorizator extends AAuthorizator {
         parent::__construct($db, $logger);
     }
 
-    public function checkActionRight(string $actionName) {
+    public function checkActionRight(string $actionName, ?int $idUser = null) {
         global $app;
 
-        if(is_null($app->user)) {
-            return false;
+        if(is_null($idUser)) {
+            $idUser = $app->user->getId();
         }
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
 
-        $valFromCache = $cm->loadActionRight($app->user->getId(), $actionName);
+        $valFromCache = $cm->loadActionRight($idUser, $actionName);
 
         $result = '';
 
         if(!is_null($valFromCache)) {
             $result = $valFromCache;
         } else {
-            $rights = $app->userRightModel->getActionRightsForIdUser($app->user->getId());
+            $rights = $app->userRightModel->getActionRightsForIdUser($idUser);
 
-            $userGroups = $app->groupUserModel->getGroupsForIdUser($app->user->getId());
+            $userGroups = $app->groupUserModel->getGroupsForIdUser($idUser);
 
             $groupRights = [];
             foreach($userGroups as $ug) {
@@ -61,7 +61,7 @@ class ActionAuthorizator extends AAuthorizator {
                 }
             }
 
-            $cm->saveActionRight($app->user->getId(), $actionName, $finalRights[$actionName]);
+            $cm->saveActionRight($idUser, $actionName, $finalRights[$actionName]);
 
             if(array_key_exists($actionName, $finalRights)) {
                 $result = $finalRights[$actionName];

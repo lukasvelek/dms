@@ -6,7 +6,6 @@ use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
-use DMS\Core\Application;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
