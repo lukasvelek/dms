@@ -12,15 +12,21 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
-    public function getDocumentsForName(string $name) {
+    public function getDocumentsForName(string $name, ?int $idFolder) {
         $qb = $this->qb(__METHOD__);
 
         $rows = $qb->select('*')
                    ->from('documents')
                    ->where('name=:name', true)
+                   ->andWhere('is_deleted=:deleted')
                    ->setParam(':name', $name)
-                   ->execute()
-                   ->fetch();
+                   ->setParam(':deleted', '0');
+
+        if(!is_null($idFolder)) {
+            $rows = $rows->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+        }
+
+        $rows = $rows->execute()->fetch();
 
         $documents = [];
         foreach($rows as $row) {
