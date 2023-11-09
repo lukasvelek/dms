@@ -54,6 +54,8 @@ class Processes extends APresenter {
     }
 
     protected function showAll() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/process-grid.html');
 
         $filter = null;
@@ -62,10 +64,16 @@ class Processes extends APresenter {
             $filter = htmlspecialchars($_GET['filter']);
         }
 
+        $processGrid = '';
+
+        $app->logger->logFunction(function() use (&$processGrid, $filter) {
+            $processGrid = $this->internalCreateStandardProcessGrid($filter);
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => 'Processes',
             '$PROCESS_PANEL$' => Panels::createProcessesPanel(),
-            '$PROCESS_GRID$' => $this->internalCreateStandardProcessGrid($filter)
+            '$PROCESS_GRID$' => $processGrid
         );
 
         $this->templateManager->fill($data, $template);

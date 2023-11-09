@@ -83,12 +83,20 @@ class Settings extends APresenter {
     }
 
     protected function showServices() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
+
+        $servicesGrid = '';
+
+        $app->logger->logFunction(function() use (&$servicesGrid) {
+            $servicesGrid = $this->internalCreateServicesGrid();
+        }, __METHOD__);
 
         $data = array(
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'Services',
-            '$SETTINGS_GRID$' => $this->internalCreateServicesGrid(),
+            '$SETTINGS_GRID$' => $servicesGrid,
             '$NEW_ENTITY_LINK$' => ''
         );
 
@@ -123,7 +131,11 @@ class Settings extends APresenter {
             if($service->name == $name) {
                 $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
 
-                $service->run();
+                $app->logger->logFunction(function() use ($service) {
+                    $service->run();
+                }, __METHOD__);
+
+                //$service->run();
                 break;
             }
         }
@@ -160,11 +172,17 @@ class Settings extends APresenter {
             $pageTitle .= ' in <i>' . $folder->getName() . '</i>';
         }
 
+        $foldersGrid = '';
+
+        $app->logger->logFunction(function() use (&$foldersGrid) {
+            $foldersGrid = $this->internalCreateFolderGrid();
+        }, __METHOD__);
+        
         $data = array(
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => $pageTitle,
             '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>',
-            '$FOLDERS_GRID$' => $this->internalCreateFolderGrid()
+            '$FOLDERS_GRID$' => $foldersGrid
         );
 
         $this->templateManager->fill($data, $template);
@@ -240,6 +258,8 @@ class Settings extends APresenter {
     }
 
     protected function showDashboard() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
 
         $data = array(
@@ -247,7 +267,11 @@ class Settings extends APresenter {
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
         );
 
-        $widgets = $this->internalDashboardCreateWidgets();
+        $widgets = ''; //$this->internalDashboardCreateWidgets();
+
+        $app->logger->logFunction(function() use (&$widgets) {
+            $widgets = $this->internalDashboardCreateWidgets();
+        }, __METHOD__);
 
         $data['$WIDGETS$'] = $widgets;
 
@@ -261,10 +285,16 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
+        $usersGrid = '';
+
+        $app->logger->logFunction(function() use (&$usersGrid) {
+            $usersGrid = $this->internalCreateUsersGrid();
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => 'Users',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $this->internalCreateUsersGrid(),
+            '$SETTINGS_GRID$' => $usersGrid,
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
         );
 
@@ -282,10 +312,16 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
+        $groupsGrid = '';
+
+        $app->logger->logFunction(function() use (&$groupsGrid) {
+            $groupsGrid = $this->internalCreateGroupGrid();
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $this->internalCreateGroupGrid(),
+            '$SETTINGS_GRID$' => $groupsGrid,
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
         );
 
@@ -303,10 +339,16 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
+        $metadataGrid = '';
+
+        $app->logger->logFunction(function() use (&$metadataGrid) {
+            $metadataGrid = $this->internalCreateMetadataGrid();
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => 'Metadata manager',
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
-            '$SETTINGS_GRID$' => $this->internalCreateMetadataGrid()
+            '$SETTINGS_GRID$' => $metadataGrid
         );
 
         if($app->actionAuthorizator->checkActionRight('create_metadata')) {

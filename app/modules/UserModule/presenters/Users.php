@@ -75,9 +75,15 @@ class Users extends APresenter {
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
 
+        $userRights = '';
+
+        $app->logger->logFunction(function() use (&$userRights, $id) {
+            $userRights = $this->internalCreateUserRightsGrid($id);
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => '<i>' . $user->getFullname() . '</i> rights',
-            '$USER_RIGHTS_GRID$' => $this->internalCreateUserRightsGrid($id)
+            '$USER_RIGHTS_GRID$' => $userRights
         );
 
         $this->templateManager->fill($data, $template);

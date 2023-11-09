@@ -42,9 +42,15 @@ class Metadata extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-grid.html');
 
+        $metadataValues = '';
+
+        $app->logger->logFunction(function() use (&$metadataValues, $idMetadata, $metadata) {
+            $metadataValues = $this->internalCreateValuesGrid($idMetadata, $metadata->getIsSystem());
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => 'Metadata <i>' . $metadata->getTableName() . '.' . $metadata->getName() . '</i> values',
-            '$METADATA_GRID$' => $this->internalCreateValuesGrid($idMetadata, $metadata->getIsSystem())
+            '$METADATA_GRID$' => $metadataValues
         );
 
         $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value');
