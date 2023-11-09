@@ -34,9 +34,6 @@ class UserAuthenticator extends AAuthenticator {
     }
 
     public function logoutCurrentUser() {
-        /*$cm = CacheManager::getTemporaryObject();
-        $cm->invalidateCache();*/
-
         CacheManager::invalidateAllCache();
 
         unset($_SESSION['id_current_user']);
