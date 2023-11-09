@@ -16,7 +16,8 @@ function loadDependencies(array &$dependencies, string $dir) {
         $dir . '\\Ajax.php',
         $dir . '\\search.php',
         $dir . '\\send-comment.php',
-        $dir . '\\get-comments.php'
+        $dir . '\\get-comments.php',
+        $dir . '\\delete-comment.php'
     );
 
     foreach($content as $c) {

@@ -22,12 +22,29 @@ async function sendComment(id_author, id_document, can_delete) {
     }
 }
 
-function loadComments(id_document, can_delete) {
+async function loadComments(id_document, can_delete) {
+    await sleep(500);
+
     $.get("app/get-comments.php", {
         idDocument: id_document,
         canDelete: can_delete
     },
     function(data) {
         $('#comments').append(data);
+    });
+}
+
+async function deleteComment(id_comment) {
+    await sleep(500);
+
+    $.ajax({
+        url: 'app/delete-comment.php',
+        type: 'POST',
+        data: {
+            idComment: id_comment
+        }
+    })
+    .done(function() {
+        $('#comment' + id_comment).remove();
     });
 }
