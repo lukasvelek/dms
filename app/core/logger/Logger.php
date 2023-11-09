@@ -14,6 +14,22 @@ class Logger implements ILoggerCallable {
         $this->cfg = $cfg;
     }
 
+    public function logFunction(callable $func, ?string $originMethod = null) {
+        $sw = self::getStopwatch();
+
+        $sw->startStopwatch();
+        $func();
+        $sw->stopStopwatch();
+        
+        $diff = $sw->calculate();
+
+        $this->logTime($diff, $originMethod);
+    }
+
+    public function logTime(string $time, ?string $method = null) {
+        return $this->log($time, LogCategoryEnum::STOPWATCH, $method);
+    }
+
     public function error(string $text, ?string $method = null) {
         return $this->log($text, LogCategoryEnum::ERROR, $method);
     }
@@ -36,12 +52,6 @@ class Logger implements ILoggerCallable {
         $text = '[' . date('Y-m-d H:i:s') . '] ' . $text . "\r\n";
 
         $result = true;
-
-        //$result = $this->saveLogEntry($filename, $text);
-
-        /*if($this->cfg['log_level'] == '3') {
-            $result = $this->saveLogEntry($filename, $text);
-        } else if($this->cfg[''])*/
 
         switch($category) {
             case LogCategoryEnum::INFO:
@@ -71,6 +81,11 @@ class Logger implements ILoggerCallable {
                 }
 
                 break;
+
+            case LogCategoryEnum::STOPWATCH:
+                $result = $this->saveLogEntry($filename, $text);
+
+                break;
         }
 
         return $result;
@@ -88,6 +103,10 @@ class Logger implements ILoggerCallable {
         }
 
         return $this->fileManager->writeLog($filename, $text);
+    }
+
+    public static function getStopwatch() {
+        return LoggerStopwatch::getTemporaryObject();
     }
 }
 

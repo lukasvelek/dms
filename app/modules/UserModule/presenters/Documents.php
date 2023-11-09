@@ -54,14 +54,25 @@ class Documents extends APresenter {
             $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
         }
 
+        $documentGrid = '';
+        $folderList = '';
+        
+        $app->logger->logFunction(function() use (&$documentGrid, $idFolder) {
+            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder);
+        }, __METHOD__);
+
+        $app->logger->logFunction(function() use (&$folderList, $idFolder) {
+            $folderList = $this->internalCreateFolderList($idFolder);
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => 'Documents',
-            '$DOCUMENT_GRID$' => $this->internalCreateStandardDocumentGrid($idFolder),
+            '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => $this->internalPrepareDocumentBulkActions(),
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
-            '$FOLDER_LIST$' => $this->internalCreateFolderList($idFolder)
+            '$FOLDER_LIST$' => $folderList
         );
 
         $this->templateManager->fill($data, $template);
@@ -135,6 +146,8 @@ class Documents extends APresenter {
         );
 
         $headerRow = null;
+
+        $documents = [];
         
         if($idFolder != null) {
             $documents = $app->documentModel->getStandardDocumentsInIdFolder($idFolder);
@@ -145,8 +158,6 @@ class Documents extends APresenter {
         if(empty($documents)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
-            $i = 0;
-
             foreach($documents as $document) {
                 $actionLinks = array(
                     '<input type="checkbox" name="select[]" value="' . $document->getId() . '">',
@@ -175,10 +186,6 @@ class Documents extends APresenter {
 
                 $docuRow = $tb->createRow();
 
-                /*if((($i % 2) != 0) && ($i > 0)) {
-                    $docuRow->setClass('even');
-                }*/
-
                 foreach($actionLinks as $actionLink) {
                     $docuRow->addCol($tb->createCol()->setText($actionLink));
                 }
@@ -203,8 +210,7 @@ class Documents extends APresenter {
                 }
 
                 $docuRow->addCol($tb->createCol()->setText($folderName));
-
-                $i++;
+                
                 $tb->addRow($docuRow);
             }
         }
