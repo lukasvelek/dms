@@ -59,7 +59,8 @@ class LinkBuilder {
     }
 
     private function getImgTemplate() {
-        return '<a class="$CLASS$" href="$URL$"><img src="$IMG_PATH$" width="28px" height="28px" loading="lazy">$NAME$</a>';
+        $size = array('32', '32'); // width, height
+        return '<a class="$CLASS$" href="$URL$"><img src="$IMG_PATH$" width="' . $size[0] . 'px" height="' . $size[1] . 'px" loading="lazy">$NAME$</a>';
     }
 
     public static function createImgLink(string $url, string $name, string $imgPath, string $class = 'general-link') {
