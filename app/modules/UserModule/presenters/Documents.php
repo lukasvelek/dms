@@ -143,7 +143,7 @@ class Documents extends APresenter {
             <script type="text/javascript">
             ajaxLoadDocuments("' . ($idFolder ?? 'null') . '");
             </script> 
-            <table border="1"></table>
+            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
         ';
     }
 

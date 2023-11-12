@@ -2,6 +2,8 @@ async function sendComment(id_author, id_document, can_delete) {
     var text = document.getElementById("text").value;
 
     if(text != "") {
+        $("#cover").show();
+
         await sleep(500);
 
         $.ajax({
@@ -17,13 +19,13 @@ async function sendComment(id_author, id_document, can_delete) {
         .done(function(data) {
             $('#comments').prepend(data);
             document.getElementById("text").value = "";
-            //console.log(data);
+            $('#cover').hide();
         });
     }
 }
 
 function showLoading() {
-    $("#comments").append('<br><p style="text-align: center">Loading...</p>');
+    $("#comments").append('<br><br><br><p style="text-align: center">Loading...</p>');
 }
 
 async function loadComments(id_document, can_delete) {

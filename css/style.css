@@ -97,3 +97,18 @@ body {
     color: black;
     font-size: 14px;
 }
+
+#cover {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+
+    /*backdrop-filter: blur(1px);*/
+    /*background-color: rgba(0, 0, 0, 0.01);*/
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}

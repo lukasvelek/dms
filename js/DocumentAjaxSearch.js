@@ -1,7 +1,8 @@
 async function ajaxSearch(query, id_folder) {
-    await sleep(250);
+    await sleep(/*250*/ 500);
 
-    //console.log(query);
+    $('#documents-loading').show();
+
     $.ajax({
         url: 'app/ajax/search.php',
         type: 'POST',
@@ -12,7 +13,7 @@ async function ajaxSearch(query, id_folder) {
     })
     .done(function(data) {
         $('table').html(data);
-        console.log(data);
+        $('#documents-loading').hide();
     });
 }
 
@@ -28,5 +29,6 @@ async function ajaxLoadDocuments(id_folder) {
     })
     .done(function(data) {
         $('table').html(data);
+        $('#documents-loading').hide();
     });
 }

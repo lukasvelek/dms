@@ -524,7 +524,9 @@ class SingleDocument extends APresenter {
         
         $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
-        return '<script type="text/javascript">
+        return '
+        <img id="comments-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">
+        <script type="text/javascript">
             $(document).on("load", showLoading())
                        .ready(loadComments("' . $document->getId() . '", "' . $canDelete . '"));
         </script>';
