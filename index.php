@@ -15,6 +15,7 @@ include('app/dms_loader.php');
     </head>
     <body>
         <script type="text/javascript" src="js/jquery-3.7.1.js"></script>
+        <script type="text/javascript" src="js/GeneralDMS.js"></script>
         <?php
 
         if(isset($_GET['page'])) {

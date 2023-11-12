@@ -509,51 +509,25 @@ class SingleDocument extends APresenter {
     }
 
     private function internalCreateNewDocumentCommentForm(Document $document) {
-        $fb = FormBuilder::getTemporaryObject();
+        global $app;
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:SingleDocument:saveComment&id_document=' . $document->getId())
+        $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
-            ->addElement($fb->createLabel()->setText('Text')->setFor('text'))
-            ->addElement($fb->createTextArea()->setName('text')->require())
-
-            ->addElement($fb->createSubmit('Create new comment'));
-
-        return $fb->build();
+        return '<script type="text/javascript" src="js/DocumentAjaxComment.js"></script>
+        <textarea name="text" id="text" required></textarea><br><br>
+        <button onclick="sendComment(' . $app->user->getId() . ', ' . $document->getId() . ', ' . $canDelete . ')">Send</button>
+        ';
     }
 
     private function internalCreateDocumentComments(Document $document) {
         global $app;
+        
+        $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
-        $codeArr = [];
-
-        $comments = $app->documentCommentModel->getCommentsForIdDocument($document->getId());
-
-        if(empty($comments)) {
-            $codeArr[] = '<hr>';
-            $codeArr[] = 'No comments found!';
-        } else {
-            foreach($comments as $comment) {
-                $author = $app->userModel->getUserById($comment->getIdAuthor());
-    
-                $authorLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $comment->getIdAuthor()), $author->getFullname());
-                
-                $codeArr[] = '<hr>';
-                $codeArr[] = '<article id="comment' . $comment->getId() . '">';
-                $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS)) {
-                    $deleteLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:askToDeleteComment', 'id_document' => $document->getId(), 'id_comment' => $comment->getId()), 'Delete');
-
-                    $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
-                } else {
-                    $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
-                }
-
-                $codeArr[] = '</article>';
-            }
-        }
-
-        return ArrayStringHelper::createUnindexedStringFromUnindexedArray($codeArr);
+        return '<script type="text/javascript">
+            $(document).on("load", showLoading())
+                       .ready(loadComments("' . $document->getId() . '", "' . $canDelete . '"));
+        </script>';
     }
 }
 
