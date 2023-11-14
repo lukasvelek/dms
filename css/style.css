@@ -59,7 +59,8 @@ body {
 #toppanel, #toppanel-right {
     padding: 5px;
 
-    background-color: /*lightblue*/ lightgrey;
+    background-color: /*lightblue*/ rgb(212, 212, 212, 0.5);
+    backdrop-filter: blur(1px);
 
     font-size: 20px;
 }
