@@ -22,6 +22,8 @@ use DMS\Models\TableModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
 
+session_start();
+
 $dependencies = array();
 
 function loadDependencies2(array &$dependencies, string $dir) {
@@ -115,5 +117,11 @@ $actionAuthorizator = new ActionAuthorizator($db, $logger);
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger);
 
 $processComponent = new ProcessComponent($db, $logger);
+
+$user = null;
+
+if(isset($_SESSION['id_current_user'])) {
+    $user = $userModel->getUserById(htmlspecialchars($_SESSION['id_current_user']));
+}
 
 ?>

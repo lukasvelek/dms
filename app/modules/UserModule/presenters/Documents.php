@@ -68,6 +68,7 @@ class Documents extends APresenter {
         $searchField = '
             <input type="text" id="q" placeholder="Search" oninput="ajaxSearch(this.value, \'' . ($idFolder ?? 'null') . '\');">
             <script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
+            <script type="text/javascript" src="js/DocumentAjaxBulkActions.js"></script>
         ';
 
         $data = array(
@@ -482,11 +483,12 @@ class Documents extends APresenter {
         global $app;
         
         $list = array(
-            '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showAll', 'Main folder (All files)') . '<br>',
-            '<hr>'
+            'null1' => '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showAll', 'Main folder (All files)') . '<br>',
+            'null2' => '<hr>'
         );
         
         $folders = $app->folderModel->getAllFolders();
+
         foreach($folders as $folder) {
             $this->_createFolderList($folder, $list, 0);
         }
@@ -512,8 +514,10 @@ class Documents extends APresenter {
             $list[$folder->getId()] = $spaces . $folderLink . '<br>';
         }
 
-        foreach($childFolders as $cf) {
-            $this->_createFolderList($cf, $list, $level + 1);
+        if(count($childFolders) > 0) {
+            foreach($childFolders as $cf) {
+                $this->_createFolderList($cf, $list, $level + 1);
+            }
         }
     }
 }

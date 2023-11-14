@@ -112,3 +112,18 @@ body {
     background-repeat: no-repeat;
     background-size: cover;
 }
+
+#bulk_actions {
+    position: fixed;
+
+    top: 50%;
+    left: 75%;
+    width: 24.5%;
+    height: 49%;
+
+    border: 1px solid black;
+    border-radius: 25px;
+
+    background-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(1px);
+}

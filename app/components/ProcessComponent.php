@@ -112,7 +112,7 @@ class ProcessComponent extends AComponent {
         return true;
     }
 
-    private function checkIfDocumentIsInProcess(int $idDocument) {
+    public function checkIfDocumentIsInProcess(int $idDocument) {
         global $app;
 
         $process = $app->processModel->getProcessForIdDocument($idDocument);

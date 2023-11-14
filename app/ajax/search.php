@@ -32,7 +32,7 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
     } else {
         foreach($documents as $document) {
             $actionLinks = array(
-                '<input type="checkbox" name="select[]" value="' . $document->getId() . '">',
+                '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawBulkActions()">',
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
             );
@@ -120,7 +120,7 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
     } else {
         foreach($documents as $document) {
             $actionLinks = array(
-                '<input type="checkbox" name="select[]" value="' . $document->getId() . '">',
+                '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawBulkActions()">',
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
             );
