@@ -26,7 +26,7 @@ class ActionAuthorizator extends AAuthorizator {
 
     public function checkActionRight(string $actionName, ?int $idUser = null, bool $checkCache = true) {
         if(is_null($idUser)) {
-            if(is_null($this->idUser)) {
+            if(empty($this->idUser)) {
                 return false;
             }
             

@@ -26,7 +26,7 @@ class PanelAuthorizator extends AAuthorizator {
 
     public function checkPanelRight(string $panelName, ?int $idUser = null, bool $checkCache = true) {
         if(is_null($idUser)) {
-            if(is_null($this->idUser)) {
+            if(empty($this->idUser)) {
                 return false;
             }
 

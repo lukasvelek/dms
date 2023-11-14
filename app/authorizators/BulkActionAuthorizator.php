@@ -26,7 +26,7 @@ class BulkActionAuthorizator extends AAuthorizator {
 
     public function checkBulkActionRight(string $bulkActionName, ?int $idUser = null, bool $checkCache = true) {
         if(is_null($idUser)) {
-            if(is_null($this->idUser)) {
+            if(empty($this->idUser)) {
                 return false;
             }
             

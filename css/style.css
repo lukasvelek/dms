@@ -116,9 +116,9 @@ body {
 #bulk_actions {
     position: fixed;
 
-    top: 50%;
-    left: 75%;
-    width: 24.5%;
+    bottom: 1%;
+    right: 1%;
+    width: 350px;
     height: 49%;
 
     border: 1px solid black;
