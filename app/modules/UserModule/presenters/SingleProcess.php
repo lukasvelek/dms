@@ -145,7 +145,7 @@ class SingleProcess extends APresenter {
 
         switch($process->getType()) {
             case ProcessTypes::DELETE:
-                $dp = new DeleteProcess($id);
+                $dp = new DeleteProcess($id, $app->processComponent, $app->documentModel, $app->processModel, $app->groupModel, $app->groupUserModel);
                 $dp->work();
                 break;
         }

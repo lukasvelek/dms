@@ -151,12 +151,12 @@ class Documents extends APresenter {
     protected function performBulkAction() {
         global $app;
 
-        if(!isset($_POST['select'])) {
+        if(!isset($_GET['select'])) {
             $app->redirect('UserModule:Documents:showAll');
         }
 
-        $ids = $_POST['select'];
-        $action = htmlspecialchars($_POST['action']);
+        $ids = $_GET['select'];
+        $action = htmlspecialchars($_GET['action']);
 
         if($action == '-') {
             $app->redirect('UserModule:Documents:showAll');
