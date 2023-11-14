@@ -3,5 +3,5 @@ function sleep(ms) {
 }
 
 $(window).on("load", function() {
-    $("#cover").hide();
+    $("#cover").remove();
 });
