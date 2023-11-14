@@ -6,113 +6,123 @@ use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\User;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\UserRightModel;
 
 class BulkActionAuthorizator extends AAuthorizator {
-    public function __construct(Database $db, Logger $logger) {
-        parent::__construct($db, $logger);
+    private UserRightModel $userRightModel;
+    private GroupUserModel $groupUserModel;
+    private GroupRightModel $groupRightModel;
+
+    public function __construct(Database $db, Logger $logger, UserRightModel $userRightModel, GroupUserModel $groupUserModel, GroupRightModel $groupRightModel, ?User $user) {
+        parent::__construct($db, $logger, $user);
+
+        $this->userRightModel = $userRightModel;
+        $this->groupUserModel = $groupUserModel;
+        $this->groupRightModel = $groupRightModel;
     }
 
-    public function ajaxCheckRight(string $bulkActionName, int $idUser, UserRightModel $userRightModel, GroupRightModel $groupRightModel, GroupUserModel $groupUserModel) {
-        $rights = $userRightModel->getBulkActionRightsForIdUser($idUser);
-        $userGroups = $groupUserModel->getGroupsForIdUser($idUser);
-
-        $groupRights = [];
-        foreach($userGroups as $ug) {
-            $idGroup = $ug->getIdGroup();
-
-            $dbGroupRights = $groupRightModel->getBulkActionRightsForIdGroup($idGroup);
-                
-            foreach($dbGroupRights as $k => $v) {
-                if(array_key_exists($k, $groupRights)) {
-                    if($groupRights[$k] != $v && $v == '1') {
-                        $groupRights[$k] = $v;
-                    }
-                } else {
-                    $groupRights[$k] = $v;
-                }
+    public function checkBulkActionRight(string $bulkActionName, ?int $idUser = null, bool $checkCache = true) {
+        if(is_null($idUser)) {
+            if(is_null($this->idUser)) {
+                return false;
             }
+            
+            $idUser = $this->idUser;
         }
-
-        $finalRights = [];
-
-        foreach($rights as $k => $v) {
-            if(array_key_exists($k, $groupRights)) {
-                if($groupRights[$k] != $v && $v == '1') {
-                    $finalRights[$k] = $v;
-                }
-            } else {
-                $finalRights[$k] = $v;
-            }
-        }
-
-        if(array_key_exists($bulkActionName, $finalRights)) {
-            $result = $finalRights[$bulkActionName];
-        } else {
-            $result = 0;
-        }
-
-        return $result ? true : false;
-    }
-
-    public function checkBulkActionRight(string $bulkActionName, int $idUser = null) {
-        global $app;
-
-        if(is_null($app->user)) {
-            return false;
-        }
-
-        $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
-
-        $valFromCache = $cm->loadBulkActionRight($app->user->getId(), $bulkActionName);
 
         $result = '';
 
-        if(!is_null($valFromCache)) {
-            $result = $valFromCache;
-        } else {
-            $rights = $app->userRightModel->getBulkActionRightsForIdUser($app->user->getId());
+        if($checkCache) {
+            $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
 
-            $userGroups = $app->groupUserModel->getGroupsForIdUser($app->user->getId());
+            $valFromCache = $cm->loadBulkActionRight($idUser, $bulkActionName);
 
-            $groupRights = [];
-            foreach($userGroups as $ug) {
-                $idGroup = $ug->getIdGroup();
+            if(!is_null($valFromCache)) {
+                $result = $valFromCache;
+            } else {
+                $rights = $this->userRightModel->getBulkActionRightsForIdUser($idUser);
 
-                $dbGroupRights = $app->groupRightModel->getBulkActionRightsForIdGroup($idGroup);
+                $userGroups = $this->groupUserModel->getGroupsForIdUser($idUser);
+
+                $groupRights = [];
+                foreach($userGroups as $ug) {
+                    $idGroup = $ug->getIdGroup();
+
+                    $dbGroupRights = $this->groupRightModel->getBulkActionRightsForIdGroup($idGroup);
                 
-                foreach($dbGroupRights as $k => $v) {
-                    if(array_key_exists($k, $groupRights)) {
-                        if($groupRights[$k] != $v && $v == '1') {
+                    foreach($dbGroupRights as $k => $v) {
+                        if(array_key_exists($k, $groupRights)) {
+                            if($groupRights[$k] != $v && $v == '1') {
+                                $groupRights[$k] = $v;
+                            }
+                        } else {
                             $groupRights[$k] = $v;
                         }
-                    } else {
-                        $groupRights[$k] = $v;
                     }
                 }
-            }
 
-            $finalRights = [];
+                $finalRights = [];
 
-            foreach($rights as $k => $v) {
-                if(array_key_exists($k, $groupRights)) {
-                    if($groupRights[$k] != $v && $v == '1') {
+                foreach($rights as $k => $v) {
+                    if(array_key_exists($k, $groupRights)) {
+                        if($groupRights[$k] != $v && $v == '1') {
+                            $finalRights[$k] = $v;
+                        }
+                    } else {
                         $finalRights[$k] = $v;
                     }
+                }
+
+                $cm->saveBulkActionRight($idUser, $bulkActionName, $finalRights[$bulkActionName]);
+
+                if(array_key_exists($bulkActionName, $finalRights)) {
+                    $result = $finalRights[$bulkActionName];
                 } else {
-                    $finalRights[$k] = $v;
+                    $result = 0;
                 }
             }
+        } else {
+            $rights = $this->userRightModel->getBulkActionRightsForIdUser($idUser);
 
-            $cm->saveBulkActionRight($app->user->getId(), $bulkActionName, $finalRights[$bulkActionName]);
+                $userGroups = $this->groupUserModel->getGroupsForIdUser($idUser);
 
-            if(array_key_exists($bulkActionName, $finalRights)) {
-                $result = $finalRights[$bulkActionName];
-            } else {
-                $result = 0;
-            }
+                $groupRights = [];
+                foreach($userGroups as $ug) {
+                    $idGroup = $ug->getIdGroup();
+
+                    $dbGroupRights = $this->groupRightModel->getBulkActionRightsForIdGroup($idGroup);
+                
+                    foreach($dbGroupRights as $k => $v) {
+                        if(array_key_exists($k, $groupRights)) {
+                            if($groupRights[$k] != $v && $v == '1') {
+                                $groupRights[$k] = $v;
+                            }
+                        } else {
+                            $groupRights[$k] = $v;
+                        }
+                    }
+                }
+
+                $finalRights = [];
+
+                foreach($rights as $k => $v) {
+                    if(array_key_exists($k, $groupRights)) {
+                        if($groupRights[$k] != $v && $v == '1') {
+                            $finalRights[$k] = $v;
+                        }
+                    } else {
+                        $finalRights[$k] = $v;
+                    }
+                }
+
+                if(array_key_exists($bulkActionName, $finalRights)) {
+                    $result = $finalRights[$bulkActionName];
+                } else {
+                    $result = 0;
+                }
         }
 
         return $result ? true : false;

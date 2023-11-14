@@ -92,6 +92,8 @@ include('../../config.local.php');
 
 //$app = new Application($cfg, '../', false);
 
+$user = null;
+
 $fm = new FileManager('../../' . $cfg['log_dir'], '../../' . $cfg['cache_dir']);
 
 $logger = new Logger($fm, $cfg);
@@ -110,18 +112,16 @@ $folderModel = new FolderModel($db, $logger);
 $serviceModel = new ServiceModel($db, $logger);
 $documentCommentModel = new DocumentCommentModel($db, $logger);
 
-$panelAuthorizator = new PanelAuthorizator($db, $logger);
-$bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger);
-$documentAuthorizator = new DocumentAuthorizator($db, $logger);
-$actionAuthorizator = new ActionAuthorizator($db, $logger);
-$metadataAuthorizator = new MetadataAuthorizator($db, $logger);
-
-$processComponent = new ProcessComponent($db, $logger);
-
-$user = null;
-
 if(isset($_SESSION['id_current_user'])) {
-    $user = $userModel->getUserById(htmlspecialchars($_SESSION['id_current_user']));
+    $user = $userModel->getUserById($_SESSION['id_current_user']);
 }
+
+$panelAuthorizator = new PanelAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
+$bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
+$documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user);
+$actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
+$metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user);
+
+$processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel);
 
 ?>

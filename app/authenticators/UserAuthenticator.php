@@ -13,7 +13,6 @@ class UserAuthenticator extends AAuthenticator {
     }
 
     public function authUser(string $username, string $password) {
-        
         $qb = $this->qb(__METHOD__);
         $row = $qb->select('id', 'username', 'password')
                   ->from('users')

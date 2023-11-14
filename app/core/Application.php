@@ -116,13 +116,13 @@ class Application {
         $this->serviceModel = new ServiceModel($this->conn, $this->logger);
         $this->documentCommentModel = new DocumentCommentModel($this->conn, $this->logger);
 
-        $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
-        $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);
-        $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger);
-        $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger);
-        $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger);
+        $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
+        $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
+        $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user);
+        $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
+        $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user);
 
-        $this->processComponent = new ProcessComponent($this->conn, $this->logger);
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel);
 
         if($install) {
             $this->installDb();
@@ -261,6 +261,11 @@ class Application {
      */
     public function setCurrentUser(User $user) {
         $this->user = $user;
+        $this->actionAuthorizator->setIdUser($this->user->getId());
+        $this->bulkActionAuthorizator->setIdUser($this->user->getId());
+        $this->documentAuthorizator->setIdUser($this->user->getId());
+        $this->metadataAuthorizator->setIdUser($this->user->getId());
+        $this->panelAuthorizator->setIdUser($this->user->getId());
     }
 
     /**

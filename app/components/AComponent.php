@@ -7,7 +7,7 @@ use DMS\Core\Logger\Logger;
 
 abstract class AComponent {
     private Database $db;
-    private Logger $logger;
+    protected Logger $logger;
 
     protected function __construct(Database $db, Logger $logger) {
         $this->db = $db;
