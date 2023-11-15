@@ -84,7 +84,8 @@ class DatabaseInstaller {
                 'id_folder' => 'INT(32) NULL',
                 'file' => 'VARCHAR(256) NULL',
                 'shred_year' => 'VARCHAR(4) NOT NULL',
-                'after_shred_action' => 'VARCHAR(256) NOT NULL'
+                'after_shred_action' => 'VARCHAR(256) NOT NULL',
+                'shredding_status' => 'INT(32) NOT NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',

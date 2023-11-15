@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentAfterShredActions;
+use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\TemplateManager;
@@ -422,6 +423,7 @@ class Documents extends APresenter {
         $data['id_author'] = $app->user->getId();
         $data['shred_year'] = htmlspecialchars($_POST['shred_year']);
         $data['after_shred_action'] = htmlspecialchars($_POST['after_shred_action']);
+        $data['shredding_status'] = DocumentShreddingStatus::NO_STATUS;
 
         if($idFolder != '-1') {
             $data['id_folder'] = $idFolder;
