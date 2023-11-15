@@ -46,36 +46,29 @@ if(isset($_GET['idDocuments'])) {
 
             $document = $documentModel->getDocumentById($idDocument);
 
-            if( $bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::DELETE_DOCUMENTS, null, false) && 
-                !$processComponent->checkIfDocumentIsInProcess($idDocument) && 
+            if( $documentBulkActionAuthorizator->canDelete($idDocument, null, false) && 
                 (is_null($canDelete) || $canDelete)) {
                 $canDelete = true;
             } else {
                 $canDelete = false;
             }
 
-            if( $bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::APPROVE_ARCHIVATION, null, false) &&
-                !$processComponent->checkIfDocumentIsInProcess($idDocument) && 
-                (is_null($canApproveArchivation) || $canApproveArchivation) &&
-                $document->getStatus() == DocumentStatus::NEW) {
+            if( $documentBulkActionAuthorizator->canApproveArchivation($idDocument, null, false) && 
+                (is_null($canApproveArchivation) || $canApproveArchivation)) {
                 $canApproveArchivation = true;
             } else {
                 $canApproveArchivation = false;
             }
 
-            if( $bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::DECLINE_ARCHIVATION, null, false) &&
-                !$processComponent->checkIfDocumentIsInProcess($idDocument) &&
-                (is_null($canDeclineArchivation) || $canDeclineArchivation) &&
-                $document->getStatus() == DocumentStatus::NEW) {
+            if( $documentBulkActionAuthorizator->canDeclineArchivation($idDocument, null, false) &&
+                (is_null($canDeclineArchivation) || $canDeclineArchivation)) {
                 $canDeclineArchivation = true;
             } else {
                 $canDeclineArchivation = false;
             }
 
-            if( $bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::ARCHIVE, null, false) &&
-                !$processComponent->checkIfDocumentIsInProcess($idDocument) &&
-                (is_null($canArchive) || $canArchive) &&
-                $document->getStatus() == DocumentStatus::ARCHIVATION_APPROVED) {
+            if( $documentBulkActionAuthorizator->canArchive($idDocument, null, false) &&
+                (is_null($canArchive) || $canArchive)) {
                 $canArchive = true;
             } else {
                 $canArchive = false;

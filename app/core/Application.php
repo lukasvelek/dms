@@ -9,6 +9,7 @@ use DMS\Authenticators\UserAuthenticator;
 use DMS\Authorizators\ActionAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
+use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
@@ -74,6 +75,7 @@ class Application {
     public DocumentAuthorizator $documentAuthorizator;
     public ActionAuthorizator $actionAuthorizator;
     public MetadataAuthorizator $metadataAuthorizator;
+    public DocumentBulkActionAuthorizator $documentBulkActionAuthorizator;
 
     public ProcessComponent $processComponent;
 
@@ -115,14 +117,16 @@ class Application {
         $this->folderModel = new FolderModel($this->conn, $this->logger);
         $this->serviceModel = new ServiceModel($this->conn, $this->logger);
         $this->documentCommentModel = new DocumentCommentModel($this->conn, $this->logger);
+        
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel);
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
-        $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user);
+        $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user);
+        $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
 
-        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel);
 
         if($install) {
             $this->installDb();
