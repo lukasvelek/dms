@@ -473,6 +473,19 @@ class Documents extends APresenter {
         $app->redirect('UserModule:Documents:showAll');
     }
 
+    private function _suggest_for_shredding(array $ids) {
+        global $app;
+
+        foreach($ids as $id) {
+            $app->documentModel->updateDocument($id, array(
+                'shredding_status' => DocumentShreddingStatus::IN_APPROVAL
+            ));
+            $app->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $app->user->getId());
+        }
+
+        echo('<script type="text/javascript">alert("Process has started"); location.href = "?page=UserModule:Documents:showAll";</script>');
+    }
+
     private function _delete_documents(array $ids) {
         global $app;
 
