@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\MetadataInputType;
+use DMS\Constants\ServiceMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
@@ -57,6 +58,9 @@ class Settings extends APresenter {
             $app->serviceModel->updateService($name, $k, $v);
         }
 
+        $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_CONFIG);
+        $cm->invalidateCache();
+
         $app->logger->info('Updated configuration for service \'' . $name . '\'', __METHOD__);
 
         $app->redirect('UserModule:Settings:showServices');
@@ -79,12 +83,20 @@ class Settings extends APresenter {
     }
 
     protected function showServices() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
+
+        $servicesGrid = '';
+
+        $app->logger->logFunction(function() use (&$servicesGrid) {
+            $servicesGrid = $this->internalCreateServicesGrid();
+        }, __METHOD__);
 
         $data = array(
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'Services',
-            '$SETTINGS_GRID$' => $this->internalCreateServicesGrid(),
+            '$SETTINGS_GRID$' => $servicesGrid,
             '$NEW_ENTITY_LINK$' => ''
         );
 
@@ -119,7 +131,11 @@ class Settings extends APresenter {
             if($service->name == $name) {
                 $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
 
-                $service->run();
+                $app->logger->logFunction(function() use ($service) {
+                    $service->run();
+                }, __METHOD__);
+
+                //$service->run();
                 break;
             }
         }
@@ -156,11 +172,17 @@ class Settings extends APresenter {
             $pageTitle .= ' in <i>' . $folder->getName() . '</i>';
         }
 
+        $foldersGrid = '';
+
+        $app->logger->logFunction(function() use (&$foldersGrid) {
+            $foldersGrid = $this->internalCreateFolderGrid();
+        }, __METHOD__);
+        
         $data = array(
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => $pageTitle,
             '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>',
-            '$FOLDERS_GRID$' => $this->internalCreateFolderGrid()
+            '$FOLDERS_GRID$' => $foldersGrid
         );
 
         $this->templateManager->fill($data, $template);
@@ -236,6 +258,8 @@ class Settings extends APresenter {
     }
 
     protected function showDashboard() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
 
         $data = array(
@@ -243,7 +267,11 @@ class Settings extends APresenter {
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
         );
 
-        $widgets = $this->internalDashboardCreateWidgets();
+        $widgets = ''; //$this->internalDashboardCreateWidgets();
+
+        $app->logger->logFunction(function() use (&$widgets) {
+            $widgets = $this->internalDashboardCreateWidgets();
+        }, __METHOD__);
 
         $data['$WIDGETS$'] = $widgets;
 
@@ -257,10 +285,16 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
+        $usersGrid = '';
+
+        $app->logger->logFunction(function() use (&$usersGrid) {
+            $usersGrid = $this->internalCreateUsersGrid();
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => 'Users',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $this->internalCreateUsersGrid(),
+            '$SETTINGS_GRID$' => $usersGrid,
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
         );
 
@@ -278,10 +312,16 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
+        $groupsGrid = '';
+
+        $app->logger->logFunction(function() use (&$groupsGrid) {
+            $groupsGrid = $this->internalCreateGroupGrid();
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $this->internalCreateGroupGrid(),
+            '$SETTINGS_GRID$' => $groupsGrid,
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
         );
 
@@ -299,10 +339,16 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
+        $metadataGrid = '';
+
+        $app->logger->logFunction(function() use (&$metadataGrid) {
+            $metadataGrid = $this->internalCreateMetadataGrid();
+        }, __METHOD__);
+
         $data = array(
             '$PAGE_TITLE$' => 'Metadata manager',
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
-            '$SETTINGS_GRID$' => $this->internalCreateMetadataGrid()
+            '$SETTINGS_GRID$' => $metadataGrid
         );
 
         if($app->actionAuthorizator->checkActionRight('create_metadata')) {
@@ -514,6 +560,7 @@ class Settings extends APresenter {
         $app->userRightModel->insertActionRightsForIdUser($idUser);
         $app->userRightModel->insertPanelRightsForIdUser($idUser);
         $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
+        $app->userRightModel->insertMetadataRightsForIdUser($idUser, $app->metadataModel->getAllMetadata());
 
         $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
     }
@@ -837,6 +884,7 @@ class Settings extends APresenter {
         global $app;
 
         $systemVersion = $app::SYSTEM_VERSION;
+        $systemBuildDate = $app::SYSTEM_BUILD_DATE;
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -847,6 +895,7 @@ class Settings extends APresenter {
                     <div class="row">
                         <div class="col-md">
                             <p><b>System version: </b>' . $systemVersion . '</p>
+                            <p><b>System build date: </b>' . $systemBuildDate . '</p>
                         </div>
                     </div>
                  </div>';
@@ -991,16 +1040,12 @@ class Settings extends APresenter {
             $cacheFolders[$folder->getId()] = array('name' => $folder->getName(), 'description' => $folder->getDescription());
         }
 
-        $cm = CacheManager::getTemporaryObject();
-        $cm->saveToCache(CacheCategories::FOLDERS, $cacheFolders);
-
         if(empty($folders)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($folders as $folder) {
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open'),
-                    //LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteFolder', 'id_folder' => $folder->getId()), 'Delete')
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete')
                 );
 
@@ -1183,7 +1228,7 @@ class Settings extends APresenter {
         foreach($serviceCfg as $key => $value) {
             $fb ->addElement($fb->createLabel()->setText($key)->setFor($key));
 
-            if($key == 'files_keep_length') {
+            if($key == ServiceMetadata::FILES_KEEP_LENGTH) {
                 $fb
                 ->addElement($fb->createSpecial('<span id="files_keep_length_text_value">__VAL__</span>'))
                 ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))

@@ -9,11 +9,14 @@ use DMS\Authenticators\UserAuthenticator;
 use DMS\Authorizators\ActionAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
+use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
+use DMS\Constants\CacheCategories;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
+use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
@@ -27,6 +30,13 @@ use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
 use DMS\Panels\Panels;
 
+/**
+ * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
+ * All necessary classes are constructed here and kept in the variables.
+ * The loaded application config file is also kept here.
+ * 
+ * @author Lukas Velek
+ */
 class Application {
     public const URL_LOGIN_PAGE = 'AnonymModule:LoginPage:showForm';
     public const URL_HOME_PAGE = 'UserModule:HomePage:showHomepage';
@@ -34,7 +44,8 @@ class Application {
     public const URL_DOCUMENTS_PAGE = 'UserModule:Documents:showAll';
     public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
 
-    public const SYSTEM_VERSION = '1.1_beta';
+    public const SYSTEM_VERSION = '1.2';
+    public const SYSTEM_BUILD_DATE = '2023/11/15';
 
     public array $cfg;
     public ?string $currentUrl;
@@ -58,29 +69,38 @@ class Application {
     public TableModel $tableModel;
     public FolderModel $folderModel;
     public ServiceModel $serviceModel;
+    public DocumentCommentModel $documentCommentModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
     public DocumentAuthorizator $documentAuthorizator;
     public ActionAuthorizator $actionAuthorizator;
     public MetadataAuthorizator $metadataAuthorizator;
+    public DocumentBulkActionAuthorizator $documentBulkActionAuthorizator;
 
     public ProcessComponent $processComponent;
 
     private array $modules;
     private ?string $pageContent;
+    private string $baseDir;
 
     private Database $conn;
 
-    public function __construct(array $cfg) {
+    /**
+     * This is the application class constructor. Here are all other classes constructed and assigned to their respective variables.
+     * 
+     * @param array $cfg The application configuration file contents
+     */
+    public function __construct(array $cfg, string $baseDir = '', bool $install = true) {
         $this->cfg = $cfg;
+        $this->baseDir = $baseDir;
 
         $this->currentUrl = null;
         $this->modules = array();
         $this->pageContent = null;
         $this->user = null;
 
-        $this->fileManager = new FileManager($this->cfg['log_dir'], $this->cfg['cache_dir']);
+        $this->fileManager = new FileManager($this->baseDir . $this->cfg['log_dir'], $this->baseDir . $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager, $this->cfg);
         $this->conn = new Database($this->cfg['db_server'], $this->cfg['db_user'], $this->cfg['db_pass'], $this->cfg['db_name'], $this->logger);
 
@@ -97,23 +117,37 @@ class Application {
         $this->tableModel = new TableModel($this->conn, $this->logger);
         $this->folderModel = new FolderModel($this->conn, $this->logger);
         $this->serviceModel = new ServiceModel($this->conn, $this->logger);
+        $this->documentCommentModel = new DocumentCommentModel($this->conn, $this->logger);
+        
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel);
 
-        $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger);
-        $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger);
-        $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger);
-        $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger);
-        $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger);
+        $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
+        $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
+        $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
+        $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
+        $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user);
+        $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
 
-        $this->processComponent = new ProcessComponent($this->conn, $this->logger);
 
-        $this->fsManager = new FileStorageManager($this->cfg['file_dir'], $this->fileManager, $this->logger);
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg);
+        if($install) {
+            $this->installDb();
+        }
+        
+        $this->fsManager = new FileStorageManager($this->baseDir . $this->cfg['file_dir'], $this->fileManager, $this->logger);
+        
+        $serviceManagerCacheManager = new CacheManager($this->cfg['serialize_cache'], CacheCategories::SERVICE_CONFIG);
 
-        $this->installDb();
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager);
 
         //$this->conn->installer->updateDefaultUserPanelRights();
     }
 
+    /**
+     * Redirects the application page to different page using constructed URL that is based on passed parameters.
+     * 
+     * @param string $url The default page URL
+     * @param array $params All other parameters that should be passed to the presenter
+     */
     public function redirect(string $url, array $params = array()) {
         $page = '?';
 
@@ -139,6 +173,9 @@ class Application {
         header('Location: ' . $page);
     }
 
+    /**
+     * Shows the current page to the user
+     */
     public function showPage() {
         if(is_null($this->pageContent)) {
             $this->renderPage();
@@ -147,6 +184,9 @@ class Application {
         echo $this->pageContent;
     }
 
+    /**
+     * Renders the current page and saves it to the $pageContent variable
+     */
     public function renderPage() {
         // --- TOPPANEL ---
 
@@ -185,30 +225,67 @@ class Application {
         $this->pageContent .= $module->currentPresenter->performAction($action);
     }
 
+    /**
+     * Renders the toppanel
+     * 
+     * @return string HTML code of the toppanel
+     */
     public function renderToppanel() {
         $panel = Panels::createTopPanel();
 
         return $panel;
     }
 
+    /**
+     * Registers the passed module to the module system
+     * 
+     * @param IModule $module Module to be saved
+     */
     public function registerModule(IModule $module) {
         $this->modules[$module->getName()] = $module;
     }
 
+    /**
+     * Returns a component based on its name
+     * 
+     * @param string $name Component name
+     * @param mixed|null Mixed if the component exists and null if it does not exist
+     */
     public function getComponent(string $name) {
         if(isset($this->$name)) {
             return $this->$name;
+        } else {
+            return null;
         }
     }
 
+    /**
+     * Sets the current user
+     * 
+     * @param User $user Current user
+     */
     public function setCurrentUser(User $user) {
         $this->user = $user;
+        $this->actionAuthorizator->setIdUser($this->user->getId());
+        $this->bulkActionAuthorizator->setIdUser($this->user->getId());
+        $this->documentAuthorizator->setIdUser($this->user->getId());
+        $this->metadataAuthorizator->setIdUser($this->user->getId());
+        $this->panelAuthorizator->setIdUser($this->user->getId());
     }
 
+    /**
+     * Returns the database connection
+     * 
+     * @return Database $conn Database connection
+     */
     public function getConn() {
         return $this->conn;
     }
 
+    /**
+     * Performs the initial database installation.
+     * After installing, it creates a file that shows whether the database has been installed or not.
+     */
     private function installDb() {
         if(!file_exists('app/core/install')) {
             $this->conn->installer->install();

@@ -3,8 +3,11 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\UserActionRights;
+use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Document;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -36,6 +39,57 @@ class SingleDocument extends APresenter {
         return $this->name;
     }
 
+    protected function deleteComment() {
+        global $app;
+
+        $idComment = htmlspecialchars($_GET['id_comment']);
+        $idDocument = htmlspecialchars($_GET['id_document']);
+
+        $app->documentCommentModel->deleteComment($idComment);
+
+        $app->logger->info('Deleted comment #' . $idComment, __METHOD__);
+
+        $app->redirect('UserModule:SingleDocument:showInfo', array('id' => $idDocument));
+    }
+
+    protected function askToDeleteComment() {
+        $idDocument = htmlspecialchars($_GET['id_document']);
+        $idComment = htmlspecialchars($_GET['id_comment']);
+
+        $urlConfirm = array(
+            'page' => 'UserModule:SingleDocument:deleteComment',
+            'id_comment' => $idComment,
+            'id_document' => $idDocument
+        );
+
+        $urlClose = array(
+            'page' => 'UserModule:SingleDocument:showInfo',
+            'id' => $idDocument
+        );
+
+        $code = ScriptLoader::confirmUser('Do you want to delete the comment?', $urlConfirm, $urlClose);
+
+        return $code;
+    }
+
+    protected function saveComment() {
+        global $app;
+
+        $idDocument = htmlspecialchars($_GET['id_document']);
+        $idAuthor = $app->user->getId();
+        $text = htmlspecialchars($_POST['text']);
+
+        $data = array(
+            'id_document' => $idDocument,
+            'id_author' => $idAuthor,
+            'text' => $text
+        );
+
+        $app->documentCommentModel->insertComment($data);
+
+        $app->redirect('UserModule:SingleDocument:showInfo', array('id' => $idDocument));
+    }
+
     protected function showInfo() {
         global $app;
 
@@ -46,7 +100,9 @@ class SingleDocument extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Document <i>' . $document->getName() . '</i>',
-            '$DOCUMENT_GRID$' => $this->internalCreateDocumentInfoGrid($document)
+            '$DOCUMENT_GRID$' => $this->internalCreateDocumentInfoGrid($document),
+            '$NEW_COMMENT_FORM$' => $this->internalCreateNewDocumentCommentForm($document),
+            '$DOCUMENT_COMMENTS$' => $this->internalCreateDocumentComments($document)
         );
 
         $this->templateManager->fill($data, $template);
@@ -450,6 +506,30 @@ class SingleDocument extends APresenter {
         $folder = $app->folderModel->getFolderById($id);
 
         return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id' => $id), $folder->getName());
+    }
+
+    private function internalCreateNewDocumentCommentForm(Document $document) {
+        global $app;
+
+        $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
+
+        return '<script type="text/javascript" src="js/DocumentAjaxComment.js"></script>
+        <textarea name="text" id="text" required></textarea><br><br>
+        <button onclick="sendComment(' . $app->user->getId() . ', ' . $document->getId() . ', ' . $canDelete . ')">Send</button>
+        ';
+    }
+
+    private function internalCreateDocumentComments(Document $document) {
+        global $app;
+        
+        $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
+
+        return '
+        <img id="comments-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">
+        <script type="text/javascript">
+            $(document).on("load", showLoading())
+                       .ready(loadComments("' . $document->getId() . '", "' . $canDelete . '"));
+        </script>';
     }
 }
 

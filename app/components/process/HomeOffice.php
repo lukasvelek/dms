@@ -5,7 +5,7 @@ namespace DMS\Components\Process;
 use DMS\Entities\Process;
 use DMS\UI\FormBuilder\FormBuilder;
 
-class HomeOffice implements IFormable, IProcessComponent {
+class HomeOffice implements IFormable {
     private Process $process;
 
     public function __construct(int $idProcess) {

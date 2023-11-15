@@ -2,19 +2,57 @@
 
 namespace DMS\Authorizators;
 
+use DMS\Components\ProcessComponent;
 use DMS\Constants\DocumentStatus;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\User;
+use DMS\Models\DocumentModel;
+use DMS\Models\ProcessModel;
+use DMS\Models\UserModel;
 
+/**
+ * DocumentAuthorizator checks if a action is allowed to be performed on a document.
+ * 
+ * @author Lukas Velek
+ */
 class DocumentAuthorizator extends AAuthorizator {
-    public function __construct(Database $db, Logger $logger) {
-        parent::__construct($db, $logger);
+    private DocumentModel $documentModel;
+    private UserModel $userModel;
+    private ProcessModel $processModel;
+    private ProcessComponent $processComponent;
+
+    /**
+     * The DocumentAuthorizator constructor creates an object
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param DocumentModel $documentModel DocumentModel instance
+     * @param UserModel $userModel UserModel instance
+     * @param ProcessModel $processModel ProcessModel instance
+     * @param null|User $user User instance
+     * @param ProcessComponent $processComponent ProcessComponent instance
+     */
+    public function __construct(Database $db, Logger $logger, DocumentModel $documentModel, UserModel $userModel, ProcessModel $processModel, ?User $user, ProcessComponent $processComponent) {
+        parent::__construct($db, $logger, $user);
+        $this->documentModel = $documentModel;
+        $this->userModel = $userModel;
+        $this->processModel = $processModel;
+        $this->processComponent = $processComponent;
     }
 
+    /**
+     * Checks if a document can be archived
+     * 
+     * @param int $id Document ID
+     * @return bool True if the document can be archived and false if not
+     */
     public function canArchive(int $id) {
-        global $app;
+        $document = $this->documentModel->getDocumentById($id);
 
-        $document = $app->documentModel->getDocumentById($id);
+        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
+            return false;
+        }
 
         if($document->getStatus() != DocumentStatus::ARCHIVATION_APPROVED) {
             return false;
@@ -23,10 +61,18 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if a document can be approved for archivation
+     * 
+     * @param int $id Document ID
+     * @return bool True if the document can be approved for archivation and false if not
+     */
     public function canApproveArchivation(int $id) {
-        global $app;
+        $document = $this->documentModel->getDocumentById($id);
 
-        $document = $app->documentModel->getDocumentById($id);
+        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
+            return false;
+        }
 
         // STATUS
         if($document->getStatus() != DocumentStatus::NEW) {
@@ -36,10 +82,18 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if a document can be declined for archivation
+     * 
+     * @param int $id Document ID
+     * @return bool True if the document can be declined for archivation and false if not
+     */
     public function canDeclineArchivation(int $id) {
-        global $app;
+        $document = $this->documentModel->getDocumentById($id);
 
-        $document = $app->documentModel->getDocumentById($id);
+        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
+            return false;
+        }
 
         //STATUS
         if($document->getStatus() != DocumentStatus::NEW) {
@@ -49,19 +103,25 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
-    public function canDeleteDocument(int $id, int $idCallingUser) {
-        global $app;
+    /**
+     * Checks if a document can be deleted
+     * 
+     * @param int $id Document ID
+     * @return bool True if the document can be deleted and false if not
+     */
+    public function canDeleteDocument(int $id) {
+        $document = $this->documentModel->getDocumentById($id);
 
-        $document = $app->documentModel->getDocumentById($id);
-        $callingUser = $app->userModel->getUserById($idCallingUser);
-        $process = $app->processModel->getProcessForIdDocument($id);
-
-        // PROCESS
-        if($process !== NULL) {
+        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
             return false;
         }
 
-        
+        if(!in_array($document->getStatus(), array(
+            DocumentStatus::ARCHIVED,
+            DocumentStatus::SHREDDED
+        ))) {
+            return false;
+        }
 
         return true;
     }

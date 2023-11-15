@@ -12,6 +12,48 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentsForName(string $name, ?int $idFolder) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('documents')
+                   ->where('name=:name', true)
+                   ->andWhere('is_deleted=:deleted')
+                   ->setParam(':name', $name)
+                   ->setParam(':deleted', '0');
+
+        if(!is_null($idFolder)) {
+            $rows = $rows->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+        }
+
+        $rows = $rows->execute()->fetch();
+
+        $documents = [];
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
+    public function getDocumentsForFilename(string $filename) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('documents')
+                   ->where('file=:file')
+                   ->setParam(':file', $filename)
+                   ->execute()
+                   ->fetch();
+
+        $documents = [];
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function nullIdFolder(int $id) {
         $qb = $this->qb(__METHOD__);
 
@@ -188,14 +230,19 @@ class DocumentModel extends AModel {
         $isDeleted = $row['is_deleted'];
         $rank = $row['rank'];
         $idFolder = null;
+        $file = null;
 
         if(isset($row['id_folder'])) {
             $idFolder = $row['id_folder'];
         }
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder'));
+        if(isset($row['file'])) {
+            $file = $row['file'];
+        }
 
-        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder);
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file'));
+
+        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file);
         $document->setMetadata($row);
 
         return $document;

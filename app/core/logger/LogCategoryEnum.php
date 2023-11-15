@@ -7,6 +7,7 @@ class LogCategoryEnum {
     public const WARN = 'WARNING';
     public const ERROR = 'ERROR';
     public const SQL = 'SQL';
+    public const STOPWATCH = 'STOPWATCH';
 }
 
 ?>

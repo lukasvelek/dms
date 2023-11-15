@@ -8,6 +8,7 @@ use DMS\UI\LinkBuilder;
 
 class Panels {
     private CONST TOPPANEL_USE_TEXT = FALSE;
+    private const SETTINGSPANEL_USE_TEXT = FALSE;
 
     public static function createProcessesPanel() {
         $templateManager = self::tm();
@@ -17,8 +18,11 @@ class Panels {
         $data = array(
             '$LINKS$' => array(
                 '&nbsp;',
-                LinkBuilder::createLink('UserModule:Processes:showMenu', 'Menu'),
-                LinkBuilder::createLink('UserModule:Processes:showAll', 'All processes')
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'startedByMe'), 'Processes started by me'),
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'waitingForMe'), 'Processes waiting for me'),
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'finished'), 'Finished processes'),
+                /*LinkBuilder::createLink('UserModule:Processes:showList', 'Processes started by me'),
+                LinkBuilder::createLink()*/
             )
         );
     
@@ -34,35 +38,64 @@ class Panels {
 
         $data = array(
             '$LINKS$' => array(
-                '&nbsp;',
-                LinkBuilder::createLink('UserModule:Settings:showDashboard', 'Dashboard')
+                '&nbsp;'
             )
         );
+
+        if(self::SETTINGSPANEL_USE_TEXT) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboard', 'Dashboard');
+        } else {
+            $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showDashboard', 'Dashboard', 'img/dashboard.svg');
+        }
 
         $panelAuthorizator = self::pa();
 
         if($panelAuthorizator->checkPanelRight(PanelRights::FOLDERS)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showFolders', 'Document folders');
+            if(self::SETTINGSPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showFolders', 'Document folders');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showFolders', 'Document folders', 'img/folder.svg');
+            }
         }
 
         if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_USERS)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showUsers', 'Users');
+            if(self::SETTINGSPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showUsers', 'Users');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showUsers', 'Users', 'img/users.svg');
+            }
         }
 
         if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_GROUPS)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showGroups', 'Groups');
+            if(self::SETTINGSPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showGroups', 'Groups');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showGroups', 'Groups', 'img/groups.svg');
+            }
         }
 
         if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_METADATA)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showMetadata', 'Metadata');
+            if(self::SETTINGSPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showMetadata', 'Metadata');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showMetadata', 'Metadata', 'img/metadata.svg');
+            }
         }
 
         if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_SYSTEM)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showSystem', 'System');
+            if(self::SETTINGSPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showSystem', 'System');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showSystem', 'System', 'img/system.svg');
+            }
         }
 
         if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_SERVICES)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showServices', 'Services');
+            if(self::SETTINGSPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showServices', 'Services');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showServices', 'Services', 'img/services.svg');
+            }
         }
 
         $templateManager->fill($data, $template);
@@ -86,7 +119,7 @@ class Panels {
         if(self::TOPPANEL_USE_TEXT) {
             $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_HOME_PAGE, 'Home');
         } else {
-            $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_HOME_PAGE, '', 'img/home-icon.png');
+            $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_HOME_PAGE, 'Home', 'img/home.svg');
         }
 
         $panelAuthorizator = self::pa();
@@ -95,7 +128,7 @@ class Panels {
             if(self::TOPPANEL_USE_TEXT) {
                 $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_DOCUMENTS_PAGE, 'Documents');
             } else {
-                $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_DOCUMENTS_PAGE, '', 'img/documents-icon.png');
+                $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_DOCUMENTS_PAGE, 'Documents', 'img/documents.svg');
             }
         }
 
@@ -103,7 +136,7 @@ class Panels {
             if(self::TOPPANEL_USE_TEXT) {
                 $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_PROCESSES_PAGE, 'Processes');
             } else {
-                $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_PROCESSES_PAGE, '', 'img/processes-icon.png');
+                $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_PROCESSES_PAGE, 'Processes', 'img/processes.svg');
             }
         }
 
@@ -111,7 +144,7 @@ class Panels {
             if(self::TOPPANEL_USE_TEXT) {
                 $data['$LINKS$'][] = LinkBuilder::createLink($app::URL_SETTINGS_PAGE, 'Settings');
             } else {
-                $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_SETTINGS_PAGE, '', 'img/settings-icon.png');
+                $data['$LINKS$'][] = LinkBuilder::createImgLink($app::URL_SETTINGS_PAGE, 'Settings', 'img/settings.svg');
             }
         }
 
@@ -120,8 +153,8 @@ class Panels {
                 $data['$USER_PROFILE_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname());
                 $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createLink('UserModule:UserLogout:logoutUser', 'Logout');
             } else {
-                $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user-icon.png');
-                $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', '', 'img/logout-icon.png');
+                $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user.svg');
+                $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', 'Logout', 'img/logout.svg');
             }
         } else {
             $data['$LINKS$'] = '';

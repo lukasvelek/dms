@@ -33,9 +33,9 @@ class UserLogout extends APresenter {
 
     protected function logoutUser() {
         global $app;
-        $app->userAuthenticator->logoutCurrentUser();
-
-        $app->redirect($app::URL_LOGIN_PAGE);
+        if($app->userAuthenticator->logoutCurrentUser()) {
+            $app->redirect($app::URL_LOGIN_PAGE);
+        }
     }
 }
 

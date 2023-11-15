@@ -15,6 +15,10 @@ include('app/dms_loader.php');
     </head>
     <body>
         <script type="text/javascript" src="js/jquery-3.7.1.js"></script>
+        <script type="text/javascript" src="js/GeneralDMS.js"></script>
+        <div id="cover">
+            <img style="position: fixed; top: 50%; left: 49%;" src='img/loading.gif' width='32' height='32'>
+        </div>
         <?php
 
         if(isset($_GET['page'])) {

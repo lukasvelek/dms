@@ -145,7 +145,7 @@ class SingleProcess extends APresenter {
 
         switch($process->getType()) {
             case ProcessTypes::DELETE:
-                $dp = new DeleteProcess($id);
+                $dp = new DeleteProcess($id, $app->processComponent, $app->documentModel, $app->processModel, $app->groupModel, $app->groupUserModel);
                 $dp->work();
                 break;
         }
@@ -158,31 +158,44 @@ class SingleProcess extends APresenter {
     private function internalCreateProcessInfoTable(Process $process) {
         global $app;
 
+        $link = function(int $id, string $name) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $id), $name);
+        };
+
         $tb = TableBuilder::getTemporaryObject();
 
         if($process->getWorkflowStep(0) != null) {
-            $workflow1User = $app->userModel->getUserById($process->getWorkflowStep(0))->getFullname();
+            $workflow1User = $app->userModel->getUserById($process->getWorkflowStep(0));
+            $workflow1User = $link($workflow1User->getId(), $workflow1User->getFullname());
         } else {
             $workflow1User = '-';
         }
 
         if($process->getWorkflowStep(1) != null) {
-            $workflow2User = $app->userModel->getUserById($process->getWorkflowStep(1))->getFullname();
+            $workflow2User = $app->userModel->getUserById($process->getWorkflowStep(1));
+            $workflow2User = $link($workflow2User->getId(), $workflow2User->getFullname());
         } else {
             $workflow2User = '-';
         }
 
         if($process->getWorkflowStep(2) != null) {
-            $workflow3User = $app->userModel->getUserById($process->getWorkflowStep(2))->getFullname();
+            $workflow3User = $app->userModel->getUserById($process->getWorkflowStep(2));
+            $workflow3User = $link($workflow3User->getId(), $workflow3User->getFullname());
         } else {
             $workflow3User = '-';
         }
 
         if($process->getWorkflowStep(3) != null) {
-            $workflow4User = $app->userModel->getUserById($process->getWorkflowStep(3))->getFullname();
+            $workflow4User = $app->userModel->getUserById($process->getWorkflowStep(3));
+            $workflow4User = $link($workflow4User->getId(), $workflow4User->getFullname());
         } else {
             $workflow4User = '-';
         }
+
+        $author = $app->userModel->getUserById($process->getIdAuthor());
+        $author = $link($author->getId(), $author->getFullname());
+
+        $currentOfficer = ${'workflow' . $process->getWorkflowStatus() . 'User'};
 
         $tb ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow 1')->setBold())
                                      ->addCol($tb->createCol()->setText($workflow1User)))
@@ -193,9 +206,11 @@ class SingleProcess extends APresenter {
             ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow 4')->setBold())
                                      ->addCol($tb->createCol()->setText($workflow4User)))
             ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow status')->setBold())
-                                     ->addCol($tb->createCol()->setText($process->getWorkflowStatus())))
+                                     ->addCol($tb->createCol()->setText($process->getWorkflowStatus() . ' (' . $currentOfficer . ')')))
             ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Current officer')->setBold())
-                                     ->addCol($tb->createCol()->setText(${'workflow' . $process->getWorkflowStatus() . 'User'})))
+                                     ->addCol($tb->createCol()->setText($currentOfficer)))
+            ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Author')->setBold())
+                                     ->addCol($tb->createCol()->setText($author)))
         ;
 
         $table = $tb->build();
@@ -209,6 +224,10 @@ class SingleProcess extends APresenter {
         $idCurrentUser = $app->user->getId();
 
         $actions = [];
+
+        if($process->getStatus() == ProcessStatus::FINISHED) {
+            return $actions;
+        }
 
         switch($process->getType()) {
             case ProcessTypes::DELETE:

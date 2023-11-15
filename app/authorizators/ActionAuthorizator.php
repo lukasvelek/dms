@@ -6,37 +6,117 @@ use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\User;
+use DMS\Models\GroupRightModel;
+use DMS\Models\GroupUserModel;
+use DMS\Models\UserRightModel;
 
+/**
+ * ActionAuthorizator checks if an entity is allowed to perform an action.
+ * 
+ * @author Lukas Velek
+ */
 class ActionAuthorizator extends AAuthorizator {
-    public function __construct(Database $db, Logger $logger) {
-        parent::__construct($db, $logger);
+    private UserRightModel $userRightModel;
+    private GroupUserModel $groupUserModel;
+    private GroupRightModel $groupRightModel;
+
+    /**
+     * ActionAuthorizator constructor creates an object
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param UserRightModel $userRightModel UserRightModel instance
+     * @param GroupUserModel $groupUserModel GroupUserModel instance
+     * @param GroupRightModel $groupRightModel GropuRightModel instance
+     * @param null|User $user User instance or null
+     */
+    public function __construct(Database $db, Logger $logger, UserRightModel $userRightModel, GroupUserModel $groupUserModel, GroupRightModel $groupRightModel, ?User $user) {
+        parent::__construct($db, $logger, $user);
+
+        $this->userRightModel = $userRightModel;
+        $this->groupUserModel = $groupUserModel;
+        $this->groupRightModel = $groupRightModel;
     }
 
-    public function checkActionRight(string $actionName) {
-        global $app;
-
-        if(is_null($app->user)) {
-            return false;
+    /**
+     * This method checks if a user (currently login or other) is allowed to perform an action of a name. It can also check cache for faster performance.
+     * 
+     * @param string $actionName Action name
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     * @return bool True if user is allowed to perform the action and false if not
+     */
+    public function checkActionRight(string $actionName, ?int $idUser = null, bool $checkCache = true) {
+        if(is_null($idUser)) {
+            if(empty($this->idUser)) {
+                return false;
+            }
+            
+            $idUser = $this->idUser;
         }
-
-        $cm = CacheManager::getTemporaryObject();
-
-        $valFromCache = $cm->loadFromCache(CacheCategories::ACTIONS, $actionName);
 
         $result = '';
 
-        if(!is_null($valFromCache)) {
-            $result = $valFromCache;
-        } else {
-            $rights = $app->userRightModel->getActionRightsForIdUser($app->user->getId());
+        if($checkCache) {
+            $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
 
-            $userGroups = $app->groupUserModel->getGroupsForIdUser($app->user->getId());
+            $valFromCache = $cm->loadActionRight($idUser, $actionName);
+
+            if(!is_null($valFromCache)) {
+                $result = $valFromCache;
+            } else {
+                $rights = $this->userRightModel->getActionRightsForIdUser($idUser);
+
+                $userGroups = $this->groupUserModel->getGroupsForIdUser($idUser);
+
+                $groupRights = [];
+                foreach($userGroups as $ug) {
+                    $idGroup = $ug->getIdGroup();
+
+                    $dbGroupRights = $this->groupRightModel->getPanelRightsForIdGroup($idGroup);
+                
+                    foreach($dbGroupRights as $k => $v) {
+                        if(array_key_exists($k, $groupRights)) {
+                            if($groupRights[$k] != $v && $v == '1') {
+                                $groupRights[$k] = $v;
+                            }
+                        } else {
+                            $groupRights[$k] = $v;
+                        }
+                    }
+                }
+
+                $finalRights = [];
+
+                foreach($rights as $k => $v) {
+                    if(array_key_exists($k, $groupRights)) {
+                        if($groupRights[$k] != $v && $v == '1') {
+                            $finalRights[$k] = $v;
+                        }
+                    } else {
+                        $finalRights[$k] = $v;
+                    }
+                }
+
+                $cm->saveActionRight($idUser, $actionName, $finalRights[$actionName]);
+
+                if(array_key_exists($actionName, $finalRights)) {
+                    $result = $finalRights[$actionName];
+                } else {
+                    $result = 0;
+                }
+            }
+        } else {
+            $rights = $this->userRightModel->getActionRightsForIdUser($idUser);
+
+            $userGroups = $this->groupUserModel->getGroupsForIdUser($idUser);
 
             $groupRights = [];
             foreach($userGroups as $ug) {
                 $idGroup = $ug->getIdGroup();
 
-                $dbGroupRights = $app->groupRightModel->getPanelRightsForIdGroup($idGroup);
+                $dbGroupRights = $this->groupRightModel->getPanelRightsForIdGroup($idGroup);
                 
                 foreach($dbGroupRights as $k => $v) {
                     if(array_key_exists($k, $groupRights)) {
@@ -61,10 +141,8 @@ class ActionAuthorizator extends AAuthorizator {
                 }
             }
 
-            $cm->saveToCache(CacheCategories::ACTIONS, $finalRights);
-
             if(array_key_exists($actionName, $finalRights)) {
-                $result = $rights[$actionName];
+                $result = $finalRights[$actionName];
             } else {
                 $result = 0;
             }

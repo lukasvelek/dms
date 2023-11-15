@@ -8,8 +8,9 @@ class Process extends AEntity {
     private ?int $workflowStatus;
     private int $type;
     private int $status;
+    private int $idAuthor;
 
-    public function __construct(int $id, string $dateCreated, ?int $idDocument, ?int $workflow1, ?int $workflow2, ?int $workflow3, ?int $workflow4, ?int $workflowStatus, int $type, int $status) {
+    public function __construct(int $id, string $dateCreated, ?int $idDocument, ?int $workflow1, ?int $workflow2, ?int $workflow3, ?int $workflow4, ?int $workflowStatus, int $type, int $status, int $idAuthor) {
         parent::__construct($id, $dateCreated);
         
         $this->idDocument = $idDocument;
@@ -21,6 +22,7 @@ class Process extends AEntity {
         $this->workflow[] = $workflow3;
         $this->workflow[] = $workflow4;
         $this->workflowStatus = $workflowStatus;
+        $this->idAuthor = $idAuthor;
     }
 
     public function getIdDocument() {
@@ -58,6 +60,10 @@ class Process extends AEntity {
         }
 
         return $i;
+    }
+
+    public function getIdAuthor() {
+        return $this->idAuthor;
     }
 }
 

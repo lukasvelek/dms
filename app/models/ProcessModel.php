@@ -12,6 +12,52 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getFinishedProcessesWithIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->where('status=:status')
+                   ->setParam(':status', ProcessStatus::FINISHED)
+                   ->explicit(' AND')
+                   ->leftBracket()
+                   ->where('workflow1=:id_user', false, false)
+                   ->orWhere('workflow2=:id_user')
+                   ->orWhere('workflow3=:id_user')
+                   ->orWhere('workflow4=:id_user')
+                   ->rightBracket()
+                   ->setParam(':id_user', $idUser)
+                   ->execute()
+                   ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
+    public function getProcessesWhereIdUserIsAuthor(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->where('id_author=:id_author')
+                   ->andWhereNot('status=:status')
+                   ->setParam(':id_author', $idUser)
+                   ->setParam(':status', ProcessStatus::FINISHED)
+                   ->execute()
+                   ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
     public function updateStatus(int $idProcess, int $status) {
         $qb = $this->qb(__METHOD__);
 
@@ -139,6 +185,7 @@ class ProcessModel extends AModel {
                   ->from('processes')
                   ->where('id_document=:id_document')
                   ->setParam(':id_document', $idDocument)
+                  ->orderBy('id', 'DESC')
                   ->execute()
                   ->fetchSingle();
 
@@ -160,8 +207,9 @@ class ProcessModel extends AModel {
         $workflow3 = $row['workflow3'];
         $workflow4 = $row['workflow4'];
         $workflowStatus = $row['workflow_status'];
+        $idAuthor = $row['id_author'];
 
-        return new Process($id, $dateCreated, $idDocument, $workflow1, $workflow2, $workflow3, $workflow4, $workflowStatus, $type, $status);
+        return new Process($id, $dateCreated, $idDocument, $workflow1, $workflow2, $workflow3, $workflow4, $workflowStatus, $type, $status, $idAuthor);
     }
 }
 

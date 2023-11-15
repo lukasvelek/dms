@@ -2,74 +2,150 @@
 
 namespace DMS\Authorizators;
 
+use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\User;
 
+/**
+ * DocumentAuthorizator checks if a user is allowed to perform an action with metadata.
+ * 
+ * @author Lukas Velek
+ */
 class MetadataAuthorizator extends AAuthorizator {
-    public function __construct(Database $db, Logger $logger) {
-        parent::__construct($db, $logger);
+    /**
+     * The MetadataAuthorizator constructor creates an object
+     */
+    public function __construct(Database $db, Logger $logger, ?User $user) {
+        parent::__construct($db, $logger, $user);
     }
 
-    public function canUserViewMetadata(int $idUser, int $idMetadata) {
-        $row = $this->getRightRow($idUser, $idMetadata);
+    /**
+     * Checks if user is allowed to view metadata
+     * 
+     * @param int $idUser User ID
+     * @param int $idMetadata Metadata ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     * @return bool True if user can view metadata and false if not
+     */
+    public function canUserViewMetadata(int $idUser, int $idMetadata, bool $checkCache = true) {
+        $row = $this->getRightRow($idUser, $idMetadata, 'view', $checkCache);
 
         if(is_null($row)) {
             return false;
         }
 
-        return $row['view'] ? true : false;
+        return $row ? true : false;
     }
 
-    public function canUserEditMetadata(int $idUser, int $idMetadata) {
-        $row = $this->getRightRow($idUser, $idMetadata);
+    /**
+     * Checks if user is allowed to edit metadata
+     * 
+     * @param int $idUser User ID
+     * @param int $idMetadata Metadata ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     * @return bool True if user can edit metadata and false if not
+     */
+    public function canUserEditMetadata(int $idUser, int $idMetadata, bool $checkCache = true) {
+        $row = $this->getRightRow($idUser, $idMetadata, 'edit', $checkCache);
 
         if(is_null($row)) {
             return false;
         }
 
-        return $row['edit'] ? true : false;
+        return $row ? true : false;
     }
 
-    public function canUserViewMetadataValues(int $idUser, int $idMetadata) {
-        $row = $this->getRightRow($idUser, $idMetadata);
+    /**
+     * Checks if user is allowed to view metadata values
+     * 
+     * @param int $idUser User ID
+     * @param int $idMetadata Metadata ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     * @return bool True if user can view metadata values and false if not
+     */
+    public function canUserViewMetadataValues(int $idUser, int $idMetadata, bool $checkCache = true) {
+        $row = $this->getRightRow($idUser, $idMetadata, 'view_values', $checkCache);
 
         if(is_null($row)) {
             return false;
         }
 
-        return $row['view_values'] ? true : false;
+        return $row ? true : false;
     }
 
-    public function canUserEditMetadataValues(int $idUser, int $idMetadata) {
-        $row = $this->getRightRow($idUser, $idMetadata);
+    /**
+     * Checks if user is allowed to edit metadata values
+     * 
+     * @param int $idUser User ID
+     * @param int $idMetadata Metadata ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     * @return bool True if user can edit metadata values and false if not
+     */
+    public function canUserEditMetadataValues(int $idUser, int $idMetadata, bool $checkCache = true) {
+        $row = $this->getRightRow($idUser, $idMetadata, 'edit_values', $checkCache);
 
         if(is_null($row)) {
             return false;
         }
 
-        return $row['edit_values'] ? true : false;
+        return $row ? true : false;
     }
 
-    private function getRightRow(int $idUser, int $idMetadata) {
+    /**
+     * Returns a right row from the database
+     * 
+     * @param int $idUser User ID
+     * @param int $idMetadata Metadata ID
+     * @param string $key Metadata key
+     * @param bool $checkCache True if cache should be checked and false if not
+     * @return mixed Row from database
+     */
+    private function getRightRow(int $idUser, int $idMetadata, string $key, bool $checkCache = true) {
         $qb = $this->qb(__METHOD__);
 
-        //$cm = CacheManager::getTemporaryObject('metadata_authorizator');
+        if($checkCache) {
+            $cm = CacheManager::getTemporaryObject(CacheCategories::METADATA);
 
-        
+            $valFromCache = $cm->loadMetadataRight($idUser, $idMetadata, $key);
 
-        $row = $qb->select('*')
-                  ->from('user_metadata_rights')
-                  ->where('id_user=:id_user')
-                  ->andWhere('id_metadata=:id_metadata')
-                  ->setParams(array(
-                    ':id_user' => $idUser,
-                    ':id_metadata' => $idMetadata
-                  ))
-                  ->execute()
-                  ->fetchSingle();
+            if($valFromCache != null) {
+                return $valFromCache;
+            }
 
-        return $row;
+            $row = $qb->select('*')
+                      ->from('user_metadata_rights')
+                      ->where('id_user=:id_user')
+                      ->andWhere('id_metadata=:id_metadata')
+                      ->setParams(array(
+                        ':id_user' => $idUser,
+                        ':id_metadata' => $idMetadata
+                      ))
+                      ->execute()
+                      ->fetchSingle();
+
+            $result = $row[$key];
+
+            if(!is_null($result)) {
+                $cm->saveMetadataRight($idUser, $idMetadata, $key, $result);
+            }
+        } else {
+            $row = $qb->select('*')
+                      ->from('user_metadata_rights')
+                      ->where('id_user=:id_user')
+                      ->andWhere('id_metadata=:id_metadata')
+                      ->setParams(array(
+                        ':id_user' => $idUser,
+                        ':id_metadata' => $idMetadata
+                      ))
+                      ->execute()
+                      ->fetchSingle();
+
+            $result = $row[$key];
+        }
+
+        return $result;
     }
 }
 

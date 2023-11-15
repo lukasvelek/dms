@@ -3,3 +3,4 @@ cache/*
 config.local.php
 app/core/install
 flow diagrams/
+files/

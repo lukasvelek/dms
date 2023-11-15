@@ -54,14 +54,32 @@ class Documents extends APresenter {
             $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
         }
 
+        $documentGrid = '';
+        $folderList = '';
+        
+        $app->logger->logFunction(function() use (&$documentGrid, $idFolder) {
+            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder);
+        }, __METHOD__);
+
+        $app->logger->logFunction(function() use (&$folderList, $idFolder) {
+            $folderList = $this->internalCreateFolderList($idFolder);
+        }, __METHOD__);
+
+        $searchField = '
+            <input type="text" id="q" placeholder="Search" oninput="ajaxSearch(this.value, \'' . ($idFolder ?? 'null') . '\');">
+            <script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
+            <script type="text/javascript" src="js/DocumentAjaxBulkActions.js"></script>
+        ';
+
         $data = array(
             '$PAGE_TITLE$' => 'Documents',
-            '$DOCUMENT_GRID$' => $this->internalCreateStandardDocumentGrid($idFolder),
-            '$BULK_ACTION_CONTROLLER$' => $this->internalPrepareDocumentBulkActions(),
+            '$DOCUMENT_GRID$' => $documentGrid,
+            '$BULK_ACTION_CONTROLLER$' => ''/*$this->internalPrepareDocumentBulkActions()*/,
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
-            '$FOLDER_LIST$' => $this->internalCreateFolderList($idFolder)
+            '$FOLDER_LIST$' => $folderList,
+            '$SEARCH_FIELD$' => $searchField
         );
 
         $this->templateManager->fill($data, $template);
@@ -122,98 +140,23 @@ class Documents extends APresenter {
     }
 
     private function internalCreateStandardDocumentGrid(?int $idFolder) {
-        global $app;
-
-        $tb = TableBuilder::getTemporaryObject();
-
-        $headers = array(
-            'Actions',
-            'Name',
-            'Author',
-            'Status',
-            'Folder'
-        );
-
-        $headerRow = null;
-        
-        if($idFolder != null) {
-            $documents = $app->documentModel->getStandardDocumentsInIdFolder($idFolder);
-        } else {
-            $documents = $app->documentModel->getStandardDocuments($idFolder);
-        }
-
-        if(empty($documents)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($documents as $document) {
-                $actionLinks = array(
-                    '<input type="checkbox" name="select[]" value="' . $document->getId() . '">',
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
-                );
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $docuRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $docuRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $docuRow->addCol($tb->createCol()->setText($document->getName()))
-                        ->addCol($tb->createCol()->setText($app->userModel->getUserById($document->getIdAuthor())->getFullname()))
-                ;
-
-                $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($app->metadataModel->getMetadataByName('status', 'documents')->getId());
-
-                foreach($dbStatuses as $dbs) {
-                    if($dbs->getValue() == $document->getStatus()) {
-                        $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
-                    }
-                }
-
-                $folderName = '-';
-
-                if($document->getIdFolder() !== NULL) {
-                    $folder = $app->folderModel->getFolderById($document->getIdFolder());
-                    $folderName = $folder->getName();
-                }
-
-                $docuRow->addCol($tb->createCol()->setText($folderName));
-
-                $tb->addRow($docuRow);
-            }
-        }
-
-        return $tb->build();
+        return '
+            <script type="text/javascript">
+            ajaxLoadDocuments("' . ($idFolder ?? 'null') . '");
+            </script> 
+            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+        ';
     }
 
     protected function performBulkAction() {
         global $app;
 
-        if(!isset($_POST['select'])) {
+        if(!isset($_GET['select'])) {
             $app->redirect('UserModule:Documents:showAll');
         }
 
-        $ids = $_POST['select'];
-        $action = htmlspecialchars($_POST['action']);
+        $ids = $_GET['select'];
+        $action = htmlspecialchars($_GET['action']);
 
         if($action == '-') {
             $app->redirect('UserModule:Documents:showAll');
@@ -343,7 +286,7 @@ class Documents extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')->setEncType()
             ->addElement($fb->createLabel()->setText('Document name')
                                            ->setFor('name'))
             ->addElement($fb->createInput()->setType('text')
@@ -369,7 +312,9 @@ class Documents extends APresenter {
                                            ->setText('Folder'))
             ->addElement($fb->createSelect()->setName('folder')
                                             ->addOptionsBasedOnArray($folders))
-            
+            ->addElement($fb->createLabel()->setFor('file')
+                                           ->setText('File'))
+            ->addElement($fb->createInput()->setType('file')->setName('file'))
            ;
 
         foreach($metadata as $name => $d) {
@@ -446,6 +391,10 @@ class Documents extends APresenter {
             $data['id_folder'] = $idFolder;
         }
 
+        if(isset($_FILES['file'])) {
+            $data['file'] = $_FILES['file']['name'];
+        }
+
         unset($_POST['name']);
         unset($_POST['manager']);
         unset($_POST['status']);
@@ -456,6 +405,10 @@ class Documents extends APresenter {
 
         $data = array_merge($data, $customMetadata);
 
+        if(isset($data['file'])) {
+            $app->fsManager->uploadFile($_FILES['file'], $data['file']);
+        }
+        
         $app->documentModel->insertNewDocument($data);
 
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
@@ -484,7 +437,7 @@ class Documents extends APresenter {
         global $app;
 
         foreach($ids as $id) {
-            $app->processComponent->startProcess(ProcessTypes::DELETE, $id);
+            $app->processComponent->startProcess(ProcessTypes::DELETE, $id, $app->user->getId());
         }
 
         echo('<script type="text/javascript">alert("Process has started"); location.href = "?page=UserModule:Documents:showAll";</script>');
@@ -530,11 +483,12 @@ class Documents extends APresenter {
         global $app;
         
         $list = array(
-            '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showAll', 'Main folder (All files)') . '<br>',
-            '<hr>'
+            'null1' => '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showAll', 'Main folder (All files)') . '<br>',
+            'null2' => '<hr>'
         );
         
         $folders = $app->folderModel->getAllFolders();
+
         foreach($folders as $folder) {
             $this->_createFolderList($folder, $list, 0);
         }
@@ -560,8 +514,10 @@ class Documents extends APresenter {
             $list[$folder->getId()] = $spaces . $folderLink . '<br>';
         }
 
-        foreach($childFolders as $cf) {
-            $this->_createFolderList($cf, $list, $level + 1);
+        if(count($childFolders) > 0) {
+            foreach($childFolders as $cf) {
+                $this->_createFolderList($cf, $list, $level + 1);
+            }
         }
     }
 }

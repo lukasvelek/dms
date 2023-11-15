@@ -8,16 +8,28 @@ use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Models\DocumentModel;
+use DMS\Models\GroupModel;
+use DMS\Models\GroupUserModel;
+use DMS\Models\ProcessModel;
 
 class ProcessComponent extends AComponent {
-    public function __construct(Database $db, Logger $logger) {
+    private ProcessModel $processModel;
+    private GroupModel $groupModel;
+    private GroupUserModel $groupUserModel;
+    private DocumentModel $documentModel;
+
+    public function __construct(Database $db, Logger $logger, ProcessModel $processModel, GroupModel $groupModel, GroupUserModel $groupUserModel, DocumentModel $documentModel) {
         parent::__construct($db, $logger);
+
+        $this->processModel = $processModel;
+        $this->groupModel = $groupModel;
+        $this->groupUserModel = $groupUserModel;
+        $this->documentModel = $documentModel;
     }
 
     public function getProcessesWhereIdUserIsCurrentOfficer(int $idUser) {
-        global $app;
-
-        $userProcesses = $app->processModel->getProcessesWithIdUser($idUser);
+        $userProcesses = $this->processModel->getProcessesWithIdUser($idUser);
 
         $processes = [];
 
@@ -47,9 +59,7 @@ class ProcessComponent extends AComponent {
         return $processes;
     }
 
-    public function startProcess(int $type, int $idDocument) {
-        global $app;
-
+    public function startProcess(int $type, int $idDocument, int $idAuthor) {
         $data = [];
 
         if($this->checkIfDocumentIsInProcess($idDocument)) {
@@ -59,10 +69,10 @@ class ProcessComponent extends AComponent {
 
         switch($type) {
             case ProcessTypes::DELETE:
-                $archmanIdGroup = $app->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
-                $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
+                $archmanIdGroup = $this->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
+                $groupUsers = $this->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
 
-                $document = $app->documentModel->getDocumentById($idDocument);
+                $document = $this->documentModel->getDocumentById($idDocument);
                 $data['workflow1'] = $document->getIdManager();
 
                 foreach($groupUsers as $gu) {
@@ -79,47 +89,46 @@ class ProcessComponent extends AComponent {
         $data['id_document'] = $idDocument;
         $data['type'] = $type;
         $data['workflow_status'] = '1';
+        $data['id_author'] = $idAuthor;
 
-        $app->processModel->insertNewProcess($data);
+        $this->processModel->insertNewProcess($data);
         
-        $app->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
+        $this->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
         
         return true;
     }
 
     public function moveProcessToNextWorkflowUser(int $idProcess) {
-        global $app;
-
-        $process = $app->processModel->getProcessById($idProcess);
+        $process = $this->processModel->getProcessById($idProcess);
 
         $newWfStatus = $process->getStatus() + 1;
 
-        $app->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
+        $this->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
 
-        $app->logger->info('Updated workflow status of process #' . $idProcess, __METHOD__);
+        $this->logger->info('Updated workflow status of process #' . $idProcess, __METHOD__);
 
         return true;
     }
 
     public function endProcess(int $idProcess) {
-        global $app;
+        $this->processModel->updateStatus($idProcess, ProcessStatus::FINISHED);
 
-        $app->processModel->updateStatus($idProcess, ProcessStatus::FINISHED);
-
-        $app->logger->info('Ended process #' . $idProcess, __METHOD__);
+        $this->logger->info('Ended process #' . $idProcess, __METHOD__);
 
         return true;
     }
 
-    private function checkIfDocumentIsInProcess(int $idDocument) {
-        global $app;
-
-        $process = $app->processModel->getProcessForIdDocument($idDocument);
+    public function checkIfDocumentIsInProcess(int $idDocument) {
+        $process = $this->processModel->getProcessForIdDocument($idDocument);
 
         if($process === NULL) {
             return false;
         } else {
-            return true;
+            if($process->getStatus() == ProcessStatus::FINISHED) {
+                return false;
+            } else {
+                return true;
+            }
         }
     }
 }
