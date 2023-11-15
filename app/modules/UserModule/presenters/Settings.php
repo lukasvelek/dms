@@ -884,6 +884,7 @@ class Settings extends APresenter {
         global $app;
 
         $systemVersion = $app::SYSTEM_VERSION;
+        $systemBuildDate = $app::SYSTEM_BUILD_DATE;
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -894,6 +895,7 @@ class Settings extends APresenter {
                     <div class="row">
                         <div class="col-md">
                             <p><b>System version: </b>' . $systemVersion . '</p>
+                            <p><b>System build date: </b>' . $systemBuildDate . '</p>
                         </div>
                     </div>
                  </div>';
