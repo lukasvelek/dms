@@ -124,7 +124,11 @@ class ProcessComponent extends AComponent {
         if($process === NULL) {
             return false;
         } else {
-            return true;
+            if($process->getStatus() == ProcessStatus::FINISHED) {
+                return false;
+            } else {
+                return true;
+            }
         }
     }
 }

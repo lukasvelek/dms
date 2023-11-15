@@ -185,6 +185,7 @@ class ProcessModel extends AModel {
                   ->from('processes')
                   ->where('id_document=:id_document')
                   ->setParam(':id_document', $idDocument)
+                  ->orderBy('id', 'DESC')
                   ->execute()
                   ->fetchSingle();
 
