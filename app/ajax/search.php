@@ -12,6 +12,7 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
     $tb = TableBuilder::getTemporaryObject();
 
     $headers = array(
+        '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
         'Actions',
         'Name',
         'Author',
@@ -94,6 +95,7 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
     $tb = TableBuilder::getTemporaryObject();
 
     $headers = array(
+        '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
         'Actions',
         'Name',
         'Author',
@@ -120,7 +122,6 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
     } else {
         foreach($documents as $document) {
             $actionLinks = array(
-                '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawBulkActions()">',
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
             );
@@ -146,6 +147,8 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
 
             $docuRow = $tb->createRow();
 
+            $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawBulkActions()" onchange="drawBulkActions()">'));
+            
             foreach($actionLinks as $actionLink) {
                 $docuRow->addCol($tb->createCol()->setText($actionLink));
             }

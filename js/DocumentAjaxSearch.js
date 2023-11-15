@@ -32,3 +32,17 @@ async function ajaxLoadDocuments(id_folder) {
         $('#documents-loading').hide();
     });
 }
+
+function selectAllDocumentEntries() {
+    var selectAllElem = $('#select-all:checked').val();
+
+    
+    if(selectAllElem == "on") {
+        $('#select:not(:checked)').prop('checked', true);
+        drawBulkActions();
+    } else {
+        $('#select:checked').prop('checked', false);
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
