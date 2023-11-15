@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\ScriptLoader;
@@ -408,7 +409,9 @@ class SingleDocument extends APresenter {
             'Status' => $status,
             'Group' => $this->createGroupLink($document->getIdGroup()),
             'Deleted?' => $document->getIsDeleted() ? 'Yes' : 'No',
-            'Folder' => $folder
+            'Folder' => $folder,
+            'Shred year' => $document->getShredYear(),
+            'Action after shredding' => DocumentAfterShredActions::$texts[$document->getAfterShredAction()]
         );
 
         foreach($document->getMetadata() as $k => $v) {

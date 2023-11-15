@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\TemplateManager;
@@ -260,6 +261,22 @@ class Documents extends APresenter {
             $folders[] = $folder;
         }
 
+        $shredYears = [];
+        for($i = 1950; $i < 2200; $i++) {
+            $shredYears[] = array(
+                'value' => $i,
+                'text' => $i
+            );
+        }
+
+        $afterShredActions = [];
+        foreach(DocumentAfterShredActions::$texts as $value => $text) {
+            $afterShredActions[] = array(
+                'value' => $value,
+                'text' => $text
+            );
+        }
+
         $customMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
         // name = array('text' => 'text', 'options' => 'options from metadata_values')
         $metadata = [];
@@ -287,34 +304,51 @@ class Documents extends APresenter {
         $fb = FormBuilder::getTemporaryObject();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')->setEncType()
+
             ->addElement($fb->createLabel()->setText('Document name')
                                            ->setFor('name'))
             ->addElement($fb->createInput()->setType('text')
                                            ->setName('name')
                                            ->require())
+
             ->addElement($fb->createLabel()->setText('Manager')
                                            ->setFor('manager'))
             ->addElement($fb->createSelect()->setName('manager')
                                             ->addOptionsBasedOnArray($managers))
+
             ->addElement($fb->createLabel()->setText('Status')
                                            ->setFor('status'))
             ->addElement($fb->createSelect()->setName('status')
                                             ->addOptionsBasedOnArray($statuses))
+
             ->addElement($fb->createLabel()->setText('Group')
                                            ->setFor('group'))
             ->addElement($fb->createSelect()->setName('group')
                                             ->addOptionsBasedOnArray($groups))
+
             ->addElement($fb->createLabel()->setFor('rank')
                                            ->setText('Rank'))
             ->addElement($fb->createSelect()->setName('rank')
                                             ->addOptionsBasedOnArray($ranks))
+
             ->addElement($fb->createLabel()->setFor('folder')
                                            ->setText('Folder'))
             ->addElement($fb->createSelect()->setName('folder')
                                             ->addOptionsBasedOnArray($folders))
+
             ->addElement($fb->createLabel()->setFor('file')
                                            ->setText('File'))
             ->addElement($fb->createInput()->setType('file')->setName('file'))
+
+            ->addElement($fb->createLabel()->setFor('shred_year')
+                                           ->setText('Shred year'))
+            ->addElement($fb->createSelect()->setName('shred_year')
+                                            ->addOptionsBasedOnArray($shredYears))
+
+            ->addElement($fb->createLabel()->setFor('after_shred_action')
+                                           ->setText('Action after shredding'))
+            ->addElement($fb->createSelect()->setName('after_shred_action')
+                                            ->addOptionsBasedOnArray($afterShredActions))
            ;
 
         foreach($metadata as $name => $d) {
@@ -386,6 +420,8 @@ class Documents extends APresenter {
         $data['status'] = htmlspecialchars($_POST['status']);
         $data['id_group'] = htmlspecialchars($idGroup);
         $data['id_author'] = $app->user->getId();
+        $data['shred_year'] = htmlspecialchars($_POST['shred_year']);
+        $data['after_shred_action'] = htmlspecialchars($_POST['after_shred_action']);
 
         if($idFolder != '-1') {
             $data['id_folder'] = $idFolder;
@@ -400,6 +436,8 @@ class Documents extends APresenter {
         unset($_POST['status']);
         unset($_POST['group']);
         unset($_POST['folder']);
+        unset($_POST['shred_year']);
+        unset($_POST['after_shred_action']);
 
         $customMetadata = $_POST;
 

@@ -13,10 +13,12 @@ class Document extends AEntity {
     private string $rank;
     private ?int $idFolder;
     private ?string $file;
+    private string $shredYear;
+    private string $afterShredAction;
 
     private array $metadata;
     
-    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted, string $rank, ?int $idFolder, ?string $file = null) {
+    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted, string $rank, ?int $idFolder, ?string $file, string $shredYear, string $afterShredAction) {
         parent::__construct($id, $dateCreated);
 
         $this->idAuthor = $idAuthor;
@@ -29,6 +31,8 @@ class Document extends AEntity {
         $this->rank = $rank;
         $this->idFolder = $idFolder;
         $this->file = $file;
+        $this->shredYear = $shredYear;
+        $this->afterShredAction = $afterShredAction;
     }
 
     public function getIdAuthor() {
@@ -85,6 +89,14 @@ class Document extends AEntity {
 
     public function getFile() {
         return $this->file;
+    }
+
+    public function getShredYear() {
+        return $this->shredYear;
+    }
+
+    public function getAfterShredAction() {
+        return $this->afterShredAction;
     }
 }
 
