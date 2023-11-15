@@ -41,6 +41,12 @@ abstract class AAuthorizator {
         $this->idUser = $idUser;
     }
 
+    /**
+     * Returns a QueryBuilder instance
+     * 
+     * @param string $methodName Name of the calling method - for logging purposes
+     * @return QueryBuilder QueryBuilder instance
+     */
     protected function qb(string $methodName) {
         $qb = $this->db->createQueryBuilder();
         $qb->setMethod($methodName);

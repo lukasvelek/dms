@@ -11,12 +11,28 @@ use DMS\Models\DocumentModel;
 use DMS\Models\ProcessModel;
 use DMS\Models\UserModel;
 
+/**
+ * DocumentAuthorizator checks if a action is allowed to be performed on a document.
+ * 
+ * @author Lukas Velek
+ */
 class DocumentAuthorizator extends AAuthorizator {
     private DocumentModel $documentModel;
     private UserModel $userModel;
     private ProcessModel $processModel;
     private ProcessComponent $processComponent;
 
+    /**
+     * The DocumentAuthorizator constructor creates an object
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param DocumentModel $documentModel DocumentModel instance
+     * @param UserModel $userModel UserModel instance
+     * @param ProcessModel $processModel ProcessModel instance
+     * @param null|User $user User instance
+     * @param ProcessComponent $processComponent ProcessComponent instance
+     */
     public function __construct(Database $db, Logger $logger, DocumentModel $documentModel, UserModel $userModel, ProcessModel $processModel, ?User $user, ProcessComponent $processComponent) {
         parent::__construct($db, $logger, $user);
         $this->documentModel = $documentModel;
@@ -25,6 +41,12 @@ class DocumentAuthorizator extends AAuthorizator {
         $this->processComponent = $processComponent;
     }
 
+    /**
+     * Checks if a document can be archived
+     * 
+     * @param int $id Document ID
+     * @return bool True if the document can be archived and false if not
+     */
     public function canArchive(int $id) {
         $document = $this->documentModel->getDocumentById($id);
 
@@ -39,6 +61,12 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if a document can be approved for archivation
+     * 
+     * @param int $id Document ID
+     * @return bool True if the document can be approved for archivation and false if not
+     */
     public function canApproveArchivation(int $id) {
         $document = $this->documentModel->getDocumentById($id);
 
@@ -54,6 +82,12 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if a document can be declined for archivation
+     * 
+     * @param int $id Document ID
+     * @return bool True if the document can be declined for archivation and false if not
+     */
     public function canDeclineArchivation(int $id) {
         $document = $this->documentModel->getDocumentById($id);
 
@@ -69,6 +103,12 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if a document can be deleted
+     * 
+     * @param int $id Document ID
+     * @return bool True if the document can be deleted and false if not
+     */
     public function canDeleteDocument(int $id) {
         $document = $this->documentModel->getDocumentById($id);
 

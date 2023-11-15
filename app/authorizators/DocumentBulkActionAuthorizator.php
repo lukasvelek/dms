@@ -6,10 +6,21 @@ use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\User;
 
+/**
+ * DocumentBulkActionAuthorizator checks if a bulk action can be displayed.
+ * 
+ * @author Lukas Velek
+ */
 class DocumentBulkActionAuthorizator extends AAuthorizator {
     private DocumentAuthorizator $documentAuthorizator;
     private BulkActionAuthorizator $bulkActionAuthorizator;
 
+    /**
+     * The DocumentBulkActionAuthorizator constructor creates an object
+     * 
+     * @param DocumentAuthorizator $documentAuthorizator DocumentAuthorizator instance
+     * @param BulkActionAuthorizator $bulkActionAuthorizator BulkActionAuthorizator instance
+     */
     public function __construct(Database $db, Logger $logger, ?User $user, DocumentAuthorizator $documentAuthorizator, BulkActionAuthorizator $bulkActionAuthorizator) {
         parent::__construct($db, $logger, $user);
 
@@ -17,6 +28,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         $this->bulkActionAuthorizator = $bulkActionAuthorizator;
     }
 
+    /**
+     * Checks if bulk action "Approve archivation" can be displayed.
+     * 
+     * @param int $idDocument Document ID
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache shulkd be checked and false if not
+     */
     public function canApproveArchivation(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
         if(!$this->assignUser($idUser)) {
             return false;
@@ -33,6 +51,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if bulk action "Decline archivation" can be displayed.
+     * 
+     * @param int $idDocument Document ID
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache shulkd be checked and false if not
+     */
     public function canDeclineArchivation(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
         if(!$this->assignUser($idUser)) {
             return false;
@@ -49,6 +74,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if bulk action "Archive" can be displayed.
+     * 
+     * @param int $idDocument Document ID
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache shulkd be checked and false if not
+     */
     public function canArchive(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
         if(!$this->assignUser($idUser)) {
             return false;
@@ -65,6 +97,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if bulk action "Delete document" can be displayed.
+     * 
+     * @param int $idDocument Document ID
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache shulkd be checked and false if not
+     */
     public function canDelete(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
         if(!$this->assignUser($idUser)) {
             return false;
@@ -81,6 +120,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Tries to assign user either from AAuthorizator or from passed variable
+     * 
+     * @param int $idUser User ID
+     * @return bool True if user has been assigned and false if not
+     */
     private function assignUser(?int &$idUser) {
         if($this->idUser == null) {
             if($idUser == null) {

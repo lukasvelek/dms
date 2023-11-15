@@ -11,11 +11,26 @@ use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\UserRightModel;
 
+/**
+ * ActionAuthorizator checks if an entity is allowed to perform an action.
+ * 
+ * @author Lukas Velek
+ */
 class ActionAuthorizator extends AAuthorizator {
     private UserRightModel $userRightModel;
     private GroupUserModel $groupUserModel;
     private GroupRightModel $groupRightModel;
 
+    /**
+     * ActionAuthorizator constructor creates an object
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param UserRightModel $userRightModel UserRightModel instance
+     * @param GroupUserModel $groupUserModel GroupUserModel instance
+     * @param GroupRightModel $groupRightModel GropuRightModel instance
+     * @param null|User $user User instance or null
+     */
     public function __construct(Database $db, Logger $logger, UserRightModel $userRightModel, GroupUserModel $groupUserModel, GroupRightModel $groupRightModel, ?User $user) {
         parent::__construct($db, $logger, $user);
 
@@ -24,6 +39,14 @@ class ActionAuthorizator extends AAuthorizator {
         $this->groupRightModel = $groupRightModel;
     }
 
+    /**
+     * This method checks if a user (currently login or other) is allowed to perform an action of a name. It can also check cache for faster performance.
+     * 
+     * @param string $actionName Action name
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     * @return bool True if user is allowed to perform the action and false if not
+     */
     public function checkActionRight(string $actionName, ?int $idUser = null, bool $checkCache = true) {
         if(is_null($idUser)) {
             if(empty($this->idUser)) {

@@ -11,11 +11,23 @@ use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\UserRightModel;
 
+/**
+ * PanelAuthorizator checks if a panel is visible to a user.
+ * 
+ * @author Lukas Velek
+ */
 class PanelAuthorizator extends AAuthorizator {
     private UserRightModel $userRightModel;
     private GroupUserModel $groupUserModel;
     private GroupRightModel $groupRightModel;
 
+    /**
+     * The PanelAuthorizator constructor creates an object
+     * 
+     * @param UserRightModel $userRightModel UserRightModel instance
+     * @param GroupUserModel $groupUserModel GroupUserModel instance
+     * @param GroupRightModel $groupRightModel GroupRightModel instance
+     */
     public function __construct(Database $db, Logger $logger, UserRightModel $userRightModel, GroupUserModel $groupUserModel, GroupRightModel $groupRightModel, ?User $user) {
         parent::__construct($db, $logger, $user);
 
@@ -24,6 +36,14 @@ class PanelAuthorizator extends AAuthorizator {
         $this->groupRightModel = $groupRightModel;
     }
 
+    /**
+     * Checks if a panel is visible to a user.
+     * 
+     * @param string $panelName Panel name
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     * @return bool True if panel is visible and false if not
+     */
     public function checkPanelRight(string $panelName, ?int $idUser = null, bool $checkCache = true) {
         if(is_null($idUser)) {
             if(empty($this->idUser)) {

@@ -11,11 +11,26 @@ use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\UserRightModel;
 
+/**
+ * BulkActionAuthorizator checks if an entity is allowed to perform a bulk action.
+ * 
+ * @author Lukas Velek
+ */
 class BulkActionAuthorizator extends AAuthorizator {
     private UserRightModel $userRightModel;
     private GroupUserModel $groupUserModel;
     private GroupRightModel $groupRightModel;
 
+    /**
+     * BulkActionAuthorizator constructor creates an object
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param UserRightModel $userRightModel UserRightModel instance
+     * @param GroupUserModel $groupUserModel GroupUserModel instance
+     * @param GroupRightModel $groupRightModel GropuRightModel instance
+     * @param null|User $user User instance or null
+     */
     public function __construct(Database $db, Logger $logger, UserRightModel $userRightModel, GroupUserModel $groupUserModel, GroupRightModel $groupRightModel, ?User $user) {
         parent::__construct($db, $logger, $user);
 
@@ -24,6 +39,14 @@ class BulkActionAuthorizator extends AAuthorizator {
         $this->groupRightModel = $groupRightModel;
     }
 
+    /**
+     * This method checks if a user (currently login or other) is allowed to perform a bulk action of a name. It can also check cache for faster performance.
+     * 
+     * @param string $bulkActionName Bulk action name
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     * @return bool True if user is allowed to perform the bulk action and false if not
+     */
     public function checkBulkActionRight(string $bulkActionName, ?int $idUser = null, bool $checkCache = true) {
         if(is_null($idUser)) {
             if(empty($this->idUser)) {
