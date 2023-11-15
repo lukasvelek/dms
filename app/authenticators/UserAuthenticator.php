@@ -40,6 +40,7 @@ class UserAuthenticator extends AAuthenticator {
 
         if($row !== FALSE && !is_null($row)) {
             if(password_verify($password, $row['password'])) {
+                $this->logger->info('Successfully authenticated user #' . $row['id']);
                 return $row['id'];
             } else {
                 return false;
@@ -55,6 +56,8 @@ class UserAuthenticator extends AAuthenticator {
      * @return bool True
      */
     public function logoutCurrentUser() {
+        $this->logger->info('Logging out current user');
+        
         CacheManager::invalidateAllCache();
 
         unset($_SESSION['id_current_user']);
