@@ -16,8 +16,8 @@ async function sendComment(id_author, id_document, can_delete) {
                 canDelete: can_delete
             }
         })
-        .done(function(data) {
-            $('#comments').prepend(data);
+        .done(async function(data) {
+            await reloadComments(id_document, can_delete);
             document.getElementById("text").value = "";
             $('#cover').hide();
         });
@@ -28,8 +28,10 @@ function showLoading() {
     $("#comments").append('<br><br><br><p style="text-align: center">Loading...</p>');
 }
 
-async function loadComments(id_document, can_delete) {
-    await sleep(500);
+async function loadComments(id_document, can_delete, canSleep = true) {
+    if(canSleep) {
+        await sleep(500);
+    }
     
     $.get("app/ajax/get-comments.php", {
         idDocument: id_document,
@@ -41,7 +43,7 @@ async function loadComments(id_document, can_delete) {
     });
 }
 
-async function deleteComment(id_comment) {
+async function deleteComment(id_comment, id_document, can_delete) {
     await sleep(500);
 
     $.ajax({
@@ -51,7 +53,15 @@ async function deleteComment(id_comment) {
             idComment: id_comment
         }
     })
-    .done(function() {
+    .done(async function() {
         $('#comment' + id_comment).remove();
+
+        await reloadComments(id_document, can_delete);
     });
+}
+
+async function reloadComments(id_document, can_delete) {
+    $('#comments').empty();
+
+    await loadComments(id_document, can_delete, false);
 }

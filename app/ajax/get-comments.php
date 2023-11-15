@@ -1,6 +1,5 @@
 <?php
 
-use DMS\Constants\UserActionRights;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\UI\LinkBuilder;
 
@@ -27,7 +26,7 @@ if(isset($_GET['idDocument']) && isset($_GET['canDelete'])) {
 
             if($canDelete == '1') {
                 //$deleteLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:askToDeleteComment', 'id_document' => $idDocument, 'id_comment' => $comment->getId()), 'Delete');
-                $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteComment(' . $comment->getId() . ');">Delete</a>';
+                $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteComment(\'' . $comment->getId() . '\', \'' . $idDocument . '\', \'' . $canDelete . '\');">Delete</a>';
 
                 $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
             } else {
