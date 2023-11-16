@@ -30,6 +30,8 @@ class DeleteProcess implements IProcessComponent {
 
         $this->process = $this->processModel->getProcessById($idProcess);
         $this->document = $this->documentModel->getDocumentById($this->process->getIdDocument());
+
+        $this->idAuthor = $this->process->getIdAuthor();
     }
 
     public function work() {

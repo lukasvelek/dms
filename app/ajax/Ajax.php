@@ -104,7 +104,7 @@ $userModel = new UserModel($db, $logger);
 $userRightModel = new UserRightModel($db, $logger);
 $documentModel = new DocumentModel($db, $logger);
 $groupModel = new GroupModel($db, $logger);
-$groupUserModel = new GroupUserModel($db, $logger);
+$groupUserModel = new GroupUserModel($db, $logger, $groupModel);
 $processModel = new ProcessModel($db, $logger);
 $groupRightModel = new GroupRightModel($db, $logger);
 $metadataModel = new MetadataModel($db, $logger);
@@ -123,7 +123,7 @@ $panelAuthorizator = new PanelAuthorizator($db, $logger, $userRightModel, $group
 $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
-$metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user);
+$metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
 

@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Components\Process\DeleteProcess;
+use DMS\Components\Process\ShreddingProcess;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\ScriptLoader;
@@ -148,6 +149,11 @@ class SingleProcess extends APresenter {
                 $dp = new DeleteProcess($id, $app->processComponent, $app->documentModel, $app->processModel, $app->groupModel, $app->groupUserModel);
                 $dp->work();
                 break;
+            
+            case ProcessTypes::SHREDDING:
+                $sp = new ShreddingProcess($id, $app->processModel, $app->documentModel, $app->processComponent);
+                $sp->work();
+                break;
         }
 
         $app->logger->info('User #' . $app->user->getId() . ' finished process #' . $id, __METHOD__);
@@ -237,6 +243,19 @@ class SingleProcess extends APresenter {
                     if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
                         // is last
                         $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToFinish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
+                    } else {
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToApprove', 'id' => $process->getId()), 'Approve');
+                        $actions[] = '<br>';
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToDecline', 'id' => $process->getId()), 'Decline');
+                    }
+                }
+
+                break;
+
+            case ProcessTypes::SHREDDING:
+                if($idCurrentUser == ($process->getWorkflowStep($process->getWorkflowStatus() - 1))) {
+                    if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToFinish', 'id' => $process->getId()), 'Shred document');
                     } else {
                         $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToApprove', 'id' => $process->getId()), 'Approve');
                         $actions[] = '<br>';

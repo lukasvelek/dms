@@ -82,7 +82,10 @@ class DatabaseInstaller {
                 'is_deleted' => 'INT(2) NOT NULL DEFAULT 0',
                 'rank' => 'VARCHAR(256) NOT NULL',
                 'id_folder' => 'INT(32) NULL',
-                'file' => 'VARCHAR(256) NULL'
+                'file' => 'VARCHAR(256) NULL',
+                'shred_year' => 'VARCHAR(4) NOT NULL',
+                'after_shred_action' => 'VARCHAR(256) NOT NULL',
+                'shredding_status' => 'INT(32) NOT NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -534,6 +537,20 @@ class DatabaseInstaller {
                 'table_name' => 'processes',
                 'name' => 'type',
                 'text' => 'Type',
+                'input_type' => 'select',
+                'length' => '256'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'after_shred_action',
+                'text' => 'Action after shredding',
+                'input_type' => 'select',
+                'length' => '256'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'shredding_status',
+                'text' => 'Shredding status',
                 'input_type' => 'select',
                 'length' => '256'
             )

@@ -231,6 +231,9 @@ class DocumentModel extends AModel {
         $rank = $row['rank'];
         $idFolder = null;
         $file = null;
+        $shredYear = $row['shred_year'];
+        $afterShredAction = $row['after_shred_action'];
+        $shreddingStatus = $row['shredding_status'];
 
         if(isset($row['id_folder'])) {
             $idFolder = $row['id_folder'];
@@ -240,9 +243,9 @@ class DocumentModel extends AModel {
             $file = $row['file'];
         }
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file'));
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status'));
 
-        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file);
+        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus);
         $document->setMetadata($row);
 
         return $document;

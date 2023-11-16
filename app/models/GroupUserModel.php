@@ -7,8 +7,35 @@ use DMS\Core\Logger\Logger;
 use DMS\Entities\GroupUser;
 
 class GroupUserModel extends AModel {
-    public function __construct(Database $db, Logger $logger) {
+    private GroupModel $groupModel;
+
+    public function __construct(Database $db, Logger $logger, GroupModel $groupModel) {
         parent::__construct($db, $logger);
+
+        $this->groupModel = $groupModel;
+    }
+
+    public function isIdUserInAdministratorsGroup(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $idGroup = $this->groupModel->getGroupByCode('ADMINISTRATORS')->getId();
+
+        $row = $qb->select('*')
+                  ->from('group_users')
+                  ->where('id_group=:id_group')
+                  ->andWhere('id_user=:id_user')
+                  ->setParams(array(
+                    ':id_group' => $idGroup,
+                    ':id_user' => $idUser
+                  ))
+                  ->execute()
+                  ->fetch();
+
+        if(is_null($row)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public function updateUserInGroup(int $idGroup, int $idUser, array $data) {

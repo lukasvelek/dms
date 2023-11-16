@@ -84,6 +84,24 @@ class ProcessComponent extends AComponent {
                 }
 
                 break;
+
+            case ProcessTypes::SHREDDING:
+                $archmanIdGroup = $this->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
+                $groupUsers = $this->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
+
+                $document = $this->documentModel->getDocumentById($idDocument);
+                $data['workflow1'] = $document->getIdAuthor();
+                $data['workflow2'] = $document->getIdManager();
+
+                foreach($groupUsers as $gu) {
+                    if($gu->getIsManager()) {
+                        $data['workflow3'] = $gu->getIdUser();
+                        
+                        break;
+                    }
+                }
+
+                break;
         }
 
         $data['id_document'] = $idDocument;
@@ -101,7 +119,7 @@ class ProcessComponent extends AComponent {
     public function moveProcessToNextWorkflowUser(int $idProcess) {
         $process = $this->processModel->getProcessById($idProcess);
 
-        $newWfStatus = $process->getStatus() + 1;
+        $newWfStatus = $process->getWorkflowStatus() + 1;
 
         $this->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
 
