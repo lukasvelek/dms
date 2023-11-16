@@ -15,4 +15,6 @@ $cfg['serialize_cache'] = true; // false does not work yet
 
 $cfg['file_dir'] = '';
 
+$cfg['id_service_user'] = '1'; // id of user used in services
+
 ?>

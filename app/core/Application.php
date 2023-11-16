@@ -137,7 +137,7 @@ class Application {
         
         $serviceManagerCacheManager = new CacheManager($this->cfg['serialize_cache'], CacheCategories::SERVICE_CONFIG);
 
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager);
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent);
 
         //$this->conn->installer->updateDefaultUserPanelRights();
     }
