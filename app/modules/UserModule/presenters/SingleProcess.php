@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Components\Process\DeleteProcess;
 use DMS\Components\Process\ShreddingProcess;
+use DMS\Constants\BulkActionRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\ScriptLoader;
@@ -123,7 +124,7 @@ class SingleProcess extends APresenter {
 
         $app->logger->info('User #' . $app->user->getId() . ' approved process #' . $id, __METHOD__);
 
-        $app->redirect('UserModule:Processes:showAll');
+        $app->redirect('UserModule:SingleProcess:showProcess', array('id' => $id));
     }
 
     protected function decline() {
@@ -135,7 +136,7 @@ class SingleProcess extends APresenter {
 
         $app->logger->info('User #' . $app->user->getId() . ' declined process #' . $id, __METHOD__);
 
-        $app->redirect('UserModule:Processes:showAll');
+        $app->redirect('UserModule:SingleProcess:showProcess', array('id' => $id));
     }
 
     protected function finish() {
@@ -247,11 +248,11 @@ class SingleProcess extends APresenter {
 
                     if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
                         // is last
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToFinish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:finish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
                     } else {
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToApprove', 'id' => $process->getId()), 'Approve');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:approve', 'id' => $process->getId()), 'Approve');
                         $actions[] = '<br>';
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToDecline', 'id' => $process->getId()), 'Decline');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:decline', 'id' => $process->getId()), 'Decline');
                     }
                 }
 
@@ -260,11 +261,11 @@ class SingleProcess extends APresenter {
             case ProcessTypes::SHREDDING:
                 if($idCurrentUser == ($process->getWorkflowStep($process->getWorkflowStatus() - 1))) {
                     if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToFinish', 'id' => $process->getId()), 'Shred document');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:finish', 'id' => $process->getId()), 'Shred document');
                     } else {
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToApprove', 'id' => $process->getId()), 'Approve');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:approve', 'id' => $process->getId()), 'Approve');
                         $actions[] = '<br>';
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToDecline', 'id' => $process->getId()), 'Decline');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:decline', 'id' => $process->getId()), 'Decline');
                     }
                 }
 
