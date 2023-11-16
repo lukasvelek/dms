@@ -10,6 +10,7 @@ use DMS\Components\ProcessComponent;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\ProcessComment;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
@@ -17,6 +18,7 @@ use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\MetadataModel;
+use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\TableModel;
@@ -33,7 +35,13 @@ function loadDependencies2(array &$dependencies, string $dir) {
     unset($content[0]);
     unset($content[1]);
 
-    $skip = array($dir . '\\dependencies.php', $dir . '\\dms_loader.php', $dir . '\\install', $dir . '\\Ajax.php', $dir . '\\search.php', $dir . '\\modules');
+    $skip = array(
+        $dir . '\\dependencies.php',
+        $dir . '\\dms_loader.php',
+        $dir . '\\install',
+        $dir . '\\modules',
+        $dir . '\\ajax'
+    );
 
     foreach($content as $c) {
         /* SKIP TEMPLATES (html files) */
@@ -112,6 +120,7 @@ $tableModel = new TableModel($db, $logger);
 $folderModel = new FolderModel($db, $logger);
 $serviceModel = new ServiceModel($db, $logger);
 $documentCommentModel = new DocumentCommentModel($db, $logger);
+$processCommentModel = new ProcessCommentModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);
