@@ -40,9 +40,9 @@ if(isset($_GET['idDocuments'])) {
     $canDeclineArchivation = null;
     $canArchive = null;
     $canSuggestShredding = null;
-    $canAcceptShredding = null;
+    /*$canApproveShredding = null;
     $canDeclineShredding = null;
-    $canShred = null;
+    $canShred = null;*/
     
     if(!is_null($user)) {
         foreach($idDocuments as $idDocument) {
@@ -85,7 +85,7 @@ if(isset($_GET['idDocuments'])) {
                 $canSuggestShredding = false;
             }
 
-            if($documentBulkActionAuthorizator->canApproveShredding($idDocument, null, false) &&
+            /*if($documentBulkActionAuthorizator->canApproveShredding($idDocument, null, false) &&
               (is_null($canApproveShredding) || $canApproveShredding)) {
                 $canApproveShredding = true;
             } else {
@@ -104,7 +104,7 @@ if(isset($_GET['idDocuments'])) {
                 $canShred = true;
             } else {
                 $canShred = false;
-            }
+            }*/
         }
     }
 
@@ -193,7 +193,7 @@ if(isset($_GET['idDocuments'])) {
         $bulkActions['Suggest shredding'] = $link;
     }
 
-    if($canApproveShredding) {
+    /*if($canApproveShredding) {
         $link = '?page=UserModule:Documents:performBulkAction&';
         
         $i = 0;
@@ -242,7 +242,7 @@ if(isset($_GET['idDocuments'])) {
         $link .= '&action=shred';
 
         $bulkActions['Shred'] = $link;
-    }
+    }*/
 
     $i = 0;
     $x = 0;

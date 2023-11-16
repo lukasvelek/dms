@@ -44,7 +44,7 @@ class Application {
     public const URL_DOCUMENTS_PAGE = 'UserModule:Documents:showAll';
     public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
 
-    public const SYSTEM_VERSION = '1.2';
+    public const SYSTEM_VERSION = '1.3_beta';
     public const SYSTEM_BUILD_DATE = '2023/11/15';
 
     public array $cfg;
