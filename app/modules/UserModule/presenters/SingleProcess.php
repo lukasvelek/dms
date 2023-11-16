@@ -203,6 +203,9 @@ class SingleProcess extends APresenter {
 
         $currentOfficer = ${'workflow' . $process->getWorkflowStatus() . 'User'};
 
+        $document = $app->documentModel->getDocumentById($process->getIdDocument());
+        $documentLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), $document->getName());
+
         $tb ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow 1')->setBold())
                                      ->addCol($tb->createCol()->setText($workflow1User)))
             ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow 2')->setBold())
@@ -217,6 +220,8 @@ class SingleProcess extends APresenter {
                                      ->addCol($tb->createCol()->setText($currentOfficer)))
             ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Author')->setBold())
                                      ->addCol($tb->createCol()->setText($author)))
+            ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Document')->setBold())
+                                     ->addCol($tb->createCol()->setText($documentLink)))
         ;
 
         $table = $tb->build();
