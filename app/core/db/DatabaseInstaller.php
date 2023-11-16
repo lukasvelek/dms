@@ -225,8 +225,21 @@ class DatabaseInstaller {
     }
 
     private function insertDefaultUsers() {
-        $defaultUsersUsernames = array('admin');
+        $defaultUsersUsernames = array('serviceuser', 'admin');
         $insertUsers = array();
+
+        $defaultUserData = array(
+            'serviceuser' => array(
+                'firstname' => 'Service',
+                'lastname' => 'User',
+                'password' => 'serviceuser'
+            ),
+            'admin' => array(
+                'firstname' => 'Admin',
+                'lastname' => 'istrator',
+                'password' => 'admin'
+            )
+        );
 
         $sql = 'SELECT * FROM `users`';
         $rows = $this->db->query($sql);
@@ -242,10 +255,14 @@ class DatabaseInstaller {
         }
 
         foreach($insertUsers as $iu) {
-            $password = password_hash($iu, PASSWORD_BCRYPT);
+            $userData = $defaultUserData[$iu];
+            $password = password_Hash($userData['password'], PASSWORD_BCRYPT);
+            $firstname = $userData['firstname'];
+            $lastname = $userData['lastname'];
+            $username = $iu;
 
-            $sql = 'INSERT INTO `users` (`firstname`, `lastname`, `username`, `password`)
-                    VALUES (\'Admin\', \'\', \'admin\', \'' . $password . '\')';
+            $sql = "INSERT INTO `users` (`firstname`, `lastname`, `username`, `password`)
+                    VALUES ('$firstname', '$lastname', '$username', '$password')";
 
             $this->logger->sql($sql, __METHOD__);
 
