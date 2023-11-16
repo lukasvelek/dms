@@ -7,6 +7,8 @@ use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\User;
+use DMS\Models\GroupUserModel;
+use DMS\Models\UserModel;
 
 /**
  * DocumentAuthorizator checks if a user is allowed to perform an action with metadata.
@@ -14,11 +16,17 @@ use DMS\Entities\User;
  * @author Lukas Velek
  */
 class MetadataAuthorizator extends AAuthorizator {
+    private UserModel $userModel;
+    private GroupUserModel $groupUserModel;
+
     /**
      * The MetadataAuthorizator constructor creates an object
      */
-    public function __construct(Database $db, Logger $logger, ?User $user) {
+    public function __construct(Database $db, Logger $logger, ?User $user, UserModel $userModel, GroupUserModel $groupUserModel) {
         parent::__construct($db, $logger, $user);
+
+        $this->userModel = $userModel;
+        $this->groupUserModel = $groupUserModel;
     }
 
     /**
@@ -30,6 +38,10 @@ class MetadataAuthorizator extends AAuthorizator {
      * @return bool True if user can view metadata and false if not
      */
     public function canUserViewMetadata(int $idUser, int $idMetadata, bool $checkCache = true) {
+        if($this->groupUserModel->isIdUserInAdministratorsGroup($idUser)) {
+            return true;
+        }
+
         $row = $this->getRightRow($idUser, $idMetadata, 'view', $checkCache);
 
         if(is_null($row)) {
@@ -48,6 +60,10 @@ class MetadataAuthorizator extends AAuthorizator {
      * @return bool True if user can edit metadata and false if not
      */
     public function canUserEditMetadata(int $idUser, int $idMetadata, bool $checkCache = true) {
+        if($this->groupUserModel->isIdUserInAdministratorsGroup($idUser)) {
+            return true;
+        }
+
         $row = $this->getRightRow($idUser, $idMetadata, 'edit', $checkCache);
 
         if(is_null($row)) {
@@ -66,6 +82,10 @@ class MetadataAuthorizator extends AAuthorizator {
      * @return bool True if user can view metadata values and false if not
      */
     public function canUserViewMetadataValues(int $idUser, int $idMetadata, bool $checkCache = true) {
+        if($this->groupUserModel->isIdUserInAdministratorsGroup($idUser)) {
+            return true;
+        }
+
         $row = $this->getRightRow($idUser, $idMetadata, 'view_values', $checkCache);
 
         if(is_null($row)) {
@@ -84,6 +104,10 @@ class MetadataAuthorizator extends AAuthorizator {
      * @return bool True if user can edit metadata values and false if not
      */
     public function canUserEditMetadataValues(int $idUser, int $idMetadata, bool $checkCache = true) {
+        if($this->groupUserModel->isIdUserInAdministratorsGroup($idUser)) {
+            return true;
+        }
+        
         $row = $this->getRightRow($idUser, $idMetadata, 'edit_values', $checkCache);
 
         if(is_null($row)) {
@@ -125,7 +149,15 @@ class MetadataAuthorizator extends AAuthorizator {
                       ->execute()
                       ->fetchSingle();
 
-            $result = $row[$key];
+            if(!is_null($row)) {
+                if(!array_key_exists($key, $row)) {
+                    return false;
+                } else {
+                    $result = $row[$key];
+                }
+            } else {
+                return false;
+            }
 
             if(!is_null($result)) {
                 $cm->saveMetadataRight($idUser, $idMetadata, $key, $result);

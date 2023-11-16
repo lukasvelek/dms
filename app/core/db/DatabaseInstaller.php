@@ -539,6 +539,20 @@ class DatabaseInstaller {
                 'text' => 'Type',
                 'input_type' => 'select',
                 'length' => '256'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'after_shred_action',
+                'text' => 'Action after shredding',
+                'input_type' => 'select',
+                'length' => '256'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'shredding_status',
+                'text' => 'Shredding status',
+                'input_type' => 'select',
+                'length' => '256'
             )
         );
 

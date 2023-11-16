@@ -110,7 +110,7 @@ class Application {
         $this->userRightModel = new UserRightModel($this->conn, $this->logger);
         $this->documentModel = new DocumentModel($this->conn, $this->logger);
         $this->groupModel = new GroupModel($this->conn, $this->logger);
-        $this->groupUserModel = new GroupUserModel($this->conn, $this->logger);
+        $this->groupUserModel = new GroupUserModel($this->conn, $this->logger, $this->groupModel);
         $this->processModel = new ProcessModel($this->conn, $this->logger);
         $this->groupRightModel = new GroupRightModel($this->conn, $this->logger);
         $this->metadataModel = new MetadataModel($this->conn, $this->logger);
@@ -125,7 +125,7 @@ class Application {
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
-        $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user);
+        $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user, $this->userModel, $this->groupUserModel);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
 
 
