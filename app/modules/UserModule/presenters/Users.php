@@ -10,6 +10,7 @@ use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
 use DMS\Core\TemplateManager;
 use DMS\Entities\User;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\UI\LinkBuilder;
@@ -81,14 +82,85 @@ class Users extends APresenter {
             $userRights = $this->internalCreateUserRightsGrid($id);
         }, __METHOD__);
 
+        $links = array(
+            '<a class="general-link" href="?page=UserModule:Users:allowAllRights&id_user=' . $id . '">Allow all</a>',
+            '&nbsp;&nbsp;',
+            '<a class="general-link" href="?page=UserModule:Users:denyAllRights&id_user=' . $id . '">Deny all</a>'
+        );
+
         $data = array(
             '$PAGE_TITLE$' => '<i>' . $user->getFullname() . '</i> rights',
-            '$USER_RIGHTS_GRID$' => $userRights
+            '$USER_RIGHTS_GRID$' => $userRights,
+            '$LINKS$' => '<div class="row"><div class="col-md">' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($links) . '</div></div>'
         );
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function allowAllRights() {
+        global $app;
+
+        $idUser = htmlspecialchars($_GET['id_user']);
+
+        $allow = true;
+
+        foreach(UserActionRights::$all as $ar) {
+            $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+        }
+
+        foreach(PanelRights::$all as $pr) {
+            $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+        }
+
+        foreach(BulkActionRights::$all as $bar) {
+            $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+        }
+
+        $cms = array(
+            CacheManager::getTemporaryObject(CacheCategories::ACTIONS),
+            CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS),
+            CacheManager::getTemporaryObject(CacheCategories::PANELS)
+        );
+
+        foreach($cms as $cm) {
+            $cm->invalidateCache();
+        }
+
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+    }
+
+    protected function denyAllRights() {
+        global $app;
+
+        $idUser = htmlspecialchars($_GET['id_user']);
+
+        $allow = false;
+
+        foreach(UserActionRights::$all as $ar) {
+            $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+        }
+
+        foreach(PanelRights::$all as $pr) {
+            $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+        }
+
+        foreach(BulkActionRights::$all as $bar) {
+            $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+        }
+
+        $cms = array(
+            CacheManager::getTemporaryObject(CacheCategories::ACTIONS),
+            CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS),
+            CacheManager::getTemporaryObject(CacheCategories::PANELS)
+        );
+
+        foreach($cms as $cm) {
+            $cm->invalidateCache();
+        }
+
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
     }
 
     protected function allowActionRight() {
