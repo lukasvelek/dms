@@ -32,7 +32,7 @@ class LogRotateService extends AService {
             $filename = explode('.', $filename)[0];
             $date = explode('_', $filename)[1];
 
-            $days = /*7*/ $this->scfg['file_keep_length'];
+            $days = $this->scfg['files_keep_length'];
 
             $maxOldDate = time() - (60 * 60 * 24 * $days);
 
