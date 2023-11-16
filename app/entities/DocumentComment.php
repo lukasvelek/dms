@@ -3,7 +3,7 @@
 namespace DMS\Entities;
 
 class DocumentComment extends Comment {
-    private $idDocument;
+    private int $idDocument;
 
     public function __construct(int $id, string $dateCreated, int $idAuthor, string $text, int $idDocument) {
         parent::__construct($id, $dateCreated, $idAuthor, $text);
