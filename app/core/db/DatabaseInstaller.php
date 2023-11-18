@@ -3,7 +3,9 @@
 namespace DMS\Core\DB;
 
 use DMS\Constants\BulkActionRights;
+use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
+use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
@@ -641,6 +643,20 @@ class DatabaseInstaller {
 
                 case 'processes.type':
                     foreach(ProcessTypes::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
+
+                case 'documents.after_shred_action':
+                    foreach(DocumentAfterShredActions::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
+
+                case 'documents.shredding_status':
+                    foreach(DocumentShreddingStatus::$texts as $v => $n) {
                         $values[$id][] = array('name' => $n, 'value' => $v);
                     }
 
