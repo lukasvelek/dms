@@ -1,5 +1,22 @@
 <?php
 
+/**
+ * The default DMS appplication loader.
+ * 
+ * It loads all dependencies that are sorted by importance:
+ * 1. Interfaces
+ * 2. Abstract classes
+ * 3. Classes
+ * 
+ * After loading dependencies it create an instance of the Application.
+ * 
+ * It also checks for presence of 'config.local.php' config script.
+ * It also loads all UI modules and registers them in the application.
+ * 
+ * @author Lukas Velek
+ * @version 1.0
+ */
+
 $dependencies = array();
 
 function loadDependencies(array &$dependencies, string $dir) {
@@ -65,16 +82,12 @@ foreach($dependencies as $dependency) {
     require_once($dependency);
 }
 
-$fm = DMS\Core\FileManager::getTemporaryObject();
-
-if(!$fm->fileExists('config.local.php')) {
+if(!DMS\Core\FileManager::fileExists('config.local.php')) {
     die('Config file does not exist!');
 }
 
 include('config.local.php');
 include('modules/modules.php');
-
-unset($fm);
 
 $app = new DMS\Core\Application($cfg);
 

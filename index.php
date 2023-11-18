@@ -39,17 +39,12 @@ include('app/dms_loader.php');
                 }
             }
 
-            //$app->user = $app->userModel->getUserById($_SESSION['id_current_user']);
             $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
         } else {
             if(!isset($_SESSION['login_in_process'])) {
                 if($app->currentUrl != $app::URL_LOGIN_PAGE && $app->currentUrl != 'AnonymModule:LoginPage:showFirstLoginForm') {
                     $app->redirect($app::URL_LOGIN_PAGE);
                 }
-            } else {
-                /*if($app->currentUrl != $app::URL_LOGIN_PAGE && $app->currentUrl != 'AnonymModule:LoginPage:showFirstLoginForm') {
-                    $app->redirect($app::URL_LOGIN_PAGE);
-                }*/
             }
         }
 

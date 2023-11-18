@@ -139,18 +139,6 @@ class FileManager {
     }
 
     /**
-     * Checks if a defined file exists or not.
-     * 
-     * @param string $file filename
-     * @return bool returns true if file exists or false if not
-     */
-    public function fileExists(string $file) {
-        if(file_exists($file)) return true;
-
-        return false;
-    }
-
-    /**
      * Deletes a defined file
      * 
      * @param string $file filename
@@ -175,6 +163,18 @@ class FileManager {
      */
     public static function getTemporaryObject() {
         return new self('', '');
+    }
+
+    /**
+     * Checks if a defined file exists or not.
+     * 
+     * @param string $file filename
+     * @return bool returns true if file exists or false if not
+     */
+    public static function fileExists(string $file) {
+        if(file_exists($file)) return true;
+
+        return false;
     }
 }
 
