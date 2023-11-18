@@ -2,27 +2,24 @@
 
 namespace DMS\UI\FormBuilder;
 
+/**
+ * Label form element displays text to the user
+ * 
+ * @author Lukas Velek
+ * @version 1.1
+ */
 class Label implements IBuildable {
-  /**
-   * @var string
-   */
-  private $for;
+  private string $for;
+  private string $text;
+  private string $id;
+
+  public string $script;
 
   /**
-   * @var string
+   * The label form element constructor sets all the class variables to empty value
+   * 
+   * @return self
    */
-  private $text;
-
-  /**
-   * @var string
-   */
-  private $id;
-
-  /**
-   * @var string
-   */
-  public $script;
-
   public function __construct() {
     $this->for = '';
     $this->text = '';
@@ -31,24 +28,47 @@ class Label implements IBuildable {
     return $this;
   }
 
+  /**
+   * Sets the form element for
+   * 
+   * @param string $for For
+   * @return self
+   */
   public function setFor(string $for) {
     $this->for = $for;
 
     return $this;
   }
 
+  /**
+   * Sets the form element text
+   * 
+   * @param string $text Text
+   * @return self
+   */
   public function setText(string $text) {
     $this->text = $text;
 
     return $this;
   }
 
-  public function setId(string $text) {
-    $this->id = 'id="' . $text . '"';
+  /**
+   * Sets the form element ID
+   * 
+   * @param string $id ID
+   * @return self
+   */
+  public function setId(string $id) {
+    $this->id = 'id="' . $id . '"';
 
     return $this;
   }
 
+  /**
+   * Converts the label class to HTML code
+   * 
+   * @return self
+   */
   public function build() {
     $script = '<label ' . $this->id . ' for="' . $this->for . '">' . $this->text . '</label>';
 
