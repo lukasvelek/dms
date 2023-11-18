@@ -100,11 +100,22 @@ class SingleDocument extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/single-document-grid.html');
 
+        $documentGrid = '';
+        $documentComments = '';
+
+        $app->logger->logFunction(function() use (&$documentGrid, $document) {
+            $documentGrid = $this->internalCreateDocumentInfoGrid($document);
+        });
+
+        $app->logger->logFunction(function() use (&$documentComments, $document) {
+            $documentComments = $this->internalCreateDocumentComments($document);
+        });
+
         $data = array(
             '$PAGE_TITLE$' => 'Document <i>' . $document->getName() . '</i>',
-            '$DOCUMENT_GRID$' => $this->internalCreateDocumentInfoGrid($document),
+            '$DOCUMENT_GRID$' => $documentGrid,
             '$NEW_COMMENT_FORM$' => $this->internalCreateNewDocumentCommentForm($document),
-            '$DOCUMENT_COMMENTS$' => $this->internalCreateDocumentComments($document)
+            '$DOCUMENT_COMMENTS$' => $documentComments
         );
 
         $this->templateManager->fill($data, $template);

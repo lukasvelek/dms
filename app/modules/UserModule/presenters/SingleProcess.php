@@ -7,6 +7,7 @@ use DMS\Components\Process\ShreddingProcess;
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Constants\UserActionRights;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Process;
@@ -50,11 +51,12 @@ class SingleProcess extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/single-process.html');
 
         $data = array(
-            '$PROCESS_NAME$' => 'Process #' . $id . ': ' . ProcessTypes::$texts[$process->getType()]
+            '$PROCESS_NAME$' => 'Process #' . $id . ': ' . ProcessTypes::$texts[$process->getType()],
+            '$PROCESS_INFO_TABLE$' => $this->internalCreateProcessInfoTable($process),
+            '$ACTIONS$' => $this->internalCreateActions($process),
+            '$NEW_COMMENT_FORM$' => $this->internalCreateNewProcessCommentForm($process),
+            '$PROCESS_COMMENTS$' => $this->internalCreateProcessComments($process)
         );
-
-        $data['$PROCESS_INFO_TABLE$'] = $this->internalCreateProcessInfoTable($process);
-        $data['$ACTIONS$'] = $this->internalCreateActions($process);
 
         $this->templateManager->fill($data, $template);
 
@@ -273,6 +275,30 @@ class SingleProcess extends APresenter {
         }
 
         return $actions;
+    }
+
+    private function internalCreateNewProcessCommentForm(Process $process) {
+        global $app;
+
+        $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
+
+        return '<script type="text/javascript" src="js/ProcessAjaxComment.js"></script>
+        <textarea name="text" id="text" required></textarea><br><br>
+        <button onclick="sendComment(' . $app->user->getId() . ', ' . $process->getId() . ', ' . $canDelete . ')">Send</button>
+        ';
+    }
+
+    private function internalCreateProcessComments(Process $process) {
+        global $app;
+        
+        $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
+
+        return '
+        <img id="comments-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">
+        <script type="text/javascript">
+            $(document).on("load", showLoading())
+                       .ready(loadComments("' . $process->getId() . '", "' . $canDelete . '"));
+        </script>';
     }
 }
 

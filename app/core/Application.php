@@ -23,6 +23,7 @@ use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\MetadataModel;
+use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\TableModel;
@@ -70,6 +71,7 @@ class Application {
     public FolderModel $folderModel;
     public ServiceModel $serviceModel;
     public DocumentCommentModel $documentCommentModel;
+    public ProcessCommentModel $processCommentModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -118,6 +120,7 @@ class Application {
         $this->folderModel = new FolderModel($this->conn, $this->logger);
         $this->serviceModel = new ServiceModel($this->conn, $this->logger);
         $this->documentCommentModel = new DocumentCommentModel($this->conn, $this->logger);
+        $this->processCommentModel = new ProcessCommentModel($this->conn, $this->logger);
         
         $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel);
 

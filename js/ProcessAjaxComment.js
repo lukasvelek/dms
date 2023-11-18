@@ -1,4 +1,4 @@
-async function sendComment(id_author, id_document, can_delete) {
+async function sendComment(id_author, id_process, can_delete) {
     var text = document.getElementById("text").value;
 
     if(text != "") {
@@ -7,17 +7,17 @@ async function sendComment(id_author, id_document, can_delete) {
         await sleep(500);
 
         $.ajax({
-            url: 'app/ajax/document-send-comment.php',
+            url: 'app/ajax/process-send-comment.php',
             type: 'POST',
             data: {
                 commentText: text,
                 idAuthor: id_author,
-                idDocument: id_document,
+                idProcess: id_process,
                 canDelete: can_delete
             }
         })
         .done(async function(data) {
-            await reloadComments(id_document, can_delete);
+            await reloadComments(id_process, can_delete);
             document.getElementById("text").value = "";
             $('#cover').hide();
         });
@@ -28,13 +28,13 @@ function showLoading() {
     $("#comments").append('<br><br><br><p style="text-align: center">Loading...</p>');
 }
 
-async function loadComments(id_document, can_delete, canSleep = true) {
+async function loadComments(id_process, can_delete, canSleep = true) {
     if(canSleep) {
         await sleep(500);
     }
     
-    $.get("app/ajax/document-get-comments.php", {
-        idDocument: id_document,
+    $.get("app/ajax/process-get-comments.php", {
+        idProcess: id_process,
         canDelete: can_delete
     },
     function(data) {
@@ -43,25 +43,25 @@ async function loadComments(id_document, can_delete, canSleep = true) {
     });
 }
 
-async function deleteComment(id_comment, id_document, can_delete) {
+async function deleteComment(id_comment, id_process, can_delete) {
     await sleep(500);
 
     $.ajax({
-        url: 'app/ajax/document-delete-comment.php',
+        url: 'app/ajax/process-delete-comment.php',
         type: 'POST',
         data: {
             idComment: id_comment
         }
     })
     .done(async function() {
-        $('#comment' + id_comment).remove();
+        $('#comment' + id_process).remove();
 
-        await reloadComments(id_document, can_delete);
+        await reloadComments(id_process, can_delete);
     });
 }
 
-async function reloadComments(id_document, can_delete) {
+async function reloadComments(id_process, can_delete) {
     $('#comments').empty();
 
-    await loadComments(id_document, can_delete, false);
+    await loadComments(id_process, can_delete, false);
 }

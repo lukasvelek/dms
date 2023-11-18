@@ -3,7 +3,9 @@
 namespace DMS\Core\DB;
 
 use DMS\Constants\BulkActionRights;
+use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
+use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
@@ -193,6 +195,13 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_author' => 'INT(32) NOT NULL',
                 'id_document' => 'INT(32) NOT NULL',
+                'text' => 'VARCHAR(256)',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'process_comments' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_author' => 'INT(32) NOT NULL',
+                'id_process' => 'INT(32) NOT NULL',
                 'text' => 'VARCHAR(256)',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
@@ -634,6 +643,20 @@ class DatabaseInstaller {
 
                 case 'processes.type':
                     foreach(ProcessTypes::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
+
+                case 'documents.after_shred_action':
+                    foreach(DocumentAfterShredActions::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
+
+                case 'documents.shredding_status':
+                    foreach(DocumentShreddingStatus::$texts as $v => $n) {
                         $values[$id][] = array('name' => $n, 'value' => $v);
                     }
 

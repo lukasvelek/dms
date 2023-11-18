@@ -4,7 +4,7 @@ async function ajaxSearch(query, id_folder) {
     $('#documents-loading').show();
 
     $.ajax({
-        url: 'app/ajax/search.php',
+        url: 'app/ajax/document-search.php',
         type: 'POST',
         data: {
             q: query,
@@ -21,7 +21,7 @@ async function ajaxLoadDocuments(id_folder) {
     await sleep(250);
 
     $.ajax({
-        url: 'app/ajax/search.php',
+        url: 'app/ajax/document-search.php',
         type: 'POST',
         data: {
             idFolder: id_folder
