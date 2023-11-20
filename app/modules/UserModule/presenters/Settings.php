@@ -44,6 +44,20 @@ class Settings extends APresenter {
         return $this->name;
     }
 
+    protected function showDashboardWidgets() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-widgets-grid.html');
+
+        $data = array(
+            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
+            '$PAGE_TITLE$' => 'Dashboard widgets',
+            '$SETTINGS_FORM$' => $this->internalCreateDashboardWidgetsForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function editService() {
         global $app;
 
@@ -1238,6 +1252,31 @@ class Settings extends APresenter {
 
         $fb ->loadJSScript('js/EditServiceForm.js')
             ->addElement($fb->createSubmit('Save'));
+
+        return $fb->build();
+    }
+
+    private function internalCreateDashboardWidgetsForm() {
+        global $app;
+
+        $idUser = $app->user->getId();
+
+        $allWidgets = array();
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb->setMethod('POST')->setAction('?page=UserModule:Settings:updateDashboardWidgets&id_user=' . $idUser);
+
+        $fb ->addElement($fb->createLabel()->setText('Widget 1 (upper-left)'))
+
+            ->addElement($fb->createLabel()->setText('Widget 2 (upper-right)'))
+
+            ->addElement($fb->createLabel()->setText('Widget 3 (lower-left)'))
+            
+            ->addElement($fb->createLabel()->setText('Widget 4 (lower-right)'))
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
 
         return $fb->build();
     }
