@@ -13,6 +13,7 @@ use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
+use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
@@ -29,6 +30,7 @@ use DMS\Models\ServiceModel;
 use DMS\Models\TableModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
+use DMS\Models\WidgetModel;
 use DMS\Panels\Panels;
 
 /**
@@ -72,6 +74,7 @@ class Application {
     public ServiceModel $serviceModel;
     public DocumentCommentModel $documentCommentModel;
     public ProcessCommentModel $processCommentModel;
+    public WidgetModel $widgetModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -81,6 +84,7 @@ class Application {
     public DocumentBulkActionAuthorizator $documentBulkActionAuthorizator;
 
     public ProcessComponent $processComponent;
+    public WidgetComponent $widgetComponent;
 
     private array $modules;
     private ?string $pageContent;
@@ -121,6 +125,7 @@ class Application {
         $this->serviceModel = new ServiceModel($this->conn, $this->logger);
         $this->documentCommentModel = new DocumentCommentModel($this->conn, $this->logger);
         $this->processCommentModel = new ProcessCommentModel($this->conn, $this->logger);
+        $this->widgetModel = new WidgetModel($this->conn, $this->logger);
         
         $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel);
 
@@ -141,6 +146,8 @@ class Application {
         $serviceManagerCacheManager = new CacheManager($this->cfg['serialize_cache'], CacheCategories::SERVICE_CONFIG);
 
         $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent);
+
+        $this->widgetComponent = new WidgetComponent($this->conn, $this->logger);
 
         //$this->conn->installer->updateDefaultUserPanelRights();
     }

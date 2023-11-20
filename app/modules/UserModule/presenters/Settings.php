@@ -7,6 +7,7 @@ use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
+use DMS\Constants\WidgetLocations;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
@@ -42,6 +43,51 @@ class Settings extends APresenter {
 
     public function getName() {
         return $this->name;
+    }
+
+    protected function updateDashboardWidgets() {
+        global $app;
+
+        $idUser = htmlspecialchars($_GET['id_user']);
+
+        $widget0_0 = htmlspecialchars($_POST['widget0-0']);
+        $widget0_1 = htmlspecialchars($_POST['widget0-1']);
+        $widget1_0 = htmlspecialchars($_POST['widget1-0']);
+        $widget1_1 = htmlspecialchars($_POST['widget1-1']);
+
+        if($widget0_0 != '-') {
+            if(is_null($app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00))) {
+                $app->widgetModel->insertWidgetForIdUser($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00, $widget0_0);
+            } else {
+                $app->widgetModel->updateWidgetForIdUser($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00, $widget0_0);
+            }
+        }
+
+        if($widget0_1 != '-') {
+            if(is_null($app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET01))) {
+                $app->widgetModel->insertWidgetForIdUser($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET01, $widget0_1);
+            } else {
+                $app->widgetModel->updateWidgetForIdUser($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET01, $widget0_1);
+            }
+        }
+        
+        if($widget1_0 != '-') {
+            if(is_null($app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10))) {
+                $app->widgetModel->insertWidgetForIdUser($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10, $widget1_0);
+            } else {
+                $app->widgetModel->updateWidgetForIdUser($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10, $widget1_0);
+            }
+        }
+
+        if($widget1_1 != '-') {
+            if(is_null($app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11))) {
+                $app->widgetModel->insertWidgetForIdUser($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11, $widget1_1);
+            } else {
+                $app->widgetModel->updateWidgetForIdUser($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11, $widget1_1);
+            }
+        }
+
+        $app->redirect('UserModule:Settings:showDashboardWidgets');
     }
 
     protected function showDashboardWidgets() {
@@ -1261,19 +1307,117 @@ class Settings extends APresenter {
 
         $idUser = $app->user->getId();
 
-        $allWidgets = array();
+        $allWidgets = $app->widgetComponent->homeDashboardWidgets;
+
+        $widgets00Select = array(
+            array(
+                'value' => '-',
+                'text' => '-'
+            )
+        );
+
+        $widgets01Select = array(
+            array(
+                'value' => '-',
+                'text' => '-'
+            )
+        );
+
+        $widgets10Select = array(
+            array(
+                'value' => '-',
+                'text' => '-'
+            )
+        );
+
+        $widgets11Select = array(
+            array(
+                'value' => '-',
+                'text' => '-'
+            )
+        );
+
+        $widget00loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00);
+        $widget01loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET01);
+        $widget10loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10);
+        $widget11loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11);
+
+        foreach($allWidgets as $name => $content) {
+            $text = $content['name'];
+            $code = $content['code'];
+
+            if(!is_null($widget00loc) && ($name == $widget00loc['widget_name'])) {
+                $widgets00Select[] = array(
+                    'value' => $name,
+                    'text' => $text,
+                    'selected' => 'selected'
+                );
+            } else {
+                $widgets00Select[] = array(
+                    'value' => $name,
+                    'text' => $text
+                );
+            }
+
+            if(!is_null($widget01loc) && ($name == $widget01loc['widget_name'])) {
+                $widgets01Select[] = array(
+                    'value' => $name,
+                    'text' => $text,
+                    'selected' => 'selected'
+                );
+            } else {
+                $widgets01Select[] = array(
+                    'value' => $name,
+                    'text' => $text
+                );
+            }
+
+            if(!is_null($widget10loc) && ($name == $widget10loc['widget_name'])) {
+                $widgets10Select[] = array(
+                    'value' => $name,
+                    'text' => $text,
+                    'selected' => 'selected'
+                );
+            } else {
+                $widgets10Select[] = array(
+                    'value' => $name,
+                    'text' => $text
+                );
+            }
+
+            if(!is_null($widget11loc) && ($name == $widget11loc['widget_name'])) {
+                $widgets11Select[] = array(
+                    'value' => $name,
+                    'text' => $text,
+                    'selected' => 'selected'
+                );
+            } else {
+                $widgets11Select[] = array(
+                    'value' => $name,
+                    'text' => $text
+                );
+            }
+        }
 
         $fb = FormBuilder::getTemporaryObject();
 
         $fb->setMethod('POST')->setAction('?page=UserModule:Settings:updateDashboardWidgets&id_user=' . $idUser);
 
         $fb ->addElement($fb->createLabel()->setText('Widget 1 (upper-left)'))
+            ->addElement($fb->createSelect()->setName('widget0-0')
+                                            ->addOptionsBasedOnArray($widgets00Select))
 
             ->addElement($fb->createLabel()->setText('Widget 2 (upper-right)'))
+            ->addElement($fb->createSelect()->setName('widget0-1')
+                                            ->addOptionsBasedOnArray($widgets01Select))
 
             ->addElement($fb->createLabel()->setText('Widget 3 (lower-left)'))
+            ->addElement($fb->createSelect()->setName('widget1-0')
+                                            ->addOptionsBasedOnArray($widgets10Select))
             
             ->addElement($fb->createLabel()->setText('Widget 4 (lower-right)'))
+            ->addElement($fb->createSelect()->setName('widget1-1')
+                                            ->addOptionsBasedOnArray($widgets11Select))
 
             ->addElement($fb->createSubmit('Save'))
         ;

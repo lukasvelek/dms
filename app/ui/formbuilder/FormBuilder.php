@@ -187,6 +187,8 @@ class FormBuilder {
     if($this->encType != '') {
       $code[] = 'enctype="' . $this->encType . '"';
       $code[] = '>';
+    } else {
+      $code[] = '>';
     }
 
     foreach($this->elements as $element) {
