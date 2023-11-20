@@ -99,7 +99,8 @@ class Panels {
         if(self::SETTINGSPANEL_USE_TEXT) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets');
         } else {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets');
+            //$data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets');
+            $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets', 'img/dashboard-widgets.svg');
         }
 
         $templateManager->fill($data, $template);
