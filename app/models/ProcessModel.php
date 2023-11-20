@@ -12,6 +12,29 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getProcessCountByStatus(int $status = 0) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb = $qb->selectCount('id', 'cnt')
+                 ->from('processes');
+
+        switch($status) {
+            case 0:
+                break;
+
+            default:
+                $qb->where('status=:status')
+                   ->setParam(':status', $status);
+
+                break;
+        }
+
+        $row = $qb->execute()
+                  ->fetchSingle('cnt');
+
+        return $row;
+    }
+
     public function getFinishedProcessesWithIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 

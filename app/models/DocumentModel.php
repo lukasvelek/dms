@@ -13,7 +13,7 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
-    public function getDocumentCount(int $status = 0) {
+    public function getDocumentCountByStatus(int $status = 0) {
         $qb = $this->qb(__METHOD__);
 
         $qb = $qb->selectCount('id', 'cnt')

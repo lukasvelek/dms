@@ -151,6 +151,6 @@ $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $gro
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
-$widgetComponent = new WidgetComponent($db, $logger, $documentModel);
+$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel);
 
 ?>
