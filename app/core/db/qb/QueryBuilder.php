@@ -61,6 +61,12 @@ class QueryBuilder {
     //$this->queryResult = null;
   }
 
+  public function selectCount(string $key, string $alias) {
+    $this->sql .= 'SELECT COUNT(' . $key . ') AS `' . $alias . '`';
+
+    return $this;
+  }
+
   public function select(string ...$keys) {
     if(count($keys) == 1) {
       if($keys[0] == '*') {

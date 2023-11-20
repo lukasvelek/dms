@@ -24,6 +24,7 @@ class TableRow implements IBuildable {
     $this->cols = array();
     $this->colspan = '';
     $this->class = '';
+    $this->script = '';
 
     return $this;
   }

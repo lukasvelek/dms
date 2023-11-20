@@ -147,7 +147,7 @@ class Application {
 
         $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent);
 
-        $this->widgetComponent = new WidgetComponent($this->conn, $this->logger);
+        $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel);
 
         //$this->conn->installer->updateDefaultUserPanelRights();
     }
