@@ -32,11 +32,23 @@ function loadDependencies(array &$dependencies, string $dir) {
         $dir . '\\ajax'
     );
 
-    foreach($content as $c) {
-        /* SKIP TEMPLATES (html files) */
-        $filenameParts = explode('.', $c);
+    $extensionsToSkip = array(
+        'html',
+        'md',
+        'js',
+        'png',
+        'gif',
+        'jpg',
+        'svg'
+    );
 
-        if($filenameParts[count($filenameParts) - 1] == 'html') continue;
+    foreach($content as $c) {
+        $filenameParts = explode('.', $c);
+        
+        /* SKIP CERTAIN EXTENSIONS */
+        if(in_array($filenameParts[count($filenameParts) - 1], $extensionsToSkip)) {
+            continue;
+        }
 
         $c = $dir . '\\' . $c;
 
