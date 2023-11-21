@@ -21,31 +21,27 @@ class ProcessModel extends AModel {
                    ->leftBracket()
                    ->leftBracket()
                    ->where('workflow1=:id_user', false, false)
-                   ->andWhere('workflow_status=:w1')
+                   ->andWhere('workflow_status=1')
                    ->rightBracket()
                    ->explicit('OR')
                    ->leftBracket()
                    ->where('workflow2=:id_user', false, false)
-                   ->andWhere('workflow_status=:w2')
+                   ->andWhere('workflow_status=2')
                    ->rightBracket()
                    ->explicit('OR')
                    ->leftBracket()
                    ->where('workflow3=:id_user', false, false)
-                   ->andWhere('workflow_status=:w3')
+                   ->andWhere('workflow_status=3')
                    ->rightBracket()
                    ->explicit('OR')
                    ->leftBracket()
                    ->where('workflow4=:id_user', false, false)
-                   ->andWhere('workflow_status=:w4')
+                   ->andWhere('workflow_status=4')
                    ->rightBracket()
                    ->rightBracket()
                    ->andWhere('status=:status')
                    ->setParams(array(
                     ':id_user' => $idUser,
-                    ':w1' => '1',
-                    ':w2' => '2',
-                    ':w3' => '3',
-                    ':w4' => '4',
                     ':status' => ProcessStatus::IN_PROGRESS
                    ))
                    ->execute()
