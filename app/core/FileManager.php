@@ -20,6 +20,12 @@ class FileManager {
         }
     }
 
+    /**
+     * Returns a list of files in the directory and all subdirectories
+     * 
+     * @param string $dir Dir name
+     * @param array $files Link to the files array
+     */
     public function readFilesInFolder(string $dir, array &$files) {
         $contents = scandir($dir);
 

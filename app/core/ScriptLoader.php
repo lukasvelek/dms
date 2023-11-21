@@ -15,6 +15,13 @@ class ScriptLoader {
         return $code;
     }
 
+    /**
+     * This method displays a JS confirm popup window and based on user's decision it redirects
+     * 
+     * @param string $text Text to display in the popup window
+     * @param array $urlConfirm Confirm URL
+     * @param array $urlClose Close URL
+     */
     public static function confirmUser(string $text, array $urlConfirm, array $urlClose) {
         $urlCo = '?';
         $urlCl = '?';
