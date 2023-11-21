@@ -121,15 +121,19 @@ body {
     right: 1%;
     width: 350px;
     height: 49%;
-
-    border: 1px solid black;
+    
     border-radius: 25px;
 
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgb(212, 212, 212, 0.5);
     backdrop-filter: blur(5px);
 }
 
 .widget {
-    border: 1px solid black;
+    /*border: 1px solid black;
+    padding: 10px;*/
+
+    background-color: rgb(212, 212, 212, 0.5);
+    backdrop-filter: blur(5px);
+
     padding: 10px;
 }
