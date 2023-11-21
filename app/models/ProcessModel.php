@@ -12,6 +12,49 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getProcessesWaitingForUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->explicit(' WHERE ')
+                   ->leftBracket()
+                   ->where('workflow1=:id_user', false, false)
+                   ->orWhere('workflow_status=:w1')
+                   ->rightBracket()
+                   ->explicit('OR')
+                   ->leftBracket()
+                   ->where('workflow2=:id_user', false, false)
+                   ->orWhere('workflow_status=:w2')
+                   ->rightBracket()
+                   ->explicit('OR')
+                   ->leftBracket()
+                   ->where('workflow3=:id_user', false, false)
+                   ->orWhere('workflow_status=:w3')
+                   ->rightBracket()
+                   ->explicit('OR')
+                   ->leftBracket()
+                   ->where('workflow4=:id_user', false, false)
+                   ->orWhere('workflow_status=:w4')
+                   ->rightBracket()
+                   ->setParams(array(
+                    ':id_user' => $idUser,
+                    ':w1' => '1',
+                    ':w2' => '2',
+                    ':w3' => '3',
+                    ':w4' => '4'
+                   ))
+                   ->execute()
+                   ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
     public function getProcessCountByStatus(int $status = 0) {
         $qb = $this->qb(__METHOD__);
 
