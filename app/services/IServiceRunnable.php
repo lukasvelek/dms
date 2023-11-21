@@ -15,7 +15,7 @@ interface IServiceRunnable {
      * 
      * @return void
      */
-    function run() : void;
+    function run();
 }
 
 ?>
