@@ -48,17 +48,22 @@ class WidgetComponent extends AComponent {
 
         $waitingForMe = $this->processModel->getProcessesWaitingForUser($idUser);
 
-        $i = 0;
-        foreach($waitingForMe as $process) {
-            if($i == 4) {
-                break;
+        if($waitingForMe != null) {
+            $i = 0;
+            
+            foreach($waitingForMe as $process) {
+                if($i == 4) {
+                    break;
+                }
+
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()), 'Process #' . $process->getId() . ' - ' . ProcessTypes::$texts[$process->getType()]);
+
+                $code[] = '<p>' . $link . '</p>';
+
+                $i++;
             }
-
-            $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()), 'Process #' . $process->getId() . ' - ' . ProcessTypes::$texts[$process->getType()]);
-
-            $code[] = '<p>' . $link . '</p>';
-
-            $i++;
+        } else {
+            $code[] = '<p>No processes found</p>';
         }
 
         return $this->__getTemplate('Processes waiting for me', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));

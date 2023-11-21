@@ -9,6 +9,8 @@ It also enables users to manage metadata or their select values.
 - added shredding
 - added shredding suggestion service
 - added process comments
+- updated core functions
+- added core code comments
 
 ### v1.2
 - added support for electronic files

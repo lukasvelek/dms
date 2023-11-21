@@ -19,6 +19,7 @@ class ProcessModel extends AModel {
                    ->from('processes')
                    ->explicit(' WHERE ')
                    ->leftBracket()
+                   ->leftBracket()
                    ->where('workflow1=:id_user', false, false)
                    ->orWhere('workflow_status=:w1')
                    ->rightBracket()
@@ -37,12 +38,15 @@ class ProcessModel extends AModel {
                    ->where('workflow4=:id_user', false, false)
                    ->orWhere('workflow_status=:w4')
                    ->rightBracket()
+                   ->rightBracket()
+                   ->andWhere('status=:status')
                    ->setParams(array(
                     ':id_user' => $idUser,
                     ':w1' => '1',
                     ':w2' => '2',
                     ':w3' => '3',
-                    ':w4' => '4'
+                    ':w4' => '4',
+                    ':status' => ProcessStatus::IN_PROGRESS
                    ))
                    ->execute()
                    ->fetch();
