@@ -58,7 +58,6 @@ class QueryBuilder {
     $this->logger = $logger;
     $this->sql = '';
     $this->variables = array();
-    //$this->queryResult = null;
   }
 
   public function selectCount(string $key, string $alias) {
@@ -144,8 +143,6 @@ class QueryBuilder {
       $this->sql .= ' WHERE ';
     }
 
-    $dbVal = '$' . $dbVal . '$';
-
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` LIKE \'%' . $dbVal . '%\'';
     } else {
@@ -173,8 +170,6 @@ class QueryBuilder {
       $this->sql .= ' WHERE ';
     }
 
-    $dbVal = '$' . $dbVal . '$';
-
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` NOT LIKE \'%' . $dbVal . '%\'';
     } else {
@@ -191,8 +186,6 @@ class QueryBuilder {
     $dbVal = explode('=', $text)[1];
 
     $this->sql .= ' AND ';
-
-    $dbVal = '$' . $dbVal . '$';
 
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` LIKE \'%' . $dbVal . '%\'';
@@ -211,8 +204,6 @@ class QueryBuilder {
 
     $this->sql .= ' AND ';
 
-    $dbVal = '$' . $dbVal . '$';
-
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` NOT LIKE \'%' . $dbVal . '%\'';
     } else {
@@ -229,8 +220,6 @@ class QueryBuilder {
     $dbVal = explode('=', $text)[1];
 
     $this->sql .= ' OR ';
-
-    $dbVal = '$' . $dbVal . '$';
 
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` LIKE \'%' . $dbVal . '%\'';
@@ -249,8 +238,6 @@ class QueryBuilder {
 
     $this->sql .= ' OR ';
 
-    $dbVal = '$' . $dbVal . '$';
-
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` NOT LIKE \'%' . $dbVal . '%\'';
     } else {
@@ -261,13 +248,13 @@ class QueryBuilder {
   }
 
   public function leftBracket() {
-    $this->sql .= ' ( ';
+    $this->sql .= '(';
 
     return $this;
   }
 
   public function rightBracket() {
-    $this->sql .= ' ) ';
+    $this->sql .= ')';
 
     return $this;
   }
@@ -303,8 +290,7 @@ class QueryBuilder {
 
     $i = 0;
     foreach($values as $k => $v) {
-      $v = trim($v);
-      $value = '$' . $v . '$';
+      $value = trim($v);
 
       if(count($values) != 1) {
         if(($i + 1) == count($values)) {
@@ -392,8 +378,7 @@ class QueryBuilder {
 
     $i = 0;
     foreach($values as $value) {
-      $value = trim($value);
-      $v = '$' . $value . '$';
+      $v = trim($value);
 
       if(count($values) != 1) {
         if(($i + 1) == count($values)) {
@@ -418,8 +403,7 @@ class QueryBuilder {
 
     $i = 0;
     foreach($values as $value) {
-      $value = trim($value);
-      $v = '$' . $value . '$';
+      $v = trim($value);
 
       if(count($values) != 1) {
         if(($i + 1) == count($values)) {
@@ -501,7 +485,7 @@ class QueryBuilder {
 
   private function createQuery() {
     foreach($this->variables as $key => $value) {
-      $this->sql = str_replace('$' . $key . '$', $value, $this->sql);
+      $this->sql = str_replace($key, $value, $this->sql);
     }
   }
 
