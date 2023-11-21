@@ -10,6 +10,8 @@ It also enables users to manage metadata or their select values.
 - added shredding suggestion service
 - added process comments
 - updated core functions
+    - updated QueryBuilder
+    - updated application loader
 - added core code comments
 
 ### v1.2
