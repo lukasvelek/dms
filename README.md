@@ -4,6 +4,12 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata or their select values.
 
 ## Changelog
+### v1.3
+- added customizable home dashboard widgets
+- added shredding
+- added shredding suggestion service
+- added process comments
+
 ### v1.2
 - added support for electronic files
 - added file manager service
