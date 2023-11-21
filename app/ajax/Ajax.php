@@ -7,6 +7,7 @@ use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
+use DMS\Components\WidgetComponent;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
@@ -24,6 +25,7 @@ use DMS\Models\ServiceModel;
 use DMS\Models\TableModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
+use DMS\Models\WidgetModel;
 
 session_start();
 
@@ -43,11 +45,24 @@ function loadDependencies2(array &$dependencies, string $dir) {
         $dir . '\\ajax'
     );
 
+    $extensionsToSkip = array(
+        'html',
+        'md',
+        'js',
+        'png',
+        'gif',
+        'jpg',
+        'svg'
+    );
+
     foreach($content as $c) {
         /* SKIP TEMPLATES (html files) */
         $filenameParts = explode('.', $c);
 
-        if($filenameParts[count($filenameParts) - 1] == 'html') continue;
+        /* SKIP CERTAIN EXTENSIONS */
+        if(in_array($filenameParts[count($filenameParts) - 1], $extensionsToSkip)) {
+            continue;
+        }
 
         $c = $dir . '\\' . $c;
 
@@ -121,6 +136,7 @@ $folderModel = new FolderModel($db, $logger);
 $serviceModel = new ServiceModel($db, $logger);
 $documentCommentModel = new DocumentCommentModel($db, $logger);
 $processCommentModel = new ProcessCommentModel($db, $logger);
+$widgetModel = new WidgetModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);
@@ -135,5 +151,6 @@ $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $gro
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
+$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel);
 
 ?>

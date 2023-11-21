@@ -20,9 +20,7 @@ class Panels {
                 '&nbsp;',
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'startedByMe'), 'Processes started by me'),
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'waitingForMe'), 'Processes waiting for me'),
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'finished'), 'Finished processes'),
-                /*LinkBuilder::createLink('UserModule:Processes:showList', 'Processes started by me'),
-                LinkBuilder::createLink()*/
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:Processes:showAll', 'filter' => 'finished'), 'Finished processes')
             )
         );
     
@@ -96,6 +94,13 @@ class Panels {
             } else {
                 $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showServices', 'Services', 'img/services.svg');
             }
+        }
+
+        if(self::SETTINGSPANEL_USE_TEXT) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets');
+        } else {
+            //$data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets');
+            $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets', 'img/dashboard-widgets.svg');
         }
 
         $templateManager->fill($data, $template);

@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\DocumentStatus;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
@@ -10,6 +11,29 @@ use DMS\Helpers\ArrayHelper;
 class DocumentModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function getDocumentCountByStatus(int $status = 0) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb = $qb->selectCount('id', 'cnt')
+                 ->from('documents');
+
+        switch($status) {
+            case 0:
+                break;
+            
+            default:
+                $qb->where('status=:status')
+                   ->setParam(':status', $status);
+
+                break;
+        }
+
+        $row = $qb->execute()
+                  ->fetchSingle('cnt');
+
+        return $row;
     }
 
     public function getDocumentsForName(string $name, ?int $idFolder) {
