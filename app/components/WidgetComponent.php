@@ -44,6 +44,10 @@ class WidgetComponent extends AComponent {
     private function _processesWaitingForMe() {
         $code = [];
 
+        if(!isset($_SESSION['id_current_user'])) {
+            return '';
+        }
+
         $idUser = $_SESSION['id_current_user'];
 
         $waitingForMe = $this->processModel->getProcessesWaitingForUser($idUser);
