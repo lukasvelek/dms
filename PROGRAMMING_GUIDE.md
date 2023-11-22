@@ -1,4 +1,41 @@
 # DMS (Document Management System) - Programming guide
+## Creating UI
+### About
+UI in DMS is concipated of several parts. It starts with a module. Module is a big UI part that containes presenters. Currently there are two modules _AnonymModule_ and _UserModule_.
+
+_AnonymModule_ is a definition of presenters that are allowed to be seen only to non-logged-in users - anonymous users.
+
+_UserModule_ is a definition of presenters that are allowed to be seen only by logged-in users.
+
+Every module consists of presenters. These presenters are essential categories of UI. 
+
+E.g. _UserModule_ has presenters such as _Documents_, _Groups_, _HomePage_, _Metadata_, _Processes_, ...
+
+Every presenter than contains actions. These actions can be show, do, perform or whatever. In native DMS there are two types of actions:
+- show
+- perform
+
+Show type displays something to the user. Perform type performs a certain action - create, update, delete, start, ...
+
+All these parts can be clearly seen in the URL link:
+_`ModuleName:PresenterName:actionName`_. This is the common page link.
+
+### Adding a new module
+UI modules are located in _dms/app/modules/_ directory. Each module has its own directory. In that directory the module class is located. This class must implement the `IModule` interface.
+
+E.g. when creating a module for a custom project named _CustomProject_ would have a directory _dms/app/modules/CustomProject/_. In this directory a PHP file with class named _CustomProject.php_ would be. There would also be another directory named _presenters_ that contains all presenters for the module.
+
+### Adding a new presenter
+After creating a module, presenters have to be defined. Every presenter must extend the `APresenter` abstract class that contains definitions of necessary methods.
+
+In the presenter there are then defined actions. These actions are then called.
+
+E.g. The _CustomProject_ module would have a presenter named _HomePage_. After defining all the necessities, an action named `showDashboard()` would be created.
+
+This action is then going to be called in the application through link _CustomProject:HomePage:showDashboard_.
+
+Passing parameters to the action is easy and done solely by calling either _$_GET[]_ to get values from the link or _$_POST[]_ to get data from a form.
+
 ## Creating services
 ### About
 Services are scripts that when called perform a defined action. Services shouldn't be run from backend but rather from frontend based on user interaction.
