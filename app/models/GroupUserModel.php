@@ -63,6 +63,23 @@ class GroupUserModel extends AModel {
         return $result;
     }
 
+    public function removeUserFromGroup(int $idGroup, int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('group_users')
+                     ->where('id_group=:id_group')
+                     ->andWhere('id_user=:id_user')
+                     ->setParams(array(
+                        ':id_user' => $idUser,
+                        ':id_group' => $idGroup
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function insertUserToGroup(int $idGroup, int $idUser) {
         $qb = $this->qb(__METHOD__);
 
