@@ -33,26 +33,28 @@ class ProcessComponent extends AComponent {
 
         $processes = [];
 
-        foreach($userProcesses as $up) {
-            $userPos = -1;
-
-            $i = 0;
-            foreach($up->getWorkflow() as $wf) {
-                if($wf == $idUser) {
-                    $userPos = $i;
-
+        if(count($userProcesses) > 0) {
+            foreach($userProcesses as $up) {
+                $userPos = -1;
+    
+                $i = 0;
+                foreach($up->getWorkflow() as $wf) {
+                    if($wf == $idUser) {
+                        $userPos = $i;
+    
+                        break;
+                    }
+    
+                    $i++;
+                }
+    
+                if($userPos == -1) {
                     break;
                 }
-
-                $i++;
-            }
-
-            if($userPos == -1) {
-                break;
-            }
-
-            if($up->getWorkflowStatus() == $userPos) {
-                $processes[] = $up;
+    
+                if($up->getWorkflowStatus() == $userPos) {
+                    $processes[] = $up;
+                }
             }
         }
 
@@ -60,6 +62,8 @@ class ProcessComponent extends AComponent {
     }
 
     public function startProcess(int $type, int $idDocument, int $idAuthor) {
+        $start = true;
+
         $data = [];
 
         if($this->checkIfDocumentIsInProcess($idDocument)) {
@@ -75,12 +79,16 @@ class ProcessComponent extends AComponent {
                 $document = $this->documentModel->getDocumentById($idDocument);
                 $data['workflow1'] = $document->getIdManager();
 
-                foreach($groupUsers as $gu) {
-                    if($gu->getIsManager()) {
-                        $data['workflow2'] = $gu->getIdUser();
-                        
-                        break;
+                if(count($groupUsers) > 0) {
+                    foreach($groupUsers as $gu) {
+                        if($gu->getIsManager()) {
+                            $data['workflow2'] = $gu->getIdUser();
+                            
+                            break;
+                        }
                     }
+                } else {
+                    $start = false;
                 }
 
                 break;
@@ -93,12 +101,16 @@ class ProcessComponent extends AComponent {
                 $data['workflow1'] = $document->getIdAuthor();
                 $data['workflow2'] = $document->getIdManager();
 
-                foreach($groupUsers as $gu) {
-                    if($gu->getIsManager()) {
-                        $data['workflow3'] = $gu->getIdUser();
-                        
-                        break;
+                if(count($groupUsers) > 0) {
+                    foreach($groupUsers as $gu) {
+                        if($gu->getIsManager()) {
+                            $data['workflow3'] = $gu->getIdUser();
+                            
+                            break;
+                        }
                     }
+                } else {
+                    $start = false;
                 }
 
                 break;
@@ -109,15 +121,22 @@ class ProcessComponent extends AComponent {
         $data['workflow_status'] = '1';
         $data['id_author'] = $idAuthor;
 
-        $this->processModel->insertNewProcess($data);
-        
-        $this->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
-        
-        return true;
+        if($start) {
+            $this->processModel->insertNewProcess($data);
+            $this->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function moveProcessToNextWorkflowUser(int $idProcess) {
         $process = $this->processModel->getProcessById($idProcess);
+
+        if(is_null($process)) {
+            return false;
+        }
 
         $newWfStatus = $process->getWorkflowStatus() + 1;
 
@@ -139,14 +158,10 @@ class ProcessComponent extends AComponent {
     public function checkIfDocumentIsInProcess(int $idDocument) {
         $process = $this->processModel->getProcessForIdDocument($idDocument);
 
-        if($process === NULL) {
-            return false;
+        if(!is_null($process) && $process->getStatus() == ProcessStatus::IN_PROGRESS) {
+            return true;
         } else {
-            if($process->getStatus() == ProcessStatus::FINISHED) {
-                return false;
-            } else {
-                return true;
-            }
+            return false;
         }
     }
 }

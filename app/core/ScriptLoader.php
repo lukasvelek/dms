@@ -63,6 +63,30 @@ class ScriptLoader {
 
         return $code;
     }
+
+    public static function alert(string $text, array $urlConfirm) {
+        $url = '';
+
+        $i = 0;
+        foreach($urlConfirm as $k => $v) {
+            if(($i + 1) == count($urlConfirm)) {
+                $url .= $k . '=' . $v;
+            } else {
+                $url .= $k . '=' . $v . '&';
+            }
+
+            $i++;
+        }
+
+        $code = '
+            <script type="text/javascript">
+                alert("' . $text . '");
+                location.replace("' . $url . '");
+            </script>
+        ';
+
+        return $code;
+    }
 }
 
 ?>

@@ -6,6 +6,7 @@ use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
@@ -13,7 +14,6 @@ use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Documents extends APresenter {
     private string $name;
@@ -196,78 +196,102 @@ class Documents extends APresenter {
             )
         );
 
-        foreach($users as $user) {
-            $managers[] = array(
-                'value' => $user->getId(),
-                'text' => $user->getFullname()
-            );
+        if(count($users) > 0) {
+            foreach($users as $user) {
+                $managers[] = array(
+                    'value' => $user->getId(),
+                    'text' => $user->getFullname()
+                );
+            }
         }
 
         $statusMetadata = $app->metadataModel->getMetadataByName('status', 'documents');
         $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($statusMetadata->getId());
-
         $statuses = [];
-        foreach($dbStatuses as $dbs) {
-            $statuses[] = array(
-                'value' => $dbs->getValue(),
-                'text' => $dbs->getName()
-            );
+
+        if(count($dbStatuses) > 0) {
+            foreach($dbStatuses as $dbs) {
+                $statuses[] = array(
+                    'value' => $dbs->getValue(),
+                    'text' => $dbs->getName()
+                );
+            }
+        } else {
+            ScriptLoader::alert('No statuses found!', array('UserModule:Documents:showAll'));
         }
 
         $dbGroups = $app->groupModel->getAllGroups();
-
         $groups = [];
-        foreach($dbGroups as $dbg) {
-            $groups[] = array(
-                'value' => $dbg->getId(),
-                'text' => $dbg->getName()
-            );
+
+        if(count($dbGroups) > 0) {
+            foreach($dbGroups as $dbg) {
+                $groups[] = array(
+                    'value' => $dbg->getId(),
+                    'text' => $dbg->getName()
+                );
+            }
+        } else {
+            ScriptLoader::alert('No groups found!', array('UserModule:Documents:showAll'));
         }
 
         $rankMetadata = $app->metadataModel->getMetadataByName('rank', 'documents');
         $dbRanks = $app->metadataModel->getAllValuesForIdMetadata($rankMetadata->getId());
-
         $ranks = [];
-        foreach($dbRanks as $dbr) {
-            $ranks[] = array(
-                'value' => $dbr->getValue(),
-                'text' => $dbr->getName()
-            );
+
+        if(count($dbRanks) > 0) {
+            foreach($dbRanks as $dbr) {
+                $ranks[] = array(
+                    'value' => $dbr->getValue(),
+                    'text' => $dbr->getName()
+                );
+            }
+        } else {
+            ScriptLoader::alert('No ranks found!', array('UserModule:Documents:showAll'));
         }
 
         $dbFolders = $app->folderModel->getAllFolders();
-
-        $folders = [];
-        $folders[] = array(
-            'value' => '-1',
-            'text' => '-'
+        $folders = array(
+            array(
+                'value' => '-1',
+                'text' => '-'
+            )
         );
 
-        foreach($dbFolders as $dbf) {
-            $text = $dbf->getName();
-
-            for($i = 0; $i < $dbf->getNestLevel(); $i++) {
-                $text = '&nbsp;&nbsp;' . $text;
+        if(count($dbFolders) > 0) {
+            foreach($dbFolders as $dbf) {
+                $text = $dbf->getName();
+    
+                for($i = 0; $i < $dbf->getNestLevel(); $i++) {
+                    $text = '&nbsp;&nbsp;' . $text;
+                }
+    
+                $folder = array(
+                    'value' => $dbf->getId(),
+                    'text' => $text
+                );
+    
+                if($idFolder != null && $idFolder == $dbf->getId()) {
+                    $folder['selected'] = 'selected';
+                }
+    
+                $folders[] = $folder;
             }
-
-            $folder = array(
-                'value' => $dbf->getId(),
-                'text' => $text
-            );
-
-            if($idFolder != null && $idFolder == $dbf->getId()) {
-                $folder['selected'] = 'selected';
-            }
-
-            $folders[] = $folder;
         }
 
         $shredYears = [];
         for($i = 1950; $i < 2200; $i++) {
-            $shredYears[] = array(
-                'value' => $i,
-                'text' => $i
-            );
+            if(date('Y') == $i) {
+                $shredYears[] = array(
+                    'value' => $i,
+                    'text' => $i,
+                    'selected' => 'selected'
+                );
+            } else {
+                $shredYears[] = array(
+                    'value' => $i,
+                    'text' => $i
+                );
+            }
         }
 
         $afterShredActions = [];
@@ -282,24 +306,26 @@ class Documents extends APresenter {
         // name = array('text' => 'text', 'options' => 'options from metadata_values')
         $metadata = [];
 
-        foreach($customMetadata as $cm) {
-            if($cm->getIsSystem()) {
-                continue;
+        if(count($customMetadata) > 0) {
+            foreach($customMetadata as $cm) {
+                if($cm->getIsSystem()) {
+                    continue;
+                }
+    
+                $name = $cm->getName();
+                $text = $cm->getText();
+                $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
+    
+                $options = [];
+                foreach($values as $v) {
+                    $options[] = array(
+                        'value' => $v->getValue(),
+                        'text' => $v->getName()
+                    );
+                }
+    
+                $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
             }
-
-            $name = $cm->getName();
-            $text = $cm->getText();
-            $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
-
-            $options = [];
-            foreach($values as $v) {
-                $options[] = array(
-                    'value' => $v->getValue(),
-                    'text' => $v->getName()
-                );
-            }
-
-            $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
         }
 
         $fb = FormBuilder::getTemporaryObject();
