@@ -13,6 +13,23 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertDocumentSharing(array $data) {
+        return $this->insertNew($data, 'document_sharing');
+    }
+
+    public function removeDocumentSharing(int $idShare) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('document_sharing')
+                     ->where('id=:id')
+                     ->setParam(':id', $idShare)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getDocumentCountByStatus(int $status = 0) {
         $qb = $this->qb(__METHOD__);
 

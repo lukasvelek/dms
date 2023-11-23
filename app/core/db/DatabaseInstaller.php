@@ -211,6 +211,16 @@ class DatabaseInstaller {
                 'location' => 'INT(32) NOT NULL',
                 'widget_name' => 'VARCHAR(256) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'document_sharing' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_author' => 'INT(32) NOT NULL',
+                'id_user' => 'INT(32) NOT NULL',
+                'id_document' => 'INT(32) NOT NULL',
+                'date_from' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'date_to' => 'DATETIME NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'hash' => 'VARCHAR(256) NOT NULL'
             )
         );
 
