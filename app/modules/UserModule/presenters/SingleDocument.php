@@ -41,6 +41,24 @@ class SingleDocument extends APresenter {
         return $this->name;
     }
 
+    protected function showShare() {
+        global $app;
+
+        $idDocument = htmlspecialchars($_GET['id']);
+        $document = $app->documentModel->getDocumentById($idDocument);
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/document-sharing-grid.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Share document <i>' . $document->getName() . '</i>',
+            '$SHARING_GRID$' => $this->internalCreateDocumentSharingForm($document)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function deleteComment() {
         global $app;
 
@@ -546,6 +564,42 @@ class SingleDocument extends APresenter {
             $(document).on("load", showLoading())
                        .ready(loadComments("' . $document->getId() . '", "' . $canDelete . '"));
         </script>';
+    }
+
+    private function internalCreateDocumentSharingForm(Document $document) {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $dbUsers = $app->userModel->getAllUsers();
+        $users = [];
+
+        if(count($dbUsers) > 0) {
+            foreach($dbUsers as $user) {
+                $users[] = array(
+                    'value' => $user->getId(),
+                    'text' => $user->getFullname()
+                );
+            }
+        } else {
+            ScriptLoader::alert('Could not load any users', array('page' => 'UserModule:Documents:showAll'));
+        }
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:SingleDocument:shareDocument&id_document=' . $document->getId())
+
+            ->addElement($fb->createLabel()->setText('User')->setFor('user'))
+            ->addElement($fb->createSelect()->setName('user')->addOptionsBasedOnArray($users))
+
+            ->addElement($fb->createLabel()->setText('Date from')->setFor('date_from'))
+            ->addElement($fb->createInput()->setType('date')->setName('date_from')->setValue(date('Y-m-d')))
+
+            ->addElement($fb->createLabel()->setText('Date to')->setFor('date_to'))
+            ->addElement($fb->createInput()->setType('date')->setName('date_to'))
+
+            ->addElement($fb->createSubmit('Share'))
+        ;
+
+        return $fb->build();
     }
 }
 
