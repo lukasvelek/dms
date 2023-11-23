@@ -152,5 +152,6 @@ $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
 $widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel);
+$sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 ?>
