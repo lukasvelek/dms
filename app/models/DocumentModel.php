@@ -17,6 +17,36 @@ class DocumentModel extends AModel {
         return $this->insertNew($data, 'document_sharing');
     }
 
+    public function isDocumentSharedToUser(int $idUser, int $idDocument) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('document_sharing')
+                   ->where('id_user=:id_user')
+                   ->andWhere('id_document=:id_document')
+                   ->setParams(array(
+                    ':id_user' => $idUser,
+                    ':id_document' => $idDocument
+                   ))
+                   ->execute()
+                   ->fetch();
+
+        $result = false;
+
+        foreach($rows as $row) {
+            $dateFrom = $row['date_from'];
+            $dateTo = $row['date_to'];
+
+            if(strtotime($dateFrom) < time() && strtotime($dateTo) > time()) {
+                $result = true;
+
+                break;
+            }
+        }
+
+        return $result;
+    }
+
     public function removeDocumentSharing(int $idShare) {
         $qb = $this->qb(__METHOD__);
 
@@ -150,6 +180,9 @@ class DocumentModel extends AModel {
                    ->from('documents')
                    ->execute()
                    ->fetch();
+
+        $qb = $qb->select('*')
+                 ->from('documents');
 
         $documents = [];
         foreach($rows as $row) {
