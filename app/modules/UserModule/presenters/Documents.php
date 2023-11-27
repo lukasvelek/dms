@@ -40,6 +40,49 @@ class Documents extends APresenter {
         return $this->name;
     }
 
+    protected function showSharedWithMe() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/document-grid.html');
+
+        $idFolder = null;
+        $folderName = 'Main folder';
+        $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+
+        $documentGrid = '';
+        $folderList = '';
+        
+        $app->logger->logFunction(function() use (&$documentGrid, $idFolder) {
+            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder);
+            $documentGrid = $this->internalCreateSharedWithMeDocumentGrid();
+        }, __METHOD__);
+
+        $app->logger->logFunction(function() use (&$folderList, $idFolder) {
+            $folderList = $this->internalCreateFolderList($idFolder);
+        }, __METHOD__);
+
+        $searchField = '
+            <input type="text" id="q" placeholder="Search" oninput="ajaxSearch(this.value, \'' . ($idFolder ?? 'null') . '\');">
+            <script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
+            <script type="text/javascript" src="js/DocumentAjaxBulkActions.js"></script>
+        ';
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Documents',
+            '$DOCUMENT_GRID$' => $documentGrid,
+            '$BULK_ACTION_CONTROLLER$' => ''/*$this->internalPrepareDocumentBulkActions()*/,
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$NEW_DOCUMENT_LINK$' => $newEntityLink,
+            '$CURRENT_FOLDER_TITLE$' => $folderName,
+            '$FOLDER_LIST$' => $folderList,
+            '$SEARCH_FIELD$' => $searchField
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showAll() {
         global $app;
 
@@ -572,6 +615,12 @@ class Documents extends APresenter {
             $this->_createFolderList($folder, $list, 0);
         }
 
+        if(count($folders) > 0) {
+            $list['null3'] = '<hr>';
+        }
+
+        $list['null4'] = '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showSharedWithMe', 'Documents shared with me');
+
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }
 
@@ -598,6 +647,15 @@ class Documents extends APresenter {
                 $this->_createFolderList($cf, $list, $level + 1);
             }
         }
+    }
+
+    private function internalCreateSharedWithMeDocumentGrid() {
+        return '
+            <script type="text/javascript">
+            ajaxLoadDocumentSharedWithMe();
+            </script> 
+            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+        ';
     }
 }
 

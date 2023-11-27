@@ -13,6 +13,29 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getSharedDocumentsWithUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('documents')
+                   ->explicit('
+                   WHERE 
+                        EXISTS(SELECT 1 FROM `document_sharing` 
+                               WHERE `document_sharing`.`id_user`=' . $idUser . '
+                               AND `document_sharing`.`id_document`=`documents`.`id`
+                        )
+                   ')
+                   ->execute()
+                   ->fetch();
+
+        $documents = [];
+        foreach($rows as $row) {
+            $documents = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function insertDocumentSharing(array $data) {
         return $this->insertNew($data, 'document_sharing');
     }
