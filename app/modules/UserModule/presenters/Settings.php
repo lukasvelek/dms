@@ -50,10 +50,10 @@ class Settings extends APresenter {
 
         $idUser = htmlspecialchars($_GET['id_user']);
 
-        $widget0_0 = htmlspecialchars($_POST['widget0-0']);
-        $widget0_1 = htmlspecialchars($_POST['widget0-1']);
-        $widget1_0 = htmlspecialchars($_POST['widget1-0']);
-        $widget1_1 = htmlspecialchars($_POST['widget1-1']);
+        $widget0_0 = htmlspecialchars($_POST['widget00']);
+        $widget0_1 = htmlspecialchars($_POST['widget01']);
+        $widget1_0 = htmlspecialchars($_POST['widget10']);
+        $widget1_1 = htmlspecialchars($_POST['widget11']);
 
         if($widget0_0 != '-') {
             if(is_null($app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00))) {
@@ -1404,19 +1404,19 @@ class Settings extends APresenter {
         $fb->setMethod('POST')->setAction('?page=UserModule:Settings:updateDashboardWidgets&id_user=' . $idUser);
 
         $fb ->addElement($fb->createLabel()->setText('Widget 1 (upper-left)'))
-            ->addElement($fb->createSelect()->setName('widget0-0')
+            ->addElement($fb->createSelect()->setName('widget00')
                                             ->addOptionsBasedOnArray($widgets00Select))
 
             ->addElement($fb->createLabel()->setText('Widget 2 (upper-right)'))
-            ->addElement($fb->createSelect()->setName('widget0-1')
+            ->addElement($fb->createSelect()->setName('widget01')
                                             ->addOptionsBasedOnArray($widgets01Select))
 
             ->addElement($fb->createLabel()->setText('Widget 3 (lower-left)'))
-            ->addElement($fb->createSelect()->setName('widget1-0')
+            ->addElement($fb->createSelect()->setName('widget10')
                                             ->addOptionsBasedOnArray($widgets10Select))
             
             ->addElement($fb->createLabel()->setText('Widget 4 (lower-right)'))
-            ->addElement($fb->createSelect()->setName('widget1-1')
+            ->addElement($fb->createSelect()->setName('widget11')
                                             ->addOptionsBasedOnArray($widgets11Select))
 
             ->addElement($fb->createSubmit('Save'))

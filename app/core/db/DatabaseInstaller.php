@@ -208,7 +208,7 @@ class DatabaseInstaller {
             'user_widgets' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user' => 'INT(32) NOT NULL',
-                'location' => 'INT(32) NOT NULL',
+                'location' => 'VARCHAR(256) NOT NULL',
                 'widget_name' => 'VARCHAR(256) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),

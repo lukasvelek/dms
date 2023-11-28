@@ -126,16 +126,9 @@ require_once('Ajax.php');
     } else {
         foreach($documents as $document) {
             $actionLinks = array(
-                '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawBulkActions()">',
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
             );
-
-            $shared = false;
-
-            if(!$shared) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
-            }
 
             if(is_null($headerRow)) {
                 $row = $tb->createRow();
@@ -157,6 +150,7 @@ require_once('Ajax.php');
             }
 
             $docuRow = $tb->createRow();
+            $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawBulkActions()">'));
 
             foreach($actionLinks as $actionLink) {
                 $docuRow->addCol($tb->createCol()->setText($actionLink));
@@ -182,6 +176,25 @@ require_once('Ajax.php');
             }
 
             $docuRow->addCol($tb->createCol()->setText($folderName));
+
+            if(isset($user)) {
+                $documentSharing = $documentModel->getDocumentSharingByIdDocumentAndIdUser($user->getId(), $document->getId());
+
+                $documentSharingAuthor = $userModel->getUserById($documentSharing['id_author']);
+
+                $dateFrom = date('Y-m-d', strtotime($documentSharing['date_from']));
+                $dateTo = date('Y-m-d', strtotime($documentSharing['date_to']));
+
+                $docuRow->addCol($tb->createCol()->setText($dateFrom))
+                        ->addCol($tb->createCol()->setText($dateTo))
+                        ->addCol($tb->createCol()->setText($documentSharingAuthor->getFullname()))
+                ;
+            } else {
+                $docuRow->addCol($tb->createCol()->setText('-'))
+                        ->addCol($tb->createCol()->setText('-'))
+                        ->addCol($tb->createCol()->setText('-'))
+                ;
+            }
                 
             $tb->addRow($docuRow);
         }

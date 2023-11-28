@@ -53,7 +53,7 @@ class Documents extends APresenter {
         $folderList = '';
         
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder) {
-            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder);
+            //$documentGrid = $this->internalCreateStandardDocumentGrid($idFolder);
             $documentGrid = $this->internalCreateSharedWithMeDocumentGrid();
         }, __METHOD__);
 
@@ -652,7 +652,7 @@ class Documents extends APresenter {
     private function internalCreateSharedWithMeDocumentGrid() {
         return '
             <script type="text/javascript">
-            ajaxLoadDocumentSharedWithMe();
+            ajaxLoadDocumentsSharedWithMe();
             </script> 
             <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
         ';

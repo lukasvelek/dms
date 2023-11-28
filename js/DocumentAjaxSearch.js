@@ -47,7 +47,7 @@ function selectAllDocumentEntries() {
     }
 }
 
-async function ajaxLoadDocumentSharedWithMe() {
+async function ajaxLoadDocumentsSharedWithMe() {
     await sleep(250);
 
     $.ajax({

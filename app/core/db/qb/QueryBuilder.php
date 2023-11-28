@@ -133,6 +133,42 @@ class QueryBuilder {
     return $this;
   }
 
+  public function inWhere(string $columnName, array $values, bool $or = true, bool $renderText = true) {
+    $paramKeys = [];
+
+    $x = 0;
+    foreach($values as $value) {
+      $key = ':' . $columnName . '_' . $x;
+      $paramKeys[] = $key;
+      $this->setParam($key, $value);
+
+      $x++;
+    }
+
+    if($renderText == true) {
+      $this->sql .= ' WHERE (';
+    }
+
+    $i = 0;
+    foreach($paramKeys as $k) {
+      $this->sql .= '(`' . $columnName . '` = \'' . $k . '\')';
+
+      if(($i + 1) != count($paramKeys)) {
+        if($or == true) {
+          $this->sql .= ' OR ';
+        } else {
+          $this->sql .= ' AND ';
+        }
+      } else {
+        $this->sql .= ')';
+      }
+
+      $i++;
+    }
+
+    return $this;
+  }
+
   public function where(string $text, bool $like = false, bool $renderText = true) {
     $text = trim($text);
 
