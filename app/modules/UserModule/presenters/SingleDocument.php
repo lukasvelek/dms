@@ -6,6 +6,7 @@ use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
+use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Document;
@@ -39,6 +40,52 @@ class SingleDocument extends APresenter {
 
     public function getName() {
         return $this->name;
+    }
+
+    protected function shareDocument() {
+        global $app;
+
+        $idDocument = htmlspecialchars($_GET['id_document']);
+        $idUser = htmlspecialchars($_POST['user']);
+        $dateFrom = htmlspecialchars($_POST['date_from']);
+        $dateTo = htmlspecialchars($_POST['date_to']);
+        $idAuthor = $app->user->getId();
+        $hash = CypherManager::createCypher(64);
+
+        if(strtotime($dateFrom) > strtotime($dateTo)) {
+            ScriptLoader::alert('Start date cannot be later than end date!', array('page' => 'UserModule:SingleDocument:showShare', 'id' => $idDocument));
+        }
+
+        $data = array(
+            'id_document' => $idDocument,
+            'id_author' => $idAuthor,
+            'id_user' => $idUser,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'hash' => $hash
+        );
+
+        $app->documentModel->insertDocumentSharing($data);
+
+        $app->redirect('UserModule:Documents:showAll');
+    }
+
+    protected function showShare() {
+        global $app;
+
+        $idDocument = htmlspecialchars($_GET['id']);
+        $document = $app->documentModel->getDocumentById($idDocument);
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/document-sharing-grid.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Share document <i>' . $document->getName() . '</i>',
+            '$SHARING_GRID$' => $this->internalCreateDocumentSharingForm($document)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
     }
 
     protected function deleteComment() {
@@ -546,6 +593,46 @@ class SingleDocument extends APresenter {
             $(document).on("load", showLoading())
                        .ready(loadComments("' . $document->getId() . '", "' . $canDelete . '"));
         </script>';
+    }
+
+    private function internalCreateDocumentSharingForm(Document $document) {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $dbUsers = $app->userModel->getAllUsers();
+        $users = [];
+
+        if(count($dbUsers) > 0) {
+            foreach($dbUsers as $user) {
+                if($app->documentModel->isDocumentSharedToUser($user->getId(), $document->getId())) {
+                    continue;
+                }
+
+                $users[] = array(
+                    'value' => $user->getId(),
+                    'text' => $user->getFullname()
+                );
+            }
+        } else {
+            ScriptLoader::alert('Could not load any users', array('page' => 'UserModule:Documents:showAll'));
+        }
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:SingleDocument:shareDocument&id_document=' . $document->getId())
+
+            ->addElement($fb->createLabel()->setText('User')->setFor('user'))
+            ->addElement($fb->createSelect()->setName('user')->addOptionsBasedOnArray($users))
+
+            ->addElement($fb->createLabel()->setText('Date from')->setFor('date_from'))
+            ->addElement($fb->createInput()->setType('date')->setName('date_from')->setValue(date('Y-m-d'))->require())
+
+            ->addElement($fb->createLabel()->setText('Date to')->setFor('date_to'))
+            ->addElement($fb->createInput()->setType('date')->setName('date_to')->require())
+
+            ->addElement($fb->createSubmit('Share'))
+        ;
+
+        return $fb->build();
     }
 }
 

@@ -7,6 +7,7 @@ use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
+use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
@@ -152,5 +153,6 @@ $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
 $widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel);
+$sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 ?>

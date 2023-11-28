@@ -5,9 +5,8 @@ use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
 
-if(isset($_POST['q']) && isset($_POST['idFolder'])) {
+/*if(isset($_POST['q'])) {
     $query = htmlspecialchars($_POST['q']);
-    $idFolder = htmlspecialchars($_POST['idFolder']);
 
     $tb = TableBuilder::getTemporaryObject();
 
@@ -17,16 +16,18 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
         'Name',
         'Author',
         'Status',
-        'Folder'
+        'Folder',
+        'Shared from',
+        'Shared to',
+        'Shared by'
     );
 
     $headerRow = null;
+    $documents = [];
 
-    if($idFolder == 'null') {
-        $idFolder = null;
+    if(!is_null($user)) {
+        $documents = $documentModel->getSharedDocumentsWithUser($user->getId());
     }
-
-    $documents = $documentModel->getDocumentsForName($query, $idFolder);
 
     if(empty($documents)) {
         $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
@@ -95,8 +96,9 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
     }
 
     echo $tb->build();
-} else if(!isset($_POST['q']) && isset($_POST['idFolder'])) {
-    $idFolder = htmlspecialchars($_POST['idFolder']);
+}*/
+
+//$query = htmlspecialchars($_POST['q']);
 
     $tb = TableBuilder::getTemporaryObject();
 
@@ -106,21 +108,17 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
         'Name',
         'Author',
         'Status',
-        'Folder'
+        'Folder',
+        'Shared from',
+        'Shared to',
+        'Shared by'
     );
 
     $headerRow = null;
-
-    if($idFolder == 'null') {
-        $idFolder = null;
-    }
-
     $documents = [];
 
-    if(is_null($idFolder)) {
-        $documents = $documentModel->getStandardDocuments();
-    } else {
-        $documents = $documentModel->getStandardDocumentsInIdFolder($idFolder);
+    if(!is_null($user)) {
+        $documents = $documentModel->getSharedDocumentsWithUser($user->getId());
     }
 
     if(empty($documents)) {
@@ -129,8 +127,7 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
         foreach($documents as $document) {
             $actionLinks = array(
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit'),
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share')
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
             );
 
             if(is_null($headerRow)) {
@@ -153,9 +150,8 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
             }
 
             $docuRow = $tb->createRow();
+            $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawBulkActions()">'));
 
-            $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawBulkActions()" onchange="drawBulkActions()">'));
-            
             foreach($actionLinks as $actionLink) {
                 $docuRow->addCol($tb->createCol()->setText($actionLink));
             }
@@ -180,12 +176,30 @@ if(isset($_POST['q']) && isset($_POST['idFolder'])) {
             }
 
             $docuRow->addCol($tb->createCol()->setText($folderName));
+
+            if(isset($user)) {
+                $documentSharing = $documentModel->getDocumentSharingByIdDocumentAndIdUser($user->getId(), $document->getId());
+
+                $documentSharingAuthor = $userModel->getUserById($documentSharing['id_author']);
+
+                $dateFrom = date('Y-m-d', strtotime($documentSharing['date_from']));
+                $dateTo = date('Y-m-d', strtotime($documentSharing['date_to']));
+
+                $docuRow->addCol($tb->createCol()->setText($dateFrom))
+                        ->addCol($tb->createCol()->setText($dateTo))
+                        ->addCol($tb->createCol()->setText($documentSharingAuthor->getFullname()))
+                ;
+            } else {
+                $docuRow->addCol($tb->createCol()->setText('-'))
+                        ->addCol($tb->createCol()->setText('-'))
+                        ->addCol($tb->createCol()->setText('-'))
+                ;
+            }
                 
             $tb->addRow($docuRow);
         }
     }
 
     echo $tb->build();
-}
 
 ?>

@@ -13,6 +13,115 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentSharingByIdDocumentAndIdUser(int $idUser, int $idDocument) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('document_sharing')
+                  ->where('id_user=:id_user')
+                  ->andWhere('id_document=:id_document')
+                  ->setParams(array(
+                   ':id_user' => $idUser,
+                   ':id_document' => $idDocument
+                  ))
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
+    public function getDocumentSharingsSharedWithUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('document_sharing')
+                   ->where('id_user=:id_user')
+                   ->explicit(' AND ')
+                   ->leftBracket()
+                   ->explicit(' `date_from` < current_timestamp AND `date_to` > current_timestamp')
+                   ->rightBracket()
+                   ->setParam(':id_user', $idUser)
+                   ->execute()
+                   ->fetch();
+
+        return $rows;
+    }
+
+    public function getSharedDocumentsWithUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $documentSharings = $this->getDocumentSharingsSharedWithUser($idUser);
+
+        if($documentSharings->num_rows == 0) {
+            return [];
+        }
+
+        $idDocuments = [];
+        foreach($documentSharings as $ds) {
+            $idDocuments[] = $ds['id_document'];
+        }
+
+        $rows = $qb->select('*')
+                   ->from('documents')
+                   ->inWhere('id', $idDocuments)
+                   ->execute()
+                   ->fetch();
+
+        $documents = [];
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
+    public function insertDocumentSharing(array $data) {
+        return $this->insertNew($data, 'document_sharing');
+    }
+
+    public function isDocumentSharedToUser(int $idUser, int $idDocument) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('document_sharing')
+                   ->where('id_user=:id_user')
+                   ->andWhere('id_document=:id_document')
+                   ->setParams(array(
+                    ':id_user' => $idUser,
+                    ':id_document' => $idDocument
+                   ))
+                   ->execute()
+                   ->fetch();
+
+        $result = false;
+
+        foreach($rows as $row) {
+            $dateFrom = $row['date_from'];
+            $dateTo = $row['date_to'];
+
+            if(strtotime($dateFrom) < time() && strtotime($dateTo) > time()) {
+                $result = true;
+
+                break;
+            }
+        }
+
+        return $result;
+    }
+
+    public function removeDocumentSharing(int $idShare) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('document_sharing')
+                     ->where('id=:id')
+                     ->setParam(':id', $idShare)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getDocumentCountByStatus(int $status = 0) {
         $qb = $this->qb(__METHOD__);
 
@@ -133,6 +242,9 @@ class DocumentModel extends AModel {
                    ->from('documents')
                    ->execute()
                    ->fetch();
+
+        $qb = $qb->select('*')
+                 ->from('documents');
 
         $documents = [];
         foreach($rows as $row) {

@@ -46,3 +46,16 @@ function selectAllDocumentEntries() {
         $('#bulk_actions').hide();
     }
 }
+
+async function ajaxLoadDocumentsSharedWithMe() {
+    await sleep(250);
+
+    $.ajax({
+        url: 'app/ajax/documents-shared-with-me-search.php',
+        type: 'POST'
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}

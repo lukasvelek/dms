@@ -13,6 +13,7 @@ use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\ProcessComponent;
+use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
 use \DMS\Core\Logger\Logger;
@@ -85,6 +86,7 @@ class Application {
 
     public ProcessComponent $processComponent;
     public WidgetComponent $widgetComponent;
+    public SharingComponent $sharingComponent;
 
     private array $modules;
     private ?string $pageContent;
@@ -148,6 +150,7 @@ class Application {
         $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent);
 
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel);
+        $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
 
         //$this->conn->installer->updateDefaultUserPanelRights();
     }
