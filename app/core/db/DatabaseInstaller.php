@@ -221,6 +221,18 @@ class DatabaseInstaller {
                 'date_to' => 'DATETIME NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'hash' => 'VARCHAR(256) NOT NULL'
+            ),
+            'notification_queue' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_recipient' => 'INT(32) NOT NULL',
+                'id_notification' => 'INT(32) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'status' => 'INT(32) NOT NULL DEFAULT 1'
+            ),
+            'notifications' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'text' => 'VARCHAR(32768) NOT NULL'
             )
         );
 

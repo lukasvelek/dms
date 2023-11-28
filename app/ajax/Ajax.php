@@ -20,6 +20,7 @@ use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\MetadataModel;
+use DMS\Models\NotificationModel;
 use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
 use DMS\Models\ServiceModel;
@@ -138,6 +139,7 @@ $serviceModel = new ServiceModel($db, $logger);
 $documentCommentModel = new DocumentCommentModel($db, $logger);
 $processCommentModel = new ProcessCommentModel($db, $logger);
 $widgetModel = new WidgetModel($db, $logger);
+$notificationModel = new NotificationModel($this->conn, $this->logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);

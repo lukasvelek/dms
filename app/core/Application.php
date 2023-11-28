@@ -25,6 +25,7 @@ use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\MetadataModel;
+use DMS\Models\NotificationModel;
 use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
 use DMS\Models\ServiceModel;
@@ -76,6 +77,7 @@ class Application {
     public DocumentCommentModel $documentCommentModel;
     public ProcessCommentModel $processCommentModel;
     public WidgetModel $widgetModel;
+    public NotificationModel $notificationModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -128,6 +130,7 @@ class Application {
         $this->documentCommentModel = new DocumentCommentModel($this->conn, $this->logger);
         $this->processCommentModel = new ProcessCommentModel($this->conn, $this->logger);
         $this->widgetModel = new WidgetModel($this->conn, $this->logger);
+        $this->notificationModel = new NotificationModel($this->conn, $this->logger);
         
         $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel);
 
