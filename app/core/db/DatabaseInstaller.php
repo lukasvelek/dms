@@ -19,7 +19,8 @@ class DatabaseInstaller {
     private Logger $logger;
 
     public const DEFAULT_USERS = array(
-        'admin'
+        'admin',
+        'service_user'
     );
 
     public function __construct(Database $db, Logger $logger) {
@@ -41,6 +42,7 @@ class DatabaseInstaller {
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
         $this->insertDefaultServiceConfig();
+        $this->insertDefaultNotifications();
     }
 
     public function updateDefaultUserRights() {
@@ -225,7 +227,7 @@ class DatabaseInstaller {
             'notification_queue' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_recipient' => 'INT(32) NOT NULL',
-                'id_notification' => 'INT(32) NOT NULL',
+                'text' => 'VARCHAR(32768) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'status' => 'INT(32) NOT NULL DEFAULT 1'
             ),
@@ -263,19 +265,19 @@ class DatabaseInstaller {
     }
 
     private function insertDefaultUsers() {
-        $defaultUsersUsernames = array('serviceuser', 'admin');
+        //$defaultUsersUsernames = array('serviceuser', 'admin');
         $insertUsers = array();
 
         $defaultUserData = array(
-            'serviceuser' => array(
+            self::DEFAULT_USERS['service_user'] => array(
                 'firstname' => 'Service',
                 'lastname' => 'User',
-                'password' => 'serviceuser'
+                'password' => self::DEFAULT_USERS['service_user']
             ),
-            'admin' => array(
+            self::DEFAULT_USERS['admin'] => array(
                 'firstname' => 'Admin',
                 'lastname' => 'istrator',
-                'password' => 'admin'
+                'password' => self::DEFAULT_USERS['admin']
             )
         );
 
@@ -284,12 +286,12 @@ class DatabaseInstaller {
 
         if($rows->num_rows > 0) {
             foreach($rows as $row) {
-                if(!in_array($row['username'], $defaultUsersUsernames)) {
+                if(!in_array($row['username'], self::DEFAULT_USERS)) {
                     $insertUsers[] = $row['username'];
                 }
             }
         } else {
-            $insertUsers = $defaultUsersUsernames;
+            $insertUsers = self::DEFAULT_USERS;
         }
 
         foreach($insertUsers as $iu) {
@@ -758,6 +760,26 @@ class DatabaseInstaller {
 
                 $this->db->query($sql);
             }
+        }
+    }
+
+    public function insertDefaultNotifications() {
+        $notifications = array(
+            array(
+                'name' => 'processStarted',
+                'text' => 'You have successfully started the $PROCESS_NAME$ process. Here is link to check current process status: $LINK$.'
+            )
+        );
+
+        foreach($notifications as $notification) {
+            $name = $notification['name'];
+            $text = $notification['text'];
+
+            $sql = "INSERT INTO `notifications` (`name`, `text`) VALUES ('$name', '$text')";
+
+            $this->logger->sql($sql, __METHOD__);
+
+            $this->db->query($sql);
         }
     }
 }

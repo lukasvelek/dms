@@ -139,7 +139,7 @@ $serviceModel = new ServiceModel($db, $logger);
 $documentCommentModel = new DocumentCommentModel($db, $logger);
 $processCommentModel = new ProcessCommentModel($db, $logger);
 $widgetModel = new WidgetModel($db, $logger);
-$notificationModel = new NotificationModel($this->conn, $this->logger);
+$notificationModel = new NotificationModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);
