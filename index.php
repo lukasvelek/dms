@@ -19,6 +19,7 @@ include('app/dms_loader.php');
         <div id="cover">
             <img style="position: fixed; top: 50%; left: 49%;" src='img/loading.gif' width='32' height='32'>
         </div>
+        <div id="notifications" style="display: none;">a</div>
         <?php
 
         if(isset($_GET['page'])) {

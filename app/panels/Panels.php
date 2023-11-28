@@ -99,7 +99,6 @@ class Panels {
         if(self::SETTINGSPANEL_USE_TEXT) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets');
         } else {
-            //$data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets');
             $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets', 'img/dashboard-widgets.svg');
         }
 
@@ -155,9 +154,11 @@ class Panels {
 
         if(!is_null($app->user)) {
             if(self::TOPPANEL_USE_TEXT) {
+                $data['$USER_NOTIFICATIONS_LINK$'] = '<script type="text/javascript">openNotifications()</script>';
                 $data['$USER_PROFILE_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname());
                 $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createLink('UserModule:UserLogout:logoutUser', 'Logout');
             } else {
+                $data['$USER_NOTIFICATIONS_LINK$'] = '<img src="img/notifications.svg" width="32" height="32" loading="lazy"><span class="general-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications</span>';
                 $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user.svg');
                 $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', 'Logout', 'img/logout.svg');
             }

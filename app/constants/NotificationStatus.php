@@ -2,7 +2,7 @@
 
 namespace DMS\Constants;
 
-class NotificationQueueStatus {
+class NotificationStatus {
     public const UNSEEN = 1;
     public const SEEN = 2;
 }

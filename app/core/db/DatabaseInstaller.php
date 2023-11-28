@@ -228,21 +228,9 @@ class DatabaseInstaller {
                 'id_user' => 'INT(32) NOT NULL',
                 'text' => 'VARCHAR(32768) NOT NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
-                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
-            )
-            /*,
-            'notification_queue' => array(
-                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'id_recipient' => 'INT(32) NOT NULL',
-                'text' => 'VARCHAR(32768) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
-                'status' => 'INT(32) NOT NULL DEFAULT 1'
-            ),
-            'notifications' => array(
-                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'name' => 'VARCHAR(256) NOT NULL',
-                'text' => 'VARCHAR(32768) NOT NULL'
-            )*/
+                'action' => 'VARCHAR(256) NOT NULL'
+            )
         );
 
         foreach($tables as $table => $columns) {
