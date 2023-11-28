@@ -45,29 +45,6 @@ class Settings extends APresenter {
         return $this->name;
     }
 
-    protected function showNotifications() {
-        global $app;
-
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
-
-        $notificationList = '';
-
-        $app->logger->logFunction(function() use (&$notificationList) {
-            $notificationList = $this->internalCreateNotificationGrid();
-        }, __METHOD__);
-
-        $data = array(
-            '$PAGE_TITLE$' => 'Notifications',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
-            '$SETTINGS_GRID$' => $notificationList,
-            '$NEW_ENTITY_LINK$' => ''
-        );
-
-        $this->templateManager->fill($data, $template);
-
-        return $template;
-    }
-
     protected function updateDashboardWidgets() {
         global $app;
 
@@ -1446,64 +1423,6 @@ class Settings extends APresenter {
         ;
 
         return $fb->build();
-    }
-
-    private function internalCreateNotificationGrid() {
-        global $app;
-
-        $tb = TableBuilder::getTemporaryObject();
-
-        $headers = array(
-            'Actions',
-            'Name',
-            'Text'
-        );
-
-        $headerRow = null;
-
-        $notifications = $app->notificationModel->getAllNotifications();
-
-        if(empty($notifications)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($notifications as $notification) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showNotificationQueue', 'id' => $notification->getId()), 'Show queue')
-                );
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $notiRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $notiRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $notiRow->addCol($tb->createCol()->setText($notification->getName()))
-                        ->addCol($tb->createCol()->setText($notification->getText()));
-
-                $tb->addRow($notiRow);
-            }
-        }
-
-        return $tb->build();
     }
 }
 

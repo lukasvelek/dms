@@ -103,10 +103,6 @@ class Panels {
             $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets', 'img/dashboard-widgets.svg');
         }
 
-        if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_NOTIFICATIONS)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNotifications', 'Notifications');
-        }
-
         $templateManager->fill($data, $template);
 
         return $template;

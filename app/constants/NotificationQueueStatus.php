@@ -3,9 +3,8 @@
 namespace DMS\Constants;
 
 class NotificationQueueStatus {
-    public const IN_QUEUE = 1;
-    public const SENT = 2;
-    public const ERROR = 3;
+    public const UNSEEN = 1;
+    public const SEEN = 2;
 }
 
 ?>
