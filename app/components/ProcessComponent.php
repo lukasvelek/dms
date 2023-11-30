@@ -152,6 +152,11 @@ class ProcessComponent extends AComponent {
 
         $this->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
 
+        $this->notificationComponent->createNewNotification(NOtifications::PROCESS_ASSIGNED_TO_USER, array(
+            'id_user' => $process->getWorkflow()[$newWfStatus - 1],
+            'id_process' => $idProcess
+        ));
+
         $this->logger->info('Updated workflow status of process #' . $idProcess, __METHOD__);
 
         return true;
@@ -159,6 +164,13 @@ class ProcessComponent extends AComponent {
 
     public function endProcess(int $idProcess) {
         $this->processModel->updateStatus($idProcess, ProcessStatus::FINISHED);
+
+        $process = $this->processModel->getProcessById($idProcess);
+
+        $this->notificationComponent->createNewNotification(Notifications::PROCESS_FINISHED, array(
+            'id_user' => $process->getIdAuthor(),
+            'id_process' => $idProcess
+        ));
 
         $this->logger->info('Ended process #' . $idProcess, __METHOD__);
 

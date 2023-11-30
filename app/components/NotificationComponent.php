@@ -2,6 +2,7 @@
 
 namespace DMS\Components;
 
+use DMS\Constants\Notifications;
 use DMS\Constants\NotificationStatus;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -26,14 +27,20 @@ class NotificationComponent extends AComponent {
         }
     }
 
-    private function _processAssignedToUser(array $data) {
-        $text = 'Process has been assigned to you.';
-
-        //$link = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:showProcess', 'id' => $data['id_process']), 'Open');
+    /**
+     * Notification to inform a user that a process they started has been finished.
+     * 
+     * Data must contain:
+     *  'id_user' - the user the notification will pop up
+     *  'id_process' - the process that has finished
+     * 
+     * @param array $data Data array
+     * @return bool True
+     */
+    private function _processFinished(array $data) {
+        $text = 'Process you started has finished.';
 
         $action = '?page=UserModule:SingleProcess:showProcess&id=' . $data['id_process'];
-
-        //$text = str_replace('$LINK$', $link, $text);
 
         $this->notificationModel->insertNewNotification(array(
             'id_user' => $data['id_user'],
@@ -41,6 +48,33 @@ class NotificationComponent extends AComponent {
             'status' => NotificationStatus::UNSEEN,
             'action' => $action
         ));
+
+        return true;
+    }
+
+    /**
+     * Notification to inform a user that he has been assigned a process.
+     * 
+     * Data must contain:
+     *  'id_user' - the user the notification will pop up
+     *  'id_process' - the process the user has been assigned
+     * 
+     * @param array $data Data array
+     * @return bool True
+     */
+    private function _processAssignedToUser(array $data) {
+        $text = 'Process has been assigned to you.';
+
+        $action = '?page=UserModule:SingleProcess:showProcess&id=' . $data['id_process'];
+
+        $this->notificationModel->insertNewNotification(array(
+            'id_user' => $data['id_user'],
+            'text' => $text,
+            'status' => NotificationStatus::UNSEEN,
+            'action' => $action
+        ));
+
+        return true;
     }
 }
 
