@@ -166,6 +166,7 @@ class Panels {
             $data['$LINKS$'] = '';
             $data['$USER_PROFILE_LINK$'] = '';
             $data['$USER_LOGOUT_LINK$'] = '';
+            $data['$USER_NOTIFICATIONS_LINK$'] = '';
         }
 
         $templateManager->fill($data, $template);
