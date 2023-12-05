@@ -3,8 +3,11 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Components\Process\DeleteProcess;
+use DMS\Components\Process\ShreddingProcess;
+use DMS\Constants\BulkActionRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Constants\UserActionRights;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Process;
@@ -48,11 +51,12 @@ class SingleProcess extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/single-process.html');
 
         $data = array(
-            '$PROCESS_NAME$' => 'Process #' . $id . ': ' . ProcessTypes::$texts[$process->getType()]
+            '$PROCESS_NAME$' => 'Process #' . $id . ': ' . ProcessTypes::$texts[$process->getType()],
+            '$PROCESS_INFO_TABLE$' => $this->internalCreateProcessInfoTable($process),
+            '$ACTIONS$' => $this->internalCreateActions($process),
+            '$NEW_COMMENT_FORM$' => $this->internalCreateNewProcessCommentForm($process),
+            '$PROCESS_COMMENTS$' => $this->internalCreateProcessComments($process)
         );
-
-        $data['$PROCESS_INFO_TABLE$'] = $this->internalCreateProcessInfoTable($process);
-        $data['$ACTIONS$'] = $this->internalCreateActions($process);
 
         $this->templateManager->fill($data, $template);
 
@@ -122,7 +126,7 @@ class SingleProcess extends APresenter {
 
         $app->logger->info('User #' . $app->user->getId() . ' approved process #' . $id, __METHOD__);
 
-        $app->redirect('UserModule:Processes:showAll');
+        $app->redirect('UserModule:SingleProcess:showProcess', array('id' => $id));
     }
 
     protected function decline() {
@@ -134,7 +138,7 @@ class SingleProcess extends APresenter {
 
         $app->logger->info('User #' . $app->user->getId() . ' declined process #' . $id, __METHOD__);
 
-        $app->redirect('UserModule:Processes:showAll');
+        $app->redirect('UserModule:SingleProcess:showProcess', array('id' => $id));
     }
 
     protected function finish() {
@@ -147,6 +151,11 @@ class SingleProcess extends APresenter {
             case ProcessTypes::DELETE:
                 $dp = new DeleteProcess($id, $app->processComponent, $app->documentModel, $app->processModel, $app->groupModel, $app->groupUserModel);
                 $dp->work();
+                break;
+            
+            case ProcessTypes::SHREDDING:
+                $sp = new ShreddingProcess($id, $app->processModel, $app->documentModel, $app->processComponent);
+                $sp->work();
                 break;
         }
 
@@ -197,6 +206,9 @@ class SingleProcess extends APresenter {
 
         $currentOfficer = ${'workflow' . $process->getWorkflowStatus() . 'User'};
 
+        $document = $app->documentModel->getDocumentById($process->getIdDocument());
+        $documentLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), $document->getName());
+
         $tb ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow 1')->setBold())
                                      ->addCol($tb->createCol()->setText($workflow1User)))
             ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow 2')->setBold())
@@ -211,6 +223,8 @@ class SingleProcess extends APresenter {
                                      ->addCol($tb->createCol()->setText($currentOfficer)))
             ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Author')->setBold())
                                      ->addCol($tb->createCol()->setText($author)))
+            ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Document')->setBold())
+                                     ->addCol($tb->createCol()->setText($documentLink)))
         ;
 
         $table = $tb->build();
@@ -236,11 +250,24 @@ class SingleProcess extends APresenter {
 
                     if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
                         // is last
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToFinish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:finish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
                     } else {
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToApprove', 'id' => $process->getId()), 'Approve');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:approve', 'id' => $process->getId()), 'Approve');
                         $actions[] = '<br>';
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:askToDecline', 'id' => $process->getId()), 'Decline');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:decline', 'id' => $process->getId()), 'Decline');
+                    }
+                }
+
+                break;
+
+            case ProcessTypes::SHREDDING:
+                if($idCurrentUser == ($process->getWorkflowStep($process->getWorkflowStatus() - 1))) {
+                    if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:finish', 'id' => $process->getId()), 'Shred document');
+                    } else {
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:approve', 'id' => $process->getId()), 'Approve');
+                        $actions[] = '<br>';
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:decline', 'id' => $process->getId()), 'Decline');
                     }
                 }
 
@@ -248,6 +275,30 @@ class SingleProcess extends APresenter {
         }
 
         return $actions;
+    }
+
+    private function internalCreateNewProcessCommentForm(Process $process) {
+        global $app;
+
+        $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
+
+        return '<script type="text/javascript" src="js/ProcessAjaxComment.js"></script>
+        <textarea name="text" id="text" required></textarea><br><br>
+        <button onclick="sendComment(' . $app->user->getId() . ', ' . $process->getId() . ', ' . $canDelete . ')">Send</button>
+        ';
+    }
+
+    private function internalCreateProcessComments(Process $process) {
+        global $app;
+        
+        $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
+
+        return '
+        <img id="comments-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">
+        <script type="text/javascript">
+            $(document).on("load", showLoading())
+                       .ready(loadComments("' . $process->getId() . '", "' . $canDelete . '"));
+        </script>';
     }
 }
 

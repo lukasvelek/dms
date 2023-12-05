@@ -205,9 +205,23 @@ class Groups extends APresenter {
 
         $app->logger->info('Added user #' . $idUser . ' to group #' . $idGroup, __METHOD__);
 
-        /*$cm = CacheManager::getTemporaryObject();
-        $cm->invalidateCache();*/
+        CacheManager::invalidateAllCache();
         
+        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+    }
+
+    protected function removeUserFromGroup() {
+        global $app;
+
+        $idGroup = htmlspecialchars($_GET['id_group']);
+        $idUser = htmlspecialchars($_GET['id_user']);
+
+        $app->groupUserModel->removeUserFromGroup($idGroup, $idUser);
+        
+        $app->logger->info('Removed user #' . $idUser . ' from group #' . $idGroup, __METHOD__);
+
+        CacheManager::invalidateAllCache();
+
         $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
     }
 
@@ -440,6 +454,10 @@ class Groups extends APresenter {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:unsetUserAsManager', 'id_group' => $idGroup, 'id_user' => $user->getId()), 'Unset as Manager');
                 } else {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:setUserAsManager', 'id_group' => $idGroup, 'id_user' => $user->getId()), 'Set as Manager');
+                }
+
+                if($idGroup != '2' && $user->getUsername() != 'admin') {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:removeUserFromGroup', 'id_group' => $idGroup, 'id_user' => $user->getId()), 'Remove');
                 }
 
                 if(is_null($headerRow)) {

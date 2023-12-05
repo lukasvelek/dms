@@ -13,7 +13,7 @@ use DMS\Entities\User;
  */
 abstract class AAuthorizator {
     private Database $db;
-    private Logger $logger;
+    protected Logger $logger;
     protected int $idUser;
 
     /**

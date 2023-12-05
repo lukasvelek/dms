@@ -3,7 +3,9 @@
 namespace DMS\Core\DB;
 
 use DMS\Constants\BulkActionRights;
+use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
+use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
@@ -17,7 +19,8 @@ class DatabaseInstaller {
     private Logger $logger;
 
     public const DEFAULT_USERS = array(
-        'admin'
+        'admin',
+        'service_user'
     );
 
     public function __construct(Database $db, Logger $logger) {
@@ -82,7 +85,10 @@ class DatabaseInstaller {
                 'is_deleted' => 'INT(2) NOT NULL DEFAULT 0',
                 'rank' => 'VARCHAR(256) NOT NULL',
                 'id_folder' => 'INT(32) NULL',
-                'file' => 'VARCHAR(256) NULL'
+                'file' => 'VARCHAR(256) NULL',
+                'shred_year' => 'VARCHAR(4) NOT NULL',
+                'after_shred_action' => 'VARCHAR(256) NOT NULL',
+                'shredding_status' => 'INT(32) NOT NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -192,6 +198,38 @@ class DatabaseInstaller {
                 'id_document' => 'INT(32) NOT NULL',
                 'text' => 'VARCHAR(256)',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'process_comments' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_author' => 'INT(32) NOT NULL',
+                'id_process' => 'INT(32) NOT NULL',
+                'text' => 'VARCHAR(256)',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_widgets' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'location' => 'VARCHAR(256) NOT NULL',
+                'widget_name' => 'VARCHAR(256) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'document_sharing' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_author' => 'INT(32) NOT NULL',
+                'id_user' => 'INT(32) NOT NULL',
+                'id_document' => 'INT(32) NOT NULL',
+                'date_from' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'date_to' => 'DATETIME NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'hash' => 'VARCHAR(256) NOT NULL'
+            ),
+            'notifications' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'text' => 'VARCHAR(32768) NOT NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'action' => 'VARCHAR(256) NOT NULL'
             )
         );
 
@@ -222,8 +260,21 @@ class DatabaseInstaller {
     }
 
     private function insertDefaultUsers() {
-        $defaultUsersUsernames = array('admin');
+        $defaultUsersUsernames = array('serviceuser', 'admin');
         $insertUsers = array();
+
+        $defaultUserData = array(
+            'service_user' => array(
+                'firstname' => 'Service',
+                'lastname' => 'User',
+                'password' => 'service_user'
+            ),
+            'admin' => array(
+                'firstname' => 'Admin',
+                'lastname' => 'istrator',
+                'password' => 'admin'
+            )
+        );
 
         $sql = 'SELECT * FROM `users`';
         $rows = $this->db->query($sql);
@@ -239,10 +290,14 @@ class DatabaseInstaller {
         }
 
         foreach($insertUsers as $iu) {
-            $password = password_hash($iu, PASSWORD_BCRYPT);
+            $userData = $defaultUserData[$iu];
+            $password = password_Hash($userData['password'], PASSWORD_BCRYPT);
+            $firstname = $userData['firstname'];
+            $lastname = $userData['lastname'];
+            $username = $iu;
 
-            $sql = 'INSERT INTO `users` (`firstname`, `lastname`, `username`, `password`)
-                    VALUES (\'Admin\', \'\', \'admin\', \'' . $password . '\')';
+            $sql = "INSERT INTO `users` (`firstname`, `lastname`, `username`, `password`)
+                    VALUES ('$firstname', '$lastname', '$username', '$password')";
 
             $this->logger->sql($sql, __METHOD__);
 
@@ -536,6 +591,20 @@ class DatabaseInstaller {
                 'text' => 'Type',
                 'input_type' => 'select',
                 'length' => '256'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'after_shred_action',
+                'text' => 'Action after shredding',
+                'input_type' => 'select',
+                'length' => '256'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'shredding_status',
+                'text' => 'Shredding status',
+                'input_type' => 'select',
+                'length' => '256'
             )
         );
 
@@ -600,6 +669,20 @@ class DatabaseInstaller {
 
                 case 'processes.type':
                     foreach(ProcessTypes::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
+
+                case 'documents.after_shred_action':
+                    foreach(DocumentAfterShredActions::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
+
+                case 'documents.shredding_status':
+                    foreach(DocumentShreddingStatus::$texts as $v => $n) {
                         $values[$id][] = array('name' => $n, 'value' => $v);
                     }
 

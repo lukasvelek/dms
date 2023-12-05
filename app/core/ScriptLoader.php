@@ -15,6 +15,13 @@ class ScriptLoader {
         return $code;
     }
 
+    /**
+     * This method displays a JS confirm popup window and based on user's decision it redirects
+     * 
+     * @param string $text Text to display in the popup window
+     * @param array $urlConfirm Confirm URL
+     * @param array $urlClose Close URL
+     */
     public static function confirmUser(string $text, array $urlConfirm, array $urlClose) {
         $urlCo = '?';
         $urlCl = '?';
@@ -51,6 +58,30 @@ class ScriptLoader {
                 } else {
                     location.replace("' . $urlCl . '");
                 }
+            </script>
+        ';
+
+        return $code;
+    }
+
+    public static function alert(string $text, array $urlConfirm) {
+        $url = '';
+
+        $i = 0;
+        foreach($urlConfirm as $k => $v) {
+            if(($i + 1) == count($urlConfirm)) {
+                $url .= $k . '=' . $v;
+            } else {
+                $url .= $k . '=' . $v . '&';
+            }
+
+            $i++;
+        }
+
+        $code = '
+            <script type="text/javascript">
+                alert("' . $text . '");
+                location.replace("' . $url . '");
             </script>
         ';
 

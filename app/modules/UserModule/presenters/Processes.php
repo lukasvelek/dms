@@ -58,16 +58,16 @@ class Processes extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/process-grid.html');
 
-        $filter = null;
+        $filter = 'waitingForMe';
 
         if(isset($_GET['filter'])) {
             $filter = htmlspecialchars($_GET['filter']);
         }
 
-        $processGrid = '';
+        $processGrid = '<script type="text/javascript" src="js/ProcessAjaxSearch.js"></script>';
 
         $app->logger->logFunction(function() use (&$processGrid, $filter) {
-            $processGrid = $this->internalCreateStandardProcessGrid($filter);
+            $processGrid .= $this->internalCreateStandardProcessGrid($filter);
         }, __METHOD__);
 
         $data = array(
@@ -160,117 +160,13 @@ class Processes extends APresenter {
         return $table;
     }
 
-    private function internalCreateStandardProcessGrid(?string $filter) {
-        global $app;
-
-        $tb = TableBuilder::getTemporaryObject();
-
-        $headers = array(
-            'Actions',
-            'Name',
-            'Workflow 1',
-            'Workflow 2',
-            'Workflow 3',
-            'Workflow 4',
-            'Workflow Status',
-            'Current officer',
-            'Type'
-        );
-
-        $headerRow = null;
-
-        $processes = [];
-
-        if(is_null($filter)) {
-            $processes = $app->processModel->getProcessesWithIdUser($app->user->getId());
-        } else {
-            switch($filter) {
-                case 'startedByMe':
-                    $processes = $app->processModel->getProcessesWhereIdUserIsAuthor($app->user->getId());
-                    break;
-                default:
-                case 'waitingForMe':
-                    // default
-                    $processes = $app->processModel->getProcessesWithIdUser($app->user->getId());
-                    break;
-                case 'finished':
-                    $processes = $app->processModel->getFinishedProcessesWithIdUser($app->user->getId());
-                    break;
-            }
-        }
-
-        if(empty($processes)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($processes as $process) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()), 'Open')
-                );
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $procRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $procRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                if($process->getWorkflowStep(0) != null) {
-                    $workflow1User = $app->userModel->getUserById($process->getWorkflowStep(0))->getFullname();
-                } else {
-                    $workflow1User = '-';
-                }
-
-                if($process->getWorkflowStep(1) != null) {
-                    $workflow2User = $app->userModel->getUserById($process->getWorkflowStep(1))->getFullname();
-                } else {
-                    $workflow2User = '-';
-                }
-
-                if($process->getWorkflowStep(2) != null) {
-                    $workflow3User = $app->userModel->getUserById($process->getWorkflowStep(2))->getFullname();
-                } else {
-                    $workflow3User = '-';
-                }
-
-                if($process->getWorkflowStep(3) != null) {
-                    $workflow4User = $app->userModel->getUserById($process->getWorkflowStep(3))->getFullname();
-                } else {
-                    $workflow4User = '-';
-                }
-
-                $procRow->addCol($tb->createCol()->setText(ProcessTypes::$texts[$process->getType()]))
-                        ->addCol($tb->createCol()->setText($workflow1User))
-                        ->addCol($tb->createCol()->setText($workflow2User))
-                        ->addCol($tb->createCol()->setText($workflow3User))
-                        ->addCol($tb->createCol()->setText($workflow4User))
-                        ->addCol($tb->createCol()->setText($process->getWorkflowStatus() ?? '-'))
-                        ->addCol($tb->createCol()->setText(${'workflow' . $process->getWorkflowStatus() . 'User'}))
-                        ->addCol($tb->createCol()->setText(ProcessTypes::$texts[$process->getType()]))
-                ;
-
-                $tb->addRow($procRow);
-            }
-        }
-
-        return $tb->build();
+    private function internalCreateStandardProcessGrid(string $filter = 'waitingForMe') {
+        return '
+            <script type="text/javascript">
+            ajaxLoadProcesses("' . $filter . '");
+            </script>
+            <table border="1"><img id="processes-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+        ';
     }
 }
 

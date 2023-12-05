@@ -6,10 +6,14 @@ use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
+use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
+use DMS\Components\SharingComponent;
+use DMS\Components\WidgetComponent;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\ProcessComment;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
@@ -17,11 +21,14 @@ use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\MetadataModel;
+use DMS\Models\NotificationModel;
+use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\TableModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
+use DMS\Models\WidgetModel;
 
 session_start();
 
@@ -33,13 +40,32 @@ function loadDependencies2(array &$dependencies, string $dir) {
     unset($content[0]);
     unset($content[1]);
 
-    $skip = array($dir . '\\dependencies.php', $dir . '\\dms_loader.php', $dir . '\\install', $dir . '\\Ajax.php', $dir . '\\search.php', $dir . '\\modules');
+    $skip = array(
+        $dir . '\\dependencies.php',
+        $dir . '\\dms_loader.php',
+        $dir . '\\install',
+        $dir . '\\modules',
+        $dir . '\\ajax'
+    );
+
+    $extensionsToSkip = array(
+        'html',
+        'md',
+        'js',
+        'png',
+        'gif',
+        'jpg',
+        'svg'
+    );
 
     foreach($content as $c) {
         /* SKIP TEMPLATES (html files) */
         $filenameParts = explode('.', $c);
 
-        if($filenameParts[count($filenameParts) - 1] == 'html') continue;
+        /* SKIP CERTAIN EXTENSIONS */
+        if(in_array($filenameParts[count($filenameParts) - 1], $extensionsToSkip)) {
+            continue;
+        }
 
         $c = $dir . '\\' . $c;
 
@@ -104,7 +130,7 @@ $userModel = new UserModel($db, $logger);
 $userRightModel = new UserRightModel($db, $logger);
 $documentModel = new DocumentModel($db, $logger);
 $groupModel = new GroupModel($db, $logger);
-$groupUserModel = new GroupUserModel($db, $logger);
+$groupUserModel = new GroupUserModel($db, $logger, $groupModel);
 $processModel = new ProcessModel($db, $logger);
 $groupRightModel = new GroupRightModel($db, $logger);
 $metadataModel = new MetadataModel($db, $logger);
@@ -112,19 +138,25 @@ $tableModel = new TableModel($db, $logger);
 $folderModel = new FolderModel($db, $logger);
 $serviceModel = new ServiceModel($db, $logger);
 $documentCommentModel = new DocumentCommentModel($db, $logger);
+$processCommentModel = new ProcessCommentModel($db, $logger);
+$widgetModel = new WidgetModel($db, $logger);
+$notificationModel = new NotificationModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);
 }
 
-$processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel);
-
 $panelAuthorizator = new PanelAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
-$documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
-$metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user);
-$documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
+$metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 
+$notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
+$processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent);
+$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel);
+$sharingComponent = new SharingComponent($db, $logger, $documentModel);
+
+$documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
+$documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
 ?>

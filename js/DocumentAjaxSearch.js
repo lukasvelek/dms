@@ -4,7 +4,7 @@ async function ajaxSearch(query, id_folder) {
     $('#documents-loading').show();
 
     $.ajax({
-        url: 'app/ajax/search.php',
+        url: 'app/ajax/document-search.php',
         type: 'POST',
         data: {
             q: query,
@@ -21,11 +21,38 @@ async function ajaxLoadDocuments(id_folder) {
     await sleep(250);
 
     $.ajax({
-        url: 'app/ajax/search.php',
+        url: 'app/ajax/document-search.php',
         type: 'POST',
         data: {
             idFolder: id_folder
         }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}
+
+function selectAllDocumentEntries() {
+    var selectAllElem = $('#select-all:checked').val();
+
+    
+    if(selectAllElem == "on") {
+        $('#select:not(:checked)').prop('checked', true);
+        drawBulkActions();
+    } else {
+        $('#select:checked').prop('checked', false);
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
+
+async function ajaxLoadDocumentsSharedWithMe() {
+    await sleep(250);
+
+    $.ajax({
+        url: 'app/ajax/documents-shared-with-me-search.php',
+        type: 'POST'
     })
     .done(function(data) {
         $('table').html(data);

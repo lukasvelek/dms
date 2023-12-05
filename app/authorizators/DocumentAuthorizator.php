@@ -3,6 +3,7 @@
 namespace DMS\Authorizators;
 
 use DMS\Components\ProcessComponent;
+use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -120,6 +121,96 @@ class DocumentAuthorizator extends AAuthorizator {
             DocumentStatus::ARCHIVED,
             DocumentStatus::SHREDDED
         ))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks if a document can be shredded
+     * 
+     * @param int $id Document ID
+     * @return bool True if the document can be shredded and false if not
+     */
+    public function canShred(int $id) {
+        $document = $this->documentModel->getDocumentById($id);
+
+        if(!$this->processComponent->checkIfDocumentIsInProcess($id)) {
+            return false;
+        }
+
+        if($document->getStatus() != DocumentStatus::ARCHIVED) {
+            return false;
+        }
+
+        if($document->getShreddingStatus() != DocumentShreddingStatus::APPROVED) {
+            return false;
+        }
+
+        if($document->getShredYear() >= date('Y')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canSuggestForShredding(int $id) {
+        $document = $this->documentModel->getDocumentById($id);
+
+        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
+            return false;
+        }
+
+        if($document->getStatus() != DocumentStatus::ARCHIVED) {
+            return false;
+        }
+
+        if($document->getShreddingStatus() != DocumentShreddingStatus::NO_STATUS) {
+            return false;
+        }
+
+        if($document->getShredYear() >= date('Y')) {
+            return false;
+        }
+
+        return true;
+    }
+    
+    public function canApproveShredding(int $id) {
+        $document = $this->documentModel->getDocumentById($id);
+
+        if(!$this->processComponent->checkIfDocumentIsInProcess($id)) {
+            return false;
+        }
+
+        if($document->getStatus() != DocumentStatus::ARCHIVED) {
+            return false;
+        }
+
+        if($document->getShreddingStatus() != DocumentShreddingStatus::IN_APPROVAL) {
+            return false;
+        }
+
+        if($document->getShredYear() >= date('Y')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canDeclineShredding(int $id) {
+        $document = $this->documentModel->getDocumentById($id);
+
+        if(!$this->processComponent->checkIfDocumentIsInProcess($id)) {
+            return false;
+        }
+
+        if($document->getStatus() != DocumentStatus::ARCHIVED) {
+            return false;
+        }
+
+        if($document->getShreddingStatus() != DocumentShreddingStatus::IN_APPROVAL) {
             return false;
         }
 

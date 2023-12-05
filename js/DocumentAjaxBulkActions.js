@@ -11,7 +11,7 @@ function drawBulkActions() {
             ids[i] = this.value;
         });
 
-        $.get('app/ajax/bulk-actions.php', {
+        $.get('app/ajax/document-bulk-actions.php', {
             idDocuments: ids
         },
         async function(data) {

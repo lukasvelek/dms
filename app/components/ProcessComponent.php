@@ -4,6 +4,7 @@ namespace DMS\Components;
 
 use DMS\Components\Process\DeleteProcess;
 use DMS\Constants\Groups;
+use DMS\Constants\Notifications;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
@@ -18,14 +19,16 @@ class ProcessComponent extends AComponent {
     private GroupModel $groupModel;
     private GroupUserModel $groupUserModel;
     private DocumentModel $documentModel;
+    private NotificationComponent $notificationComponent;
 
-    public function __construct(Database $db, Logger $logger, ProcessModel $processModel, GroupModel $groupModel, GroupUserModel $groupUserModel, DocumentModel $documentModel) {
+    public function __construct(Database $db, Logger $logger, ProcessModel $processModel, GroupModel $groupModel, GroupUserModel $groupUserModel, DocumentModel $documentModel, NotificationComponent $notificationComponent) {
         parent::__construct($db, $logger);
 
         $this->processModel = $processModel;
         $this->groupModel = $groupModel;
         $this->groupUserModel = $groupUserModel;
         $this->documentModel = $documentModel;
+        $this->notificationComponent = $notificationComponent;
     }
 
     public function getProcessesWhereIdUserIsCurrentOfficer(int $idUser) {
@@ -33,26 +36,28 @@ class ProcessComponent extends AComponent {
 
         $processes = [];
 
-        foreach($userProcesses as $up) {
-            $userPos = -1;
-
-            $i = 0;
-            foreach($up->getWorkflow() as $wf) {
-                if($wf == $idUser) {
-                    $userPos = $i;
-
+        if(count($userProcesses) > 0) {
+            foreach($userProcesses as $up) {
+                $userPos = -1;
+    
+                $i = 0;
+                foreach($up->getWorkflow() as $wf) {
+                    if($wf == $idUser) {
+                        $userPos = $i;
+    
+                        break;
+                    }
+    
+                    $i++;
+                }
+    
+                if($userPos == -1) {
                     break;
                 }
-
-                $i++;
-            }
-
-            if($userPos == -1) {
-                break;
-            }
-
-            if($up->getWorkflowStatus() == $userPos) {
-                $processes[] = $up;
+    
+                if($up->getWorkflowStatus() == $userPos) {
+                    $processes[] = $up;
+                }
             }
         }
 
@@ -60,6 +65,8 @@ class ProcessComponent extends AComponent {
     }
 
     public function startProcess(int $type, int $idDocument, int $idAuthor) {
+        $start = true;
+
         $data = [];
 
         if($this->checkIfDocumentIsInProcess($idDocument)) {
@@ -75,12 +82,38 @@ class ProcessComponent extends AComponent {
                 $document = $this->documentModel->getDocumentById($idDocument);
                 $data['workflow1'] = $document->getIdManager();
 
-                foreach($groupUsers as $gu) {
-                    if($gu->getIsManager()) {
-                        $data['workflow2'] = $gu->getIdUser();
-                        
-                        break;
+                if(count($groupUsers) > 0) {
+                    foreach($groupUsers as $gu) {
+                        if($gu->getIsManager()) {
+                            $data['workflow2'] = $gu->getIdUser();
+                            
+                            break;
+                        }
                     }
+                } else {
+                    $start = false;
+                }
+
+                break;
+
+            case ProcessTypes::SHREDDING:
+                $archmanIdGroup = $this->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
+                $groupUsers = $this->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
+
+                $document = $this->documentModel->getDocumentById($idDocument);
+                $data['workflow1'] = $document->getIdAuthor();
+                $data['workflow2'] = $document->getIdManager();
+
+                if(count($groupUsers) > 0) {
+                    foreach($groupUsers as $gu) {
+                        if($gu->getIsManager()) {
+                            $data['workflow3'] = $gu->getIdUser();
+                            
+                            break;
+                        }
+                    }
+                } else {
+                    $start = false;
                 }
 
                 break;
@@ -91,19 +124,38 @@ class ProcessComponent extends AComponent {
         $data['workflow_status'] = '1';
         $data['id_author'] = $idAuthor;
 
-        $this->processModel->insertNewProcess($data);
-        
-        $this->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
-        
-        return true;
+        if($start) {
+            $this->processModel->insertNewProcess($data);
+            $this->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
+            
+            $idProcess = $this->processModel->getLastInsertedIdProcess();
+
+            $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
+                'id_process' => $idProcess,
+                'id_user' => $_SESSION['id_current_user']
+            ));
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function moveProcessToNextWorkflowUser(int $idProcess) {
         $process = $this->processModel->getProcessById($idProcess);
 
-        $newWfStatus = $process->getStatus() + 1;
+        if(is_null($process)) {
+            return false;
+        }
+
+        $newWfStatus = $process->getWorkflowStatus() + 1;
 
         $this->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
+
+        $this->notificationComponent->createNewNotification(NOtifications::PROCESS_ASSIGNED_TO_USER, array(
+            'id_user' => $process->getWorkflow()[$newWfStatus - 1],
+            'id_process' => $idProcess
+        ));
 
         $this->logger->info('Updated workflow status of process #' . $idProcess, __METHOD__);
 
@@ -113,6 +165,13 @@ class ProcessComponent extends AComponent {
     public function endProcess(int $idProcess) {
         $this->processModel->updateStatus($idProcess, ProcessStatus::FINISHED);
 
+        $process = $this->processModel->getProcessById($idProcess);
+
+        $this->notificationComponent->createNewNotification(Notifications::PROCESS_FINISHED, array(
+            'id_user' => $process->getIdAuthor(),
+            'id_process' => $idProcess
+        ));
+
         $this->logger->info('Ended process #' . $idProcess, __METHOD__);
 
         return true;
@@ -121,14 +180,10 @@ class ProcessComponent extends AComponent {
     public function checkIfDocumentIsInProcess(int $idDocument) {
         $process = $this->processModel->getProcessForIdDocument($idDocument);
 
-        if($process === NULL) {
-            return false;
+        if(!is_null($process) && $process->getStatus() == ProcessStatus::IN_PROGRESS) {
+            return true;
         } else {
-            if($process->getStatus() == ProcessStatus::FINISHED) {
-                return false;
-            } else {
-                return true;
-            }
+            return false;
         }
     }
 }

@@ -19,6 +19,7 @@ include('app/dms_loader.php');
         <div id="cover">
             <img style="position: fixed; top: 50%; left: 49%;" src='img/loading.gif' width='32' height='32'>
         </div>
+        <div id="notifications" style="display: none;">a</div>
         <?php
 
         if(isset($_GET['page'])) {
@@ -39,17 +40,12 @@ include('app/dms_loader.php');
                 }
             }
 
-            //$app->user = $app->userModel->getUserById($_SESSION['id_current_user']);
             $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
         } else {
             if(!isset($_SESSION['login_in_process'])) {
                 if($app->currentUrl != $app::URL_LOGIN_PAGE && $app->currentUrl != 'AnonymModule:LoginPage:showFirstLoginForm') {
                     $app->redirect($app::URL_LOGIN_PAGE);
                 }
-            } else {
-                /*if($app->currentUrl != $app::URL_LOGIN_PAGE && $app->currentUrl != 'AnonymModule:LoginPage:showFirstLoginForm') {
-                    $app->redirect($app::URL_LOGIN_PAGE);
-                }*/
             }
         }
 

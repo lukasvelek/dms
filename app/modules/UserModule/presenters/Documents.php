@@ -2,8 +2,11 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\DocumentAfterShredActions;
+use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
@@ -11,7 +14,6 @@ use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Documents extends APresenter {
     private string $name;
@@ -36,6 +38,49 @@ class Documents extends APresenter {
 
     public function getName() {
         return $this->name;
+    }
+
+    protected function showSharedWithMe() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/document-grid.html');
+
+        $idFolder = null;
+        $folderName = 'Main folder';
+        $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+
+        $documentGrid = '';
+        $folderList = '';
+        
+        $app->logger->logFunction(function() use (&$documentGrid, $idFolder) {
+            //$documentGrid = $this->internalCreateStandardDocumentGrid($idFolder);
+            $documentGrid = $this->internalCreateSharedWithMeDocumentGrid();
+        }, __METHOD__);
+
+        $app->logger->logFunction(function() use (&$folderList, $idFolder) {
+            $folderList = $this->internalCreateFolderList($idFolder);
+        }, __METHOD__);
+
+        $searchField = '
+            <input type="text" id="q" placeholder="Search" oninput="ajaxSearch(this.value, \'' . ($idFolder ?? 'null') . '\');">
+            <script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
+            <script type="text/javascript" src="js/DocumentAjaxBulkActions.js"></script>
+        ';
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Documents',
+            '$DOCUMENT_GRID$' => $documentGrid,
+            '$BULK_ACTION_CONTROLLER$' => ''/*$this->internalPrepareDocumentBulkActions()*/,
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$NEW_DOCUMENT_LINK$' => $newEntityLink,
+            '$CURRENT_FOLDER_TITLE$' => $folderName,
+            '$FOLDER_LIST$' => $folderList,
+            '$SEARCH_FIELD$' => $searchField
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
     }
 
     protected function showAll() {
@@ -194,127 +239,186 @@ class Documents extends APresenter {
             )
         );
 
-        foreach($users as $user) {
-            $managers[] = array(
-                'value' => $user->getId(),
-                'text' => $user->getFullname()
-            );
+        if(count($users) > 0) {
+            foreach($users as $user) {
+                $managers[] = array(
+                    'value' => $user->getId(),
+                    'text' => $user->getFullname()
+                );
+            }
         }
 
         $statusMetadata = $app->metadataModel->getMetadataByName('status', 'documents');
         $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($statusMetadata->getId());
-
         $statuses = [];
-        foreach($dbStatuses as $dbs) {
-            $statuses[] = array(
-                'value' => $dbs->getValue(),
-                'text' => $dbs->getName()
-            );
+
+        if(count($dbStatuses) > 0) {
+            foreach($dbStatuses as $dbs) {
+                $statuses[] = array(
+                    'value' => $dbs->getValue(),
+                    'text' => $dbs->getName()
+                );
+            }
+        } else {
+            ScriptLoader::alert('No statuses found!', array('UserModule:Documents:showAll'));
         }
 
         $dbGroups = $app->groupModel->getAllGroups();
-
         $groups = [];
-        foreach($dbGroups as $dbg) {
-            $groups[] = array(
-                'value' => $dbg->getId(),
-                'text' => $dbg->getName()
-            );
+
+        if(count($dbGroups) > 0) {
+            foreach($dbGroups as $dbg) {
+                $groups[] = array(
+                    'value' => $dbg->getId(),
+                    'text' => $dbg->getName()
+                );
+            }
+        } else {
+            ScriptLoader::alert('No groups found!', array('UserModule:Documents:showAll'));
         }
 
         $rankMetadata = $app->metadataModel->getMetadataByName('rank', 'documents');
         $dbRanks = $app->metadataModel->getAllValuesForIdMetadata($rankMetadata->getId());
-
         $ranks = [];
-        foreach($dbRanks as $dbr) {
-            $ranks[] = array(
-                'value' => $dbr->getValue(),
-                'text' => $dbr->getName()
-            );
+
+        if(count($dbRanks) > 0) {
+            foreach($dbRanks as $dbr) {
+                $ranks[] = array(
+                    'value' => $dbr->getValue(),
+                    'text' => $dbr->getName()
+                );
+            }
+        } else {
+            ScriptLoader::alert('No ranks found!', array('UserModule:Documents:showAll'));
         }
 
         $dbFolders = $app->folderModel->getAllFolders();
-
-        $folders = [];
-        $folders[] = array(
-            'value' => '-1',
-            'text' => '-'
+        $folders = array(
+            array(
+                'value' => '-1',
+                'text' => '-'
+            )
         );
 
-        foreach($dbFolders as $dbf) {
-            $text = $dbf->getName();
-
-            for($i = 0; $i < $dbf->getNestLevel(); $i++) {
-                $text = '&nbsp;&nbsp;' . $text;
+        if(count($dbFolders) > 0) {
+            foreach($dbFolders as $dbf) {
+                $text = $dbf->getName();
+    
+                for($i = 0; $i < $dbf->getNestLevel(); $i++) {
+                    $text = '&nbsp;&nbsp;' . $text;
+                }
+    
+                $folder = array(
+                    'value' => $dbf->getId(),
+                    'text' => $text
+                );
+    
+                if($idFolder != null && $idFolder == $dbf->getId()) {
+                    $folder['selected'] = 'selected';
+                }
+    
+                $folders[] = $folder;
             }
+        }
 
-            $folder = array(
-                'value' => $dbf->getId(),
+        $shredYears = [];
+        for($i = 1950; $i < 2200; $i++) {
+            if(date('Y') == $i) {
+                $shredYears[] = array(
+                    'value' => $i,
+                    'text' => $i,
+                    'selected' => 'selected'
+                );
+            } else {
+                $shredYears[] = array(
+                    'value' => $i,
+                    'text' => $i
+                );
+            }
+        }
+
+        $afterShredActions = [];
+        foreach(DocumentAfterShredActions::$texts as $value => $text) {
+            $afterShredActions[] = array(
+                'value' => $value,
                 'text' => $text
             );
-
-            if($idFolder != null && $idFolder == $dbf->getId()) {
-                $folder['selected'] = 'selected';
-            }
-
-            $folders[] = $folder;
         }
 
         $customMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
         // name = array('text' => 'text', 'options' => 'options from metadata_values')
         $metadata = [];
 
-        foreach($customMetadata as $cm) {
-            if($cm->getIsSystem()) {
-                continue;
+        if(count($customMetadata) > 0) {
+            foreach($customMetadata as $cm) {
+                if($cm->getIsSystem()) {
+                    continue;
+                }
+    
+                $name = $cm->getName();
+                $text = $cm->getText();
+                $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
+    
+                $options = [];
+                foreach($values as $v) {
+                    $options[] = array(
+                        'value' => $v->getValue(),
+                        'text' => $v->getName()
+                    );
+                }
+    
+                $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
             }
-
-            $name = $cm->getName();
-            $text = $cm->getText();
-            $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
-
-            $options = [];
-            foreach($values as $v) {
-                $options[] = array(
-                    'value' => $v->getValue(),
-                    'text' => $v->getName()
-                );
-            }
-
-            $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
         }
 
         $fb = FormBuilder::getTemporaryObject();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')->setEncType()
+
             ->addElement($fb->createLabel()->setText('Document name')
                                            ->setFor('name'))
             ->addElement($fb->createInput()->setType('text')
                                            ->setName('name')
                                            ->require())
+
             ->addElement($fb->createLabel()->setText('Manager')
                                            ->setFor('manager'))
             ->addElement($fb->createSelect()->setName('manager')
                                             ->addOptionsBasedOnArray($managers))
+
             ->addElement($fb->createLabel()->setText('Status')
                                            ->setFor('status'))
             ->addElement($fb->createSelect()->setName('status')
                                             ->addOptionsBasedOnArray($statuses))
+
             ->addElement($fb->createLabel()->setText('Group')
                                            ->setFor('group'))
             ->addElement($fb->createSelect()->setName('group')
                                             ->addOptionsBasedOnArray($groups))
+
             ->addElement($fb->createLabel()->setFor('rank')
                                            ->setText('Rank'))
             ->addElement($fb->createSelect()->setName('rank')
                                             ->addOptionsBasedOnArray($ranks))
+
             ->addElement($fb->createLabel()->setFor('folder')
                                            ->setText('Folder'))
             ->addElement($fb->createSelect()->setName('folder')
                                             ->addOptionsBasedOnArray($folders))
+
             ->addElement($fb->createLabel()->setFor('file')
                                            ->setText('File'))
             ->addElement($fb->createInput()->setType('file')->setName('file'))
+
+            ->addElement($fb->createLabel()->setFor('shred_year')
+                                           ->setText('Shred year'))
+            ->addElement($fb->createSelect()->setName('shred_year')
+                                            ->addOptionsBasedOnArray($shredYears))
+
+            ->addElement($fb->createLabel()->setFor('after_shred_action')
+                                           ->setText('Action after shredding'))
+            ->addElement($fb->createSelect()->setName('after_shred_action')
+                                            ->addOptionsBasedOnArray($afterShredActions))
            ;
 
         foreach($metadata as $name => $d) {
@@ -386,6 +490,9 @@ class Documents extends APresenter {
         $data['status'] = htmlspecialchars($_POST['status']);
         $data['id_group'] = htmlspecialchars($idGroup);
         $data['id_author'] = $app->user->getId();
+        $data['shred_year'] = htmlspecialchars($_POST['shred_year']);
+        $data['after_shred_action'] = htmlspecialchars($_POST['after_shred_action']);
+        $data['shredding_status'] = DocumentShreddingStatus::NO_STATUS;
 
         if($idFolder != '-1') {
             $data['id_folder'] = $idFolder;
@@ -400,6 +507,8 @@ class Documents extends APresenter {
         unset($_POST['status']);
         unset($_POST['group']);
         unset($_POST['folder']);
+        unset($_POST['shred_year']);
+        unset($_POST['after_shred_action']);
 
         $customMetadata = $_POST;
 
@@ -431,6 +540,19 @@ class Documents extends APresenter {
         $app->documentModel->updateOfficer($idDocument, $documentIdManager);
 
         $app->redirect('UserModule:Documents:showAll');
+    }
+
+    private function _suggest_for_shredding(array $ids) {
+        global $app;
+
+        foreach($ids as $id) {
+            $app->documentModel->updateDocument($id, array(
+                'shredding_status' => DocumentShreddingStatus::IN_APPROVAL
+            ));
+            $app->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $app->user->getId());
+        }
+
+        echo('<script type="text/javascript">alert("Process has started"); location.href = "?page=UserModule:Documents:showAll";</script>');
     }
 
     private function _delete_documents(array $ids) {
@@ -493,6 +615,12 @@ class Documents extends APresenter {
             $this->_createFolderList($folder, $list, 0);
         }
 
+        if(count($folders) > 0) {
+            $list['null3'] = '<hr>';
+        }
+
+        $list['null4'] = '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showSharedWithMe', 'Documents shared with me');
+
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }
 
@@ -519,6 +647,15 @@ class Documents extends APresenter {
                 $this->_createFolderList($cf, $list, $level + 1);
             }
         }
+    }
+
+    private function internalCreateSharedWithMeDocumentGrid() {
+        return '
+            <script type="text/javascript">
+            ajaxLoadDocumentsSharedWithMe();
+            </script> 
+            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+        ';
     }
 }
 

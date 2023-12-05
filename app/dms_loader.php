@@ -1,5 +1,22 @@
 <?php
 
+/**
+ * The default DMS appplication loader.
+ * 
+ * It loads all dependencies that are sorted by importance:
+ * 1. Interfaces
+ * 2. Abstract classes
+ * 3. Classes
+ * 
+ * After loading dependencies it create an instance of the Application.
+ * 
+ * It also checks for presence of 'config.local.php' config script.
+ * It also loads all UI modules and registers them in the application.
+ * 
+ * @author Lukas Velek
+ * @version 1.0
+ */
+
 $dependencies = array();
 
 function loadDependencies(array &$dependencies, string $dir) {
@@ -15,11 +32,23 @@ function loadDependencies(array &$dependencies, string $dir) {
         $dir . '\\ajax'
     );
 
-    foreach($content as $c) {
-        /* SKIP TEMPLATES (html files) */
-        $filenameParts = explode('.', $c);
+    $extensionsToSkip = array(
+        'html',
+        'md',
+        'js',
+        'png',
+        'gif',
+        'jpg',
+        'svg'
+    );
 
-        if($filenameParts[count($filenameParts) - 1] == 'html') continue;
+    foreach($content as $c) {
+        $filenameParts = explode('.', $c);
+        
+        /* SKIP CERTAIN EXTENSIONS */
+        if(in_array($filenameParts[count($filenameParts) - 1], $extensionsToSkip)) {
+            continue;
+        }
 
         $c = $dir . '\\' . $c;
 
@@ -65,16 +94,12 @@ foreach($dependencies as $dependency) {
     require_once($dependency);
 }
 
-$fm = DMS\Core\FileManager::getTemporaryObject();
-
-if(!$fm->fileExists('config.local.php')) {
+if(!DMS\Core\FileManager::fileExists('config.local.php')) {
     die('Config file does not exist!');
 }
 
 include('config.local.php');
 include('modules/modules.php');
-
-unset($fm);
 
 $app = new DMS\Core\Application($cfg);
 

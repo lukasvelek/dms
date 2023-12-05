@@ -316,6 +316,9 @@ class CacheManager {
         return new self($app->cfg['serialize_cache'], $category);
     }
 
+    /**
+     * Invalidates all types of cache
+     */
     public static function invalidateAllCache() {
         global $app;
 

@@ -12,7 +12,7 @@ use DMS\Core\Logger\Logger;
  */
 abstract class AAuthenticator {
     private Database $db;
-    private Logger $logger;
+    protected Logger $logger;
 
     /**
      * Common constructor for all authenticators

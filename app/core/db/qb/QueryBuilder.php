@@ -58,7 +58,12 @@ class QueryBuilder {
     $this->logger = $logger;
     $this->sql = '';
     $this->variables = array();
-    //$this->queryResult = null;
+  }
+
+  public function selectCount(string $key, string $alias) {
+    $this->sql .= 'SELECT COUNT(' . $key . ') AS `' . $alias . '`';
+
+    return $this;
   }
 
   public function select(string ...$keys) {
@@ -128,6 +133,42 @@ class QueryBuilder {
     return $this;
   }
 
+  public function inWhere(string $columnName, array $values, bool $or = true, bool $renderText = true) {
+    $paramKeys = [];
+
+    $x = 0;
+    foreach($values as $value) {
+      $key = ':' . $columnName . '_' . $x;
+      $paramKeys[] = $key;
+      $this->setParam($key, $value);
+
+      $x++;
+    }
+
+    if($renderText == true) {
+      $this->sql .= ' WHERE (';
+    }
+
+    $i = 0;
+    foreach($paramKeys as $k) {
+      $this->sql .= '(`' . $columnName . '` = \'' . $k . '\')';
+
+      if(($i + 1) != count($paramKeys)) {
+        if($or == true) {
+          $this->sql .= ' OR ';
+        } else {
+          $this->sql .= ' AND ';
+        }
+      } else {
+        $this->sql .= ')';
+      }
+
+      $i++;
+    }
+
+    return $this;
+  }
+
   public function where(string $text, bool $like = false, bool $renderText = true) {
     $text = trim($text);
 
@@ -137,8 +178,6 @@ class QueryBuilder {
     if($renderText == true) {
       $this->sql .= ' WHERE ';
     }
-
-    $dbVal = '$' . $dbVal . '$';
 
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` LIKE \'%' . $dbVal . '%\'';
@@ -167,8 +206,6 @@ class QueryBuilder {
       $this->sql .= ' WHERE ';
     }
 
-    $dbVal = '$' . $dbVal . '$';
-
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` NOT LIKE \'%' . $dbVal . '%\'';
     } else {
@@ -185,8 +222,6 @@ class QueryBuilder {
     $dbVal = explode('=', $text)[1];
 
     $this->sql .= ' AND ';
-
-    $dbVal = '$' . $dbVal . '$';
 
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` LIKE \'%' . $dbVal . '%\'';
@@ -205,8 +240,6 @@ class QueryBuilder {
 
     $this->sql .= ' AND ';
 
-    $dbVal = '$' . $dbVal . '$';
-
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` NOT LIKE \'%' . $dbVal . '%\'';
     } else {
@@ -223,8 +256,6 @@ class QueryBuilder {
     $dbVal = explode('=', $text)[1];
 
     $this->sql .= ' OR ';
-
-    $dbVal = '$' . $dbVal . '$';
 
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` LIKE \'%' . $dbVal . '%\'';
@@ -243,8 +274,6 @@ class QueryBuilder {
 
     $this->sql .= ' OR ';
 
-    $dbVal = '$' . $dbVal . '$';
-
     if($like == true) {
       $this->sql .= '`' . $dbKey . '` NOT LIKE \'%' . $dbVal . '%\'';
     } else {
@@ -255,13 +284,13 @@ class QueryBuilder {
   }
 
   public function leftBracket() {
-    $this->sql .= ' ( ';
+    $this->sql .= '(';
 
     return $this;
   }
 
   public function rightBracket() {
-    $this->sql .= ' ) ';
+    $this->sql .= ')';
 
     return $this;
   }
@@ -297,8 +326,7 @@ class QueryBuilder {
 
     $i = 0;
     foreach($values as $k => $v) {
-      $v = trim($v);
-      $value = '$' . $v . '$';
+      $value = trim($v);
 
       if(count($values) != 1) {
         if(($i + 1) == count($values)) {
@@ -386,8 +414,7 @@ class QueryBuilder {
 
     $i = 0;
     foreach($values as $value) {
-      $value = trim($value);
-      $v = '$' . $value . '$';
+      $v = trim($value);
 
       if(count($values) != 1) {
         if(($i + 1) == count($values)) {
@@ -412,8 +439,7 @@ class QueryBuilder {
 
     $i = 0;
     foreach($values as $value) {
-      $value = trim($value);
-      $v = '$' . $value . '$';
+      $v = trim($value);
 
       if(count($values) != 1) {
         if(($i + 1) == count($values)) {
@@ -495,7 +521,7 @@ class QueryBuilder {
 
   private function createQuery() {
     foreach($this->variables as $key => $value) {
-      $this->sql = str_replace('$' . $key . '$', $value, $this->sql);
+      $this->sql = str_replace($key, $value, $this->sql);
     }
   }
 

@@ -7,7 +7,7 @@ async function sendComment(id_author, id_document, can_delete) {
         await sleep(500);
 
         $.ajax({
-            url: 'app/ajax/send-comment.php',
+            url: 'app/ajax/document-send-comment.php',
             type: 'POST',
             data: {
                 commentText: text,
@@ -33,7 +33,7 @@ async function loadComments(id_document, can_delete, canSleep = true) {
         await sleep(500);
     }
     
-    $.get("app/ajax/get-comments.php", {
+    $.get("app/ajax/document-get-comments.php", {
         idDocument: id_document,
         canDelete: can_delete
     },
@@ -47,7 +47,7 @@ async function deleteComment(id_comment, id_document, can_delete) {
     await sleep(500);
 
     $.ajax({
-        url: 'app/ajax/delete-comment.php',
+        url: 'app/ajax/document-delete-comment.php',
         type: 'POST',
         data: {
             idComment: id_comment

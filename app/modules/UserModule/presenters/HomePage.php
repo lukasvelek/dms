@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\WidgetLocations;
 use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
@@ -32,11 +33,52 @@ class HomePage extends APresenter {
     }
 
     protected function showHomePage() {
+        global $app;
+
+        $idUser = $app->user->getId();
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/homepage.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Home page'
         );
+
+        $widget00 = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00);
+        $widget01 = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET01);
+        $widget10 = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10);
+        $widget11 = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11);
+
+        $emptyWidget = function() {
+            return 
+            '<div class="widget">
+                <p>No widget</p>
+                <!--<a class="general-link" href="?page=UserModule:Settings:showDashboardWidgets">Set up</a>-->
+            </div>';
+        };
+
+        if(!is_null($widget00)) {
+            $data['$WIDGET0-0$'] = $app->widgetComponent->homeDashboardWidgets[$widget00['widget_name']]['code'];
+        } else {
+            $data['$WIDGET0-0$'] = $emptyWidget();
+        }
+
+        if(!is_null($widget01)) {
+            $data['$WIDGET0-1$'] = $app->widgetComponent->homeDashboardWidgets[$widget01['widget_name']]['code'];
+        } else {
+            $data['$WIDGET0-1$'] = $emptyWidget();
+        }
+
+        if(!is_null($widget10)) {
+            $data['$WIDGET1-0$'] = $app->widgetComponent->homeDashboardWidgets[$widget10['widget_name']]['code'];
+        } else {
+            $data['$WIDGET1-0$'] = $emptyWidget();
+        }
+
+        if(!is_null($widget11)) {
+            $data['$WIDGET1-1$'] = $app->widgetComponent->homeDashboardWidgets[$widget11['widget_name']]['code'];
+        } else {
+            $data['$WIDGET1-1$'] = $emptyWidget();
+        }
 
         $this->templateManager->fill($data, $template);
 

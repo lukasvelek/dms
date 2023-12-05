@@ -120,6 +120,70 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    public function canApproveShredding(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('approve_shredding', $idUser, $checkCache)) {
+            return false;
+        }
+
+        if(!$this->documentAuthorizator->canApproveShredding($idDocument)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canDeclineShredding(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('decline_shredding', $idUser, $checkCache)) {
+            return false;
+        }
+
+        if(!$this->documentAuthorizator->canDeclineShredding($idDocument)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canSuggestForShredding(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('suggest_shredding', $idUser, $checkCache)) {
+            return false;
+        }
+
+        if(!$this->documentAuthorizator->canSuggestForShredding($idDocument)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canShred(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('shred', $idUser, $checkCache)) {
+            return false;
+        }
+
+        if(!$this->documentAuthorizator->canShred($idDocument)) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Tries to assign user either from AAuthorizator or from passed variable
      * 

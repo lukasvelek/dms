@@ -12,6 +12,72 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getProcessesWaitingForUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->explicit(' WHERE ')
+                   ->leftBracket()
+                   ->leftBracket()
+                   ->where('workflow1=:id_user', false, false)
+                   ->andWhere('workflow_status=1')
+                   ->rightBracket()
+                   ->explicit('OR')
+                   ->leftBracket()
+                   ->where('workflow2=:id_user', false, false)
+                   ->andWhere('workflow_status=2')
+                   ->rightBracket()
+                   ->explicit('OR')
+                   ->leftBracket()
+                   ->where('workflow3=:id_user', false, false)
+                   ->andWhere('workflow_status=3')
+                   ->rightBracket()
+                   ->explicit('OR')
+                   ->leftBracket()
+                   ->where('workflow4=:id_user', false, false)
+                   ->andWhere('workflow_status=4')
+                   ->rightBracket()
+                   ->rightBracket()
+                   ->andWhere('status=:status')
+                   ->setParams(array(
+                    ':id_user' => $idUser,
+                    ':status' => ProcessStatus::IN_PROGRESS
+                   ))
+                   ->execute()
+                   ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
+    public function getProcessCountByStatus(int $status = 0) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb = $qb->selectCount('id', 'cnt')
+                 ->from('processes');
+
+        switch($status) {
+            case 0:
+                break;
+
+            default:
+                $qb->where('status=:status')
+                   ->setParam(':status', $status);
+
+                break;
+        }
+
+        $row = $qb->execute()
+                  ->fetchSingle('cnt');
+
+        return $row;
+    }
+
     public function getFinishedProcessesWithIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 

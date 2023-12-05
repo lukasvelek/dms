@@ -2,6 +2,12 @@
 
 namespace DMS\UI;
 
+/**
+ * LinkBuilder classes is used to create HTML '<a>' links using PHP.
+ * 
+ * @author Lukas Velek
+ * @version 1.0
+ */
 class LinkBuilder {
     private string $url;
     private string $class;
@@ -9,6 +15,15 @@ class LinkBuilder {
     private string $style;
     private ?string $imgPath;
     
+    /**
+     * The default constructor that does nothing more than save passed arguments to the class variables.
+     * 
+     * @param string $url Link URL
+     * @param string $class Link CSS class
+     * @param string $name Link text
+     * @param string $style Link custom CSS style definition
+     * @param null|string $imgPath Link image
+     */
     public function __construct(string $url, string $class, string $name, string $style = '', ?string $imgPath = NULL) {
         $this->url = $url;
         $this->class = $class;
@@ -17,6 +32,11 @@ class LinkBuilder {
         $this->imgPath = $imgPath;
     }
 
+    /**
+     * Converts the class variables to final HTML code
+     * 
+     * @return string HTML code
+     */
     public function render() {
         $hasStyle = false;
 
@@ -50,6 +70,12 @@ class LinkBuilder {
         return $template;
     }
 
+    /**
+     * Returns the link template based on passed parameters.
+     * 
+     * @param bool $style True if custom style will be used and false if not
+     * @return string HTML link template
+     */
     private function getTemplate(bool $style = false) {
         if(!$style) {
             return '<a class="$CLASS$" href="$URL$">$NAME$</a>';
@@ -58,40 +84,72 @@ class LinkBuilder {
         }
     }
 
+    /**
+     * Returns the image link template.
+     * 
+     * @return string HTML image link template
+     */
     private function getImgTemplate() {
         $size = array('32', '32'); // width, height
         return '<a class="$CLASS$" href="$URL$"><img src="$IMG_PATH$" width="' . $size[0] . '" height="' . $size[1] . '" loading="lazy">$NAME$</a>';
     }
 
+    /**
+     * Static function to get basic image link.
+     * 
+     * @param string $url Link URL
+     * @param string $name Link text
+     * @param string $imgPath Link image path
+     * @param string $class Link CSS class
+     * @return string HTML code
+     */
     public static function createImgLink(string $url, string $name, string $imgPath, string $class = 'general-link') {
         $obj = new self('?page=' . $url, $class, $name, '', $imgPath);
         return $obj->render();
     }
 
+    /**
+     * Static function to get advanced image link.
+     * 
+     * @param array $urlParams Link URL params that will be parsed into a single string URL link
+     * @param string $name Link text
+     * @param string $imgPath Link image path
+     * @param string $class Link CSS class
+     * @return string HTML code
+     */
     public static function createImgAdvLink(array $urlParams, string $name, string $imgPath, string $class = 'general-link') {
-        $url = '?';
-
-        $i = 0;
-        foreach($urlParams as $paramKey => $paramVal) {
-            if(($i + 1) == count($urlParams)) {
-                $url .= $paramKey . '=' . $paramVal;
-            } else {
-                $url .= $paramKey . '=' . $paramVal . '&';
-            }
-            
-            $i++;
-        }
-
-        $obj = new self($url, $class, $name, '', $imgPath);
+        $obj = new self(self::createURL($urlParams), $class, $name, '', $imgPath);
         return $obj->render();
     }
 
+    /**
+     * Static function to get basic text link.
+     * 
+     * @param string $url Link URL
+     * @param string $name Link text
+     * @param string $class Link CSS class
+     * @return string HTML code
+     */
     public static function createLink(string $url, string $name, string $class = 'general-link') {
         $obj = new self('?page=' . $url, $class, $name);
         return $obj->render();
     }
 
+    /**
+     * Static function to get advanced image link.
+     * 
+     * @param array $urlParams Link URL params that will be parsed into a single string URL link
+     * @param string $name Link text
+     * @param string $class Link CSS class
+     * @param string $style Link CSS custom style
+     * @return string HTML code
+     */
     public static function createAdvLink(array $urlParams, string $name, string $class = 'general-link', string $style = '') {
+        $obj = new self(self::createURL($urlParams), $class, $name, $style);
+        return $obj->render();
+    }
+
+    private static function createURL(array $urlParams) {
         $url = '?';
 
         $i = 0;
@@ -105,8 +163,7 @@ class LinkBuilder {
             $i++;
         }
 
-        $obj = new self($url, $class, $name, $style);
-        return $obj->render();
+        return $url;
     }
 }
 

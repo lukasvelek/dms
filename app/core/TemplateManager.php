@@ -10,7 +10,13 @@ class TemplateManager {
     }
 
     public function loadTemplate(string $file) {
-        return $this->fileManager->read($file);
+        $file = $this->fileManager->read($file);
+
+        if(is_string($file)) {
+            return $file;
+        } else {
+            return 'Template <i>' . $file . '</i> not found!';
+        }
     }
 
     public function replace(string $search, string $replace, string &$subject) {

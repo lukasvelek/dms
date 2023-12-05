@@ -39,6 +39,10 @@ if(isset($_GET['idDocuments'])) {
     $canApproveArchivation = null;
     $canDeclineArchivation = null;
     $canArchive = null;
+    $canSuggestShredding = null;
+    /*$canApproveShredding = null;
+    $canDeclineShredding = null;
+    $canShred = null;*/
     
     if(!is_null($user)) {
         foreach($idDocuments as $idDocument) {
@@ -73,6 +77,34 @@ if(isset($_GET['idDocuments'])) {
             } else {
                 $canArchive = false;
             }
+
+            if($documentBulkActionAuthorizator->canSuggestForShredding($idDocument, null, false) &&
+              (is_null($canSuggestShredding) || $canSuggestShredding)) {
+                $canSuggestShredding = true;
+            } else {
+                $canSuggestShredding = false;
+            }
+
+            /*if($documentBulkActionAuthorizator->canApproveShredding($idDocument, null, false) &&
+              (is_null($canApproveShredding) || $canApproveShredding)) {
+                $canApproveShredding = true;
+            } else {
+                $canApproveShredding = false;
+            }
+
+            if($documentBulkActionAuthorizator->canDeclineShredding($idDocument, null, false) &&
+              (is_null($canDeclineShredding) || $canDeclineShredding)) {
+                $canDeclineShredding = true;
+            } else {
+                $canDeclineShredding = false;
+            }
+
+            if($documentBulkActionAuthorizator->canShred($idDocument, null, false) &&
+              (is_null($canShred) || $canShred)) {
+                $canShred = true;
+            } else {
+                $canShred = false;
+            }*/
         }
     }
 
@@ -143,6 +175,74 @@ if(isset($_GET['idDocuments'])) {
 
         $bulkActions['Delete'] = $link;
     }
+
+    if($canSuggestShredding) {
+        $link = '?page=UserModule:Documents:performBulkAction&';
+        
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=suggest_for_shredding';
+
+        $bulkActions['Suggest shredding'] = $link;
+    }
+
+    /*if($canApproveShredding) {
+        $link = '?page=UserModule:Documents:performBulkAction&';
+        
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=approve_shredding';
+
+        $bulkActions['Approve shredding'] = $link;
+    }
+
+    if($canDeclineShredding) {
+        $link = '?page=UserModule:Documents:performBulkAction&';
+        
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=decline_shredding';
+
+        $bulkActions['Decline shredding'] = $link;
+    }
+
+    if($canShred) {
+        $link = '?page=UserModule:Documents:performBulkAction&';
+        
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=shred';
+
+        $bulkActions['Shred'] = $link;
+    }*/
 
     $i = 0;
     $x = 0;
