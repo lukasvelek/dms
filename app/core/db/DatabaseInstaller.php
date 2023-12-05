@@ -19,7 +19,8 @@ class DatabaseInstaller {
     private Logger $logger;
 
     public const DEFAULT_USERS = array(
-        'admin'
+        'admin',
+        'service_user'
     );
 
     public function __construct(Database $db, Logger $logger) {
@@ -221,6 +222,14 @@ class DatabaseInstaller {
                 'date_to' => 'DATETIME NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'hash' => 'VARCHAR(256) NOT NULL'
+            ),
+            'notifications' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'text' => 'VARCHAR(32768) NOT NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'action' => 'VARCHAR(256) NOT NULL'
             )
         );
 
@@ -255,10 +264,10 @@ class DatabaseInstaller {
         $insertUsers = array();
 
         $defaultUserData = array(
-            'serviceuser' => array(
+            'service_user' => array(
                 'firstname' => 'Service',
                 'lastname' => 'User',
-                'password' => 'serviceuser'
+                'password' => 'service_user'
             ),
             'admin' => array(
                 'firstname' => 'Admin',

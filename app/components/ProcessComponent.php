@@ -4,6 +4,7 @@ namespace DMS\Components;
 
 use DMS\Components\Process\DeleteProcess;
 use DMS\Constants\Groups;
+use DMS\Constants\Notifications;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
@@ -18,14 +19,16 @@ class ProcessComponent extends AComponent {
     private GroupModel $groupModel;
     private GroupUserModel $groupUserModel;
     private DocumentModel $documentModel;
+    private NotificationComponent $notificationComponent;
 
-    public function __construct(Database $db, Logger $logger, ProcessModel $processModel, GroupModel $groupModel, GroupUserModel $groupUserModel, DocumentModel $documentModel) {
+    public function __construct(Database $db, Logger $logger, ProcessModel $processModel, GroupModel $groupModel, GroupUserModel $groupUserModel, DocumentModel $documentModel, NotificationComponent $notificationComponent) {
         parent::__construct($db, $logger);
 
         $this->processModel = $processModel;
         $this->groupModel = $groupModel;
         $this->groupUserModel = $groupUserModel;
         $this->documentModel = $documentModel;
+        $this->notificationComponent = $notificationComponent;
     }
 
     public function getProcessesWhereIdUserIsCurrentOfficer(int $idUser) {
@@ -124,6 +127,13 @@ class ProcessComponent extends AComponent {
         if($start) {
             $this->processModel->insertNewProcess($data);
             $this->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
+            
+            $idProcess = $this->processModel->getLastInsertedIdProcess();
+
+            $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
+                'id_process' => $idProcess,
+                'id_user' => $_SESSION['id_current_user']
+            ));
 
             return true;
         } else {
@@ -142,6 +152,11 @@ class ProcessComponent extends AComponent {
 
         $this->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
 
+        $this->notificationComponent->createNewNotification(NOtifications::PROCESS_ASSIGNED_TO_USER, array(
+            'id_user' => $process->getWorkflow()[$newWfStatus - 1],
+            'id_process' => $idProcess
+        ));
+
         $this->logger->info('Updated workflow status of process #' . $idProcess, __METHOD__);
 
         return true;
@@ -149,6 +164,13 @@ class ProcessComponent extends AComponent {
 
     public function endProcess(int $idProcess) {
         $this->processModel->updateStatus($idProcess, ProcessStatus::FINISHED);
+
+        $process = $this->processModel->getProcessById($idProcess);
+
+        $this->notificationComponent->createNewNotification(Notifications::PROCESS_FINISHED, array(
+            'id_user' => $process->getIdAuthor(),
+            'id_process' => $idProcess
+        ));
 
         $this->logger->info('Ended process #' . $idProcess, __METHOD__);
 
