@@ -2,10 +2,11 @@ async function ajaxLoadProcesses(_filter = 'waitingForMe') {
     await sleep(250);
 
     $.ajax({
-        url: 'app/ajax/process-search.php',
+        url: 'app/ajax/Processes.php',
         type: 'POST',
         data: {
-            filter: _filter
+            filter: _filter,
+            action: "search"
         }
     })
     .done(function(data) {
