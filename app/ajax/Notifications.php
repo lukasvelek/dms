@@ -17,8 +17,7 @@ if($action == null) {
 echo($action());
 
 function loadCount() {
-    global $notificationModel;
-    global $user;
+    global $notificationModel, $user;
 
     if($user == null) {
         exit;
@@ -38,8 +37,7 @@ function hideNotification() {
 }
 
 function getNotifications() {
-    global $notificationModel;
-    global $user;
+    global $notificationModel, $user;
 
     if($user == null) {
         exit;
