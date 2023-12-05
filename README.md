@@ -1,9 +1,11 @@
 # Document Management System (DMS)
 This website application is used for managing documents. It can manage documents, run processes on them, manage users, groups and folders. Allow or deny rights to users and groups to perform actions or see panels.
 
-It also enables users to manage metadata or their select values.
+It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.4
+
 ### v1.3
 - added customizable home dashboard widgets
 - added shredding
