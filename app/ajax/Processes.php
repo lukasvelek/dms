@@ -225,4 +225,6 @@ function search() {
     echo $tb->build();
 }
 
+exit;
+
 ?>

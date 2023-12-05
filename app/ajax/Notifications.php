@@ -76,4 +76,6 @@ function getNotifications() {
     }
 }
 
+exit;
+
 ?>

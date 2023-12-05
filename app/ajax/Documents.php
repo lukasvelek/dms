@@ -599,4 +599,6 @@ function _createBlankLink(int $left, int $top) {
     return $code;
 }
 
+exit;
+
 ?>
