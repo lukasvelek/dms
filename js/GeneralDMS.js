@@ -14,7 +14,9 @@ async function openNotifications() {
     $("#notificationsController").attr("onclick", "closeNotifications()");
     $('#notifications').html('<img style="position: fixed; top: 45%; left: 45%;" src="img/loading.gif" width="32" height="32">');
 
-    $.get('app/ajax/get-user-notifications.php', {},
+    $.get("app/ajax/Notifications.php", {
+        action: "getNotifications"
+    },
     async function(data) {
         let obj = JSON.parse(data);
 
@@ -32,15 +34,16 @@ async function closeNotifications() {
 }
 
 async function useNotification(_id, _url) {
-    $.get('app/ajax/hide-user-notification.php', {
-        id: _id
+    $.get("app/ajax/Notifications.php", {
+        id: _id,
+        action: "hideNotification"
     }, async function() {
         location.href = _url;
     });
 }
 
 async function loadNotificationCount() {
-    $.get('app/ajax/Notifications.php', {
+    $.get("app/ajax/Notifications.php", {
         action: "loadCount"
     },
     async function(data) {
