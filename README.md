@@ -13,6 +13,8 @@ It also enables users to manage metadata or their select values.
     - updated QueryBuilder
     - updated application loader
 - added core code comments
+- added a new notification
+- fixed a bug where a notification link macro was displayed on login screen
 
 ### v1.2
 - added support for electronic files
