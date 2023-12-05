@@ -514,7 +514,7 @@ class Documents extends APresenter {
 
         $data = array_merge($data, $customMetadata);
 
-        if(isset($data['file'])) {
+        if(isset($data['file']) && !empty($data['file'])) {
             $app->fsManager->uploadFile($_FILES['file'], $data['file']);
         }
         
