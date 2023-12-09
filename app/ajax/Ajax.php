@@ -13,7 +13,6 @@ use DMS\Components\WidgetComponent;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
-use DMS\Entities\ProcessComment;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
@@ -29,6 +28,7 @@ use DMS\Models\TableModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
+use DMS\Repositories\DocumentCommentRepository;
 
 session_start();
 
@@ -158,5 +158,7 @@ $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 $documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
+
+$documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
 
 ?>

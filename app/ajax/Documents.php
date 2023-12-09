@@ -38,28 +38,28 @@ function getBulkActions() {
             $inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
             $document = $documentModel->getDocumentById($idDocument);
 
-            if( $documentBulkActionAuthorizator->canDelete($idDocument, null, false) && 
+            if($documentBulkActionAuthorizator->canDelete($idDocument, null, false) && 
                 (is_null($canDelete) || $canDelete)) {
                 $canDelete = true;
             } else {
                 $canDelete = false;
             }
 
-            if( $documentBulkActionAuthorizator->canApproveArchivation($idDocument, null, false) && 
+            if($documentBulkActionAuthorizator->canApproveArchivation($idDocument, null, false) && 
                 (is_null($canApproveArchivation) || $canApproveArchivation)) {
                 $canApproveArchivation = true;
             } else {
                 $canApproveArchivation = false;
             }
 
-            if( $documentBulkActionAuthorizator->canDeclineArchivation($idDocument, null, false) &&
+            if($documentBulkActionAuthorizator->canDeclineArchivation($idDocument, null, false) &&
                 (is_null($canDeclineArchivation) || $canDeclineArchivation)) {
                 $canDeclineArchivation = true;
             } else {
                 $canDeclineArchivation = false;
             }
 
-            if( $documentBulkActionAuthorizator->canArchive($idDocument, null, false) &&
+            if($documentBulkActionAuthorizator->canArchive($idDocument, null, false) &&
                 (is_null($canArchive) || $canArchive)) {
                 $canArchive = true;
             } else {
@@ -198,11 +198,24 @@ function getBulkActions() {
 }
 
 function deleteComment() {
-    global $documentCommentModel;
+    global $user, $documentCommentRepository;
 
     $idComment = htmlspecialchars($_POST['idComment']);
+    $idCurrentUser = null;
 
-    $documentCommentModel->deleteComment($idComment);
+    if(!is_null($user)) {
+        $idCurrentUser = $user->getId();
+    } else {
+        $idCurrentUser = $_SESSION['id_current_user'];
+    }
+
+    try {
+        $documentCommentRepository->deleteComment($idComment, $idCurrentUser);
+    } catch (Exception $e) {
+
+    }
+
+    //$documentCommentModel->deleteComment($idComment);
 }
 
 function getComments() {
