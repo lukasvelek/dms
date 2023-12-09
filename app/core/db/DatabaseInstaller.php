@@ -341,7 +341,17 @@ class DatabaseInstaller {
 
     private function insertDefaultUserGroups() {
         $groupCodes = array(
-            'ADMINISTRATORS' => 'admin'
+            'ADMINISTRATORS',
+            'ARCHMAN'
+        );
+
+        $groupUsers = array(
+            'ARCHMAN' => array(
+                'admin' => '1'
+            ),
+            'ADMINISTRATORS' => array(
+                'admin' => '1'
+            )
         );
 
         $managers = array(
@@ -351,7 +361,7 @@ class DatabaseInstaller {
         $idGroup = null;
         $idUser = null;
 
-        foreach($groupCodes as $groupCode => $username) {
+        foreach($groupCodes as $groupCode) {
             $idGroup = null;
             $idUser = null;
 
@@ -364,20 +374,24 @@ class DatabaseInstaller {
                 }
             }
 
-            $sql = "SELECT * FROM `users` WHERE `username` = '$username'";
-            $rows = $this->db->query($sql);
+            if($idGroup != NULL) {
+                foreach($groupUsers[$groupCode] as $user => $isManager) {
+                    $sql = "SELECT `id` FROM `users` WHERE `username` = '$user'";
+                    $rows = $this->db->query($sql);
 
-            if($rows->num_rows > 0) {
-                foreach($rows as $row) {
-                    $idUser = $row['id'];
-                }
-            }
+                    $idUser = null;
 
-            if($idUser != NULL && $idGroup != NULL) {
-                $manager = $managers[$username];
+                    foreach($rows as $row) {
+                        $idUser = $row['id'];
+                    }
 
-                $sql = "INSERT INTO `group_users` (`id_user`, `id_group`, `is_manager`) VALUES ('$idUser', '$idGroup', '$manager')";
-                $this->db->query($sql);
+                    if($idUser == null) {
+                        continue;
+                    }
+
+                    $sql = "INSERT INTO `group_users` (`id_user`, `id_group`, `is_manager`) VALUES ('$idUser', '$idGroup', '$isManager')";
+                    $result = $this->db->query($sql);
+                } 
             }
         }
 
