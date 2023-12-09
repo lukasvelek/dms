@@ -236,7 +236,7 @@ function getComments() {
             $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
 
             if($canDelete == '1') {
-                $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteComment(\'' . $comment->getId() . '\', \'' . $idDocument . '\', \'' . $canDelete . '\');">Delete</a>';
+                $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteDocumentComment(\'' . $comment->getId() . '\', \'' . $idDocument . '\', \'' . $canDelete . '\');">Delete</a>';
 
                 $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
             } else {
@@ -314,7 +314,7 @@ function search() {
         } else {
             foreach($documents as $document) {
                 $actionLinks = array(
-                    '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawBulkActions()">',
+                    '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawDocumentBulkActions()">',
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
                 );
@@ -433,7 +433,7 @@ function search() {
     
                 $docuRow = $tb->createRow();
     
-                $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawBulkActions()" onchange="drawBulkActions()">'));
+                $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">'));
                 
                 foreach($actionLinks as $actionLink) {
                     $docuRow->addCol($tb->createCol()->setText($actionLink));
@@ -521,7 +521,7 @@ function searchDocumentsSharedWithMe() {
             }
 
             $docuRow = $tb->createRow();
-            $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawBulkActions()">'));
+            $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawDocumentBulkActions()">'));
 
             foreach($actionLinks as $actionLink) {
                 $docuRow->addCol($tb->createCol()->setText($actionLink));

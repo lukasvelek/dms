@@ -55,7 +55,7 @@ function sendComment() {
     $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
 
     if($canDelete == '1') {
-        $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteComment(\'' . $comment->getId() . '\', \'' . $idProcess . '\', \'' . $canDelete . '\');">Delete</a>';
+        $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteProcessComment(\'' . $comment->getId() . '\', \'' . $idProcess . '\', \'' . $canDelete . '\');">Delete</a>';
 
         $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
     } else {
@@ -89,7 +89,7 @@ function getComments() {
             $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
 
             if($canDelete == '1') {
-                $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteComment(\'' . $comment->getId() . '\', \'' . $idProcess . '\', \'' . $canDelete . '\');">Delete</a>';
+                $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteProcessComment(\'' . $comment->getId() . '\', \'' . $idProcess . '\', \'' . $canDelete . '\');">Delete</a>';
 
                 $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
             } else {

@@ -576,9 +576,9 @@ class SingleDocument extends APresenter {
 
         $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
-        return '<script type="text/javascript" src="js/DocumentAjaxComment.js"></script>
+        return '<!--<script type="text/javascript" src="js/DocumentAjaxComment.js"></script>-->
         <textarea name="text" id="text" required></textarea><br><br>
-        <button onclick="sendComment(' . $app->user->getId() . ', ' . $document->getId() . ', ' . $canDelete . ')">Send</button>
+        <button onclick="sendDocumentComment(' . $app->user->getId() . ', ' . $document->getId() . ', ' . $canDelete . ')">Send</button>
         ';
     }
 
@@ -590,8 +590,8 @@ class SingleDocument extends APresenter {
         return '
         <img id="comments-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">
         <script type="text/javascript">
-            $(document).on("load", showLoading())
-                       .ready(loadComments("' . $document->getId() . '", "' . $canDelete . '"));
+            $(document).on("load", showCommentsLoading())
+                       .ready(loadDocumentComments("' . $document->getId() . '", "' . $canDelete . '"));
         </script>';
     }
 

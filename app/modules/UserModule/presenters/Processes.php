@@ -64,7 +64,7 @@ class Processes extends APresenter {
             $filter = htmlspecialchars($_GET['filter']);
         }
 
-        $processGrid = '<script type="text/javascript" src="js/ProcessAjaxSearch.js"></script>';
+        $processGrid = '<!--<script type="text/javascript" src="js/ProcessAjaxSearch.js"></script>-->';
 
         $app->logger->logFunction(function() use (&$processGrid, $filter) {
             $processGrid .= $this->internalCreateStandardProcessGrid($filter);
@@ -163,7 +163,7 @@ class Processes extends APresenter {
     private function internalCreateStandardProcessGrid(string $filter = 'waitingForMe') {
         return '
             <script type="text/javascript">
-            ajaxLoadProcesses("' . $filter . '");
+            loadProcesses("' . $filter . '");
             </script>
             <table border="1"><img id="processes-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
         ';
