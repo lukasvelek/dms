@@ -212,10 +212,9 @@ function deleteComment() {
     try {
         $documentCommentRepository->deleteComment($idComment, $idCurrentUser);
     } catch (Exception $e) {
-
+        echo 'Exception occured: ' . $e->getMessage();
+        exit;
     }
-
-    //$documentCommentModel->deleteComment($idComment);
 }
 
 function getComments() {
