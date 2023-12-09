@@ -4,11 +4,12 @@ async function ajaxSearch(query, id_folder) {
     $('#documents-loading').show();
 
     $.ajax({
-        url: 'app/ajax/document-search.php',
+        url: 'app/ajax/Documents.php',
         type: 'POST',
         data: {
             q: query,
-            idFolder: id_folder
+            idFolder: id_folder,
+            action: "search"
         }
     })
     .done(function(data) {
@@ -21,10 +22,11 @@ async function ajaxLoadDocuments(id_folder) {
     await sleep(250);
 
     $.ajax({
-        url: 'app/ajax/document-search.php',
+        url: 'app/ajax/Documents.php',
         type: 'POST',
         data: {
-            idFolder: id_folder
+            idFolder: id_folder,
+            action: "search"
         }
     })
     .done(function(data) {
@@ -51,8 +53,11 @@ async function ajaxLoadDocumentsSharedWithMe() {
     await sleep(250);
 
     $.ajax({
-        url: 'app/ajax/documents-shared-with-me-search.php',
-        type: 'POST'
+        url: 'app/ajax/Documents.php',
+        type: 'POST',
+        data: {
+            action: "searchDocumentsSharedWithMe"
+        }
     })
     .done(function(data) {
         $('table').html(data);

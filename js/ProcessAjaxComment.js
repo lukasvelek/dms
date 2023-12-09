@@ -7,13 +7,14 @@ async function sendComment(id_author, id_process, can_delete) {
         await sleep(500);
 
         $.ajax({
-            url: 'app/ajax/process-send-comment.php',
+            url: 'app/ajax/Processes.php',
             type: 'POST',
             data: {
                 commentText: text,
                 idAuthor: id_author,
                 idProcess: id_process,
-                canDelete: can_delete
+                canDelete: can_delete,
+                action: "sendComment"
             }
         })
         .done(async function(data) {
@@ -33,9 +34,10 @@ async function loadComments(id_process, can_delete, canSleep = true) {
         await sleep(500);
     }
     
-    $.get("app/ajax/process-get-comments.php", {
+    $.get("app/ajax/Processes.php", {
         idProcess: id_process,
-        canDelete: can_delete
+        canDelete: can_delete,
+        action: "getComments"
     },
     function(data) {
         $("#comments").empty();
@@ -47,10 +49,11 @@ async function deleteComment(id_comment, id_process, can_delete) {
     await sleep(500);
 
     $.ajax({
-        url: 'app/ajax/process-delete-comment.php',
+        url: 'app/ajax/Processes.php',
         type: 'POST',
         data: {
-            idComment: id_comment
+            idComment: id_comment,
+            action: "deleteComment"
         }
     })
     .done(async function() {
