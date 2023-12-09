@@ -354,10 +354,6 @@ class DatabaseInstaller {
             )
         );
 
-        $managers = array(
-            'admin' => '1'
-        );
-
         $idGroup = null;
         $idUser = null;
 
