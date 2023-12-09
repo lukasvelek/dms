@@ -209,12 +209,7 @@ function deleteComment() {
         $idCurrentUser = $_SESSION['id_current_user'];
     }
 
-    try {
-        $documentCommentRepository->deleteComment($idComment, $idCurrentUser);
-    } catch (Exception $e) {
-        echo 'Exception occured: ' . $e->getMessage();
-        exit;
-    }
+    $documentCommentRepository->deleteComment($idComment, $idCurrentUser);
 }
 
 function getComments() {
@@ -256,21 +251,14 @@ function getComments() {
 }
 
 function sendComment() {
-    global $documentCommentModel;
-    global $userModel;
+    global $documentCommentModel, $userModel, $documentCommentRepository;
 
     $text = htmlspecialchars($_POST['commentText']);
     $idAuthor = htmlspecialchars($_POST['idAuthor']);
     $idDocument = htmlspecialchars($_POST['idDocument']);
     $canDelete = htmlspecialchars($_POST['canDelete']);
 
-    $data = array(
-        'id_author' => $idAuthor,
-        'id_document' => $idDocument,
-        'text' => $text
-    );
-
-    $documentCommentModel->insertComment($data);
+    $documentCommentRepository->insertComment($idAuthor, $idDocument, $text);
     $comment = $documentCommentModel->getLastInsertedCommentForIdUserAndIdDocument($idAuthor, $idDocument);
 
     $author = $userModel->getUserById($idAuthor);

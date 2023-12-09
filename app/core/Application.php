@@ -36,6 +36,7 @@ use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
+use DMS\Repositories\DocumentRepository;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -94,6 +95,7 @@ class Application {
     public NotificationComponent $notificationComponent;
 
     public DocumentCommentRepository $documentCommentRepository;
+    public DocumentRepository $documentRepository;
 
     private array $modules;
     private ?string $pageContent;
@@ -161,6 +163,7 @@ class Application {
         $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent);
 
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
+        $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
         
         //$this->conn->installer->updateDefaultUserPanelRights();
     }

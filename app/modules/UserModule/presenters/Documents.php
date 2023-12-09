@@ -480,6 +480,8 @@ class Documents extends APresenter {
     protected function createNewDocument() {
         global $app;
 
+        //$app->documentRepository->composeCreateDocumentDataArray($_POST)
+
         $data = [];
 
         $idGroup = htmlspecialchars($_POST['group']);
