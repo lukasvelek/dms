@@ -25,6 +25,8 @@ class Label implements IBuildable {
     $this->text = '';
     $this->id = '';
 
+    $this->script = '';
+
     return $this;
   }
 
