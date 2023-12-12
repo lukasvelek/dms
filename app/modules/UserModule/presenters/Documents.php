@@ -111,7 +111,7 @@ class Documents extends APresenter {
         }, __METHOD__);
 
         $searchField = '
-            <input type="text" id="q" placeholder="Search" oninput="ajaxSearch(this.value, \'' . ($idFolder ?? 'null') . '\');">
+            <input type="text" id="q" placeholder="Search" oninput="loadDocumentsSearch(this.value, \'' . ($idFolder ?? 'null') . '\');">
             <!--<script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
             <script type="text/javascript" src="js/DocumentAjaxBulkActions.js"></script>-->
         ';
