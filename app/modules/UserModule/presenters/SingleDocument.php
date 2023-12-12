@@ -502,6 +502,10 @@ class SingleDocument extends APresenter {
         }
 
         foreach($data as $k => $v) {
+            if(is_null($v)) {
+                $v = '-';
+            }
+
             $row = $tb->createRow();
 
             $row->addCol($tb->createCol()->setText($k)->setBold())
