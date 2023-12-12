@@ -2,6 +2,7 @@
 
 namespace DMS\Core\DB;
 
+use DMS\Authenticators\UserAuthenticator;
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
@@ -394,12 +395,58 @@ class DatabaseInstaller {
         return true;
     }
 
-    private function insertDefaultUserPanelRights() {
-        $idUsers = array();
+    private function insertDefaultGroupPanelRights() {
+        $idGroups = [];
         $panels = PanelRights::$all;
 
-        $userPanels = array();
-        $dbUserPanels = array();
+        $sql = "SELECT `id`, `code` FROM `groups`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $allowPanels = [];
+
+        foreach($rows as $row) {
+            $idGroups[] = $row['id'];
+
+            switch($row['code']) {
+                case 'ARCHMAN':
+                    $allowPanels[$row['id']] = array(
+                        PanelRights::DOCUMENTS,
+                        PanelRights::PROCESSES
+                    );
+                    break;
+                
+                case 'ADMINISTRATORS':
+                    $allowPanels[$row['id']] = $panels;
+                    break;
+            }
+        }
+
+        foreach($idGroups as $id) {
+            foreach($panels as $panel) {
+                if(in_array($panel, $allowPanels[$id])) {
+                    // allow
+                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '1')";
+                } else {
+                    // deny
+                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '0')";
+                }
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    private function insertDefaultUserPanelRights() {
+        $idUsers = [];
+        $panels = PanelRights::$all;
+
+        $userPanels = [];
+        $dbUserPanels = [];
 
         $sql = 'SELECT * FROM `users`';
 
@@ -443,6 +490,51 @@ class DatabaseInstaller {
             foreach($upanels as $upanel) {
                 $sql = "INSERT INTO `user_panel_rights` (`id_user`, `panel_name`, `is_visible`)
                 VALUES ('$id', '$upanel', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    private function insertDefaultGroupBulkActionRights() {
+        $idGroups = [];
+        $actions = BulkActionRights::$all;
+
+        $sql = "SELECT `id`, `code` FROM `groups`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $allowActions = [];
+
+        if($rows->num_rows > 0) {
+            foreach($rows as $row) {
+                $idGroups[] = $row['id'];
+
+                switch($row['code']) {
+                    case 'ARCHMAN':
+                        $allowActions[$row['id']] = $actions;
+                        break;
+
+                    case 'ADMINISTRATORS':
+                        $allowActions[$row['id']] = $actions;
+                        break;
+                }
+            }
+        }
+
+        foreach($idGroups as $id) {
+            foreach($actions as $action) {
+                if(in_array($action, $allowActions[$id])) {
+                    // allow
+                    $sql = "INSERT INTO `group_bulk_rights` (`id_group`, `action_name`, `is_executable`) VALUES ('$id', '$action', '1')";
+                } else {
+                    // deny
+                    $sql = "INSERT INTO `group_bulk_rights` (`id_group`, `action_name`, `is_executable`) VALUES ('$id', '$action', '0')";
+                }
 
                 $this->logger->sql($sql, __METHOD__);
 
@@ -500,6 +592,49 @@ class DatabaseInstaller {
             foreach($uactions as $uaction) {
                 $sql = "INSERT INTO `user_bulk_rights` (`id_user`, `action_name`, `is_executable`)
                 VALUES ('$id', '$uaction', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    private function insertDefaultGroupActionRights() {
+        $idGroups = [];
+        $actions = UserActionRights::$all;
+
+        $sql = "SELECT `id`, `code` FROM `groups`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $allowActions = [];
+
+        foreach($rows as $row) {
+            $idGroups[] = $row['id'];
+
+            switch($row['code']) {
+                case 'ARCHMAN':
+                    $allowActions[$row['id']] = [];
+                    break;
+
+                case 'ADMINISTRATORS':
+                    $allowActions[$row['id']] = $actions;
+                    break;
+            }
+        }
+
+        foreach($idGroups as $id) {
+            foreach($actions as $action) {
+                if(in_array($action, $allowActions[$id])) {
+                    // allow
+                    $sql = "INSERT INTO `group_action_rights` (`id_group`, `action_name`, `is_executable`) VALUES ('$id', '$action', '1')";
+                } else {
+                    // deny
+                    $sql = "INSERT INTO `group_action_rights` (`id_group`, `action_name`, `is_executable`) VALUES ('$id', '$action', '0')";
+                }
 
                 $this->logger->sql($sql, __METHOD__);
 
@@ -742,6 +877,41 @@ class DatabaseInstaller {
             foreach($idMetadata as $idMeta) {
                 $sql = "INSERT INTO `user_metadata_rights` (`id_metadata`, `id_user`, `view`, `edit`, `view_values`, `edit_values`)
                         VALUES ('$idMeta', '$idUser', '1', '1', '1', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    public function insertDefaultGroupMetadataRights() {
+        $sql = "SELECT `id` FROM `groups`";
+        
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+        
+        $idGroups = [];
+        foreach($rows as $row) {
+            $idGroups[] = $row['id'];
+        }
+
+        $sql = "SELECT `id` FROM `metadata`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $idMetadata = [];
+        foreach($rows as $row) {
+            $idMetadata[] = $row['id'];
+        }
+
+        foreach($idGroups as $idGroup) {
+            foreach($idMetadata as $idMeta) {
+                $sql = "INSERT INTO `group_metadata_rights` (`id_metadata`, `id_user`, `view`, `edit`, `view_values`, `edit_values`)
+                        VALUES ('$idMeta', '$idGroup', '1', '1', '1', '1')";
 
                 $this->logger->sql($sql, __METHOD__);
 

@@ -48,7 +48,7 @@ class Panels {
 
         $panelAuthorizator = self::pa();
 
-        if($panelAuthorizator->checkPanelRight(PanelRights::FOLDERS)) {
+        if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_FOLDERS)) {
             if(self::SETTINGSPANEL_USE_TEXT) {
                 $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showFolders', 'Document folders');
             } else {
