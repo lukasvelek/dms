@@ -156,4 +156,6 @@ body {
     backdrop-filter: blur(5px);
 
     padding: 10px;
+
+    overflow-y: scroll;
 }

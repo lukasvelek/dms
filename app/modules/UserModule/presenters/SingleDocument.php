@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentAfterShredActions;
+use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
@@ -448,6 +449,8 @@ class SingleDocument extends APresenter {
         $status = '-';
         $statusMetadata = $app->metadataModel->getMetadataByName('status', 'documents');
         $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($statusMetadata->getId());
+        
+        $rank = DocumentRank::$texts[$document->getRank()];
 
         foreach($dbStatuses as $dbs) {
             if($dbs->getValue() == $document->getStatus()) {
@@ -466,6 +469,7 @@ class SingleDocument extends APresenter {
             'Author' => $this->createUserLink($document->getIdAuthor()),
             'Manager' => $this->createUserLink($document->getIdManager()),
             'Status' => $status,
+            'Rank' => $rank,
             'Group' => $this->createGroupLink($document->getIdGroup()),
             'Deleted?' => $document->getIsDeleted() ? 'Yes' : 'No',
             'Folder' => $folder,

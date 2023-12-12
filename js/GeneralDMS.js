@@ -51,6 +51,16 @@ async function loadNotificationCount() {
     });
 }
 
+async function deleteAllNotifications() {
+    $.get("app/ajax/Notifications.php", {
+        action: "deleteAll"
+    },
+    async function(data) {
+        $("#notifications").html("No notifications found");
+        $("#notificationsController").html("Notifications (0)");
+    });
+}
+
 function drawDocumentBulkActions() {
     var elems = $('#select:checked');
 

@@ -50,6 +50,11 @@ function getNotifications() {
         echo json_encode($data, JSON_UNESCAPED_SLASHES);
     } else {
         $code = '';
+
+        $code .= '<span>';
+        $code .= '<a class="general-link" onclick="deleteAllNotifications()" style="cursor: pointer">Delete all notifications</a>';
+        $code .= '</span>';
+        $code .= '<hr>';
     
         $i = 0;
         foreach($notifications as $notification) {
@@ -73,6 +78,20 @@ function getNotifications() {
         $data = ['code' => $code, 'count' => count($notifications)];
 
         echo json_encode($data, JSON_UNESCAPED_SLASHES);
+    }
+}
+
+function deleteAll() {
+    global $notificationModel, $user;
+
+    if($user == null) {
+        exit;
+    }
+
+    $notifications = $notificationModel->getNotificationsForUser($user->getId());
+
+    foreach($notifications as $notification) {
+        $notificationModel->setSeen($notification->getId());
     }
 }
 
