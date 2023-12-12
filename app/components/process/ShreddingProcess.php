@@ -8,7 +8,9 @@ use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Entities\Document;
 use DMS\Entities\Process;
+use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
+use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
 
 class ShreddingProcess implements IProcessComponent {
@@ -18,11 +20,15 @@ class ShreddingProcess implements IProcessComponent {
     private ProcessModel $processModel;
     private DocumentModel $documentModel;
     private ProcessComponent $processComponent;
+    private DocumentCommentModel $documentCommentModel;
+    private ProcessCommentModel $processCommentModel;
 
-    public function __construct(int $idProcess, ProcessModel $processModel, DocumentModel $documentModel, ProcessComponent $processComponent) {
+    public function __construct(int $idProcess, ProcessModel $processModel, DocumentModel $documentModel, ProcessComponent $processComponent, DocumentCommentModel $documentCommentModel, ProcessCommentModel $processCommentModel) {
         $this->processModel = $processModel;
         $this->documentModel = $documentModel;
         $this->processComponent = $processComponent;
+        $this->documentCommentModel = $documentCommentModel;
+        $this->processCommentModel = $processCommentModel;
         
         $this->process = $this->processModel->getProcessById($idProcess);
         $this->document = $this->documentModel->getDocumentById($this->process->getIdDocument());
@@ -41,6 +47,12 @@ class ShreddingProcess implements IProcessComponent {
         switch($this->document->getAfterShredAction()) {
             case DocumentAfterShredActions::DELETE:
                 $this->documentModel->deleteDocument($this->document->getId());
+                break;
+
+            case DocumentAfterShredActions::TOTAL_DELETE:
+                $this->documentModel->deleteDocument($this->document->getId(), false);
+                $this->documentCommentModel->removeCommentsForIdDocument($this->document->getId());
+                $this->processComponent->deleteProcessesForIdDocument($this->document->getId());
                 break;
 
             default:

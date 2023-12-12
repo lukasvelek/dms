@@ -154,7 +154,7 @@ class SingleProcess extends APresenter {
                 break;
             
             case ProcessTypes::SHREDDING:
-                $sp = new ShreddingProcess($id, $app->processModel, $app->documentModel, $app->processComponent);
+                $sp = new ShreddingProcess($id, $app->processModel, $app->documentModel, $app->processComponent, $app->documentCommentModel, $app->processCommentModel);
                 $sp->work();
                 break;
         }

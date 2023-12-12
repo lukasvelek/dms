@@ -153,7 +153,7 @@ class Application {
         $serviceManagerCacheManager = new CacheManager($this->cfg['serialize_cache'], CacheCategories::SERVICE_CONFIG);
         
         $this->notificationComponent = new NotificationComponent($this->conn, $this->logger, $this->notificationModel);
-        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel, $this->notificationComponent);
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel, $this->notificationComponent, $this->processCommentModel);
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel);
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
         

@@ -12,6 +12,7 @@ use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentModel;
 use DMS\Models\GroupModel;
 use DMS\Models\GroupUserModel;
+use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
 
 class ProcessComponent extends AComponent {
@@ -20,8 +21,9 @@ class ProcessComponent extends AComponent {
     private GroupUserModel $groupUserModel;
     private DocumentModel $documentModel;
     private NotificationComponent $notificationComponent;
+    private ProcessCommentModel $processCommentModel;
 
-    public function __construct(Database $db, Logger $logger, ProcessModel $processModel, GroupModel $groupModel, GroupUserModel $groupUserModel, DocumentModel $documentModel, NotificationComponent $notificationComponent) {
+    public function __construct(Database $db, Logger $logger, ProcessModel $processModel, GroupModel $groupModel, GroupUserModel $groupUserModel, DocumentModel $documentModel, NotificationComponent $notificationComponent, ProcessCommentModel $processCommentModel) {
         parent::__construct($db, $logger);
 
         $this->processModel = $processModel;
@@ -29,6 +31,7 @@ class ProcessComponent extends AComponent {
         $this->groupUserModel = $groupUserModel;
         $this->documentModel = $documentModel;
         $this->notificationComponent = $notificationComponent;
+        $this->processCommentModel = $processCommentModel;
     }
 
     public function getProcessesWhereIdUserIsCurrentOfficer(int $idUser) {
@@ -185,6 +188,24 @@ class ProcessComponent extends AComponent {
         } else {
             return false;
         }
+    }
+
+    public function deleteProcess(int $idProcess) {
+        $this->processModel->deleteProcess($idProcess);
+        $this->processCommentModel->removeProcessCommentsForIdProcess($idProcess);
+
+        return true;
+    }
+
+    public function deleteProcessesForIdDocument(int $idDocument) {
+        $processes = $this->processModel->getProcessesForIdDocument($idDocument);
+        $this->processModel->removeProcessesForIdDocument($idDocument);
+
+        foreach($processes as $process) {
+            $this->processCommentModel->removeProcessCommentsForIdProcess($process->getId());
+        }
+
+        return true;
     }
 }
 

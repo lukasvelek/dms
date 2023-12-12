@@ -154,7 +154,7 @@ $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $gro
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
-$processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent);
+$processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent, $processCommentModel);
 $widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
