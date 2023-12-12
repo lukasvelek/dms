@@ -3,6 +3,7 @@
 namespace DMS\Components\Process;
 
 use DMS\Components\ProcessComponent;
+use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Entities\Document;
@@ -36,6 +37,18 @@ class ShreddingProcess implements IProcessComponent {
             'status' => DocumentStatus::SHREDDED
         ));
         $this->documentModel->nullIdOfficer($this->document->getId());
+
+        switch($this->document->getAfterShredAction()) {
+            case DocumentAfterShredActions::DELETE:
+                $this->documentModel->deleteDocument($this->document->getId());
+                break;
+
+            default:
+            case DocumentAfterShredActions::SHOW_AS_SHREDDED:
+                break;
+        }
+
+        $this->documentModel->removeDocumentSharingForIdDocument($this->document->getId());
 
         return true;
     }

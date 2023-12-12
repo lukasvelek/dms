@@ -152,7 +152,7 @@ class ProcessComponent extends AComponent {
 
         $this->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
 
-        $this->notificationComponent->createNewNotification(NOtifications::PROCESS_ASSIGNED_TO_USER, array(
+        $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
             'id_user' => $process->getWorkflow()[$newWfStatus - 1],
             'id_process' => $idProcess
         ));
