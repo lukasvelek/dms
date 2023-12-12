@@ -42,6 +42,12 @@ class DatabaseInstaller {
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
+
+        $this->insertDefaultGroupPanelRights();
+        $this->insertDefaultGroupBulkActionRights();
+        $this->insertDefaultGroupActionRights();
+        $this->insertDefaultGroupMetadataRights();
+
         $this->insertDefaultServiceConfig();
     }
 
@@ -910,7 +916,7 @@ class DatabaseInstaller {
 
         foreach($idGroups as $idGroup) {
             foreach($idMetadata as $idMeta) {
-                $sql = "INSERT INTO `group_metadata_rights` (`id_metadata`, `id_user`, `view`, `edit`, `view_values`, `edit_values`)
+                $sql = "INSERT INTO `group_metadata_rights` (`id_metadata`, `id_group`, `view`, `edit`, `view_values`, `edit_values`)
                         VALUES ('$idMeta', '$idGroup', '1', '1', '1', '1')";
 
                 $this->logger->sql($sql, __METHOD__);
