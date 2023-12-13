@@ -5,6 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;

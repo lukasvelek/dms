@@ -100,6 +100,7 @@ class Application {
     private array $modules;
     private ?string $pageContent;
     private string $baseDir;
+    private ?string $flashMessage;
 
     private Database $conn;
 
@@ -116,6 +117,7 @@ class Application {
         $this->modules = array();
         $this->pageContent = null;
         $this->user = null;
+        $this->flashMessage = null;
 
         $this->fileManager = new FileManager($this->baseDir . $this->cfg['log_dir'], $this->baseDir . $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager, $this->cfg);
@@ -244,11 +246,19 @@ class Application {
             die('Presenter does not exist');
         }
 
+        $pageBody = $module->currentPresenter->performAction($action);
+
+        $this->pageContent = '';
+
         if($presenter::DRAW_TOPPANEL) {
-            $this->pageContent = $toppanel;
+            $this->pageContent .= $toppanel;
         }
 
-        $this->pageContent .= $module->currentPresenter->performAction($action);
+        if($this->flashMessage != null) {
+            $this->pageContent .= $this->flashMessage;
+        }
+
+        $this->pageContent .= $pageBody;
     }
 
     /**
@@ -306,6 +316,21 @@ class Application {
      */
     public function getConn() {
         return $this->conn;
+    }
+
+    public function flashMessage(string $message, string $type) {
+        $code = '<div id="flash-message" class="' . $type . '">';
+        $code .= '<div class="row">';
+        $code .= '<div class="col-md">';
+        $code .= $message;
+        $code .= '</div>';
+        $code .= '<div class="col-md" id="right">';
+        $code .= '<a style="cursor: pointer" onclick="hideFlashMessage()">x</a>';
+        $code .= '</div>';
+        $code .= '</div>';
+        $code .= '</div>';
+
+        $this->flashMessage = $code;
     }
 
     /**

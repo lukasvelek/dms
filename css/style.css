@@ -159,3 +159,29 @@ body {
 
     overflow-y: scroll;
 }
+
+.info {
+    background-color: lightgreen;
+    border: 1px solid green;
+    color: green;
+}
+
+.warn {
+    background-color: yellow;
+    border: 1px solid orange;
+    color: orange;
+}
+
+.error {
+    background-color: lightcoral;
+    border: 1px solid red;
+    color: red;
+}
+
+#flash-message {
+    padding: 10px;
+
+    margin: 10px;
+
+    border-radius: 5px;
+}

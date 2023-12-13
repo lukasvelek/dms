@@ -308,3 +308,7 @@ async function reloadProcessComments(id_process, can_delete) {
 
     await loadProcessComments(id_process, can_delete, false);
 }
+
+function hideFlashMessage() {
+    $('#flash-message').hide();
+}
