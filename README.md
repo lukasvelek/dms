@@ -5,17 +5,26 @@ It also enables users to manage metadata and their values.
 
 ## Changelog
 ### v1.4
+- added document filters
+- added new after shredding action
+- added support for flash messages
+- updated ajax
+- updated core code
+- updated app database installation
+- deleted unused code
+- merged unnecessarily split JS files into one
+- fixed bugs and potential bugs
 
 ### v1.3
 - added customizable home dashboard widgets
 - added shredding
 - added shredding suggestion service
 - added process comments
+- added core code comments
+- added a new notification
 - updated core functions
     - updated QueryBuilder
     - updated application loader
-- added core code comments
-- added a new notification
 - fixed a bug where a notification link macro was displayed on login screen
 
 ### v1.2
