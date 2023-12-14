@@ -39,35 +39,40 @@ function getBulkActions() {
             $document = $documentModel->getDocumentById($idDocument);
 
             if($documentBulkActionAuthorizator->canDelete($idDocument, null, false) && 
-                (is_null($canDelete) || $canDelete)) {
+                (is_null($canDelete) || $canDelete) &&
+                !$inProcess) {
                 $canDelete = true;
             } else {
                 $canDelete = false;
             }
 
             if($documentBulkActionAuthorizator->canApproveArchivation($idDocument, null, false) && 
-                (is_null($canApproveArchivation) || $canApproveArchivation)) {
+                (is_null($canApproveArchivation) || $canApproveArchivation) &&
+                !$inProcess) {
                 $canApproveArchivation = true;
             } else {
                 $canApproveArchivation = false;
             }
 
             if($documentBulkActionAuthorizator->canDeclineArchivation($idDocument, null, false) &&
-                (is_null($canDeclineArchivation) || $canDeclineArchivation)) {
+                (is_null($canDeclineArchivation) || $canDeclineArchivation) &&
+                !$inProcess) {
                 $canDeclineArchivation = true;
             } else {
                 $canDeclineArchivation = false;
             }
 
             if($documentBulkActionAuthorizator->canArchive($idDocument, null, false) &&
-                (is_null($canArchive) || $canArchive)) {
+                (is_null($canArchive) || $canArchive) &&
+                !$inProcess) {
                 $canArchive = true;
             } else {
                 $canArchive = false;
             }
 
             if($documentBulkActionAuthorizator->canSuggestForShredding($idDocument, null, false) &&
-              (is_null($canSuggestShredding) || $canSuggestShredding)) {
+              (is_null($canSuggestShredding) || $canSuggestShredding) &&
+              !$inProcess) {
                 $canSuggestShredding = true;
             } else {
                 $canSuggestShredding = false;

@@ -33,7 +33,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * 
      * @param int $idDocument Document ID
      * @param null|int $idUser User ID
-     * @param bool $checkCache True if cache shulkd be checked and false if not
+     * @param bool $checkCache True if cache should be checked and false if not
      */
     public function canApproveArchivation(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
         if(!$this->assignUser($idUser)) {
@@ -56,7 +56,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * 
      * @param int $idDocument Document ID
      * @param null|int $idUser User ID
-     * @param bool $checkCache True if cache shulkd be checked and false if not
+     * @param bool $checkCache True if cache should be checked and false if not
      */
     public function canDeclineArchivation(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
         if(!$this->assignUser($idUser)) {
@@ -79,7 +79,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * 
      * @param int $idDocument Document ID
      * @param null|int $idUser User ID
-     * @param bool $checkCache True if cache shulkd be checked and false if not
+     * @param bool $checkCache True if cache should be checked and false if not
      */
     public function canArchive(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
         if(!$this->assignUser($idUser)) {
@@ -102,7 +102,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * 
      * @param int $idDocument Document ID
      * @param null|int $idUser User ID
-     * @param bool $checkCache True if cache shulkd be checked and false if not
+     * @param bool $checkCache True if cache should be checked and false if not
      */
     public function canDelete(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
         if(!$this->assignUser($idUser)) {

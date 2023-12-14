@@ -47,7 +47,7 @@ class BulkActionAuthorizator extends AAuthorizator {
      * @param bool $checkCache True if cache should be checked and false if not
      * @return bool True if user is allowed to perform the bulk action and false if not
      */
-    public function checkBulkActionRight(string $bulkActionName, ?int $idUser = null, bool $checkCache = true) {
+    public function checkBulkActionRight(string $bulkActionName, ?int $idUser = null, bool $checkCache = false) {
         if(is_null($idUser)) {
             if(empty($this->idUser)) {
                 return false;
@@ -87,68 +87,71 @@ class BulkActionAuthorizator extends AAuthorizator {
                     }
                 }
 
-                $finalRights = [];
+                $userRight = false;
+                $groupRight = false;
 
-                foreach($rights as $k => $v) {
-                    if(array_key_exists($k, $groupRights)) {
-                        if($groupRights[$k] != $v && $v == '1') {
-                            $finalRights[$k] = $v;
-                        }
-                    } else {
-                        $finalRights[$k] = $v;
-                    }
+                if(array_key_exists($bulkActionName, $rights)) {
+                    $userRight = $rights[$bulkActionName] ? true : false;
                 }
 
-                $cm->saveBulkActionRight($idUser, $bulkActionName, $finalRights[$bulkActionName]);
+                if(array_key_exists($bulkActionName, $groupRights)) {
+                    $groupRight = $groupRights[$bulkActionName] ? true : false;
+                }
 
-                if(array_key_exists($bulkActionName, $finalRights)) {
-                    $result = $finalRights[$bulkActionName];
+                if($userRight == true || $groupRight == true) {
+                    $result = true;
                 } else {
-                    $result = 0;
+                    $result = false;
                 }
+
+                $cm->saveBulkActionRight($idUser, $bulkActionName, $result);
             }
         } else {
             $rights = $this->userRightModel->getBulkActionRightsForIdUser($idUser);
 
-                $userGroups = $this->groupUserModel->getGroupsForIdUser($idUser);
+            if(array_key_exists($bulkActionName, $rights)) {
+                return $rights[$bulkActionName] ? true : false;
+            }
 
-                $groupRights = [];
-                foreach($userGroups as $ug) {
-                    $idGroup = $ug->getIdGroup();
+            $userGroups = $this->groupUserModel->getGroupsForIdUser($idUser);
 
-                    $dbGroupRights = $this->groupRightModel->getBulkActionRightsForIdGroup($idGroup);
+            $groupRights = [];
+            foreach($userGroups as $ug) {
+                $idGroup = $ug->getIdGroup();
+
+                $dbGroupRights = $this->groupRightModel->getBulkActionRightsForIdGroup($idGroup);
                 
-                    foreach($dbGroupRights as $k => $v) {
-                        if(array_key_exists($k, $groupRights)) {
-                            if($groupRights[$k] != $v && $v == '1') {
-                                $groupRights[$k] = $v;
-                            }
-                        } else {
-                            $groupRights[$k] = $v;
-                        }
-                    }
-                }
-
-                $finalRights = [];
-
-                foreach($rights as $k => $v) {
+                foreach($dbGroupRights as $k => $v) {
                     if(array_key_exists($k, $groupRights)) {
                         if($groupRights[$k] != $v && $v == '1') {
-                            $finalRights[$k] = $v;
+                            $groupRights[$k] = $v;
                         }
                     } else {
-                        $finalRights[$k] = $v;
+                        $groupRights[$k] = $v;
                     }
                 }
+            }
 
-                if(array_key_exists($bulkActionName, $finalRights)) {
-                    $result = $finalRights[$bulkActionName];
-                } else {
-                    $result = 0;
-                }
+            $userRight = false;
+            $groupRight = false;
+
+            if(array_key_exists($bulkActionName, $rights)) {
+                $userRight = $rights[$bulkActionName] ? true : false;
+            }
+
+            if(array_key_exists($bulkActionName, $groupRights)) {
+                $groupRight = $groupRights[$bulkActionName] ? true : false;
+            }
+
+            if($userRight == true || $groupRight == true) {
+                $result = true;
+            } else {
+                $result = false;
+            }
         }
 
         return $result ? true : false;
+
     }
 }
 
