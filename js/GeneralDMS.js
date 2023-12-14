@@ -349,5 +349,6 @@ async function reloadProcessComments(id_process, can_delete) {
 }
 
 function hideFlashMessage() {
+    sessionStorage.removeItem('flash_message');
     $('#flash-message').hide();
 }

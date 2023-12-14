@@ -548,6 +548,7 @@ class Documents extends APresenter {
 
         $app->documentModel->updateOfficer($idDocument, $documentIdManager);
 
+        $app->flashMessage('Created new document');
         $app->redirect('UserModule:Documents:showAll');
     }
 
@@ -561,7 +562,8 @@ class Documents extends APresenter {
             $app->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $app->user->getId());
         }
 
-        echo('<script type="text/javascript">alert("Process has started"); location.href = "?page=UserModule:Documents:showAll";</script>');
+        $app->flashMessage('Process has started');
+        $app->redirect('UserModule:Documents:showAll');
     }
 
     private function _delete_documents(array $ids) {
@@ -571,7 +573,8 @@ class Documents extends APresenter {
             $app->processComponent->startProcess(ProcessTypes::DELETE, $id, $app->user->getId());
         }
 
-        echo('<script type="text/javascript">alert("Process has started"); location.href = "?page=UserModule:Documents:showAll";</script>');
+        $app->flashMessage('Process has started');
+        $app->redirect('UserModule:Documents:showAll');
     }
 
     private function _decline_archivation(array $ids) {
@@ -581,6 +584,12 @@ class Documents extends APresenter {
             if($app->documentAuthorizator->canDeclineArchivation($id)) {
                 $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVATION_DECLINED);
             }
+        }
+
+        if(count($ids) == 1) {
+            $app->flashMessage('Declined archivation for selected document');
+        } else {
+            $app->flashMessage('Declined archivation for selected documents');
         }
 
         $app->redirect('UserModule:Documents:showAll');
@@ -595,6 +604,12 @@ class Documents extends APresenter {
             }
         }
 
+        if(count($ids) == 1) {
+            $app->flashMessage('Approved archivation for selected document');
+        } else {
+            $app->flashMessage('Approved archivation for selected documents');
+        }
+
         $app->redirect('UserModule:Documents:showAll');
     }
 
@@ -605,6 +620,12 @@ class Documents extends APresenter {
             if($app->documentAuthorizator->canArchive($id)) {
                 $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVED);
             }
+        }
+
+        if(count($ids) == 1) {
+            $app->flashMessage('Archived selected document');
+        } else {
+            $app->flashMessage('Archived selected documents');
         }
 
         $app->redirect('UserModule:Documents:showAll');
@@ -663,7 +684,7 @@ class Documents extends APresenter {
         }
 
         $childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
-        $folderLink = $linkCreationMethod($link, $folder->getName(), $folder->getId(), $filter) /*LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showAll', 'id_folder' => $folder->getId()), $folder->getName())*/;
+        $folderLink = $linkCreationMethod($link, $folder->getName(), $folder->getId(), $filter);
         
         $spaces = '&nbsp;&nbsp;';
 

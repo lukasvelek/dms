@@ -17,6 +17,7 @@ use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\FlashMessageTypes;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\DocumentCommentModel;
@@ -256,6 +257,11 @@ class Application {
 
         if($this->flashMessage != null) {
             $this->pageContent .= $this->flashMessage;
+        } else if(isset($_SESSION['flash_message'])) {
+            $this->flashMessage = $_SESSION['flash_message'];
+            $this->pageContent .= $this->flashMessage;
+
+            unset($_SESSION['flash_message']);
         }
 
         $this->pageContent .= $pageBody;
@@ -318,7 +324,9 @@ class Application {
         return $this->conn;
     }
 
-    public function flashMessage(string $message, string $type) {
+    public function flashMessage(string $message, string $type = FlashMessageTypes::INFO) {
+        unset($_SESSION['flash_message']);
+
         $code = '<div id="flash-message" class="' . $type . '">';
         $code .= '<div class="row">';
         $code .= '<div class="col-md">';
@@ -331,6 +339,8 @@ class Application {
         $code .= '</div>';
 
         $this->flashMessage = $code;
+
+        $_SESSION['flash_message'] = $code;
     }
 
     /**
