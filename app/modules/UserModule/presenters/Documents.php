@@ -13,6 +13,7 @@ use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
+use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 
@@ -53,30 +54,82 @@ class Documents extends APresenter {
         $documentGrid = '';
         $folderList = '';
         
-        $app->logger->logFunction(function() use (&$documentGrid, $idFolder) {
-            //$documentGrid = $this->internalCreateStandardDocumentGrid($idFolder);
+        $app->logger->logFunction(function() use (&$documentGrid) {
             $documentGrid = $this->internalCreateSharedWithMeDocumentGrid();
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder) {
-            $folderList = $this->internalCreateFolderList($idFolder);
+            $folderList = $this->internalCreateFolderList($idFolder, null);
         }, __METHOD__);
 
         $searchField = '
             <input type="text" id="q" placeholder="Search" oninput="ajaxSearch(this.value, \'' . ($idFolder ?? 'null') . '\');">
-            <!--<script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
-            <script type="text/javascript" src="js/DocumentAjaxBulkActions.js"></script>-->
         ';
 
         $data = array(
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
-            '$BULK_ACTION_CONTROLLER$' => ''/*$this->internalPrepareDocumentBulkActions()*/,
+            '$BULK_ACTION_CONTROLLER$' => '',
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField
+            '$SEARCH_FIELD$' => $searchField,
+            '$DOCUMENT_PANEL$' => ''
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showFiltered() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/document-grid.html');
+
+        $idFolder = null;
+        $folderName = 'Main folder';
+        $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+
+        if(isset($_GET['id_folder'])) {
+            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $folder = $app->folderModel->getFolderById($idFolder);
+            $folderName = $folder->getName();
+            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+        }
+
+        $documentGrid = '';
+        $folderList = '';
+
+        $filter = null;
+
+        if(isset($_GET['filter'])) {
+            $filter = htmlspecialchars($_GET['filter']);
+        }
+        
+        $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter) {
+            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $filter);
+        }, __METHOD__);
+
+        $app->logger->logFunction(function() use (&$folderList, $idFolder, $filter) {
+            $folderList = $this->internalCreateFolderList($idFolder, $filter);
+        }, __METHOD__);
+
+        $searchField = '
+            <input type="text" id="q" placeholder="Search" oninput="loadDocumentsSearchFilter(this.value, \'' . ($idFolder ?? 'null') . '\', \'' . $filter . '\');">
+        ';
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Documents',
+            '$DOCUMENT_GRID$' => $documentGrid,
+            '$BULK_ACTION_CONTROLLER$' => '',
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$NEW_DOCUMENT_LINK$' => $newEntityLink,
+            '$CURRENT_FOLDER_TITLE$' => $folderName,
+            '$FOLDER_LIST$' => $folderList,
+            '$SEARCH_FIELD$' => $searchField,
+            '$DOCUMENT_PANEL$' => Panels::createDocumentsPanel()
         );
 
         $this->templateManager->fill($data, $template);
@@ -104,11 +157,11 @@ class Documents extends APresenter {
         $folderList = '';
         
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder) {
-            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder);
+            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, null);
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder) {
-            $folderList = $this->internalCreateFolderList($idFolder);
+            $folderList = $this->internalCreateFolderList($idFolder, null);
         }, __METHOD__);
 
         $searchField = '
@@ -120,12 +173,13 @@ class Documents extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
-            '$BULK_ACTION_CONTROLLER$' => ''/*$this->internalPrepareDocumentBulkActions()*/,
+            '$BULK_ACTION_CONTROLLER$' => '',
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField
+            '$SEARCH_FIELD$' => $searchField,
+            '$DOCUMENT_PANEL$' => Panels::createDocumentsPanel()
         );
 
         $this->templateManager->fill($data, $template);
@@ -133,65 +187,19 @@ class Documents extends APresenter {
         return $template;
     }
 
-    private function internalPrepareDocumentBulkActions() {
-        global $app;
+    private function internalCreateStandardDocumentGrid(?int $idFolder, ?string $filter) {
+        $code = '<script type="text/javascript">';
 
-        $bulkActions = array(
-            '-' => '-'
-        );
-
-        $dbBulkActions = $app->userRightModel->getAllBulkActionRightsForIdUser($app->user->getId());
-
-        foreach($dbBulkActions as $dba) {
-            $name = '';
-
-            if(!$app->bulkActionAuthorizator->checkBulkActionRight($dba)) {
-                continue;
-            }
-
-            switch($dba) {
-                case 'delete_documents':
-                    $name = 'Delete documents';
-                    break;
-
-                case 'approve_archivation':
-                    $name = 'Approve archivation';
-                    break;
-
-                case 'decline_archivation':
-                    $name = 'Decline archivation';
-                    break;
-
-                case 'archive':
-                    $name = 'Archive';
-                    break;
-            }
-
-            $bulkActions[$dba] = $name;
+        if($filter != null) {
+            $code .= 'loadDocumentsFilter("' . ($idFolder ?? 'null') . '", "' . $filter . '")';
+        } else {
+            $code .= 'loadDocuments("' . ($idFolder ?? 'null') . '");';
         }
 
-        $code = [];
-        $code[] = '<select name="action">';
+        $code .= '</script>';
+        $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
 
-        foreach($bulkActions as $bAction => $bName) {
-            $code[] = '<option value="' . $bAction . '">' . $bName . '</option>';
-        }
-
-        $code[] = '</select>';
-        $code[] = '<input type="submit" value="Perform">';
-
-        $singleLineCode = ArrayStringHelper::createUnindexedStringFromUnindexedArray($code);
-
-        return $singleLineCode;
-    }
-
-    private function internalCreateStandardDocumentGrid(?int $idFolder) {
-        return '
-            <script type="text/javascript">
-            loadDocuments("' . ($idFolder ?? 'null') . '");
-            </script> 
-            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
-        ';
+        return $code;
     }
 
     protected function performBulkAction() {
@@ -604,18 +612,39 @@ class Documents extends APresenter {
         $app->redirect('UserModule:Documents:showAll');
     }
 
-    private function internalCreateFolderList(?int $idFolder) {
+    private function internalCreateFolderList(?int $idFolder, ?string $filter) {
         global $app;
+
+        $createLink = function(string $action, string $text, ?int $idFolder, ?string $filter) {
+            $url = array(
+                'page' => 'UserModule:Documents:' . $action
+            );
+
+            if($idFolder != null) {
+                $url['id_folder'] = $idFolder;
+            }
+
+            if($filter != null) {
+                $url['filter'] = $filter;
+            }
+
+            return LinkBuilder::createAdvLink($url, $text);
+        };
+
+        $link = 'showAll';
+        if($filter != null) {
+            $link = 'showFiltered';
+        }
         
         $list = array(
-            'null1' => '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showAll', 'Main folder (All files)') . '<br>',
+            'null1' => '&nbsp;&nbsp;' . $createLink($link, 'Main folder (all files)', null, $filter) . '<br>',
             'null2' => '<hr>'
         );
         
         $folders = $app->folderModel->getAllFolders();
 
         foreach($folders as $folder) {
-            $this->_createFolderList($folder, $list, 0);
+            $this->_createFolderList($folder, $list, 0, $filter, $createLink);
         }
 
         if(count($folders) > 0) {
@@ -627,11 +656,16 @@ class Documents extends APresenter {
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }
 
-    private function _createFolderList(Folder $folder, array &$list, int $level) {
+    private function _createFolderList(Folder $folder, array &$list, int $level, ?string $filter, callable $linkCreationMethod) {
         global $app;
 
+        $link = 'showAll';
+        if($filter != null) {
+            $link = 'showFiltered';
+        }
+
         $childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
-        $folderLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showAll', 'id_folder' => $folder->getId()), $folder->getName());
+        $folderLink = $linkCreationMethod($link, $folder->getName(), $folder->getId(), $filter) /*LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showAll', 'id_folder' => $folder->getId()), $folder->getName())*/;
         
         $spaces = '&nbsp;&nbsp;';
 
@@ -647,7 +681,7 @@ class Documents extends APresenter {
 
         if(count($childFolders) > 0) {
             foreach($childFolders as $cf) {
-                $this->_createFolderList($cf, $list, $level + 1);
+                $this->_createFolderList($cf, $list, $level + 1, $filter, $linkCreationMethod);
             }
         }
     }

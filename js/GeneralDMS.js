@@ -159,6 +159,45 @@ async function reloadDocumentComments(id_document, can_delete) {
     await loadDocumentComments(id_document, can_delete, false);
 }
 
+async function loadDocumentsSearchFilter(query, id_folder, _filter) {
+    await sleep(500);
+
+    $('#documents-loading').show();
+
+    $.ajax({
+        url: 'app/ajax/Documents.php',
+        type: 'POST',
+        data: {
+            q: query,
+            idFolder: id_folder,
+            filter: _filter,
+            action: "search"
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}
+
+async function loadDocumentsFilter(id_folder, _filter) {
+    await sleep(250);
+
+    $.ajax({
+        url: 'app/ajax/Documents.php',
+        type: 'POST',
+        data: {
+            idFolder: id_folder,
+            filter: _filter,
+            action: "search"
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}
+
 async function loadDocumentsSearch(query, id_folder) {
     await sleep(500);
 

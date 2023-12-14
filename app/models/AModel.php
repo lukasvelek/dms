@@ -4,6 +4,7 @@ namespace DMS\Models;
 
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use QueryBuilder\QueryBuilder;
 
 abstract class AModel {
     protected Database $db;
@@ -26,7 +27,7 @@ abstract class AModel {
      * @param string $methodName Calling method name
      * @return QueryBuilder QueryBuilder instance
      */
-    protected function qb(string $methodName) {
+    protected function qb(string $methodName) : QueryBuilder {
         $qb = $this->db->createQueryBuilder();
         $qb->setMethod($methodName);
         return $qb;

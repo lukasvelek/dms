@@ -174,6 +174,52 @@ class Panels {
         return $template;
     }
 
+    public static function createDocumentsPanel() {
+        $templateManager = self::tm();
+
+        $template = $templateManager->loadTemplate('app/panels/templates/general-subpanel.html');
+
+        $data = array(
+            '$LINKS$' => array(
+                '&nbsp;'
+            )
+        );
+
+        $createFilter = function(string $filterName, string $text, bool $useImage = true, bool $useFolder = true) {
+            $url = array(
+                'page' => 'UserModule:Documents:showFiltered', 
+                'filter' => $filterName
+            );
+
+            if($filterName == 'all') {
+                $url['page'] = 'UserModule:Documents:showAll';
+                unset($url['filter']);
+            }
+
+            if(isset($_GET['id_folder'])) {
+                $idFolder = htmlspecialchars($_GET['id_folder']);
+
+                if($useFolder) {
+                    $url['id_folder'] = $idFolder;
+                }
+            }
+            
+            if($useImage) {
+                return LinkBuilder::createImgAdvLink($url, $text, 'img/documents.svg');
+            } else {
+                return LinkBuilder::createAdvLink($url, $text);
+            }
+        };
+
+        $data['$LINKS$'][] = $createFilter('all', 'All', false);
+        $data['$LINKS$'][] = $createFilter('new', 'New', false);
+        $data['$LINKS$'][] = $createFilter('waitingForArchivation', 'Waiting for archivation', false);
+
+        $templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     private static function tm() {
         return TemplateManager::getTemporaryObject();
     }

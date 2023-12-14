@@ -287,6 +287,12 @@ function search() {
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
+    $filter = null;
+
+    if(isset($_POST['filter'])) {
+        $filter = htmlspecialchars($_POST['filter']);
+    }
+
     if(isset($_POST['q'])) {
         $query = htmlspecialchars($_POST['q']);
 
@@ -306,8 +312,8 @@ function search() {
         if($idFolder == 'null') {
             $idFolder = null;
         }
-
-        $documents = $documentModel->getDocumentsForName($query, $idFolder);
+        
+        $documents = $documentModel->getDocumentsForName($query, $idFolder, $filter);
 
         if(empty($documents)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
@@ -394,13 +400,7 @@ function search() {
             $idFolder = null;
         }
     
-        $documents = [];
-    
-        if(is_null($idFolder)) {
-            $documents = $documentModel->getStandardDocuments();
-        } else {
-            $documents = $documentModel->getStandardDocumentsInIdFolder($idFolder);
-        }
+        $documents = $documentModel->getStandardDocuments($idFolder, $filter);
     
         if(empty($documents)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
