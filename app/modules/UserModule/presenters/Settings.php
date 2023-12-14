@@ -94,10 +94,12 @@ class Settings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-widgets-grid.html');
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'Dashboard widgets',
             '$SETTINGS_FORM$' => $this->internalCreateDashboardWidgetsForm()
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -133,9 +135,11 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$FORM$' => $this->internalCreateEditServiceForm($name)
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -154,11 +158,13 @@ class Settings extends APresenter {
         }, __METHOD__);
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'Services',
             '$SETTINGS_GRID$' => $servicesGrid,
             '$NEW_ENTITY_LINK$' => ''
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -195,7 +201,6 @@ class Settings extends APresenter {
                     $service->run();
                 }, __METHOD__);
 
-                //$service->run();
                 break;
             }
         }
@@ -239,11 +244,13 @@ class Settings extends APresenter {
         }, __METHOD__);
         
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => $pageTitle,
             '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>',
             '$FOLDERS_GRID$' => $foldersGrid
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -260,10 +267,12 @@ class Settings extends APresenter {
         }
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'New document folder form',
             '$FORM$' => $this->internalCreateNewFolderForm($idParentFolder)
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -323,9 +332,11 @@ class Settings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
 
         $data = array(
-            '$PAGE_TITLE$' => 'Settings',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
+            '$PAGE_TITLE$' => 'Settings'
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $widgets = '';
 
@@ -354,9 +365,11 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Users',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $usersGrid,
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
+            '$SETTINGS_GRID$' => $usersGrid
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_user')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user') . '</div></div>';
@@ -381,9 +394,11 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $groupsGrid,
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
+            '$SETTINGS_GRID$' => $groupsGrid
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group') . '</div></div>';
@@ -407,9 +422,11 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Metadata manager',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$SETTINGS_GRID$' => $metadataGrid
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_metadata')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewMetadataForm', 'New metadata') . '</div></div>';
@@ -427,9 +444,11 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'System',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$WIDGETS$' => LinkBuilder::createLink('UserModule:Settings:updateDefaultUserRights', 'Update default user rights')
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -451,9 +470,11 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New metadata form',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$FORM$' => $this->internalCreateNewMetadataForm()
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -464,10 +485,12 @@ class Settings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'New user form',
             '$FORM$' => $this->internalCreateNewUserForm()
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -478,10 +501,12 @@ class Settings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'New group form',
             '$FORM$' => $this->internalCreateNewGroupForm()
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 

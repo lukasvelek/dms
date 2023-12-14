@@ -255,6 +255,10 @@ class Application {
             $this->pageContent .= $toppanel;
         }
 
+        if($module->currentPresenter->drawSubpanel) {
+            $this->pageContent .= $module->currentPresenter->subpanel;
+        }
+
         if($this->flashMessage != null) {
             $this->pageContent .= $this->flashMessage;
         } else if(isset($_SESSION['flash_message'])) {

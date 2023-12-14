@@ -5,7 +5,6 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
-use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
@@ -18,11 +17,11 @@ use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 
 class Documents extends APresenter {
+    public const DRAW_TOPPANEL = true;
+    
     private string $name;
     private TemplateManager $templateManager;
     private IModule $module;
-
-    public const DRAW_TOPPANEL = true;
 
     public function __construct() {
         $this->name = 'Documents';
@@ -74,8 +73,7 @@ class Documents extends APresenter {
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PANEL$' => ''
+            '$SEARCH_FIELD$' => $searchField
         );
 
         $this->templateManager->fill($data, $template);
@@ -128,9 +126,11 @@ class Documents extends APresenter {
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PANEL$' => Panels::createDocumentsPanel()
+            '$SEARCH_FIELD$' => $searchField
         );
+
+        $this->subpanel = Panels::createDocumentsPanel();
+        $this->drawSubpanel = true;
 
         $this->templateManager->fill($data, $template);
 
@@ -178,9 +178,11 @@ class Documents extends APresenter {
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PANEL$' => Panels::createDocumentsPanel()
+            '$SEARCH_FIELD$' => $searchField
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createDocumentsPanel();
 
         $this->templateManager->fill($data, $template);
 
