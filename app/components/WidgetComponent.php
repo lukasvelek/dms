@@ -5,6 +5,7 @@ namespace DMS\Components;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Core\Application;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Helpers\ArrayStringHelper;
@@ -33,12 +34,26 @@ class WidgetComponent extends AComponent {
         $widgetNames = array(
             'documentStats' => 'Document statistics',
             'processStats' => 'Process statistics',
-            'processesWaitingForMe' => 'Processes waiting for me'
+            'processesWaitingForMe' => 'Processes waiting for me',
+            'systemInfo' => 'System information'
         );
 
         foreach($widgetNames as $name => $text) {
             $this->homeDashboardWidgets[$name] = array('name' => $text, 'code' => $this->{'_' . $name}());
         }
+    }
+
+    private function _systemInfo() {
+        $code = [];
+
+        $add = function(string $text) use (&$code) {
+            $code[] = '<p>' . $text . '</p>';
+        };
+
+        $add('<b>System version:</b> ' . Application::SYSTEM_VERSION);
+        $add('<b>System build date:</b> ' . Application::SYSTEM_BUILD_DATE);
+
+        return $this->__getTemplate('System information', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));
     }
 
     private function _processesWaitingForMe() {
@@ -80,10 +95,12 @@ class WidgetComponent extends AComponent {
         $shreddedDocumentCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED);
         $archivedDocumentCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED);
         $documentsWaitingForArchivationCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED);
+        $newDocumentCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::NEW);
 
         $code[] = '<p><b>Total documents:</b> ' . $documentCount . '</p>';
         $code[] = '<p><b>Shredded documents:</b> ' . $shreddedDocumentCount . '</p>';
         $code[] = '<p><b>Archived documents:</b> ' . $archivedDocumentCount . '</p>';
+        $code[] = '<p><b>New documents:</b> ' . $newDocumentCount . '</p>';
         $code[] = '<p><b>Documents waiting for archivation:</b> ' . $documentsWaitingForArchivationCount . '</p>';
 
         return $this->__getTemplate('Document statistics', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));

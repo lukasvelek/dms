@@ -327,7 +327,7 @@ class Settings extends APresenter {
             '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
         );
 
-        $widgets = ''; //$this->internalDashboardCreateWidgets();
+        $widgets = '';
 
         $app->logger->logFunction(function() use (&$widgets) {
             $widgets = $this->internalDashboardCreateWidgets();
