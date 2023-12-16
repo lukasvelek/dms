@@ -211,9 +211,9 @@ class Panels {
             }
         };
 
-        $data['$LINKS$'][] = $createFilter('all', 'All', false);
-        $data['$LINKS$'][] = $createFilter('new', 'New', false);
-        $data['$LINKS$'][] = $createFilter('waitingForArchivation', 'Waiting for archivation', false);
+        $data['$LINKS$'][] = $createFilter('all', 'All documents', false);
+        $data['$LINKS$'][] = $createFilter('new', 'New documents', false);
+        $data['$LINKS$'][] = $createFilter('waitingForArchivation', 'Documents waiting for archivation', false);
 
         $templateManager->fill($data, $template);
 
