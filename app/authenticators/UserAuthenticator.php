@@ -65,6 +65,30 @@ class UserAuthenticator extends AAuthenticator {
 
         return true;
     }
+
+    /**
+     * Checks if all given passwords match
+     * 
+     * @param array<string> $passwords Passwords to check
+     * @return bool True if all passwords match or false if not
+     */
+    public function checkPasswordMatch(array $passwords) {
+        $match = true;
+
+        $last = null;
+
+        foreach($passwords as $password) {
+            if($last != $password) {
+                $match = false;
+
+                break;
+            } else {
+                $last = $password;
+            }
+        }
+
+        return $match;
+    }
 }
 
 ?>

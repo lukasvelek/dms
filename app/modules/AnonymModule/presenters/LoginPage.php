@@ -3,6 +3,7 @@
 namespace DMS\Modules\AnonymModule;
 
 use DMS\Constants\UserStatus;
+use DMS\Core\CryptManager;
 use DMS\Core\Logger\LogCategoryEnum;
 use DMS\Core\ScriptLoader;
 use \DMS\Modules\IModule;
@@ -124,11 +125,11 @@ class LoginPage extends APresenter {
         $password1 = htmlspecialchars($_POST['password1']);
         $password2 = htmlspecialchars($_POST['password2']);
 
-        if($password1 !== $password2) {
-            die('password do not match!');
+        if($app->userAuthenticator->checkPasswordMatch(array($password1, $password2))) {
+            die('Passwords do not match');
         }
 
-        $password = password_hash($password1, PASSWORD_BCRYPT);
+        $password = CryptManager::hashPassword($password1);
 
         $app->userModel->updateUserPassword($id, $password);
         $app->userModel->updateUserStatus($id, UserStatus::ACTIVE);

@@ -13,6 +13,7 @@ use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
+use DMS\Core\CryptManager;
 use DMS\Core\Logger\Logger;
 
 class DatabaseInstaller {
@@ -304,7 +305,7 @@ class DatabaseInstaller {
 
         foreach($insertUsers as $iu) {
             $userData = $defaultUserData[$iu];
-            $password = password_Hash($userData['password'], PASSWORD_BCRYPT);
+            $password = CryptManager::hashPassword($userData['password']);
             $firstname = $userData['firstname'];
             $lastname = $userData['lastname'];
             $username = $iu;
