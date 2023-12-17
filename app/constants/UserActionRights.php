@@ -12,6 +12,7 @@ class UserActionRights {
     public const EDIT_METADATA_VALUES = 'edit_metadata_values';
     public const EDIT_USER_METADATA_RIGHTS = 'edit_user_metadata_rights';
     public const DELETE_COMMENTS = 'delete_comments';
+    public const EDIT_USER = 'edit_user';
 
     public static $all = array(
         self::CREATE_USER,
@@ -22,7 +23,8 @@ class UserActionRights {
         self::DELETE_METADATA,
         self::EDIT_METADATA_VALUES,
         self::EDIT_USER_METADATA_RIGHTS,
-        self::DELETE_COMMENTS
+        self::DELETE_COMMENTS,
+        self::EDIT_USER
     );
 }
 

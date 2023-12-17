@@ -105,7 +105,11 @@ class Groups extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
 
-        $app->groupRightModel->updateActionRight($idGroup, $name, true);
+        if($app->groupRightModel->checkActionRightExists($idGroup, $name) === TRUE) {
+            $app->groupRightModel->updateActionRight($idGroup, $name, true);
+        } else {
+            $app->groupRightModel->insertActionRightForIdGroup($idGroup, $name, true);
+        }
 
         $app->logger->info('Allowed action right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
 
@@ -121,7 +125,11 @@ class Groups extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
 
-        $app->groupRightModel->updateActionRight($idGroup, $name, false);
+        if($app->groupRightModel->checkActionRightExists($idGroup, $name) === TRUE) {
+            $app->groupRightModel->updateActionRight($idGroup, $name, false);
+        } else {
+            $app->groupRightModel->insertActionRightForIdGroup($idGroup, $name, false);
+        }
 
         $app->logger->info('Denied action right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
 
@@ -137,7 +145,11 @@ class Groups extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
 
-        $app->groupRightModel->updatePanelRight($idGroup, $name, true);
+        if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
+            $app->groupRightModel->updatePanelRight($idGroup, $name, true);
+        } else {
+            $app->groupRightModel->insertPanelRightForIdGroup($idGroup, $name, true);
+        }
 
         $app->logger->info('Allowed panel right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
 
@@ -153,7 +165,11 @@ class Groups extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
 
-        $app->groupRightModel->updatePanelRight($idGroup, $name, false);
+        if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
+            $app->groupRightModel->updatePanelRight($idGroup, $name, false);
+        } else {
+            $app->groupRightModel->insertPanelRightForIdGroup($idGroup, $name, false);
+        }
 
         $app->logger->info('Denied panel right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
 
@@ -169,7 +185,11 @@ class Groups extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
 
-        $app->groupRightModel->updateBulkActionRight($idGroup, $name, true);
+        if($app->groupRightModel->checkBulkActionRightExists($idGroup, $name) === TRUE) {
+            $app->groupRightModel->updateBulkActionRight($idGroup, $name, true);
+        } else {
+            $app->groupRightModel->insertBulkActionRightForIdGroup($idGroup, $name, true);
+        }
 
         $app->logger->info('Allowed bulk action right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
 
@@ -185,7 +205,11 @@ class Groups extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
 
-        $app->groupRightModel->updateBulkActionRight($idGroup, $name, false);
+        if($app->groupRightModel->checkBulkActionRightExists($idGroup, $name) === TRUE) {
+            $app->groupRightModel->updateBulkActionRight($idGroup, $name, false);
+        } else {
+            $app->groupRightModel->insertBulkActionRightForIdGroup($idGroup, $name, false);
+        }
 
         $app->logger->info('Denied bulk action right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
 
