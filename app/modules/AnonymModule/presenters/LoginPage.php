@@ -64,6 +64,14 @@ class LoginPage extends APresenter {
         $authResult = $userAuthenticator->authUser($username, $password);
 
         if($authResult != false) {
+            $user = $app->userModel->getUserById($authResult);
+
+            if(!in_array($user->getStatus(), array(UserStatus::ACTIVE))) {
+                $app->flashMessage('Password change for your account has been requested. Please create a new password!');
+                $app->redirect('AnonymModule:LoginPage:showFirstLoginForm');
+                exit;
+            }
+
             $_SESSION['id_current_user'] = $authResult;
             $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60))); // 1 day
 

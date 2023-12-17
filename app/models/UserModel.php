@@ -16,6 +16,8 @@ class UserModel extends AModel {
 
         $result = $qb->update('users')
                      ->setNull(array('password'))
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
                      ->execute()
                      ->fetch();
 
@@ -76,7 +78,6 @@ class UserModel extends AModel {
         $row = $qb->select('*')
                   ->from('users')
                   ->where('username=:username')
-                  ->explicit('AND `password` IS NULL')
                   ->setParam(':username', $username)
                   ->execute()
                   ->fetchSingle();

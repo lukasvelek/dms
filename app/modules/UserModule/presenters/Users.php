@@ -92,7 +92,6 @@ class Users extends APresenter {
         );
 
         $app->userModel->updateUser($id, $data);
-        $app->userModel->nullUserPassword($id);
 
         $app->flashMessage('Request password change for user #' . $id . ' successful.');
         $app->redirect('UserModule:Users:showProfile', array('id' => $id));

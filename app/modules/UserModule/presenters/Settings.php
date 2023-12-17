@@ -869,12 +869,7 @@ class Settings extends APresenter {
             'Lastname',
             'Username',
             'Email',
-            'Status',
-            'Address Street',
-            'Address House number',
-            'Address City',
-            'Address Zip code',
-            'Address Country'
+            'Status'
         );
 
         $headerRow = null;
@@ -923,12 +918,7 @@ class Settings extends APresenter {
                     $user->getLastname() ?? '-',
                     $user->getUsername() ?? '-',
                     $user->getEmail() ?? '-',
-                    UserStatus::$texts[$user->getStatus()],
-                    $user->getAddressStreet() ?? '-',
-                    $user->getAddressHouseNumber() ?? '-',
-                    $user->getAddressCity() ?? '-',
-                    $user->getAddressZipCode() ?? '-',
-                    $user->getAddressCountry() ?? '-'
+                    UserStatus::$texts[$user->getStatus()]
                 );
 
                 foreach($userData as $ud) {
