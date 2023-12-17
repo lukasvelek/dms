@@ -70,12 +70,16 @@ class Users extends APresenter {
             '$LINKS$' => array($editLink)
         );
 
-        $requestPasswordChangeLink = LinkBuilder::createAdvLink(array(
-            'page' => 'UserModule:Users:requestPasswordChange',
-            'id' => $id
-        ), 'Request password change');
+        $requestPasswordChangeLink = '';
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . $requestPasswordChangeLink;
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::REQUEST_PASSWORD_CHANGE_USER)) {
+            $requestPasswordChangeLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
+                'page' => 'UserModule:Users:requestPasswordChange',
+                'id' => $id
+            ), 'Request password change');
+        }
+
+        $data['$LINKS$'][] = $requestPasswordChangeLink;
 
         $this->templateManager->fill($data, $template);
 
