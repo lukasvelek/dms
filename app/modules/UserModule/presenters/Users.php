@@ -195,15 +195,27 @@ class Users extends APresenter {
         $allow = true;
 
         foreach(UserActionRights::$all as $ar) {
-            $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+            if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
+                $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+            } else {
+                $app->userRightModel->insertActionRightForIdUser($idUser, $ar, $allow);
+            }
         }
 
         foreach(PanelRights::$all as $pr) {
-            $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+            if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
+                $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+            } else {
+                $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
+            }
         }
 
         foreach(BulkActionRights::$all as $bar) {
-            $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+            if($app->userRightModel->checkBulkActionRightExists($idUser, $bar)) {
+                $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+            } else {
+                $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
+            }
         }
 
         $cms = array(
@@ -227,15 +239,27 @@ class Users extends APresenter {
         $allow = false;
 
         foreach(UserActionRights::$all as $ar) {
-            $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+            if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
+                $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+            } else {
+                $app->userRightModel->insertActionRightForIdUser($idUser, $ar, $allow);
+            }
         }
 
         foreach(PanelRights::$all as $pr) {
-            $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+            if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
+                $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+            } else {
+                $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
+            }
         }
 
         foreach(BulkActionRights::$all as $bar) {
-            $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+            if($app->userRightModel->checkBulkActionRightExists($idUser, $bar)) {
+                $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+            } else {
+                $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
+            }
         }
 
         $cms = array(
@@ -257,7 +281,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updateActionRight($idUser, $name, true);
+        if($app->userRightModel->checkActionRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updateActionRight($idUser, $name, true);
+        } else {
+            $app->userRightModel->insertActionRightForIdUser($idUser, $name, true);
+        }
 
         $app->logger->info('Allowed action right to user #' . $idUser, __METHOD__);
 
@@ -273,7 +301,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updateActionRight($idUser, $name, false);
+        if($app->userRightModel->checkActionRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updateActionRight($idUser, $name, false);
+        } else {
+            $app->userRightModel->insertActionRightForIdUser($idUser, $name, false);
+        }
 
         $app->logger->info('Denied action right to user #' . $idUser, __METHOD__);
 
@@ -289,7 +321,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updatePanelRight($idUser, $name, true);
+        if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updatePanelRight($idUser, $name, true);
+        } else {
+            $app->userRightModel->insertPanelRightForIdUser($idUser, $name, true);
+        }
 
         $app->logger->info('Allowed panel right to user #' . $idUser, __METHOD__);
 
@@ -305,7 +341,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updatePanelRight($idUser, $name, false);
+        if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updatePanelRight($idUser, $name, false);
+        } else {
+            $app->userRightModel->insertPanelRightForIdUser($idUser, $name, false);
+        }
 
         $app->logger->info('Denied panel right to user #' . $idUser, __METHOD__);
 
@@ -321,7 +361,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updateBulkActionRight($idUser, $name, true);
+        if($app->userRightModel->checkBulkActionRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updateBulkActionRight($idUser, $name, true);
+        } else {
+            $app->userRightModel->insertBulkActionRightForIdUser($idUser, $name, true);
+        }
 
         $app->logger->info('Allowed bulk action right to user #' . $idUser, __METHOD__);
 
@@ -337,7 +381,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updateBulkActionRight($idUser, $name, false);
+        if($app->userRightModel->checkBulkActionRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updateBulkActionRight($idUser, $name, false);
+        } else {
+            $app->userRightModel->insertBulkActionRightForIdUser($idUser, $name, false);
+        }
 
         $app->logger->info('Denied bulk action right to user #' . $idUser, __METHOD__);
 

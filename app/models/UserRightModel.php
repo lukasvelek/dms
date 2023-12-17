@@ -14,6 +14,42 @@ class UserRightModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function checkActionRightExists(int $idUser, string $actionName) {
+        return $this->checkRightExists('action', $idUser, $actionName);
+    }
+
+    public function checkBulkActionRightExists(int $idUser, string $bulkActionName) {
+        return $this->checkRightExists('bulk', $idUser, $bulkActionName);
+    }
+
+    public function checkPanelRightExists(int $idUser, string $panelName) {
+        return $this->checkRightExists('panel', $idUser, $panelName);
+    }
+
+    public function insertActionRightForIdUser(int $idUser, string $actionName, bool $status) {
+        return $this->insertNew(array(
+            'id_user' => $idUser,
+            'action_name' => $actionName,
+            'is_executable' => $status ? '1' : '0'
+            ), 'user_action_rights');
+    }
+
+    public function insertBulkActionRightForIdUser(int $idUser, string $bulkActionName, bool $status) {
+        return $this->insertNew(array(
+            'id_user' => $idUser,
+            'action_name' => $bulkActionName,
+            'is_executable' => $status ? '1' : '0'
+            ), 'user_bulk_rights');
+    }
+
+    public function insertPanelRightForIdUser(int $idUser, string $panelName, bool $status) {
+        return $this->insertNew(array(
+            'id_user' => $idUser,
+            'action_name' => $panelName,
+            'is_visible' => $status ? '1' : '0'
+            ), 'user_panel_rights');
+    }
+
     public function insertMetadataRight(int $idUser, int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 
@@ -292,6 +328,47 @@ class UserRightModel extends AModel {
         }
 
         return $rights;
+    }
+
+    private function checkRightExists(string $type, int $idUser, string $name) {
+        $qb = $this->qb(__METHOD__);
+
+        $tableName = '';
+        $columnName = '';
+
+        switch($type) {
+            case 'action':
+                $tableName = 'user_action_rights';
+                $columnName = 'action_name';
+                break;
+
+            case 'bulk':
+                $tableName = 'user_bulk_rights';
+                $columnName = 'action_name';
+                break;
+
+            case 'panel':
+                $tableName = 'user_panel_rights';
+                $columnName = 'panel_name';
+                break;
+        }
+
+        $result = $qb->select('*')
+                     ->from($tableName)
+                     ->where('id_user=:id')
+                     ->andWhere($columnName . '=:name')
+                     ->setParams(array(
+                        ':id' => $idUser,
+                        ':name' => $name
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        if($result->num_rows == 1) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 

@@ -13,6 +13,7 @@ class UserActionRights {
     public const EDIT_USER_METADATA_RIGHTS = 'edit_user_metadata_rights';
     public const DELETE_COMMENTS = 'delete_comments';
     public const EDIT_USER = 'edit_user';
+    public const REQUEST_PASSWORD_CHANGE_USER = 'request_password_change_user';
 
     public static $all = array(
         self::CREATE_USER,
@@ -24,7 +25,8 @@ class UserActionRights {
         self::EDIT_METADATA_VALUES,
         self::EDIT_USER_METADATA_RIGHTS,
         self::DELETE_COMMENTS,
-        self::EDIT_USER
+        self::EDIT_USER,
+        self::REQUEST_PASSWORD_CHANGE_USER
     );
 }
 
