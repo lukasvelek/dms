@@ -2,6 +2,8 @@
 
 namespace DMS\Core;
 
+use DMS\Helpers\ArrayStringHelper;
+
 class CryptManager {
     public static function createPassword(bool $hash = true, int $length = 8) {
         $cypher = CypherManager::createCypher($length);
@@ -13,24 +15,29 @@ class CryptManager {
         }
     }
 
-    public static function createAdvPassword(string $salt, bool $hash = true, int $length = 12) {
-        $saltLetters = [];
-
-        for($i = 0; $i < strlen($salt); $i++) {
-            $saltLetters[] = $salt[$i];
+    public static function suggestPassword(int $length = 12) {
+        $partCount = 3;
+        
+        if($length < 12 || ($length % $partCount) != 0) {
+            return null;
         }
 
-        $cypher = CypherManager::createCypherSkipSymbols($saltLetters, $length);
+        $partLength = $length / $partCount;
 
-        if($hash === TRUE) {
-            return password_hash($cypher, PASSWORD_BCRYPT);
-        } else {
-            return $cypher;
+        $parts = [];
+        for($i = 0; $i < $partCount; $i++) {
+            $parts[] = CypherManager::createCypher($partLength);
+
+            if(($i + 1) < $partCount) {
+                $parts[] .= '-';
+            }
         }
+
+        return ArrayStringHelper::createUnindexedStringFromUnindexedArray($parts);
     }
 
-    public static function hashPassword(string $password) {
-        return password_hash($password, PASSWORD_BCRYPT);
+    public static function hashPassword(string $password, string $salt) {
+        return password_hash($password, PASSWORD_BCRYPT, array('salt' => $salt));
     }
 }
 

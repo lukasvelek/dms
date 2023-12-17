@@ -108,7 +108,7 @@ class LoginPage extends APresenter {
             $data = array(
                 '$PAGE_TITLE$' => 'Create password for user \'' . $username . '\'',
                 '$FIRST_LOGIN_LINK$' => '<p id="msg"></p>' . LinkBuilder::createLink('AnonymModule:LoginPage:showForm', 'General login'),
-                '$FORM$' => $this->internalCreatePasswordForm($user->getId()) . ScriptLoader::loadJSScript('/dms/js/FirstLoginPage.js')
+                '$FORM$' => $this->internalCreatePasswordForm($user->getId(), $username) . ScriptLoader::loadJSScript('/dms/js/FirstLoginPage.js')
             );
         }
 
@@ -124,12 +124,19 @@ class LoginPage extends APresenter {
 
         $password1 = htmlspecialchars($_POST['password1']);
         $password2 = htmlspecialchars($_POST['password2']);
+        $suggestedPassword = htmlspecialchars($_POST['suggested_password']);
+        $username = htmlspecialchars($_POST['username']);
+
+        if(empty($password1) && empty($password2)) {
+            $password1 = $suggestedPassword;
+            $password2 = $suggestedPassword;
+        }
 
         if($app->userAuthenticator->checkPasswordMatch(array($password1, $password2))) {
             die('Passwords do not match');
         }
 
-        $password = CryptManager::hashPassword($password1);
+        $password = CryptManager::hashPassword($password1, $username);
 
         $app->userModel->updateUserPassword($id, $password);
         $app->userModel->updateUserStatus($id, UserStatus::ACTIVE);
@@ -137,24 +144,36 @@ class LoginPage extends APresenter {
         $app->redirect('AnonymModule:LoginPage:showForm');
     }
 
-    private function internalCreatePasswordForm(int $id) {
+    private function internalCreatePasswordForm(int $id, string $username) {
         $fb = FormBuilder::getTemporaryObject();
+
+        $suggestedPassword = CryptManager::suggestPassword();
 
         $fb ->setAction('?page=AnonymModule:LoginPage:savePassword&id=' . $id)->setMethod('POST')
             ->addElement($fb->createLabel()->setText('Password')
                                            ->setFor('password1'))
+
             ->addElement($fb->createInput()->setType('password')
                                            ->setName('password1')
                                            ->setMaxLength('256')
-                                           ->require()
-                                           ->setId('password1'))
+                                           ->setId('password1')
+                                           ->setPlaceHolder($suggestedPassword))
+
             ->addElement($fb->createLabel()->setText('Password again')
                                            ->setFor('password2'))
+
             ->addElement($fb->createInput()->setType('password')
                                            ->setName('password2')
                                            ->setMaxLength('256')
-                                           ->require()
-                                           ->setId('password2'))
+                                           ->setId('password2')
+                                           ->setPlaceHolder($suggestedPassword))
+
+            ->addElement($fb->createLabel()->setText('To use suggested password, leave the input elements empty.'))
+
+            ->addElement($fb->createSpecial('<input type="text" name="suggested_password" value="' . $suggestedPassword . '" hidden>'))
+            
+            ->addElement($fb->createSpecial('<input type="text" name="username" value="' . $username . '" hidden>'))
+
             ->addElement($fb->createSubmit()->setId('submit'))
         ;
 

@@ -305,7 +305,7 @@ class DatabaseInstaller {
 
         foreach($insertUsers as $iu) {
             $userData = $defaultUserData[$iu];
-            $password = CryptManager::hashPassword($userData['password']);
+            $password = CryptManager::hashPassword($userData['password'], $iu);
             $firstname = $userData['firstname'];
             $lastname = $userData['lastname'];
             $username = $iu;
