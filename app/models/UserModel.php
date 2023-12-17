@@ -11,6 +11,39 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function nullUserPassword(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('users')
+                     ->setNull(array('password'))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function updateUser(int $id, array $data) {
+        $qb = $this->qb(__METHOD__);
+
+        $values = [];
+        $params = [];
+
+        foreach($data as $k => $v) {
+            $values[$k] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $result = $qb->update('users')
+                     ->set($values)
+                     ->where('id=:id')
+                     ->setParams($params)
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function updateUserStatus(int $id, int $status) {
         $qb = $this->qb(__METHOD__);
 

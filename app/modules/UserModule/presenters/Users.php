@@ -13,6 +13,7 @@ use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
+use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -54,14 +55,102 @@ class Users extends APresenter {
 
         $user = $app->userModel->getUserById($id);
 
+        $editLink = '';
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER)) {
+            $editLink = LinkBuilder::createAdvLink(array(
+                'page' => 'UserModule:Users:showEditForm',
+                'id' => $id
+            ), 'Edit user');
+        }
+
         $data = array(
             '$PAGE_TITLE$' => '<i>' . $user->getFullname() . '</i>\'s profile',
-            '$USER_PROFILE_GRID$' => $this->internalCreateUserProfileGrid($id)
+            '$USER_PROFILE_GRID$' => $this->internalCreateUserProfileGrid($id),
+            '$LINKS$' => array($editLink)
+        );
+
+        $requestPasswordChangeLink = LinkBuilder::createAdvLink(array(
+            'page' => 'UserModule:Users:requestPasswordChange',
+            'id' => $id
+        ), 'Request password change');
+
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . $requestPasswordChangeLink;
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function requestPasswordChange() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $data = array(
+            'status' => UserStatus::PASSWORD_UPDATE_REQUIRED
+        );
+
+        $app->userModel->updateUser($id, $data);
+        $app->userModel->nullUserPassword($id);
+
+        $app->flashMessage('Request password change for user #' . $id . ' successful.');
+        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
+    }
+
+    protected function showEditForm() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
+
+        $id = htmlspecialchars($_GET['id']);
+        $user = $app->userModel->getUserById($id);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Edit user \'' . $user->getFullname() . '\'',
+            '$FORM$' => $this->internalCreateEditUserForm($user)
         );
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function saveUserEdit() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+        
+        $required = array('firstname', 'lastname', 'username');
+        
+        $data = [];
+        foreach($required as $r) {
+            $data[$r] = htmlspecialchars($_POST[$r]);
+        }
+
+        if(isset($_POST['email']) && !empty($_POST['email'])) {
+            $data['email'] = htmlspecialchars($_POST['email']);
+        }
+        if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
+            $data['address_street'] = htmlspecialchars($_POST['address_street']);
+        }
+        if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
+            $data['address_house_number'] = htmlspecialchars($_POST['address_house_number']);
+        }
+        if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
+            $data['address_city'] = htmlspecialchars($_POST['address_city']);
+        }
+        if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
+            $data['address_zip_code'] = htmlspecialchars($_POST['address_zip_code']);
+        }
+        if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
+            $data['address_country'] = htmlspecialchars($_POST['address_country']);
+        }
+
+        $app->userModel->updateUser($id, $data);
+
+        $app->flashMessage('Successfully edited user #' . $id);
+        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
     }
 
     protected function showUserRights() {
@@ -411,6 +500,46 @@ class Users extends APresenter {
         $code .= '</table>';
 
         return $code;
+    }
+
+    private function internalCreateEditUserForm(User $user) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Users:saveUserEdit&id=' . $user->getId())
+            ->addElement($fb->createLabel()->setFor('firstname')->setText('First name'))
+            ->addElement($fb->createInput()->setType('text')->setName('firstname')->require()->setValue($user->getFirstname() ?? ''))
+
+            ->addElement($fb->createLabel()->setFor('lastname')->setText('Last name'))
+            ->addElement($fb->createInput()->setType('text')->setName('lastname')->require()->setValue($user->getLastname() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('email')->setText('Email'))
+            ->addElement($fb->createInput()->setType('email')->setName('email')->setValue($user->getEmail() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('username')->setText('Username'))
+            ->addElement($fb->createInput()->setType('text')->setName('username')->setValue($user->getUsername())->setSpecial('readonly'))
+
+            ->addElement($fb->createlabel()->setText('Address'))
+            ->addElement($fb->createlabel()->setFor('address_street')->setText('Street'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_street')->setValue($user->getAddressStreet() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('address_house_number')->setText('House number'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_house_number')->setValue($user->getAddressHouseNumber() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('address_city')->setText('City'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_city')->setValue($user->getAddressCity() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('address_zip_code')->setText('Zip code'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_zip_code')->setValue($user->getAddressZipCode() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('address_country')->setText('Country'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_country')->setValue($user->getAddressCountry() ?? ''))
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        $form = $fb->build();
+
+        return $form;
     }
 }
 
