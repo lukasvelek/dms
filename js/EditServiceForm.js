@@ -1,16 +1,94 @@
-var text = document.getElementById('files_keep_length_text_value');
-var range = document.getElementById('files_keep_length');
+// FILES_KEEP_LENGTH
+if(document.getElementById('files_keep_length_text_value') != null && document.getElementById('files_keep_length') != null) {
+    var files_keep_length_text_value = document.getElementById('files_keep_length_text_value');
+    var files_keep_length_range = document.getElementById('files_keep_length');
 
-if(range.value == 1) {
-    text.innerHTML = range.value + " day";
-} else {
-    text.innerHTML = range.value + " days";
+    if(files_keep_length_range.value == 1) {
+        files_keep_length_text_value.innerHTML = files_keep_length_range.value + " day";
+    } else {
+        files_keep_length_text_value.innerHTML = files_keep_length_range.value + " days";
+    }
+
+    files_keep_length_range.oninput = function() {
+        if(files_keep_length_range.value == 1) {
+            files_keep_length_text_value.innerHTML = files_keep_length_range.value + " day";
+        } else {
+            files_keep_length_text_value.innerHTML = files_keep_length_range.value + " days";
+        }
+    };
 }
 
-range.oninput = function() {
-    if(range.value == 1) {
-        text.innerHTML = range.value + " day";
+
+// PASSWORD_CHANGE_PERIOD
+if(document.getElementById('password_change_period_text_value') != null && document.getElementById('password_change_period') != null) {
+    var password_change_period_text_value = document.getElementById('password_change_period_text_value');
+    var password_change_period_range = document.getElementById('password_change_period');
+
+    if(password_change_period_range.value == 0) {
+        password_change_period_text_value.innerHTML = 'Never';
+    } else if(password_change_period_range.value == 1) {
+        password_change_period_text_value.innerHTML = password_change_period_range.value + " day";
     } else {
-        text.innerHTML = range.value + " days";
+        password_change_period_text_value.innerHTML = password_change_period_range.value + " days";
     }
-};
+
+    password_change_period_range.oninput = function() {
+        if(password_change_period_range.value == 0) {
+            password_change_period_text_value.innerHTML = 'Never';
+        } else if(password_change_period_range.value == 1) {
+            password_change_period_text_value.innerHTML = password_change_period_range.value + " day";
+        } else {
+            password_change_period_text_value.innerHTML = password_change_period_range.value + " days";
+        }
+    };
+}
+
+
+// PASSWORD_CHANGE_FORCE_ADMINISTRATORS
+if(document.getElementById('password_change_force_administrators_text_value') != null && document.getElementById('password_change_force_administrators') != null) {
+    var password_change_force_administrators_text_value = document.getElementById('password_change_force_administrators_text_value');
+    var password_change_force_administrators = document.getElementById('password_change_force_administrators');
+
+    if(password_change_force_administrators.checked == 1) {
+        password_change_force_administrators_text_value.innerHTML = 'Force';
+        password_change_force_administrators_text_value.style.color = 'red';
+    } else {
+        password_change_force_administrators_text_value.innerHTML = 'Don\'t force';
+        password_change_force_administrators_text_value.style.color = 'green';
+    }
+
+    password_change_force_administrators.oninput = function() {
+        if(password_change_force_administrators.checked == 1) {
+            password_change_force_administrators_text_value.innerHTML = 'Force';
+            password_change_force_administrators_text_value.style.color = 'red';
+        } else {
+            password_change_force_administrators_text_value.innerHTML = 'Don\'t force';
+            password_change_force_administrators_text_value.style.color = 'green';
+        }
+    };
+}
+
+
+// PASSWORD_CHANGE_FORCE
+if(document.getElementById('password_change_force_text_value') != null && document.getElementById('password_change_force') != null) {
+    var password_change_force_text_value = document.getElementById('password_change_force_text_value');
+    var password_change_force = document.getElementById('password_change_force');
+
+    if(password_change_force.checked == 1) {
+        password_change_force_text_value.innerHTML = 'Force';
+        password_change_force_text_value.style.color = 'red';
+    } else {
+        password_change_force_text_value.innerHTML = 'Don\'t force';
+        password_change_force_text_value.style.color = 'green';
+    }
+
+    password_change_force.oninput = function() {
+        if(password_change_force.checked == 1) {
+            password_change_force_text_value.innerHTML = 'Force';
+            password_change_force_text_value.style.color = 'red';
+        } else {
+            password_change_force_text_value.innerHTML = 'Don\'t force';
+            password_change_force_text_value.style.color = 'green';
+        }
+    };
+}

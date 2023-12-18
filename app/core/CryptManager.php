@@ -36,8 +36,8 @@ class CryptManager {
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($parts);
     }
 
-    public static function hashPassword(string $password, string $salt) {
-        return password_hash($password, PASSWORD_BCRYPT, array('salt' => $salt));
+    public static function hashPassword(string $password) {
+        return password_hash($password, PASSWORD_BCRYPT);
     }
 }
 

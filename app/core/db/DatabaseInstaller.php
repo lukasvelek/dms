@@ -73,7 +73,9 @@ class DatabaseInstaller {
                 'address_city' => 'VARCHAR(256) NULL',
                 'address_zip_code' => 'VARCHAR(256) NULL',
                 'address_country' => 'VARCHAR(256) NULL',
-                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'date_password_changed' => 'DATETIME NOT NULL',
+                'password_change_status' => 'INT(2) NOT NULL DEFAULT 1'
             ),
             'user_panel_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -309,9 +311,10 @@ class DatabaseInstaller {
             $firstname = $userData['firstname'];
             $lastname = $userData['lastname'];
             $username = $iu;
+            $datePasswordChanged = date('Y-m-d H:i:s');
 
-            $sql = "INSERT INTO `users` (`firstname`, `lastname`, `username`, `password`)
-                    VALUES ('$firstname', '$lastname', '$username', '$password')";
+            $sql = "INSERT INTO `users` (`firstname`, `lastname`, `username`, `password`, `date_password_changed`)
+                    VALUES ('$firstname', '$lastname', '$username', '$password', '$datePasswordChanged')";
 
             $this->logger->sql($sql, __METHOD__);
 
@@ -937,6 +940,11 @@ class DatabaseInstaller {
         $serviceCfg = array(
             'LogRotateService' => array(
                 'files_keep_length' => '7'
+            ),
+            'PasswordPolicyService' => array(
+                'password_change_period' => '30',
+                'password_change_force_administrators' => '0',
+                'password_change_force' => '0'
             )
         );
 

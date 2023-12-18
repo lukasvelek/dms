@@ -13,6 +13,42 @@ class GroupRightModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function checkActionRightExists(int $idGroup, string $actionName) {
+        return $this->checkRightExists('action', $idGroup, $actionName);
+    }
+
+    public function checkBulkActionRightExists(int $idGroup, string $bulkActionName) {
+        return $this->checkRightExists('bulk', $idGroup, $bulkActionName);
+    }
+
+    public function checkPanelRightExists(int $idGroup, string $panelName) {
+        return $this->checkRightExists('panel', $idGroup, $panelName);
+    }
+
+    public function insertActionRightForIdGroup(int $idGroup, string $actionName, bool $status) {
+        return $this->insertNew(array(
+            'id_group' => $idGroup,
+            'action_name' => $actionName,
+            'is_executable' => $status ? '1' : '0'
+            ), 'group_action_rights');
+    }
+
+    public function insertBulkActionRightForIdGroup(int $idGroup, string $bulkActionName, bool $status) {
+        return $this->insertNew(array(
+            'id_group' => $idGroup,
+            'action_name' => $bulkActionName,
+            'is_executable' => $status ? '1' : '0'
+            ), 'group_bulk_rights');
+    }
+
+    public function insertPanelRightForIdGroup(int $idGroup, string $panelName, bool $status) {
+        return $this->insertNew(array(
+            'id_group' => $idGroup,
+            'panel_name' => $panelName,
+            'is_visible' => $status ? '1' : '0'
+            ), 'group_panel_rights');
+    }
+
     public function insertActionRightsForIdGroup(int $idGroup) {
         $totalResult = true;
 
@@ -197,7 +233,57 @@ class GroupRightModel extends AModel {
         }
 
         return $rights;
-    }   
+    }
+
+    /**
+     * Internal method that is used to check if a right exists.
+     * It is useful when trying to update a value. If the right does not exist, it cannot be updated and has to be inserted instead.
+     * 
+     * @param string $type Right type - possible values: action, bulk, panel
+     * @param int $idGroup Group ID
+     * @param string $name Right name
+     * @return bool True if the right exists or false if not
+     */
+    private function checkRightExists(string $type, int $idGroup, string $name) {
+        $qb = $this->qb(__METHOD__);
+
+        $tableName = '';
+        $columnName = '';
+
+        switch($type) {
+            case 'action':
+                $tableName = 'group_action_rights';
+                $columnName = 'action_name';
+                break;
+
+            case 'bulk':
+                $tableName = 'group_bulk_rights';
+                $columnName = 'action_name';
+                break;
+
+            case 'panel':
+                $tableName = 'group_panel_rights';
+                $columnName = 'panel_name';
+                break;
+        }
+
+        $result = $qb->select('*')
+                     ->from($tableName)
+                     ->where('id_group=:id')
+                     ->andWhere($columnName . '=:name')
+                     ->setParams(array(
+                        ':id' => $idGroup,
+                        ':name' => $name
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        if($result->num_rows == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
 
 ?>

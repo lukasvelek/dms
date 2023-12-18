@@ -78,12 +78,15 @@ class UserAuthenticator extends AAuthenticator {
         $last = null;
 
         foreach($passwords as $password) {
+            if($last == null) {
+                $last = $password;
+                continue;
+            }
+
             if($last != $password) {
                 $match = false;
 
                 break;
-            } else {
-                $last = $password;
             }
         }
 
