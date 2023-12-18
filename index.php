@@ -58,7 +58,7 @@ include('app/dms_loader.php');
 
         if(!is_null($app->user)) {
             if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::WARNING) {
-                $changeLink = '<a style="color: red; text-decoration: underline" href="?page=UserModule:Users:showChangePasswordForm">here</a>';
+                $changeLink = '<a style="color: red; text-decoration: underline" href="?page=UserModule:Users:showChangePasswordForm&id=' . $app->user->getId() . '">here</a>';
                 $app->flashMessage('Your password is outdated. You should update it! Click ' . $changeLink . ' to update password.', FlashMessageTypes::WARNING);
             } else if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::FORCE) {
                 $app->flashMessage('Your password is outdated. You must update it!', FlashMessageTypes::ERROR);

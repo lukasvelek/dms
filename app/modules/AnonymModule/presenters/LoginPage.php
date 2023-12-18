@@ -141,19 +141,19 @@ class LoginPage extends APresenter {
             $password2 = $suggestedPassword;
         }
 
-        if($app->userAuthenticator->checkPasswordMatch(array($password1, $password2))) {
+        if(!$app->userAuthenticator->checkPasswordMatch(array($password1, $password2))) {
             die('Passwords do not match');
         }
 
-        $password = CryptManager::hashPassword($password1, $username);
+        $password = CryptManager::hashPassword($password1);
 
         $data = array(
             'password_change_status' => UserPasswordChangeStatus::OK,
-            'password' => $password,
             'status' => UserStatus::ACTIVE
         );
 
         $app->userModel->updateUser($id, $data);
+        $app->userModel->updateUserPassword($id, $password);
 
         $app->redirect('AnonymModule:LoginPage:showForm');
     }

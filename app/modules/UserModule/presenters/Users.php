@@ -4,11 +4,13 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
+use DMS\Core\CryptManager;
 use DMS\Core\TemplateManager;
 use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
@@ -43,6 +45,65 @@ class Users extends APresenter {
         return $this->name;
     }
 
+    protected function showChangePasswordForm() {
+        global $app;
+
+        if(!isset($_GET['id'])) {
+            $app->redirect('UserModule:HomePage:showHomepage');
+        }
+
+        $id = htmlspecialchars($_GET['id']);
+        $user = $app->userModel->getUserById($id);
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Update password for user <i>' . $user->getFullname() . '</i>',
+            '$FORM$' => $this->internalCreateChangePasswordForm($user)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function changePassword() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+        $user = $app->userModel->getUserById($id);
+
+        $currentPassword = htmlspecialchars($_POST['current_password']);
+        $password1 = htmlspecialchars($_POST['password1']);
+        $password2 = htmlspecialchars($_POST['password2']);
+
+        if($app->userAuthenticator->authUser($user->getUsername(), $currentPassword) == $id) {
+            // password check ok
+
+            if($app->userAuthenticator->checkPasswordMatch(array($password1, $password2)) && !$app->userAuthenticator->checkPasswordMatch(array($password1, $currentPassword))) {
+                // new password check ok
+
+                $password = CryptManager::hashPassword($password1);
+
+                $data = array(
+                    'password_change_status' => UserPasswordChangeStatus::OK,
+                    'date_password_changed' => date('Y-m-d H:i:s')
+                );
+
+                $app->userModel->updateUser($id, $data);
+                $app->userModel->updateUserPassword($id, $password);
+
+                $app->redirect('UserModule:HomePage:showHomepage');
+            } else {
+                $app->flashMessage('New passwords do not match or they match the current password used', FlashMessageTypes::ERROR);
+                $app->redirect('UserModule:Users:showChangePasswordForm', array('id' => $id));
+            }
+        } else {
+            $app->flashMessage('Entered current password does not match the one this account has!', FlashMessageTypes::ERROR);
+            $app->redirect('UserModule:Users:showChangePasswordForm', array('id' => $id));
+        }
+    }
+
     protected function showProfile() {
         global $app;
 
@@ -72,6 +133,7 @@ class Users extends APresenter {
         );
 
         $requestPasswordChangeLink = '';
+        $forcePasswordChangeLink = '';
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::REQUEST_PASSWORD_CHANGE_USER)) {
             $requestPasswordChangeLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
@@ -85,8 +147,18 @@ class Users extends APresenter {
             ), 'Force password change');
         }
 
-        $data['$LINKS$'][] = $requestPasswordChangeLink;
-        $data['$LINKS$'][] = $forcePasswordChangeLink;
+        if($id == $app->user->getId()) {
+            // current user
+            $changePasswordLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
+                'page' => 'UserModule:Users:showChangePasswordForm',
+                'id' => $id
+            ), 'Change password');
+
+            $data['$LINKS$'][] = $changePasswordLink;
+        } else {
+            $data['$LINKS$'][] = $requestPasswordChangeLink;
+            $data['$LINKS$'][] = $forcePasswordChangeLink;
+        }
 
         $this->templateManager->fill($data, $template);
 
@@ -609,6 +681,30 @@ class Users extends APresenter {
             ->addElement($fb->createInput()->setType('text')->setName('address_country')->setValue($user->getAddressCountry() ?? ''))
 
             ->addElement($fb->createSubmit('Save'))
+        ;
+
+        $form = $fb->build();
+
+        return $form;
+    }
+
+    private function internalCreateChangePasswordForm(User $user) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb
+        ->setMethod('POST')
+        ->setAction('?page=UserModule:Users:changePassword&id=' . $user->getId())
+
+        ->addElement($fb->createLabel()->setFor('current_password')->setText('Current password'))
+        ->addElement($fb->createInput()->setType('password')->setName('current_password')->require())
+
+        ->addElement($fb->createLabel()->setFor('password1')->setText('New password'))
+        ->addElement($fb->createInput()->setType('password')->setName('password1')->require())
+
+        ->addElement($fb->createLabel()->setFor('password2')->setText('New password again'))
+        ->addElement($fb->createInput()->setType('password')->setName('password2')->require())
+
+        ->addElement($fb->createSubmit('Save')->setId('submit'))
         ;
 
         $form = $fb->build();
