@@ -246,6 +246,13 @@ class DatabaseInstaller {
                 'name' => 'VARCHAR(256) NOT NULL',
                 'text' => 'VARCHAR(32768) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'mail_queue' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'recipient' => 'VARCHAR(256) NOT NULL',
+                'title' => 'VARCHAR(256) NOT NULL',
+                'body' => 'VARCHAR(32768) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 
