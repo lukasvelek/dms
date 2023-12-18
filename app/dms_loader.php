@@ -29,7 +29,8 @@ function loadDependencies(array &$dependencies, string $dir) {
         $dir . '\\dependencies.php',
         $dir . '\\dms_loader.php',
         $dir . '\\install',
-        $dir . '\\ajax'
+        $dir . '\\ajax',
+        $dir . '\\PHPMailer'
     );
 
     $extensionsToSkip = array(
@@ -93,6 +94,18 @@ sortDependencies($dependencies);
 foreach($dependencies as $dependency) {
     require_once($dependency);
 }
+
+// VENDOR DEPENDENCIES
+
+require_once('core/vendor/PHPMailer/OAuthTokenProvider.php');
+require_once('core/vendor/PHPMailer/OAuth.php');
+require_once('core/vendor/PHPMailer/DSNConfigurator.php');
+require_once('core/vendor/PHPMailer/Exception.php');
+require_once('core/vendor/PHPMailer/PHPMailer.php');
+require_once('core/vendor/PHPMailer/POP3.php');
+require_once('core/vendor/PHPMailer/SMTP.php');
+
+// END OF VENDOR DENEPENDENCIES
 
 if(!DMS\Core\FileManager::fileExists('config.local.php')) {
     die('Config file does not exist!');
