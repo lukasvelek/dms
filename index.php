@@ -49,6 +49,10 @@ include('app/dms_loader.php');
             }
         }
 
+        if(is_null($app->user) && $app->currentUrl != $app::URL_LOGIN_PAGE) {
+            $app->redirect($app::URL_LOGIN_PAGE);
+        }
+
         $app->showPage();
 
         ?>
