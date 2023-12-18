@@ -8,6 +8,8 @@ It also enables users to manage metadata and their values.
 - added document filters
 - added new after shredding action
 - added support for flash messages
+- added support for sending emails
+- added password policy service
 - updated ajax
 - updated core code
 - updated app database installation

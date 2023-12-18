@@ -1001,6 +1001,7 @@ class Settings extends APresenter {
         $groups = count($app->groupModel->getAllGroups());
         $documents = count($app->documentModel->getAllDocuments());
         $folders = count($app->folderModel->getAllFolders());
+        $emails = $app->mailModel->getMailQueue()->num_rows;
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -1014,6 +1015,7 @@ class Settings extends APresenter {
                             <p><b>Total groups: </b>' . $groups . '</p>
                             <p><b>Total documents: </b>' . $documents . '</p>
                             <p><b>Total folders: </b>' . $folders . '</p>
+                            <p><b>Total emails in queue: </b>' . $emails . '</p>
                         </div>
                     </div>
                 </div>';

@@ -24,6 +24,19 @@ class MailModel extends AModel {
 
         return $rows;
     }
+
+    public function deleteFromQueue(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('mail_queue')
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
 }
 
 ?>

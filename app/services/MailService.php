@@ -32,6 +32,7 @@ class MailService extends AService {
             $title = $mail['title'];
 
             $this->mailManager->sendEmail($recipient, $title, $body);
+            $this->mailModel->deleteFromQueue($mail['id']);
         }
 
         $this->stopService();
