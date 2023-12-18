@@ -6,6 +6,7 @@ use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
+use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
 use DMS\Core\TemplateManager;
@@ -77,13 +78,35 @@ class Users extends APresenter {
                 'page' => 'UserModule:Users:requestPasswordChange',
                 'id' => $id
             ), 'Request password change');
+
+            $forcePasswordChangeLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
+                'page' => 'UserModule:Users:forcePasswordChange',
+                'id' => $id
+            ), 'Force password change');
         }
 
         $data['$LINKS$'][] = $requestPasswordChangeLink;
+        $data['$LINKS$'][] = $forcePasswordChangeLink;
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function forcePasswordChange() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $data = array(
+            'status' => UserStatus::PASSWORD_UPDATE_REQUIRED,
+            'password_change_status' => UserPasswordChangeStatus::FORCE
+        );
+
+        $app->userModel->updateUser($id, $data);
+
+        $app->flashMessage('Request password change for user #' . $id . ' successful.');
+        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
     }
 
     protected function requestPasswordChange() {
@@ -92,7 +115,7 @@ class Users extends APresenter {
         $id = htmlspecialchars($_GET['id']);
 
         $data = array(
-            'status' => UserStatus::PASSWORD_UPDATE_REQUIRED
+            'password_change_status' => UserPasswordChangeStatus::WARNING
         );
 
         $app->userModel->updateUser($id, $data);

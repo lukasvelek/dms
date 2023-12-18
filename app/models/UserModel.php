@@ -11,6 +11,23 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllUsersMeetingCondition(string $condition) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('users')
+                   ->explicit($condition)
+                   ->execute()
+                   ->fetch();
+
+        $users = [];
+        foreach($rows as $row) {
+            $users[] = $this->getUserObjectFromDbRow($row);
+        }
+
+        return $users;
+    }
+
     public function nullUserPassword(int $id) {
         $qb = $this->qb(__METHOD__);
 
@@ -63,9 +80,9 @@ class UserModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $result = $qb->update('users')
-                     ->set(array('password' => ':password'))
+                     ->set(array('password' => ':password', 'date_password_changed' => ':date_password_changed'))
                      ->where('id=:id')
-                     ->setParams(array(':password' => $hashedPassword, ':id' => $id))
+                     ->setParams(array(':password' => $hashedPassword, ':id' => $id, ':date_password_changed' => date('Y-m-d H:i:s')))
                      ->execute()
                      ->fetch();
 
@@ -140,6 +157,8 @@ class UserModel extends AModel {
         $values['Lastname'] = $row['lastname'];
         $values['Username'] = $row['username'];
         $values['Status'] = $row['status'];
+        $values['DatePasswordChanged'] = $row['date_password_changed'];
+        $values['PasswordChangeStatus'] = $row['password_change_status'];
         
         if(isset($row['email'])) {
             $values['Email'] = $row['email'];    

@@ -167,9 +167,9 @@ body {
 }
 
 .warn {
-    background-color: yellow;
-    border: 1px solid orange;
-    color: orange;
+    background-color: orange;
+    border: 1px solid red;
+    color: red;
 }
 
 .error {

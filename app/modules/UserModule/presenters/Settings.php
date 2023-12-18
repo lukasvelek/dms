@@ -6,6 +6,7 @@ use DMS\Constants\CacheCategories;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
 use DMS\Constants\UserActionRights;
+use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Constants\WidgetLocations;
 use DMS\Core\CacheManager;
@@ -115,6 +116,20 @@ class Settings extends APresenter {
 
         unset($values['name']);
         unset($values['description']);
+
+        if($name == 'PasswordPolicyService') {
+            if(!array_key_exists('password_change_force_administrators', $values)) {
+                $values['password_change_force_administrators'] = '0';
+            } else {
+                $values['password_change_force_administrators'] = '1';
+            }
+
+            if(!array_key_exists('password_change_force', $values)) {
+                $values['password_change_force'] = '0';
+            } else {
+                $values['password_change_force'] = '1';
+            }
+        }
 
         foreach($values as $k => $v) {
             $app->serviceModel->updateService($name, $k, $v);
@@ -636,6 +651,7 @@ class Settings extends APresenter {
         }
 
         $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
+        $data['password_change_status'] = UserPasswordChangeStatus::FORCE;
 
         $app->userModel->insertUser($data);
         $idUser = $app->userModel->getLastInsertedUser()->getId();
@@ -1301,13 +1317,54 @@ class Settings extends APresenter {
         ;
 
         foreach($serviceCfg as $key => $value) {
-            $fb ->addElement($fb->createLabel()->setText($key)->setFor($key));
+            $fb ->addElement($fb->createLabel()->setText(ServiceMetadata::$texts[$key] . ' (' . $key . ')')->setFor($key));
 
-            if($key == ServiceMetadata::FILES_KEEP_LENGTH) {
-                $fb
-                ->addElement($fb->createSpecial('<span id="files_keep_length_text_value">__VAL__</span>'))
-                ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))
-                ;
+            switch($key) {
+                case ServiceMetadata::FILES_KEEP_LENGTH:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="files_keep_length_text_value">__VAL__</span>'))
+                    ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))
+                    ;
+                    break;
+
+                case ServiceMetadata::PASSWORD_CHANGE_PERIOD:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="password_change_period_text_value">__VAL__</span>'))
+                    ->addElement($fb->createInput()->setType('range')->setMin('0')->setMax('60')->setName($key)->setValue($value))
+                    ;
+                    break;
+
+                case ServiceMetadata::PASSWORD_CHANGE_FORCE_ADMINISTRATORS:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="password_change_force_administrators_text_value">__VAL__</span>'))
+                    ;
+
+                    $checkbox = $fb->createInput()->setType('checkbox')->setName($key);
+
+                    if($value == '1') {
+                        $checkbox->setSpecial('checked');
+                    }
+
+                    $fb->addElement($checkbox);
+
+                    break;
+
+                case ServiceMetadata::PASSWORD_CHANGE_FORCE:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="password_change_force_text_value">__VAL__</span>'))
+                    ;
+
+                    $checkbox = $fb->createInput()->setType('checkbox')->setName($key);
+
+                    if($value == '1') {
+                        $checkbox->setSpecial('checked');
+                    }
+
+                    $fb->addElement($checkbox);
+
+                    break;
+
+                    break;
             }
         }
 

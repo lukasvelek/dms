@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\AnonymModule;
 
+use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
 use DMS\Core\Logger\LogCategoryEnum;
@@ -146,8 +147,13 @@ class LoginPage extends APresenter {
 
         $password = CryptManager::hashPassword($password1, $username);
 
-        $app->userModel->updateUserPassword($id, $password);
-        $app->userModel->updateUserStatus($id, UserStatus::ACTIVE);
+        $data = array(
+            'password_change_status' => UserPasswordChangeStatus::OK,
+            'password' => $password,
+            'status' => UserStatus::ACTIVE
+        );
+
+        $app->userModel->updateUser($id, $data);
 
         $app->redirect('AnonymModule:LoginPage:showForm');
     }

@@ -18,6 +18,7 @@ use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
+use DMS\Constants\UserPasswordChangeStatus;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\DocumentCommentModel;
@@ -38,6 +39,7 @@ use DMS\Models\WidgetModel;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use FFI;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -52,6 +54,7 @@ class Application {
     public const URL_SETTINGS_PAGE = 'UserModule:Settings:showDashboard';
     public const URL_DOCUMENTS_PAGE = 'UserModule:Documents:showAll';
     public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
+    public const URL_LOGOUT_PAGE = 'UserModule:UserLogout:logoutUser';
 
     public const SYSTEM_VERSION = '1.4_beta';
     public const SYSTEM_BUILD_DATE = '2023/12/05';
@@ -163,7 +166,7 @@ class Application {
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent);
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel);
 
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
@@ -345,6 +348,14 @@ class Application {
         $this->flashMessage = $code;
 
         $_SESSION['flash_message'] = $code;
+    }
+
+    public function clearFlashMessage(bool $clearFromSession = true) {
+        $this->flashMessage = null;
+
+        if($clearFromSession) {
+            unset($_SESSION['flash_message']);
+        }
     }
 
     /**

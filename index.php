@@ -1,5 +1,8 @@
 <?php
 
+use DMS\Constants\FlashMessageTypes;
+use DMS\Constants\UserPasswordChangeStatus;
+
 session_start();
 
 include('app/dms_loader.php');
@@ -49,8 +52,21 @@ include('app/dms_loader.php');
             }
         }
 
-        if(is_null($app->user) && $app->currentUrl != $app::URL_LOGIN_PAGE) {
+        /*if(is_null($app->user) && $app->currentUrl != $app::URL_LOGIN_PAGE) {
             $app->redirect($app::URL_LOGIN_PAGE);
+        }*/
+
+        if(!is_null($app->user)) {
+            if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::WARNING) {
+                $changeLink = '<a style="color: red; text-decoration: underline" href="?page=UserModule:Users:showChangePasswordForm">here</a>';
+                $app->flashMessage('Your password is outdated. You should update it! Click ' . $changeLink . ' to update password.', FlashMessageTypes::WARNING);
+            } else if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::FORCE) {
+                $app->flashMessage('Your password is outdated. You must update it!', FlashMessageTypes::ERROR);
+                
+                if($app->currentUrl != 'UserModule:UserLogout:logoutUser') {
+                    $app->redirect($app::URL_LOGOUT_PAGE);
+                }
+            }
         }
 
         $app->showPage();
