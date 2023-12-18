@@ -253,6 +253,12 @@ class DatabaseInstaller {
                 'title' => 'VARCHAR(256) NOT NULL',
                 'body' => 'VARCHAR(32768) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'password_reset_hashes' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'hash' => 'VARCHAR(256)',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 

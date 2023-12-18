@@ -2,6 +2,7 @@
 
 namespace DMS\Core;
 
+use DMS\UI\LinkBuilder;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -42,6 +43,7 @@ class MailManager {
 
             $mail->setFrom($this->fromEmail, $this->fromName);
             $mail->addAddress($recipient);
+            $mail->isHTML(true);
             $mail->Subject = $title;
             $mail->Body = $body;
 
@@ -59,6 +61,23 @@ class MailManager {
             'title' => $title,
             'body' => $body
         );
+    }
+
+    public static function composeForgottenPasswordEmail(string $recipient, string $hash) {
+        $link = LinkBuilder::createAdvLink(array(
+            'page' => 'AnonymModule:ResetPassword:showForm',
+            'hash' => $hash
+        ), 'here');
+
+        $body = 'This email was sent to you because you requested to change your password because you have forgotten it. <br>Click ' . $link . ' to reset your password.<br>DMS';
+        
+        $data = array(
+            'recipient' => $recipient,
+            'title' => 'Forgotten password recovery',
+            'body' => $body
+        );
+
+        return $data;
     }
 }
 

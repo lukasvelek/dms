@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\AnonymModule;
 
+use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
@@ -43,15 +44,52 @@ class LoginPage extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Login form',
-            '$FIRST_LOGIN_LINK$' => LinkBuilder::createLink('AnonymModule:LoginPage:showFirstLoginForm', 'First login'),
+            //'$FIRST_LOGIN_LINK$' => LinkBuilder::createLink('AnonymModule:LoginPage:showFirstLoginForm', 'First login'),
             '$FORM$' => $this->internalRenderForm()
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('AnonymModule:LoginPage:showFirstLoginForm', 'First login');
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createLink('AnonymModule:LoginPage:showForgotPasswordForm', 'Forgot password');
 
         $this->templateManager->fill($data, $template);
 
         $_SESSION['login_in_process'] = true;
 
         return $template;
+    }
+
+    protected function showForgotPasswordForm() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/GeneralForm.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Forgot password form',
+            '$FORM$' => $this->internalCreateForgotPasswordForm()
+        );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('AnonymModule:LoginPage:showForm', 'Login');
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function forgotPassword() {
+        global $app;
+
+        $emailAddress = htmlspecialchars($_GET['email']);
+
+        $users = $app->userModel->getAllUsersMeetingCondition("WHERE `email` = '$emailAddress'");
+
+        if(count($users) > 0) {
+            // ok
+
+            
+        } else {
+            $app->flashMessage('The email you provided does not meet any email in the database. Please try again!', FlashMessageTypes::ERROR);
+            $app->redirect('AnonymModule:LoginPage:showForgotPasswordForm');
+        }
     }
 
     protected function tryLogin() {
@@ -235,6 +273,24 @@ class LoginPage extends APresenter {
 
         $form = $fb->build();
 
+        return $form;
+    }
+
+    private function internalCreateForgotPasswordForm() {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb
+        ->setAction('?page=AnonymModule:LoginPage:forgotPassword')->setMethod('POST')
+
+        ->addElement($fb->createSpecial('<span>Enter the email address associated to your account. An email containing a link to reset your password will be sent to the email address provided.</span><br><br>'))
+
+        ->addElement($fb->createLabel()->setText('Email')->setFor('email'))
+        ->addElement($fb->createInput()->setType('email')->setName('email')->require())
+
+        ->addElement($fb->createSubmit('Send'))
+        ;
+
+        $form = $fb->build();
         return $form;
     }
 }
