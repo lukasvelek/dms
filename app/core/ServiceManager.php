@@ -7,11 +7,13 @@ use DMS\Components\ProcessComponent;
 use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentModel;
 use DMS\Models\GroupUserModel;
+use DMS\Models\MailModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\UserModel;
 use DMS\Services\CacheRotateService;
 use DMS\Services\FileManagerService;
 use DMS\Services\LogRotateService;
+use DMS\Services\MailService;
 use DMS\Services\PasswordPolicyService;
 use DMS\Services\ShreddingSuggestionService;
 
@@ -26,10 +28,12 @@ class ServiceManager {
     private ProcessComponent $processComponent;
     private UserModel $userModel;
     private GroupUserModel $groupUserModel;
+    private MailModel $mailModel;
+    private MailManager $mailManager;
 
     public array $services;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm, DocumentAuthorizator $documentAuthorizator, ProcessComponent $processComponent, UserModel $userModel, GroupUserModel $groupUserModel) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm, DocumentAuthorizator $documentAuthorizator, ProcessComponent $processComponent, UserModel $userModel, GroupUserModel $groupUserModel, MailModel $mailModel, MailManager $mailManager) {
         $this->logger = $logger;
         $this->cfg = $cfg;
         $this->serviceModel = $serviceModel;
@@ -40,6 +44,8 @@ class ServiceManager {
         $this->processComponent = $processComponent;
         $this->userModel = $userModel;
         $this->groupUserModel = $groupUserModel;
+        $this->mailModel = $mailModel;
+        $this->mailManager = $mailManager;
         
         $this->loadServices();
     }
@@ -60,6 +66,7 @@ class ServiceManager {
         $this->services['File Manager'] = new FileManagerService($this->logger, $this->serviceModel, $this->cfg, $this->fsm, $this->documentModel, $this->cm);
         $this->services['Shredding Suggestion Service'] = new ShreddingSuggestionService($this->logger, $this->serviceModel, $this->cm, $this->documentAuthorizator, $this->documentModel, $this->processComponent, $this->cfg);
         $this->services['Password Policy Service'] = new PasswordPolicyService($this->logger, $this->serviceModel, $this->cm, $this->userModel, $this->groupUserModel);
+        $this->services['Mail Service'] = new MailService($this->logger, $this->serviceModel, $this->cm, $this->mailModel, $this->mailManager);
     }
 }
 

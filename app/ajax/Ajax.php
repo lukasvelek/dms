@@ -14,12 +14,14 @@ use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\FileStorageManager;
 use DMS\Core\Logger\Logger;
+use DMS\Core\MailManager;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
+use DMS\Models\MailModel;
 use DMS\Models\MetadataModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ProcessCommentModel;
@@ -156,6 +158,7 @@ $documentCommentModel = new DocumentCommentModel($db, $logger);
 $processCommentModel = new ProcessCommentModel($db, $logger);
 $widgetModel = new WidgetModel($db, $logger);
 $notificationModel = new NotificationModel($db, $logger);
+$mailModel = new MailModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);
@@ -176,5 +179,7 @@ $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logge
 
 $documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator);
+
+$mailManager = new MailManager($cfg);
 
 ?>

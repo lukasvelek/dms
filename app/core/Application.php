@@ -27,6 +27,7 @@ use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
+use DMS\Models\MailModel;
 use DMS\Models\MetadataModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ProcessCommentModel;
@@ -85,6 +86,7 @@ class Application {
     public ProcessCommentModel $processCommentModel;
     public WidgetModel $widgetModel;
     public NotificationModel $notificationModel;
+    public MailModel $mailModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -100,6 +102,8 @@ class Application {
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
+
+    public MailManager $mailManager;
 
     private array $modules;
     private ?string $pageContent;
@@ -144,6 +148,7 @@ class Application {
         $this->processCommentModel = new ProcessCommentModel($this->conn, $this->logger);
         $this->widgetModel = new WidgetModel($this->conn, $this->logger);
         $this->notificationModel = new NotificationModel($this->conn, $this->logger);
+        $this->mailModel = new MailModel($this->conn, $this->logger);
         
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -155,6 +160,7 @@ class Application {
         }
         
         $this->fsManager = new FileStorageManager($this->baseDir . $this->cfg['file_dir'], $this->fileManager, $this->logger);
+        $this->mailManager = new MailManager($this->cfg);
         
         $serviceManagerCacheManager = new CacheManager($this->cfg['serialize_cache'], CacheCategories::SERVICE_CONFIG);
         
@@ -166,10 +172,11 @@ class Application {
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel);
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager);
 
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
+
         
         //$this->conn->installer->updateDefaultUserPanelRights();
     }
