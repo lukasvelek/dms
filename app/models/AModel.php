@@ -61,6 +61,23 @@ abstract class AModel {
 
         return $result;
     }
+
+    protected function deleteById(int $id, string $tableName) {
+        return $this->deleteByCol('id', $id, $tableName);
+    }
+
+    protected function deleteByCol(string $colName, string $colValue, string $tableName) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from($tableName)
+                     ->where($colName . '=:' . $colName)
+                     ->setParam(':' . $colName, $colValue)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
 }
 
 ?>

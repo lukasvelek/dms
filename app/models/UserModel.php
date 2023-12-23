@@ -11,6 +11,14 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deletePasswordResetHashByIdHash(string $hash) {
+        return $this->deleteByCol('hash', $hash, 'password_reset_hashes');
+    }
+
+    public function insertPasswordResetHash(array $data) {
+        return $this->insertNew($data, 'password_reset_hashes');
+    }
+
     public function getAllUsersMeetingCondition(string $condition) {
         $qb = $this->qb(__METHOD__);
 

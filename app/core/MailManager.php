@@ -64,10 +64,12 @@ class MailManager {
     }
 
     public static function composeForgottenPasswordEmail(string $recipient, string $hash) {
-        $link = LinkBuilder::createAdvLink(array(
+        /*$link = LinkBuilder::createAdvLink(array(
             'page' => 'AnonymModule:ResetPassword:showForm',
             'hash' => $hash
-        ), 'here');
+        ), 'here');*/
+
+        $link = '<a href="localhost/dms/?page=AnonymModule:ResetPassword:showForm&hash=' . $hash . '">here</a>';
 
         $body = 'This email was sent to you because you requested to change your password because you have forgotten it. <br>Click ' . $link . ' to reset your password.<br>DMS';
         

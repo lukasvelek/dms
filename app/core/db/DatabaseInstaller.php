@@ -289,7 +289,7 @@ class DatabaseInstaller {
     }
 
     private function insertDefaultUsers() {
-        $defaultUsersUsernames = array('serviceuser', 'admin');
+        $defaultUsersUsernames = array('service_user', 'admin');
         $insertUsers = array();
 
         $defaultUserData = array(
