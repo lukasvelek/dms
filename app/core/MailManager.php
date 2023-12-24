@@ -64,14 +64,21 @@ class MailManager {
     }
 
     public static function composeForgottenPasswordEmail(string $recipient, string $hash) {
-        /*$link = LinkBuilder::createAdvLink(array(
+        $tm = TemplateManager::getTemporaryObject();
+
+        $body = $tm->loadTemplate('app/templates/EmailTemplate.html');
+
+        $link = LinkBuilder::createAdvLink(array(
             'page' => 'AnonymModule:ResetPassword:showForm',
             'hash' => $hash
-        ), 'here');*/
+        ), 'here');
+        
+        $bodyData = array(
+            '$TITLE$' => 'Forgotten password | DMS Service',
+            '$BODY$' => '<div><h2>Forgotten password</h2><p>' . 'This email was sent to you because you requested to change your password because you have forgotten it. <br>Click ' . $link . ' to reset your password.<br>DMS' . '</p></div>'
+        );
 
-        $link = '<a href="localhost/dms/?page=AnonymModule:ResetPassword:showForm&hash=' . $hash . '">here</a>';
-
-        $body = 'This email was sent to you because you requested to change your password because you have forgotten it. <br>Click ' . $link . ' to reset your password.<br>DMS';
+        $tm->fill($bodyData, $body);
         
         $data = array(
             'recipient' => $recipient,

@@ -3,6 +3,8 @@
 namespace DMS\Core\Logger;
 
 class LoggerStopwatch {
+    private const DISPLAY_TIME_FROM_TO = false;
+
     private string $stopwatchStart;
     private string $stopwatchEnd;
 
@@ -21,21 +23,27 @@ class LoggerStopwatch {
     }
 
     public function startStopwatch() {
-        $this->stopwatchStart = time();
+        $this->stopwatchStart = hrtime(true);
 
         $this->syncWithSession();
     }
 
     public function stopStopwatch() {
-        $this->stopwatchEnd = time();
+        $this->stopwatchEnd = hrtime(true);
 
         $this->syncWithSession();
     }
 
     public function calculate() {
-        $difference = $this->stopwatchEnd - $this->stopwatchStart;
+        $difference = $this->stopwatchEnd - $this->stopwatchStart; // in nanoseconds
 
-        $text = $difference . 's (' . $this->stopwatchEnd . ' - ' . $this->stopwatchStart . ')';
+        $difference = round(($difference / 1e+6));
+
+        $text = 'Time taken: ' . $difference . 'ms';
+
+        if(self::DISPLAY_TIME_FROM_TO) {
+            $text .= ' (' . $this->stopwatchEnd . ' - ' . $this->stopwatchStart . ')';
+        }
 
         $this->clear();
 
