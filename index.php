@@ -52,10 +52,6 @@ include('app/dms_loader.php');
             }
         }
 
-        /*if(is_null($app->user) && $app->currentUrl != $app::URL_LOGIN_PAGE) {
-            $app->redirect($app::URL_LOGIN_PAGE);
-        }*/
-
         if(!is_null($app->user)) {
             if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::WARNING) {
                 $changeLink = '<a style="color: red; text-decoration: underline" href="?page=UserModule:Users:showChangePasswordForm&id=' . $app->user->getId() . '">here</a>';

@@ -17,15 +17,36 @@ if($action == null) {
 echo($action());
 
 function loadCount() {
-    global $notificationModel, $user;
+    global $notificationModel, $user, $logger;
 
     if($user == null) {
         exit;
     }
-    
-    $notifications = $notificationModel->getNotificationsForUser($user->getId());
 
-    echo count($notifications);
+    if(!isset($_SESSION['user_notification_count']) || !isset($_SESSION['user_notification_count_timestamp'])) {
+        $_SESSION['user_notification_count'] = count($notificationModel->getNotificationsForUser($user->getId()));
+        $_SESSION['user_notification_count_timestamp'] = time();
+
+        $logger->info('Notifications for user #' . $user->getId() . ' loaded.', __METHOD__);
+
+        echo($_SESSION['user_notification_count']);
+    } else {
+        $difference = time() - $_SESSION['user_notification_count_timestamp'];
+        $remaining = (1 * 60) - $difference;
+
+        if($difference > (1 * 60)) {
+            unset($_SESSION['user_notification_count']);
+            unset($_SESSION['user_notification_count_timestamp']);
+
+            $logger->info('Loaded notifications for user #' . $user->getId() . ' are too old. Reloading...', __METHOD__);
+
+            loadCount();
+        } else {
+            $logger->info('Notifications for user #' . $user->getId() . ' loaded from cache. Remaining age: ' . $remaining . 's');
+            
+            echo $_SESSION['user_notification_count'];
+        }
+    }
 }
 
 function hideNotification() {

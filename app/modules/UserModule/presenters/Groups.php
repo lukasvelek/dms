@@ -331,6 +331,8 @@ class Groups extends APresenter {
 
         $tb = TableBuilder::getTemporaryObject();
 
+        $tb->showRowBorder();
+
         $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('Actions')->setBold()->setColspan('2'))
                                     ->addCol($tb->createCol()->setText('Status')->setBold())
                                     ->addCol($tb->createCol()->setText('Right name')->setBold())
