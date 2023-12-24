@@ -293,6 +293,8 @@ class Users extends APresenter {
 
         $allow = true;
 
+        $app->getConn()->beginTransaction();
+
         foreach(UserActionRights::$all as $ar) {
             if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
                 $app->userRightModel->updateActionRight($idUser, $ar, $allow);
@@ -316,6 +318,8 @@ class Users extends APresenter {
                 $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
             }
         }
+
+        $app->getConn()->commit();
 
         $cms = array(
             CacheManager::getTemporaryObject(CacheCategories::ACTIONS),
@@ -337,6 +341,8 @@ class Users extends APresenter {
 
         $allow = false;
 
+        $app->getConn()->beginTransaction();
+
         foreach(UserActionRights::$all as $ar) {
             if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
                 $app->userRightModel->updateActionRight($idUser, $ar, $allow);
@@ -360,6 +366,8 @@ class Users extends APresenter {
                 $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
             }
         }
+
+        $app->getConn()->commit();
 
         $cms = array(
             CacheManager::getTemporaryObject(CacheCategories::ACTIONS),
@@ -498,6 +506,8 @@ class Users extends APresenter {
         global $app;
 
         $tb = TableBuilder::getTemporaryObject();
+
+        $tb->showRowBorder();
 
         $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('Actions')->setBold()->setColspan('2'))
                                     ->addCol($tb->createCol()->setText('Status')->setBold())

@@ -11,12 +11,23 @@ namespace DMS\UI\TableBuilder;
 class TableBuilder {
     private string $border;
     private array $rows;
+    private bool $showRowBorder;
 
     /**
      * The table builder constructor sets all the class variables to empty values
      */
     public function __construct() {
         $this->clean();
+
+        $this->showRowBorder = false;
+    }
+
+    public function showRowBorder() {
+        $this->showRowBorder = true;
+    }
+
+    public function hideRowBorder() {
+        $this->showRowBorder = false;
     }
 
     /**
@@ -85,7 +96,15 @@ class TableBuilder {
     public function build() {
         $code = array();
 
-        $code[] = '<table border="' . $this->border . '">';
+        if($this->showRowBorder) {
+            $code[] = '<style>';
+            $code[] = '#tablebuilder-table tr {';
+            $code[] = 'border-bottom: 1px solid grey;';
+            $code[] = '}';
+            $code[] = '</style>';
+        }
+
+        $code[] = '<table id="tablebuilder-table" border="' . $this->border . '">';
 
         if(!empty($this->rows)) {
             foreach($this->rows as $row) {

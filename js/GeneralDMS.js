@@ -199,6 +199,12 @@ async function loadDocumentsFilter(id_folder, _filter) {
 }
 
 async function loadDocumentsSearch(query, id_folder) {
+    if(query.length < 3 && query.length > 0) {
+        return;
+    } else if(query.length == 0) {
+        await loadDocuments(id_folder);
+    }
+
     await sleep(500);
 
     $('#documents-loading').show();
@@ -240,7 +246,7 @@ function selectAllDocumentEntries() {
 
     if(selectAllElem == "on") {
         $('#select:not(:checked)').prop('checked', true);
-        drawBulkActions();
+        drawDocumentBulkActions();
     } else {
         $('#select:checked').prop('checked', false);
         $('#bulk_actions').html('');

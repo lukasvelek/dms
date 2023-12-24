@@ -301,6 +301,8 @@ function search() {
     if(isset($_POST['q'])) {
         $query = htmlspecialchars($_POST['q']);
 
+        $query = str_replace('_', '%', $query);
+
         $tb = TableBuilder::getTemporaryObject();
 
         $headers = array(
@@ -325,7 +327,6 @@ function search() {
         } else {
             foreach($documents as $document) {
                 $actionLinks = array(
-                    '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawDocumentBulkActions()">',
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
                 );
@@ -356,6 +357,8 @@ function search() {
                 }
 
                 $docuRow = $tb->createRow();
+
+                $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">'));
 
                 foreach($actionLinks as $actionLink) {
                     $docuRow->addCol($tb->createCol()->setText($actionLink));

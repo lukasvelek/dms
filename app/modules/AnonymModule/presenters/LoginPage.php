@@ -178,6 +178,8 @@ class LoginPage extends APresenter {
             );
         }
 
+        $data['$LINKS$'] = '';
+
         $this->templateManager->fill($data, $template);
 
         return $template;
