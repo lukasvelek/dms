@@ -13,9 +13,10 @@ It also enables users to manage metadata and their values.
 - updated ajax
 - updated core code
 - updated app database installation
-- deleted unused code
+- removed unused code
 - merged unnecessarily split JS files into one
 - fixed bugs and potential bugs
+- optimized application
 
 ### v1.3
 - added customizable home dashboard widgets

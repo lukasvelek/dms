@@ -123,11 +123,33 @@ class WidgetComponent extends AComponent {
     private function _documentStats() {
         $code = [];
         
-        $documentCount = $this->documentModel->getDocumentCountByStatus();
-        $shreddedDocumentCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED);
-        $archivedDocumentCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED);
-        $documentsWaitingForArchivationCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED);
-        $newDocumentCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::NEW);
+        $documents = $this->documentModel->getAllDocuments();
+
+        $documentCount = count($documents);
+        $shreddedDocumentCount = 0;
+        $archivedDocumentCount = 0;
+        $documentsWaitingForArchivationCount = 0;
+        $newDocumentCount = 0;
+
+        foreach($documents as $document) {
+            switch($document->getStatus()) {
+                case DocumentStatus::SHREDDED:
+                    $shreddedDocumentCount++;
+                    break;
+                    
+                case DocumentStatus::ARCHIVED:
+                    $archivedDocumentCount++;
+                    break;
+
+                case DocumentStatus::ARCHIVATION_APPROVED:
+                    $documentsWaitingForArchivationCount++;
+                    break;
+
+                case DocumentStatus::NEW:
+                    $newDocumentCount++;
+                    break;
+            }
+        }
 
         $add = function(string $title, string $text) use (&$code) {
             $code[] = '<p><b>' . $title . ':</b> ' . $text . '</p>';
@@ -145,9 +167,23 @@ class WidgetComponent extends AComponent {
     private function _processStats() {
         $code = [];
 
-        $processCount = $this->processModel->getProcessCountByStatus();
-        $finishedProcessCount = $this->processModel->getProcessCountByStatus(ProcessStatus::FINISHED);
-        $inProgressProcessCount = $this->processModel->getProcessCountByStatus(ProcessStatus::IN_PROGRESS);
+        $processes = $this->processModel->getAllProcesses();
+
+        $processCount = count($processes);
+        $finishedProcessCount = 0;
+        $inProgressProcessCount = 0;
+
+        foreach($processes as $process) {
+            switch($process->getStatus()) {
+                case ProcessStatus::IN_PROGRESS:
+                    $inProgressProcessCount++;
+                    break;
+
+                case ProcessStatus::FINISHED:
+                    $finishedProcessCount++;
+                    break;
+            }
+        }
 
         $add = function(string $title, string $text) use (&$code) {
             $code[] = '<p><b>' . $title . ':</b> ' . $text . '</p>';
