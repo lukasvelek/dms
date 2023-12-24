@@ -225,6 +225,7 @@ function getComments() {
 
     $comments = $documentCommentModel->getCommentsForIdDocument($idDocument);
     
+    $authors = [];
     $codeArr = [];
 
     if(empty($comments)) {
@@ -232,7 +233,14 @@ function getComments() {
         $codeArr[] = 'No comments found!';
     } else {
         foreach($comments as $comment) {
-            $author = $userModel->getUserById($comment->getIdAuthor());
+            $author = null;
+
+            if(array_key_exists($comment->getIdAuthor(), $authors)) {
+                $author = $authors[$comment->getIdAuthor()];
+            } else {
+                $author = $userModel->getUserById($comment->getIdAuthor());
+                $authors[$comment->getIdAuthor()] = $author;
+            }
 
             $authorLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $comment->getIdAuthor()), $author->getFullname());
             
@@ -319,6 +327,10 @@ function search() {
         if($idFolder == 'null') {
             $idFolder = null;
         }
+
+        $authors = [];
+
+        $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
         
         $documents = $documentModel->getDocumentsForName($query, $idFolder, $filter);
 
@@ -364,11 +376,18 @@ function search() {
                     $docuRow->addCol($tb->createCol()->setText($actionLink));
                 }
 
-                $docuRow->addCol($tb->createCol()->setText($document->getName()))
-                        ->addCol($tb->createCol()->setText($userModel->getUserById($document->getIdAuthor())->getFullname()))
-                ;
+                $author = null;
 
-                $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
+                if(array_key_exists($document->getIdAuthor(), $authors)) {
+                    $author = $authors[$document->getIdAuthor()];
+                } else {
+                    $author = $userModel->getUserById($document->getIdAuthor());
+                    $authors[$document->getIdAuthor()] = $author;
+                }
+
+                $docuRow->addCol($tb->createCol()->setText($document->getName()))
+                        ->addCol($tb->createCol()->setText($author->getFullname()))
+                ;
 
                 foreach($dbStatuses as $dbs) {
                     if($dbs->getValue() == $document->getStatus()) {
@@ -407,7 +426,11 @@ function search() {
         if($idFolder == 'null') {
             $idFolder = null;
         }
-    
+
+        $authors = [];
+
+        $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
+
         $documents = $documentModel->getStandardDocuments($idFolder, $filter);
     
         if(empty($documents)) {
@@ -446,12 +469,19 @@ function search() {
                 foreach($actionLinks as $actionLink) {
                     $docuRow->addCol($tb->createCol()->setText($actionLink));
                 }
-    
+
+                $author = null;
+
+                if(array_key_exists($document->getIdAuthor(), $authors)) {
+                    $author = $authors[$document->getIdAuthor()];
+                } else {
+                    $author = $userModel->getUserById($document->getIdAuthor());
+                    $authors[$document->getIdAuthor()] = $author;
+                }
+
                 $docuRow->addCol($tb->createCol()->setText($document->getName()))
-                        ->addCol($tb->createCol()->setText($userModel->getUserById($document->getIdAuthor())->getFullname()))
+                        ->addCol($tb->createCol()->setText($author->getFullname()))
                 ;
-    
-                $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
     
                 foreach($dbStatuses as $dbs) {
                     if($dbs->getValue() == $document->getStatus()) {

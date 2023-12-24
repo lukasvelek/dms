@@ -585,7 +585,7 @@ class SingleDocument extends APresenter {
         $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
         return '<!--<script type="text/javascript" src="js/DocumentAjaxComment.js"></script>-->
-        <textarea name="text" id="text" required></textarea><br><br>
+        <textarea name="text" id="text" maxlength="32768" required></textarea><br><br>
         <button onclick="sendDocumentComment(' . $app->user->getId() . ', ' . $document->getId() . ', ' . $canDelete . ')">Send</button>
         ';
     }

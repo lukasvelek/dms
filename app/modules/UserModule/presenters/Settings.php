@@ -1416,10 +1416,7 @@ class Settings extends APresenter {
         $widget10loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10);
         $widget11loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11);
 
-        foreach($allWidgets as $name => $content) {
-            $text = $content['name'];
-            $code = $content['code'];
-
+        foreach($allWidgets as $name => $text) {
             if(!is_null($widget00loc) && ($name == $widget00loc['widget_name'])) {
                 $widgets00Select[] = array(
                     'value' => $name,

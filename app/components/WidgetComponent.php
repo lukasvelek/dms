@@ -29,8 +29,24 @@ class WidgetComponent extends AComponent {
         $this->mailModel = $mailModel;
 
         $this->homeDashboardWidgets = [];
+        
+        $this->createHomeDashboardWidgetList();
+    }
 
-        $this->createHomeDashboardWidgets();
+    public function render(string $widgetName) {
+        $code = $this->{'_' . $widgetName}();
+
+        return $code;
+    }
+
+    private function createHomeDashboardWidgetList() {
+        $this->homeDashboardWidgets = array(
+            'documentStats' => 'Document statistics',
+            'processStats' => 'Process statistics',
+            'processesWaitingForMe' => 'Processes waiting for me',
+            'systemInfo' => 'System information',
+            'mailInfo' => 'Mail information'
+        );
     }
 
     private function createHomeDashboardWidgets() {
