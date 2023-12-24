@@ -10,6 +10,10 @@ class MailModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getMailInQueueCount() {
+        return $this->getMailQueue()->num_rows;
+    }
+
     public function insertNewQueueEntry(array $data) {
         return $this->insertNew($data, 'mail_queue');
     }
