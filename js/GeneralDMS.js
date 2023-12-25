@@ -360,3 +360,19 @@ function hideFlashMessage() {
     sessionStorage.removeItem('flash_message');
     $('#flash-message').hide();
 }
+
+async function loadMailQueue() {
+    await sleep(250);
+
+    $.ajax({
+        url: 'app/ajax/Mails.php',
+        type: 'GET',
+        data: {
+            action: "getQueue"
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#mailqueue-loading').hide();
+    });
+}
