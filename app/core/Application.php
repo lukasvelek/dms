@@ -59,6 +59,7 @@ class Application {
 
     public const SYSTEM_VERSION = '1.4_beta';
     public const SYSTEM_BUILD_DATE = '2023/12/05';
+    public const SYSTEM_IS_BETA = true;
 
     public array $cfg;
     public ?string $currentUrl;
