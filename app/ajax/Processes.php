@@ -1,11 +1,15 @@
 <?php
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\ProcessTypes;
+use DMS\Core\CacheManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
+
+$ucm = new CacheManager(true, CacheCategories::USERS, '../../logs/', '../../cache/');
 
 $action = null;
 
@@ -30,7 +34,7 @@ function deleteComment() {
 }
 
 function sendComment() {
-    global $processCommentModel, $userModel;
+    global $processCommentModel, $userModel, $ucm;
 
     $text = htmlspecialchars($_POST['commentText']);
     $idAuthor = htmlspecialchars($_POST['idAuthor']);
@@ -46,7 +50,17 @@ function sendComment() {
     $processCommentModel->insertComment($data);
     $comment = $processCommentModel->getLastInsertedCommentForIdUserAndIdProcess($idAuthor, $idProcess);
 
-    $author = $userModel->getUserById($idAuthor);
+    $author = null;
+
+    $cacheAuthor = $ucm->loadUserByIdFromCache($comment->getIdAuthor());
+
+    if(is_null($cacheAuthor)) {
+        $author = $userModel->getUserById($idAuthor);
+        
+        $ucm->saveUserToCache($author);
+    } else {
+        $author = $cacheAuthor;
+    }
 
     $authorLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $comment->getIdAuthor()), $author->getFullname());
 
@@ -68,7 +82,7 @@ function sendComment() {
 }
 
 function getComments() {
-    global $processCommentModel, $userModel;
+    global $processCommentModel, $userModel, $ucm;
 
     $idProcess = htmlspecialchars($_GET['idProcess']);
     $canDelete = htmlspecialchars($_GET['canDelete']);
@@ -80,7 +94,17 @@ function getComments() {
         $codeArr[] = 'No comments found!';
     } else {
         foreach($comments as $comment) {
-            $author = $userModel->getUserById($comment->getIdAuthor());
+            $author = null;
+
+            $cacheAuthor = $ucm->loadUserByIdFromCache($comment->getIdAuthor());
+
+            if(is_null($cacheAuthor)) {
+                $author = $userModel->getUserById($comment->getIdAuthor());
+        
+                $ucm->saveUserToCache($author);
+            } else {
+                $author = $cacheAuthor;
+            }
 
             $authorLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $comment->getIdAuthor()), $author->getFullname());
             
@@ -104,7 +128,7 @@ function getComments() {
 }
 
 function search() {
-    global $userModel, $processModel, $user;
+    global $userModel, $processModel, $user, $ucm;
 
     $filter = 'waitingForMe';
 
@@ -185,25 +209,73 @@ function search() {
             }
 
             if($process->getWorkflowStep(0) != null) {
-                $workflow1User = $userModel->getUserById($process->getWorkflowStep(0))->getFullname();
+                $user = null;
+
+                $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(0));
+
+                if(is_null($cacheUser)) {
+                    $user = $userModel->getUserById($process->getWorkflowStep(0));
+
+                    $ucm->saveUserToCache($user);
+                } else {
+                    $user = $cacheUser;
+                }
+
+                $workflow1User = $user->getFullname();
             } else {
                 $workflow1User = '-';
             }
 
             if($process->getWorkflowStep(1) != null) {
-                $workflow2User = $userModel->getUserById($process->getWorkflowStep(1))->getFullname();
+                $user = null;
+
+                $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(1));
+
+                if(is_null($cacheUser)) {
+                    $user = $userModel->getUserById($process->getWorkflowStep(1));
+
+                    $ucm->saveUserToCache($user);
+                } else {
+                    $user = $cacheUser;
+                }
+
+                $workflow2User = $user->getFullname();
             } else {
                 $workflow2User = '-';
             }
 
             if($process->getWorkflowStep(2) != null) {
-                $workflow3User = $userModel->getUserById($process->getWorkflowStep(2))->getFullname();
+                $user = null;
+
+                $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(2));
+
+                if(is_null($cacheUser)) {
+                    $user = $userModel->getUserById($process->getWorkflowStep(2));
+
+                    $ucm->saveUserToCache($user);
+                } else {
+                    $user = $cacheUser;
+                }
+
+                $workflow3User = $user->getFullname();
             } else {
                 $workflow3User = '-';
             }
 
             if($process->getWorkflowStep(3) != null) {
-                $workflow4User = $userModel->getUserById($process->getWorkflowStep(3))->getFullname();
+                $user = null;
+
+                $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(3));
+
+                if(is_null($cacheUser)) {
+                    $user = $userModel->getUserById($process->getWorkflowStep(3));
+
+                    $ucm->saveUserToCache($user);
+                } else {
+                    $user = $cacheUser;
+                }
+
+                $workflow4User = $user->getFullname();
             } else {
                 $workflow4User = '-';
             }

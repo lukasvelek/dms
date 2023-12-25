@@ -1,10 +1,14 @@
 <?php
 
+use DMS\Constants\CacheCategories;
+use DMS\Core\CacheManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
+
+$ucm = new CacheManager(true, CacheCategories::USERS, '../../logs/', '../../cache/');
 
 $action = null;
 
@@ -218,14 +222,13 @@ function deleteComment() {
 }
 
 function getComments() {
-    global $documentCommentModel, $userModel;
+    global $documentCommentModel, $userModel, $ucm;
 
     $idDocument = htmlspecialchars($_GET['idDocument']);
     $canDelete = htmlspecialchars($_GET['canDelete']);
 
     $comments = $documentCommentModel->getCommentsForIdDocument($idDocument);
     
-    $authors = [];
     $codeArr = [];
 
     if(empty($comments)) {
@@ -233,13 +236,16 @@ function getComments() {
         $codeArr[] = 'No comments found!';
     } else {
         foreach($comments as $comment) {
+            $cacheAuthor = $ucm->loadUserByIdFromCache($comment->getIdAuthor());
+            
             $author = null;
 
-            if(array_key_exists($comment->getIdAuthor(), $authors)) {
-                $author = $authors[$comment->getIdAuthor()];
-            } else {
+            if(is_null($cacheAuthor)) {
                 $author = $userModel->getUserById($comment->getIdAuthor());
-                $authors[$comment->getIdAuthor()] = $author;
+
+                $ucm->saveUserToCache($author);
+            } else {
+                $author = $cacheAuthor;
             }
 
             $authorLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $comment->getIdAuthor()), $author->getFullname());
@@ -296,7 +302,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $metadataModel;
+    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm;
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
@@ -334,8 +340,6 @@ function search() {
         if($idFolder == 'null') {
             $idFolder = null;
         }
-
-        $authors = [];
 
         $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
         
@@ -385,11 +389,13 @@ function search() {
 
                 $author = null;
 
-                if(array_key_exists($document->getIdAuthor(), $authors)) {
-                    $author = $authors[$document->getIdAuthor()];
-                } else {
+                $cacheAuthor = $ucm->loadUserByIdFromCache($document->getIdAuthor());
+
+                if(is_null($cacheAuthor)) {
                     $author = $userModel->getUserById($document->getIdAuthor());
-                    $authors[$document->getIdAuthor()] = $author;
+                    $ucm->saveUserToCache($author);
+                } else {
+                    $author = $cacheAuthor;
                 }
 
                 $docuRow->addCol($tb->createCol()->setText($document->getName()))
@@ -435,8 +441,6 @@ function search() {
         if($idFolder == 'null') {
             $idFolder = null;
         }
-
-        $authors = [];
 
         $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
 
@@ -489,11 +493,13 @@ function search() {
 
                 $author = null;
 
-                if(array_key_exists($document->getIdAuthor(), $authors)) {
-                    $author = $authors[$document->getIdAuthor()];
-                } else {
+                $cacheAuthor = $ucm->loadUserByIdFromCache($document->getIdAuthor());
+
+                if(is_null($cacheAuthor)) {
                     $author = $userModel->getUserById($document->getIdAuthor());
-                    $authors[$document->getIdAuthor()] = $author;
+                    $ucm->saveUserToCache($author);
+                } else {
+                    $author = $cacheAuthor;
                 }
 
                 $docuRow->addCol($tb->createCol()->setText($document->getName()))

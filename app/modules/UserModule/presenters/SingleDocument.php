@@ -2,11 +2,13 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
+use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
@@ -558,7 +560,17 @@ class SingleDocument extends APresenter {
     private function createUserLink(int $id) {
         global $app;
 
-        $user = $app->userModel->getUserById($id);
+        $ucm = new CacheManager(true, CacheCategories::USERS);
+
+        $cacheUser = $ucm->loadUserByIdFromCache($id);
+
+        if(is_null($cacheUser)) {
+            $user = $app->userModel->getUserById($id);
+
+            $ucm->saveUserToCache($user);
+        } else {
+            $user = $cacheUser;
+        }
 
         return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $id), $user->getFullname());
     }
