@@ -235,6 +235,8 @@ class DocumentModel extends AModel {
             $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
         }
 
+        $qb->limit('20');
+
         $rows = $qb->execute()->fetch();
 
         $documents = [];
@@ -406,7 +408,7 @@ class DocumentModel extends AModel {
         return $documents;
     }
 
-    public function getStandardDocuments(?int $idFolder, ?string $filter) {
+    public function getStandardDocuments(?int $idFolder, ?string $filter, int $limit) {
         $qb = $this->composeQueryStandardDocuments();
 
         if($idFolder != null) {
@@ -416,6 +418,8 @@ class DocumentModel extends AModel {
         if($filter != null) {
             $this->addFilterCondition($filter, $qb);
         }
+
+        $qb->limit($limit);
 
         $rows = $qb->execute()->fetch();
 

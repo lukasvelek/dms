@@ -224,7 +224,7 @@ async function loadDocumentsSearch(query, id_folder) {
     });
 }
 
-async function loadDocuments(id_folder) {
+async function loadDocuments(id_folder, _page) {
     await sleep(250);
 
     $.ajax({
@@ -232,7 +232,8 @@ async function loadDocuments(id_folder) {
         type: 'POST',
         data: {
             idFolder: id_folder,
-            action: "search"
+            action: "search",
+            page: _page
         }
     })
     .done(function(data) {
@@ -254,14 +255,15 @@ function selectAllDocumentEntries() {
     }
 }
 
-async function loadDocumentsSharedWithMe() {
+async function loadDocumentsSharedWithMe(_page) {
     await sleep(250);
 
     $.ajax({
         url: 'app/ajax/Documents.php',
         type: 'POST',
         data: {
-            action: "searchDocumentsSharedWithMe"
+            action: "searchDocumentsSharedWithMe",
+            page: _page
         }
     })
     .done(function(data) {

@@ -55,6 +55,9 @@ function hideNotification() {
     $id = htmlspecialchars($_GET['id']);
 
     $notificationModel->setSeen($id);
+
+    unset($_SESSION['user_notification_count']);
+    unset($_SESSION['user_notification_count_timestamp']);
 }
 
 function getNotifications() {
@@ -114,6 +117,9 @@ function deleteAll() {
     foreach($notifications as $notification) {
         $notificationModel->setSeen($notification->getId());
     }
+
+    unset($_SESSION['user_notification_count']);
+    unset($_SESSION['user_notification_count_timestamp']);
 }
 
 exit;

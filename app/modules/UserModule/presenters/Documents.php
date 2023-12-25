@@ -49,12 +49,17 @@ class Documents extends APresenter {
         $idFolder = null;
         $folderName = 'Main folder';
         $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        $page = 1;
+
+        if(isset($_GET['grid_page'])) {
+            $page = (int)(htmlspecialchars($_GET['grid_page']));
+        }
 
         $documentGrid = '';
         $folderList = '';
         
-        $app->logger->logFunction(function() use (&$documentGrid) {
-            $documentGrid = $this->internalCreateSharedWithMeDocumentGrid();
+        $app->logger->logFunction(function() use (&$documentGrid, $page) {
+            $documentGrid = $this->internalCreateSharedWithMeDocumentGrid($page);
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder) {
@@ -73,7 +78,8 @@ class Documents extends APresenter {
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField
+            '$SEARCH_FIELD$' => $searchField,
+            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
         );
 
         $this->templateManager->fill($data, $template);
@@ -89,12 +95,17 @@ class Documents extends APresenter {
         $idFolder = null;
         $folderName = 'Main folder';
         $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        $page = 1;
 
         if(isset($_GET['id_folder'])) {
             $idFolder = htmlspecialchars($_GET['id_folder']);
             $folder = $app->folderModel->getFolderById($idFolder);
             $folderName = $folder->getName();
             $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+        }
+
+        if(isset($_GET['grid_page'])) {
+            $page = (int)(htmlspecialchars($_GET['grid_page']));
         }
 
         $documentGrid = '';
@@ -106,8 +117,8 @@ class Documents extends APresenter {
             $filter = htmlspecialchars($_GET['filter']);
         }
         
-        $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter) {
-            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $filter);
+        $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter, $page) {
+            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $filter, $page);
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder, $filter) {
@@ -126,7 +137,8 @@ class Documents extends APresenter {
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField
+            '$SEARCH_FIELD$' => $searchField,
+            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
         );
 
         $this->subpanel = Panels::createDocumentsPanel();
@@ -145,6 +157,7 @@ class Documents extends APresenter {
         $idFolder = null;
         $folderName = 'Main folder';
         $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        $page = 1;
 
         if(isset($_GET['id_folder'])) {
             $idFolder = htmlspecialchars($_GET['id_folder']);
@@ -153,11 +166,15 @@ class Documents extends APresenter {
             $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
         }
 
+        if(isset($_GET['grid_page'])) {
+            $page = (int)(htmlspecialchars($_GET['grid_page']));
+        }
+
         $documentGrid = '';
         $folderList = '';
         
-        $app->logger->logFunction(function() use (&$documentGrid, $idFolder) {
-            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, null);
+        $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $page) {
+            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, null, $page);
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder) {
@@ -178,7 +195,8 @@ class Documents extends APresenter {
             '$NEW_DOCUMENT_LINK$' => $newEntityLink,
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField
+            '$SEARCH_FIELD$' => $searchField,
+            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
         );
 
         $this->drawSubpanel = true;
@@ -189,13 +207,13 @@ class Documents extends APresenter {
         return $template;
     }
 
-    private function internalCreateStandardDocumentGrid(?int $idFolder, ?string $filter) {
+    private function internalCreateStandardDocumentGrid(?int $idFolder, ?string $filter, int $page = 1) {
         $code = '<script type="text/javascript">';
 
         if($filter != null) {
             $code .= 'loadDocumentsFilter("' . ($idFolder ?? 'null') . '", "' . $filter . '")';
         } else {
-            $code .= 'loadDocuments("' . ($idFolder ?? 'null') . '");';
+            $code .= 'loadDocuments("' . ($idFolder ?? 'null') . '", "' . $page . '");';
         }
 
         $code .= '</script>';
@@ -707,13 +725,83 @@ class Documents extends APresenter {
         }
     }
 
-    private function internalCreateSharedWithMeDocumentGrid() {
+    private function internalCreateSharedWithMeDocumentGrid(int $page) {
         return '
             <script type="text/javascript">
-            loadDocumentsSharedWithMe();
+            loadDocumentsSharedWithMe("' . $page . '");
             </script> 
             <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
         ';
+    }
+
+    private function internalCreateGridPageControl(int $page, ?string $idFolder) {
+        global $app;
+
+        $documentCount = count($app->documentModel->getAllDocumentIds());
+
+        $documentPageControl = '';
+        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Documents:showAll';
+        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Documents:showAll';
+        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Documents:showAll';
+        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Documents:showAll';
+
+        if(!is_null($idFolder)) {
+            $firstPageLink .= '&id_folder=' . $idFolder;
+            $previousPageLink .= '&id_folder=' . $idFolder;
+            $nextPageLink .= '&id_folder=' . $idFolder;
+            $lastPageLink .= '&id_folder=' . $idFolder;
+        }
+
+        $firstPageLink .= '"';
+
+        if($page == 1) {
+            $firstPageLink .= ' hidden';
+        }
+
+        $firstPageLink .= '>&lt;&lt;</a>';
+
+        if($page > 2) {
+            $previousPageLink .= '&grid_page=' . ($page - 1);
+        }
+        $previousPageLink .= '"';
+
+        if($page == 1) {
+            $previousPageLink .= ' hidden';
+        }
+
+        $previousPageLink .= '>&lt;</a>';
+
+        $nextPageLink .= '&grid_page=' . ($page + 1);
+        $nextPageLink .= '"';
+
+        if($documentCount < ($page * 20)) {
+            $nextPageLink .= ' hidden';
+        }
+
+        $nextPageLink .= '>&gt;</a>';
+
+        $lastPageLink .= '&grid_page=' . (ceil($documentCount / 20));
+        $lastPageLink .= '"';
+
+        if($documentCount < ($page * 20)) {
+            $lastPageLink .= ' hidden';
+        }
+
+        $lastPageLink .= '>&gt;&gt;</a>';
+
+        if($documentCount > 20) {
+            if(($page * 20) > $documentCount) {
+                $documentPageControl = $documentCount;
+            } else {
+                $documentPageControl = ($page * 20) .  '+';
+            }
+        } else {
+            $documentPageControl = $documentCount;
+        }
+
+        $documentPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
+
+        return $documentPageControl;
     }
 }
 

@@ -301,9 +301,14 @@ function search() {
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
     $filter = null;
+    $page = 1;
 
     if(isset($_POST['filter'])) {
         $filter = htmlspecialchars($_POST['filter']);
+    }
+
+    if(isset($_POST['page'])) {
+        $page = (int)(htmlspecialchars($_POST['page']));
     }
 
     if(isset($_POST['q'])) {
@@ -431,12 +436,20 @@ function search() {
 
         $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
 
-        $documents = $documentModel->getStandardDocuments($idFolder, $filter);
+        $documents = $documentModel->getStandardDocuments($idFolder, $filter, ($page * 20));
+
+        $skip = 0;
+        $maxSkip = ($page - 1) * 20;
     
         if(empty($documents)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($documents as $document) {
+                if($skip < $maxSkip) {
+                    $skip++;
+                    continue;
+                }
+
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit'),
