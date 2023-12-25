@@ -10,6 +10,7 @@ It also enables users to manage metadata and their values.
 - added support for flash messages
 - added support for sending emails
 - added password policy service
+- added document grid pages
 - updated ajax
 - updated core code
 - updated app database installation
