@@ -14,6 +14,22 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllDocumentIds() {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('id')
+                   ->from('documents')
+                   ->execute()
+                   ->fetch();
+
+        $ids = [];
+        foreach($rows as $row) {
+            $ids[] = $row['id'];
+        }
+
+        return $ids;
+    }
+
     public function removeDocumentSharingForIdDocument(int $idDocument) {
         $qb = $this->qb(__METHOD__);
 

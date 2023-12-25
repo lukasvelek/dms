@@ -13,6 +13,10 @@ use DMS\Models\DocumentModel;
 use DMS\Models\MailModel;
 use DMS\Models\ProcessModel;
 use DMS\UI\LinkBuilder;
+use DMS\Widgets\HomeDashboard\DocumentStats;
+use DMS\Widgets\HomeDashboard\MailInfo;
+use DMS\Widgets\HomeDashboard\ProcessStats;
+use DMS\Widgets\HomeDashboard\SystemInfo;
 
 class WidgetComponent extends AComponent {
     private DocumentModel $documentModel;
@@ -64,28 +68,15 @@ class WidgetComponent extends AComponent {
     }
 
     private function _mailInfo() {
-        $code = [];
+        $mi = new MailInfo($this->mailModel);
 
-        $add = function(string $title, string $text) use (&$code) {
-            $code[] = '<p><b>' . $title . ':</b> ' . $text . '</p>';
-        };
-
-        $add('Emails in queue', $this->mailModel->getMailInQueueCount());
-
-        return $this->__getTemplate('Mail information', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));
+        return $this->__getTemplate('Mail information', $mi->render());
     }
 
     private function _systemInfo() {
-        $code = [];
+        $si = new SystemInfo();
 
-        $add = function(string $title, string $text) use (&$code) {
-            $code[] = '<p><b>' . $title . ':</b> ' . $text . '</p>';
-        };
-
-        $add('System version', Application::SYSTEM_VERSION);
-        $add('System build date', Application::SYSTEM_BUILD_DATE);
-
-        return $this->__getTemplate('System information', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));
+        return $this->__getTemplate('System information', $si->render());
     }
 
     private function _processesWaitingForMe() {
@@ -121,79 +112,15 @@ class WidgetComponent extends AComponent {
     }
 
     private function _documentStats() {
-        $code = [];
-        
-        $documents = $this->documentModel->getAllDocuments();
+        $ds = new DocumentStats($this->documentModel);
 
-        $documentCount = count($documents);
-        $shreddedDocumentCount = 0;
-        $archivedDocumentCount = 0;
-        $documentsWaitingForArchivationCount = 0;
-        $newDocumentCount = 0;
-
-        foreach($documents as $document) {
-            switch($document->getStatus()) {
-                case DocumentStatus::SHREDDED:
-                    $shreddedDocumentCount++;
-                    break;
-                    
-                case DocumentStatus::ARCHIVED:
-                    $archivedDocumentCount++;
-                    break;
-
-                case DocumentStatus::ARCHIVATION_APPROVED:
-                    $documentsWaitingForArchivationCount++;
-                    break;
-
-                case DocumentStatus::NEW:
-                    $newDocumentCount++;
-                    break;
-            }
-        }
-
-        $add = function(string $title, string $text) use (&$code) {
-            $code[] = '<p><b>' . $title . ':</b> ' . $text . '</p>';
-        };
-
-        $add('Total documents', $documentCount);
-        $add('Shredded documents', $shreddedDocumentCount);
-        $add('Archived documents', $archivedDocumentCount);
-        $add('New documents', $newDocumentCount);
-        $add('Documents waiting for archivation', $documentsWaitingForArchivationCount);
-
-        return $this->__getTemplate('Document statistics', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));
+        return $this->__getTemplate('Document statistics', $ds->render());
     }
 
     private function _processStats() {
-        $code = [];
+        $ps = new ProcessStats($this->processModel);
 
-        $processes = $this->processModel->getAllProcesses();
-
-        $processCount = count($processes);
-        $finishedProcessCount = 0;
-        $inProgressProcessCount = 0;
-
-        foreach($processes as $process) {
-            switch($process->getStatus()) {
-                case ProcessStatus::IN_PROGRESS:
-                    $inProgressProcessCount++;
-                    break;
-
-                case ProcessStatus::FINISHED:
-                    $finishedProcessCount++;
-                    break;
-            }
-        }
-
-        $add = function(string $title, string $text) use (&$code) {
-            $code[] = '<p><b>' . $title . ':</b> ' . $text . '</p>';
-        };
-
-        $add('Total processes', $processCount);
-        $add('Processes in progress', $inProgressProcessCount);
-        $add('Finished processes', $finishedProcessCount);
-
-        return $this->__getTemplate('Process statistics', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));;
+        return $this->__getTemplate('Process statistics', $ps->render());
     }
 
     private function __getTemplate(string $title, string $widgetCode) {
