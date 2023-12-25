@@ -318,6 +318,8 @@ function search() {
 
         $tb = TableBuilder::getTemporaryObject();
 
+        $tb->showRowBorder();
+
         $headers = array(
             '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
             'Actions',
@@ -416,6 +418,8 @@ function search() {
         echo $tb->build();
     } else {
         $tb = TableBuilder::getTemporaryObject();
+
+        $tb->showRowBorder();
 
         $headers = array(
             '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
