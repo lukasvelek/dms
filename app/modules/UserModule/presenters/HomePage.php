@@ -57,25 +57,25 @@ class HomePage extends APresenter {
         };
 
         if(!is_null($widget00)) {
-            $data['$WIDGET0-0$'] = /*$app->widgetComponent->homeDashboardWidgets[$widget00['widget_name']]['code']*/ $app->widgetComponent->render($widget00['widget_name']);
+            $data['$WIDGET0-0$'] = $app->widgetComponent->render($widget00['widget_name']);
         } else {
             $data['$WIDGET0-0$'] = $emptyWidget();
         }
 
         if(!is_null($widget01)) {
-            $data['$WIDGET0-1$'] = /*$app->widgetComponent->homeDashboardWidgets[$widget01['widget_name']]['code']*/ $app->widgetComponent->render($widget01['widget_name']);
+            $data['$WIDGET0-1$'] = $app->widgetComponent->render($widget01['widget_name']);
         } else {
             $data['$WIDGET0-1$'] = $emptyWidget();
         }
 
         if(!is_null($widget10)) {
-            $data['$WIDGET1-0$'] = /*$app->widgetComponent->homeDashboardWidgets[$widget10['widget_name']]['code']*/ $app->widgetComponent->render($widget10['widget_name']);
+            $data['$WIDGET1-0$'] = $app->widgetComponent->render($widget10['widget_name']);
         } else {
             $data['$WIDGET1-0$'] = $emptyWidget();
         }
 
         if(!is_null($widget11)) {
-            $data['$WIDGET1-1$'] = /*$app->widgetComponent->homeDashboardWidgets[$widget11['widget_name']]['code']*/ $app->widgetComponent->render($widget11['widget_name']);
+            $data['$WIDGET1-1$'] = $app->widgetComponent->render($widget11['widget_name']);
         } else {
             $data['$WIDGET1-1$'] = $emptyWidget();
         }

@@ -38,89 +38,78 @@ class WidgetComponent extends AComponent {
     }
 
     public function render(string $widgetName) {
-        $code = $this->{'_' . $widgetName}();
-
-        return $code;
+        return $this->homeDashboardWidgets[$widgetName]['render']();
     }
 
     private function createHomeDashboardWidgetList() {
         $this->homeDashboardWidgets = array(
-            'documentStats' => 'Document statistics',
-            'processStats' => 'Process statistics',
-            'processesWaitingForMe' => 'Processes waiting for me',
-            'systemInfo' => 'System information',
-            'mailInfo' => 'Mail information'
-        );
-    }
+            'documentStats' => array(
+                'text' => 'Document statistics',
+                'render' => function() {
+                    $ds = new DocumentStats($this->documentModel);
 
-    private function createHomeDashboardWidgets() {
-        $widgetNames = array(
-            'documentStats' => 'Document statistics',
-            'processStats' => 'Process statistics',
-            'processesWaitingForMe' => 'Processes waiting for me',
-            'systemInfo' => 'System information',
-            'mailInfo' => 'Mail information'
-        );
-
-        foreach($widgetNames as $name => $text) {
-            $this->homeDashboardWidgets[$name] = array('name' => $text, 'code' => $this->{'_' . $name}());
-        }
-    }
-
-    private function _mailInfo() {
-        $mi = new MailInfo($this->mailModel);
-
-        return $this->__getTemplate('Mail information', $mi->render());
-    }
-
-    private function _systemInfo() {
-        $si = new SystemInfo();
-
-        return $this->__getTemplate('System information', $si->render());
-    }
-
-    private function _processesWaitingForMe() {
-        $code = [];
-
-        if(!isset($_SESSION['id_current_user'])) {
-            return '';
-        }
-
-        $idUser = $_SESSION['id_current_user'];
-
-        $waitingForMe = $this->processModel->getProcessesWaitingForUser($idUser);
-
-        if($waitingForMe != null) {
-            $i = 0;
-            
-            foreach($waitingForMe as $process) {
-                if($i == 4) {
-                    break;
+                    return $this->__getTemplate('Document statistics', $ds->render());
                 }
+            ),
+            'processStats' => array(
+                'text' => 'Process statistics',
+                'render' => function() {
+                    $ps = new ProcessStats($this->processModel);
 
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()), 'Process #' . $process->getId() . ' - ' . ProcessTypes::$texts[$process->getType()]);
+                    return $this->__getTemplate('Process statistics', $ps->render());
+                }
+            ),
+            'mailInfo' => array(
+                'text' => 'Mail information',
+                'render' => function() {
+                    $mi = new MailInfo($this->mailModel);
 
-                $code[] = '<p>' . $link . '</p>';
+                    return $this->__getTemplate('Mail information', $mi->render());
+                }
+            ),
+            'systemInfo' => array(
+                'text' => 'System information',
+                'render' => function() {
+                    $si = new SystemInfo();
 
-                $i++;
-            }
-        } else {
-            $code[] = '<p>No processes found</p>';
-        }
+                    return $this->__getTemplate('System information', $si->render());
+                }
+            ),
+            'processesWaitingForMe' => array(
+                'text' => 'Processes waiting for me',
+                'render' => function() {
+                    $code = [];
 
-        return $this->__getTemplate('Processes waiting for me', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));
-    }
+                    if(!isset($_SESSION['id_current_user'])) {
+                        return '';
+                    }
 
-    private function _documentStats() {
-        $ds = new DocumentStats($this->documentModel);
+                    $idUser = $_SESSION['id_current_user'];
 
-        return $this->__getTemplate('Document statistics', $ds->render());
-    }
+                    $waitingForMe = $this->processModel->getProcessesWaitingForUser($idUser);
 
-    private function _processStats() {
-        $ps = new ProcessStats($this->processModel);
+                    if($waitingForMe != null) {
+                        $i = 0;
+            
+                        foreach($waitingForMe as $process) {
+                            if($i == 4) {
+                                break;
+                            }
 
-        return $this->__getTemplate('Process statistics', $ps->render());
+                            $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()), 'Process #' . $process->getId() . ' - ' . ProcessTypes::$texts[$process->getType()]);
+
+                            $code[] = '<p>' . $link . '</p>';
+
+                            $i++;
+                        }
+                    } else {
+                        $code[] = '<p>No processes found</p>';
+                    }
+
+                    return $this->__getTemplate('Processes waiting for me', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));
+                }
+            )
+        );
     }
 
     private function __getTemplate(string $title, string $widgetCode) {
