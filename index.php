@@ -1,7 +1,9 @@
 <?php
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\UserPasswordChangeStatus;
+use DMS\Core\CacheManager;
 
 session_start();
 
@@ -41,6 +43,20 @@ include('app/dms_loader.php');
                 if($app->currentUrl != $app::URL_LOGIN_PAGE) {
                     $app->redirect($app::URL_LOGIN_PAGE);
                 }
+            }
+
+            $ucm = new CacheManager(true, CacheCategories::USERS);
+
+            $user = null;
+
+            $cacheUser = $ucm->loadUserByIdFromCache($_SESSION['id_current_user']);
+
+            if(is_null($cacheUser)) {
+                $user = $app->userModel->getUserById($_SESSION['id_current_user']);
+
+                $ucm->saveUserToCache($user);
+            } else {
+                $user = $cacheUser;
             }
 
             $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
