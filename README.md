@@ -12,6 +12,7 @@ It also enables users to manage metadata and their values.
 - added password policy service
 - added document grid pages
 - added debug tools
+- added grid pages with adjustable size
 - updated ajax
 - updated core code
 - updated app database installation
