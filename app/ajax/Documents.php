@@ -637,9 +637,10 @@ function searchDocumentsSharedWithMe() {
 }
 
 function generateDocuments() {
-    global $documentModel, $user;
+    global $documentModel, $user, $app;
 
-    if($user == null) {
+    if($user == null ||
+       !$app::SYSTEM_DEBUG) {
         exit;
     }
 
