@@ -52,6 +52,8 @@ async function loadNotificationCount() {
 }
 
 async function deleteAllNotifications() {
+    $('#notifications').html('<img style="position: fixed; top: 45%; left: 45%;" src="img/loading.gif" width="32" height="32">');
+
     $.get("app/ajax/Notifications.php", {
         action: "deleteAll"
     },
