@@ -4,6 +4,9 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.5
+- updated core code
+
 ### v1.4
 - added document filters
 - added new after shredding action
