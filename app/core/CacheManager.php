@@ -3,6 +3,7 @@
 namespace DMS\Core;
 
 use DMS\Constants\CacheCategories;
+use DMS\Entities\Folder;
 use DMS\Entities\User;
 
 /**
@@ -26,6 +27,28 @@ class CacheManager {
 
         $this->serialize = $serialize;
         $this->category = $category;
+    }
+
+    public function saveFolderToCache(Folder $folder) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[CacheCategories::FOLDERS][$folder->getId()] = $folder;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadFolderByIdFromCache(int $id) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($id, $cacheData[CacheCategories::FOLDERS])) {
+            return $cacheData[CacheCategories::USERS][$id];
+        } else {
+            return null;
+        }
     }
 
     public function saveUserToCache(User $user) {

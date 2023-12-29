@@ -10,6 +10,7 @@ use DMS\UI\TableBuilder\TableBuilder;
 require_once('Ajax.php');
 
 $ucm = new CacheManager(true, CacheCategories::USERS, '../../logs/', '../../cache/');
+$fcm = new CacheManager(true, CacheCategories::FOLDERS, '../../logs/', '../../cache/');
 
 $action = null;
 
@@ -303,7 +304,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm;
+    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm;
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
@@ -410,6 +411,17 @@ function search() {
                 }
 
                 $folderName = '-';
+
+                $folder = null;
+
+                $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
+
+                if(is_null($cacheFolder)) {
+                    $folder = $folderModel->getFolderById($document->getIdFolder());
+                    $fcm->saveFolderToCache($folder);
+                } else {
+                    $folder = $cacheFolder;
+                }
 
                 if($document->getIdFolder() !== NULL) {
                     $folder = $folderModel->getFolderById($document->getIdFolder());
@@ -637,15 +649,19 @@ function searchDocumentsSharedWithMe() {
 }
 
 function generateDocuments() {
-    global $documentModel, $user, $app;
+    global $documentModel, $user;
 
-    if($user == null ||
-       !$app::SYSTEM_DEBUG) {
+    if($user == null) {
         exit;
     }
 
     $id_folder = $_GET['id_folder'];
     $count = $_GET['count'];
+    $isDebug = $_GET['is_debug'];
+
+    if($isDebug == 0 || $isDebug == '0') {
+        exit;
+    }
 
     $data = [];
     for($i = 0; $i < $count; $i++) {

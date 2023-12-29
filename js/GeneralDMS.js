@@ -377,7 +377,7 @@ async function loadMailQueue() {
     });
 }
 
-async function generateDocuments() {
+async function generateDocuments(_is_debug) {
     var _id_folder = $("#id_folder").val();
     var _count = $("#count").val();
 
@@ -387,16 +387,19 @@ async function generateDocuments() {
         data: {
             action: "generateDocuments",
             id_folder: _id_folder,
-            count: _count
+            count: _count,
+            is_debug: _is_debug
         }
     })
     .done(function(data) {
         $('#documents-loading').hide();
 
         if(_id_folder != "0") {
-            location.replace("?page=UserModule:Documents:showAll&id_folder=" + _id_folder);
+            //location.replace("?page=UserModule:Documents:showAll&id_folder=" + _id_folder);
+            location.replace('?page=UserModule:AjaxHelper:flashMessage&id_folder=' + _id_folder + '&message=Documents%20have%20been%20generated&type=info&redirect=UserModule:Documents:showAll');
         } else {
-            location.replace("?page=UserModule:Documents:showAll");
+            //location.replace("?page=UserModule:Documents:showAll");
+            location.replace('?page=UserModule:AjaxHelper:flashMessage&message=Documents%20have%20been%20generated&type=info&redirect=UserModule:Documents:showAll');
         }
     });
 }
