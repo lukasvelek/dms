@@ -12,14 +12,16 @@ use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
+use DMS\Core\FileStorageManager;
 use DMS\Core\Logger\Logger;
-use DMS\Entities\ProcessComment;
+use DMS\Core\MailManager;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
+use DMS\Models\MailModel;
 use DMS\Models\MetadataModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ProcessCommentModel;
@@ -29,6 +31,8 @@ use DMS\Models\TableModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
+use DMS\Repositories\DocumentCommentRepository;
+use DMS\Repositories\DocumentRepository;
 
 session_start();
 
@@ -45,7 +49,8 @@ function loadDependencies2(array &$dependencies, string $dir) {
         $dir . '\\dms_loader.php',
         $dir . '\\install',
         $dir . '\\modules',
-        $dir . '\\ajax'
+        $dir . '\\ajax',
+        $dir . '\\PHPMailer'
     );
 
     $extensionsToSkip = array(
@@ -111,6 +116,18 @@ foreach($dependencies as $dependency) {
     require_once($dependency);
 }
 
+// VENDOR DEPENDENCIES
+
+require_once('../core/vendor/PHPMailer/OAuthTokenProvider.php');
+require_once('../core/vendor/PHPMailer/OAuth.php');
+require_once('../core/vendor/PHPMailer/DSNConfigurator.php');
+require_once('../core/vendor/PHPMailer/Exception.php');
+require_once('../core/vendor/PHPMailer/PHPMailer.php');
+require_once('../core/vendor/PHPMailer/POP3.php');
+require_once('../core/vendor/PHPMailer/SMTP.php');
+
+// END OF VENDOR DENEPENDENCIES
+
 if(!file_exists('../../config.local.php')) {
     die('Config file does not exist!');
 }
@@ -141,6 +158,7 @@ $documentCommentModel = new DocumentCommentModel($db, $logger);
 $processCommentModel = new ProcessCommentModel($db, $logger);
 $widgetModel = new WidgetModel($db, $logger);
 $notificationModel = new NotificationModel($db, $logger);
+$mailModel = new MailModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);
@@ -152,11 +170,18 @@ $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $gro
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
-$processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent);
-$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel);
+$processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent, $processCommentModel);
+$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel, $mailModel);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 $documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
+
+$documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
+$documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator);
+
+$mailManager = new MailManager($cfg);
+
+$gridSize = $cfg['grid_size'];
 
 ?>

@@ -36,11 +36,9 @@ class DeleteProcess implements IProcessComponent {
 
     public function work() {
         $this->processComponent->endProcess($this->process->getId());
-        $this->documentModel->updateDocument($this->document->getId(), array(
-            'is_deleted' => '1',
-            'status' => '2'
-        ));
+        $this->documentModel->deleteDocument($this->document->getId());
         $this->documentModel->nullIdOfficer($this->document->getId());
+        $this->documentModel->removeDocumentSharingForIdDocument($this->document->getId());
 
         return true;
     }

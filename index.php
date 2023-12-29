@@ -1,5 +1,10 @@
 <?php
 
+use DMS\Constants\CacheCategories;
+use DMS\Constants\FlashMessageTypes;
+use DMS\Constants\UserPasswordChangeStatus;
+use DMS\Core\CacheManager;
+
 session_start();
 
 include('app/dms_loader.php');
@@ -19,7 +24,7 @@ include('app/dms_loader.php');
         <div id="cover">
             <img style="position: fixed; top: 50%; left: 49%;" src='img/loading.gif' width='32' height='32'>
         </div>
-        <div id="notifications" style="display: none;">a</div>
+        <div id="notifications" style="display: none;">Notifications (0)</div>
         <?php
 
         if(isset($_GET['page'])) {
@@ -40,11 +45,38 @@ include('app/dms_loader.php');
                 }
             }
 
+            $ucm = new CacheManager(true, CacheCategories::USERS);
+
+            $user = null;
+
+            $cacheUser = $ucm->loadUserByIdFromCache($_SESSION['id_current_user']);
+
+            if(is_null($cacheUser)) {
+                $user = $app->userModel->getUserById($_SESSION['id_current_user']);
+
+                $ucm->saveUserToCache($user);
+            } else {
+                $user = $cacheUser;
+            }
+
             $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
         } else {
             if(!isset($_SESSION['login_in_process'])) {
                 if($app->currentUrl != $app::URL_LOGIN_PAGE && $app->currentUrl != 'AnonymModule:LoginPage:showFirstLoginForm') {
                     $app->redirect($app::URL_LOGIN_PAGE);
+                }
+            }
+        }
+
+        if(!is_null($app->user)) {
+            if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::WARNING) {
+                $changeLink = '<a style="color: red; text-decoration: underline" href="?page=UserModule:Users:showChangePasswordForm&id=' . $app->user->getId() . '">here</a>';
+                $app->flashMessage('Your password is outdated. You should update it! Click ' . $changeLink . ' to update password.', FlashMessageTypes::WARNING);
+            } else if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::FORCE) {
+                $app->flashMessage('Your password is outdated. You must update it!', FlashMessageTypes::ERROR);
+                
+                if($app->currentUrl != 'UserModule:UserLogout:logoutUser') {
+                    $app->redirect($app::URL_LOGOUT_PAGE);
                 }
             }
         }

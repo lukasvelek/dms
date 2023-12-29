@@ -154,7 +154,7 @@ class SingleProcess extends APresenter {
                 break;
             
             case ProcessTypes::SHREDDING:
-                $sp = new ShreddingProcess($id, $app->processModel, $app->documentModel, $app->processComponent);
+                $sp = new ShreddingProcess($id, $app->processModel, $app->documentModel, $app->processComponent, $app->documentCommentModel, $app->processCommentModel);
                 $sp->work();
                 break;
         }
@@ -282,9 +282,9 @@ class SingleProcess extends APresenter {
 
         $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
-        return '<script type="text/javascript" src="js/ProcessAjaxComment.js"></script>
+        return '<!--<script type="text/javascript" src="js/ProcessAjaxComment.js"></script>-->
         <textarea name="text" id="text" required></textarea><br><br>
-        <button onclick="sendComment(' . $app->user->getId() . ', ' . $process->getId() . ', ' . $canDelete . ')">Send</button>
+        <button onclick="sendProcessComment(' . $app->user->getId() . ', ' . $process->getId() . ', ' . $canDelete . ')">Send</button>
         ';
     }
 
@@ -296,8 +296,8 @@ class SingleProcess extends APresenter {
         return '
         <img id="comments-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">
         <script type="text/javascript">
-            $(document).on("load", showLoading())
-                       .ready(loadComments("' . $process->getId() . '", "' . $canDelete . '"));
+            $(document).on("load", showCommentsLoading())
+                       .ready(loadProcessComments("' . $process->getId() . '", "' . $canDelete . '"));
         </script>';
     }
 }

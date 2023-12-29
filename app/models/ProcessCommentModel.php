@@ -11,6 +11,19 @@ class ProcessCommentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function removeProcessCommentsForIdProcess(int $idProcess) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('process_comments')
+                     ->where('id_process=:id_process')
+                     ->setParam(':id_process', $idProcess)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getLastInsertedCommentForIdUserAndIdProcess(int $idAuthor, int $idProcess) {
         $qb = $this->qb(__METHOD__);
 

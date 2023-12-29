@@ -34,6 +34,7 @@ class UserLogout extends APresenter {
     protected function logoutUser() {
         global $app;
         if($app->userAuthenticator->logoutCurrentUser()) {
+            $app->clearFlashMessage();
             $app->redirect($app::URL_LOGIN_PAGE);
         }
     }

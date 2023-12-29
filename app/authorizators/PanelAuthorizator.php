@@ -84,27 +84,24 @@ class PanelAuthorizator extends AAuthorizator {
                     }
                 }
 
-                $finalRights = [];
+                $userRight = false;
+                $groupRight = false;
 
-                foreach($rights as $k => $v) {
-                    $finalRights[$k] = $v;
+                if(array_key_exists($panelName, $rights)) {
+                    $userRight = $rights[$panelName] ? true : false;
                 }
 
-                foreach($groupRights as $k => $v) {
-                    if(array_key_exists($k, $finalRights)) {
-                        if($v == '1' && $finalRights[$k] != $v) {
-                            $finalRights[$k] = $v;
-                        }
-                    }
+                if(array_key_exists($panelName, $groupRights)) {
+                    $groupRight = $groupRights[$panelName] ? true : false;
                 }
 
-                $cm->savePanelRight($idUser, $panelName, $finalRights[$panelName]);
-
-                if(array_key_exists($panelName, $finalRights)) {
-                    $result = $finalRights[$panelName];
+                if($userRight == true || $groupRight == true) {
+                    $result = true;
                 } else {
-                    $result = 0;
+                    $result = false;
                 }
+
+                $cm->savePanelRight($idUser, $panelName, $result);
             }
         } else {
             $rights = $this->userRightModel->getPanelRightsForIdUser($idUser);
@@ -128,24 +125,21 @@ class PanelAuthorizator extends AAuthorizator {
                 }
             }
 
-            $finalRights = [];
+            $userRight = false;
+            $groupRight = false;
 
-            foreach($rights as $k => $v) {
-                $finalRights[$k] = $v;
+            if(array_key_exists($panelName, $rights)) {
+                $userRight = $rights[$panelName] ? true : false;
             }
 
-            foreach($groupRights as $k => $v) {
-                if(array_key_exists($k, $finalRights)) {
-                    if($v == '1' && $finalRights[$k] != $v) {
-                        $finalRights[$k] = $v;
-                    }
-                }
+            if(array_key_exists($panelName, $groupRights)) {
+                $groupRight = $groupRights[$panelName] ? true : false;
             }
 
-            if(array_key_exists($panelName, $finalRights)) {
-                $result = $finalRights[$panelName];
+            if($userRight == true || $groupRight == true) {
+                $result = true;
             } else {
-                $result = 0;
+                $result = false;
             }
         }
 

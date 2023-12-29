@@ -52,7 +52,7 @@ class Database implements IDbQueriable {
 
     public function beginTransaction() {
         if($this->transactionCount == 0) {
-            $sql = 'BEGIN TRANSACTION';
+            $sql = 'START TRANSACTION';
 
             $this->query($sql);
 

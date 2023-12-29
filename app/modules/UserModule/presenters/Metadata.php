@@ -34,6 +34,18 @@ class Metadata extends APresenter {
         return $this->name;
     }
 
+    protected function deleteValue() {
+        global $app;
+
+        $idMetadata = htmlspecialchars($_GET['id_metadata']);
+        $idMetadataValue = htmlspecialchars($_GET['id_metadata_value']);
+
+        $app->metadataModel->deleteMetadataValueByIdMetadataValue($idMetadataValue);
+
+        $app->flashMessage('Deleted metadata value for metadata #' . $idMetadata);
+        $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
+    }
+
     protected function showValues() {
         global $app;
 

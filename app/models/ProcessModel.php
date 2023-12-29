@@ -12,6 +12,82 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllProcessIds() {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('id')
+                   ->from('processes')
+                   ->execute()
+                   ->fetch();
+
+        $ids = [];
+        foreach($rows as $row) {
+            $ids[] = $row['id'];
+        }
+
+        return $ids;
+    }
+
+    public function getAllProcesses() {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->execute()
+                   ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
+    public function getProcessesForIdDocument(int $idDocument) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->where('id_document=:id_document')
+                   ->setParam(':id_document', $idDocument)
+                   ->execute()
+                   ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
+    public function deleteProcess(int $idProcess) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('processes')
+                     ->where('id=:id')
+                     ->setParam(':id', $idProcess)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function removeProcessesForIdDocument(int $idDocument) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('processes')
+                     ->where('id_document=:id_document')
+                     ->setParam(':id_document', $idDocument)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getProcessesWaitingForUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
@@ -78,7 +154,7 @@ class ProcessModel extends AModel {
         return $row;
     }
 
-    public function getFinishedProcessesWithIdUser(int $idUser) {
+    public function getFinishedProcessesWithIdUser(int $idUser, int $limit) {
         $qb = $this->qb(__METHOD__);
 
         $rows = $qb->select('*')
@@ -93,6 +169,7 @@ class ProcessModel extends AModel {
                    ->orWhere('workflow4=:id_user')
                    ->rightBracket()
                    ->setParam(':id_user', $idUser)
+                   ->limit($limit)
                    ->execute()
                    ->fetch();
 
@@ -104,7 +181,7 @@ class ProcessModel extends AModel {
         return $processes;
     }
 
-    public function getProcessesWhereIdUserIsAuthor(int $idUser) {
+    public function getProcessesWhereIdUserIsAuthor(int $idUser, int $limit) {
         $qb = $this->qb(__METHOD__);
 
         $rows = $qb->select('*')
@@ -113,6 +190,7 @@ class ProcessModel extends AModel {
                    ->andWhereNot('status=:status')
                    ->setParam(':id_author', $idUser)
                    ->setParam(':status', ProcessStatus::FINISHED)
+                   ->limit($limit)
                    ->execute()
                    ->fetch();
 
@@ -169,7 +247,7 @@ class ProcessModel extends AModel {
         return $this->createProcessObjectFromDbRow($row);
     }
 
-    public function getProcessesWithIdUser(int $idUser) {
+    public function getProcessesWithIdUser(int $idUser, int $limit) {
         $qb = $this->qb(__METHOD__);
 
         $rows = $qb->select('*')
@@ -184,6 +262,7 @@ class ProcessModel extends AModel {
                    ->orWhere('workflow4=:id_user')
                    ->rightBracket()
                    ->setParam(':id_user', $idUser)
+                   ->limit($limit)
                    ->execute()
                    ->fetch();
 

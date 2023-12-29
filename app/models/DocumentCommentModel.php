@@ -11,6 +11,32 @@ class DocumentCommentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function removeCommentsForIdDocument(int $idDocument) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('document_comments')
+                     ->where('id_document=:id_document')
+                     ->setParam(':id_document', $idDocument)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function getCommentById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('document_comments')
+                  ->where('id=:id')
+                  ->setParam(':id', $id)
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createCommentObjectFromDbRow($row);
+    }
+
     public function getLastInsertedCommentForIdUserAndIdDocument(int $idAuthor, int $idDocument) {
         $qb = $this->qb(__METHOD__);
 

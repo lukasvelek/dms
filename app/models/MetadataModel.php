@@ -12,6 +12,19 @@ class MetadataModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteMetadataValueByIdMetadataValue(int $idMetadataValue) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('metadata_values')
+                     ->where('id=:id')
+                     ->setParam(':id', $idMetadataValue)
+                     ->execute()
+                     ->fetch();
+                    
+        return $result;
+    }
+
     public function deleteMetadata(int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 

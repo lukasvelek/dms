@@ -48,7 +48,7 @@ class Panels {
 
         $panelAuthorizator = self::pa();
 
-        if($panelAuthorizator->checkPanelRight(PanelRights::FOLDERS)) {
+        if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_FOLDERS)) {
             if(self::SETTINGSPANEL_USE_TEXT) {
                 $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showFolders', 'Document folders');
             } else {
@@ -158,7 +158,7 @@ class Panels {
                 $data['$USER_PROFILE_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname());
                 $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createLink('UserModule:UserLogout:logoutUser', 'Logout');
             } else {
-                $data['$USER_NOTIFICATIONS_LINK$'] = '<img src="img/notifications.svg" width="32" height="32" loading="lazy"><span class="general-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications</span>';
+                $data['$USER_NOTIFICATIONS_LINK$'] = '<img src="img/notifications.svg" width="32" height="32" loading="lazy"><span class="general-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications (0)</span>';
                 $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user.svg');
                 $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', 'Logout', 'img/logout.svg');
             }
@@ -168,6 +168,52 @@ class Panels {
             $data['$USER_LOGOUT_LINK$'] = '';
             $data['$USER_NOTIFICATIONS_LINK$'] = '';
         }
+
+        $templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    public static function createDocumentsPanel() {
+        $templateManager = self::tm();
+
+        $template = $templateManager->loadTemplate('app/panels/templates/general-subpanel.html');
+
+        $data = array(
+            '$LINKS$' => array(
+                '&nbsp;'
+            )
+        );
+
+        $createFilter = function(string $filterName, string $text, bool $useImage = true, bool $useFolder = true) {
+            $url = array(
+                'page' => 'UserModule:Documents:showFiltered', 
+                'filter' => $filterName
+            );
+
+            if($filterName == 'all') {
+                $url['page'] = 'UserModule:Documents:showAll';
+                unset($url['filter']);
+            }
+
+            if(isset($_GET['id_folder'])) {
+                $idFolder = htmlspecialchars($_GET['id_folder']);
+
+                if($useFolder) {
+                    $url['id_folder'] = $idFolder;
+                }
+            }
+            
+            if($useImage) {
+                return LinkBuilder::createImgAdvLink($url, $text, 'img/documents.svg');
+            } else {
+                return LinkBuilder::createAdvLink($url, $text);
+            }
+        };
+
+        $data['$LINKS$'][] = $createFilter('all', 'All documents', false);
+        $data['$LINKS$'][] = $createFilter('new', 'New documents', false);
+        $data['$LINKS$'][] = $createFilter('waitingForArchivation', 'Documents waiting for archivation', false);
 
         $templateManager->fill($data, $template);
 

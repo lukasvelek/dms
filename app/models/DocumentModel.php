@@ -7,10 +7,66 @@ use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
 use DMS\Helpers\ArrayHelper;
+use QueryBuilder\QueryBuilder;
 
 class DocumentModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function getAllDocumentIds() {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('id')
+                   ->from('documents')
+                   ->execute()
+                   ->fetch();
+
+        $ids = [];
+        foreach($rows as $row) {
+            $ids[] = $row['id'];
+        }
+
+        return $ids;
+    }
+
+    public function removeDocumentSharingForIdDocument(int $idDocument) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('document_sharing')
+                     ->where('id_document=:id_document')
+                     ->setParam(':id_document', $idDocument)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function deleteDocument(int $id, bool $keepInDb = true) {
+        $qb = $this->qb(__METHOD__);
+
+        if($keepInDb) {
+            $qb ->update('documents')
+                ->set(array(
+                    'is_deleted' => ':is_deleted',
+                    'status' => ':status'
+                ))
+                ->setParams(array(
+                    ':status' => DocumentStatus::DELETED,
+                    ':is_deleted' => '1'
+                ));
+        } else {
+            $qb ->delete()
+                ->from('documents');
+        }
+
+        $result = $qb->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
     }
 
     public function getDocumentSharingByIdDocumentAndIdUser(int $idUser, int $idDocument) {
@@ -40,7 +96,7 @@ class DocumentModel extends AModel {
                    ->leftBracket()
                    ->explicit(' `date_from` < current_timestamp AND `date_to` > current_timestamp')
                    ->rightBracket()
-                   ->setParam(':id_user', $idUser)
+                   ->setParam(':id_user', $idUser) 
                    ->execute()
                    ->fetch();
 
@@ -145,21 +201,43 @@ class DocumentModel extends AModel {
         return $row;
     }
 
-    public function getDocumentsForName(string $name, ?int $idFolder) {
-        $qb = $this->qb(__METHOD__);
+    public function getFilteredDocumentsForName(string $name, ?int $idFolder, string $filter) {
+        $qb = $this->composeQueryStandardDocuments();
 
-        $rows = $qb->select('*')
-                   ->from('documents')
-                   ->where('name=:name', true)
-                   ->andWhere('is_deleted=:deleted')
-                   ->setParam(':name', $name)
-                   ->setParam(':deleted', '0');
+        $qb ->andWhere('name=:name', true)->setParam(':name', $name);
 
         if(!is_null($idFolder)) {
-            $rows = $rows->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+            $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
         }
 
-        $rows = $rows->execute()->fetch();
+        $this->addFilterCondition($filter, $qb);
+
+        $rows = $qb->execute()->fetch();
+
+        $documents = [];
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
+    public function getDocumentsForName(string $name, ?int $idFolder, ?string $filter) {
+        $qb = $this->composeQueryStandardDocuments();
+
+        $qb ->andWhere('name=:name', true)->setParam(':name', $name);
+
+        if($filter != null) {
+            $this->addFilterCondition($filter, $qb);
+        }
+
+        if($idFolder != null) {
+            $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+        }
+
+        $qb->limit('20');
+
+        $rows = $qb->execute()->fetch();
 
         $documents = [];
         foreach($rows as $row) {
@@ -316,15 +394,34 @@ class DocumentModel extends AModel {
         return $this->insertNew($data, 'documents');
     }
 
-    public function getStandardDocuments() {
-        $qb = $this->qb(__METHOD__);
+    public function getStandardFilteredDocuments(string $filter) {
+        $qb = $this->composeQueryStandardDocuments();
+        $this->addFilterCondition($filter, $qb);
 
-        $rows = $qb->select('*')
-                   ->from('documents')
-                   ->where('is_deleted=:deleted')
-                   ->setParam(':deleted', '0')
-                   ->execute()
-                   ->fetch();
+        $rows = $qb->execute()->fetch();
+
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
+    public function getStandardDocuments(?int $idFolder, ?string $filter, int $limit) {
+        $qb = $this->composeQueryStandardDocuments();
+
+        if($idFolder != null) {
+            $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+        }
+
+        if($filter != null) {
+            $this->addFilterCondition($filter, $qb);
+        }
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
 
         $documents = array();
         foreach($rows as $row) {
@@ -335,16 +432,11 @@ class DocumentModel extends AModel {
     }
 
     public function getStandardDocumentsInIdFolder(int $idFolder) {
-        $qb = $this->qb(__METHOD__);
+        $qb = $this->composeQueryStandardDocuments();
 
-        $rows = $qb->select('*')
-                   ->from('documents')
-                   ->where('is_deleted=:deleted')
-                   ->andWhere('id_folder=:id_folder')
-                   ->setParam(':deleted', '0')
-                   ->setParam(':id_folder', $idFolder)
-                   ->execute()
-                   ->fetch();
+        $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+
+        $rows = $qb->execute()->fetch();
 
         $documents = array();
         foreach($rows as $row) {
@@ -385,6 +477,29 @@ class DocumentModel extends AModel {
         $document->setMetadata($row);
 
         return $document;
+    }
+
+    private function composeQueryStandardDocuments() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select('*')
+            ->from('documents')
+            ->where('is_deleted=:deleted')
+            ->setParam(':deleted', '0');
+
+        return $qb;
+    }
+
+    private function addFilterCondition(string $filter, QueryBuilder &$qb) {
+        switch($filter) {
+            case 'waitingForArchivation':
+                $qb ->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
+                break;
+
+            case 'new':
+                $qb ->andWhere('status=:status')->setParam(':status', DocumentStatus::NEW);
+                break;
+        }
     }
 }
 

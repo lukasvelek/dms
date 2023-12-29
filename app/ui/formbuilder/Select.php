@@ -28,6 +28,8 @@ class Select implements IBuildable {
     $this->disable = '';
     $this->id = '';
 
+    $this->script = '';
+
     return $this;
   }
 

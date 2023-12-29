@@ -17,4 +17,13 @@ $cfg['file_dir'] = '';
 
 $cfg['id_service_user'] = '1'; // id of user used in services
 
+$cfg['mail_sender_email'] = '';
+$cfg['mail_sender_name'] = '';
+$cfg['mail_server'] = '';
+$cfg['mail_server_port'] = '';
+$cfg['mail_login_username'] = '';
+$cfg['mail_login_password'] = '';
+
+$cfg['grid_size'] = '25';
+
 ?>

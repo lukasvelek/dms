@@ -26,6 +26,7 @@ class TextArea implements IBuildable {
     $this->text = '';
     $this->required = '';
     $this->script = '';
+    $this->disabled = '';
 
     return $this;
   }

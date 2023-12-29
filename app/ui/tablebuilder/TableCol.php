@@ -30,6 +30,8 @@ class TableCol implements IBuildable {
     $this->bold = 'td';
     $this->width = '';
 
+    $this->script = '';
+
     return $this;
   }
 

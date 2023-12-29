@@ -9,6 +9,7 @@ class CacheCategories {
     public const FOLDERS = 'folders';
     public const METADATA = 'metadata';
     public const SERVICE_CONFIG = 'service_config';
+    public const USERS = 'users';
 
     public static $all = array(
         self::BULK_ACTIONS,
@@ -16,7 +17,8 @@ class CacheCategories {
         self::ACTIONS,
         self::FOLDERS,
         self::METADATA,
-        self::SERVICE_CONFIG
+        self::SERVICE_CONFIG,
+        self::USERS
     );
 }
 

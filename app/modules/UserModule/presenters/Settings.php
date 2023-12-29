@@ -6,8 +6,10 @@ use DMS\Constants\CacheCategories;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
 use DMS\Constants\UserActionRights;
+use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Constants\WidgetLocations;
+use DMS\Core\Application;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
@@ -94,10 +96,12 @@ class Settings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-widgets-grid.html');
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'Dashboard widgets',
             '$SETTINGS_FORM$' => $this->internalCreateDashboardWidgetsForm()
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -113,6 +117,20 @@ class Settings extends APresenter {
 
         unset($values['name']);
         unset($values['description']);
+
+        if($name == 'PasswordPolicyService') {
+            if(!array_key_exists('password_change_force_administrators', $values)) {
+                $values['password_change_force_administrators'] = '0';
+            } else {
+                $values['password_change_force_administrators'] = '1';
+            }
+
+            if(!array_key_exists('password_change_force', $values)) {
+                $values['password_change_force'] = '0';
+            } else {
+                $values['password_change_force'] = '1';
+            }
+        }
 
         foreach($values as $k => $v) {
             $app->serviceModel->updateService($name, $k, $v);
@@ -133,9 +151,11 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$FORM$' => $this->internalCreateEditServiceForm($name)
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -154,11 +174,13 @@ class Settings extends APresenter {
         }, __METHOD__);
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'Services',
             '$SETTINGS_GRID$' => $servicesGrid,
             '$NEW_ENTITY_LINK$' => ''
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -195,7 +217,6 @@ class Settings extends APresenter {
                     $service->run();
                 }, __METHOD__);
 
-                //$service->run();
                 break;
             }
         }
@@ -239,11 +260,13 @@ class Settings extends APresenter {
         }, __METHOD__);
         
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => $pageTitle,
             '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>',
             '$FOLDERS_GRID$' => $foldersGrid
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -260,10 +283,12 @@ class Settings extends APresenter {
         }
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'New document folder form',
             '$FORM$' => $this->internalCreateNewFolderForm($idParentFolder)
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -323,11 +348,13 @@ class Settings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
 
         $data = array(
-            '$PAGE_TITLE$' => 'Settings',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
+            '$PAGE_TITLE$' => 'Settings'
         );
 
-        $widgets = ''; //$this->internalDashboardCreateWidgets();
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
+
+        $widgets = '';
 
         $app->logger->logFunction(function() use (&$widgets) {
             $widgets = $this->internalDashboardCreateWidgets();
@@ -354,9 +381,11 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Users',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $usersGrid,
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
+            '$SETTINGS_GRID$' => $usersGrid
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_user')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user') . '</div></div>';
@@ -381,9 +410,11 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $groupsGrid,
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel()
+            '$SETTINGS_GRID$' => $groupsGrid
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group') . '</div></div>';
@@ -407,9 +438,11 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Metadata manager',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$SETTINGS_GRID$' => $metadataGrid
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_metadata')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewMetadataForm', 'New metadata') . '</div></div>';
@@ -425,11 +458,21 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
 
+        $widgets = array(
+            LinkBuilder::createLink('UserModule:Settings:updateDefaultUserRights', 'Update default user rights') . '<br>'
+        );
+
+        if(Application::SYSTEM_DEBUG) {
+            $widgets[] = LinkBuilder::createLink('UserModule:DocumentGenerator:showForm', 'Document generator');
+        }
+
         $data = array(
             '$PAGE_TITLE$' => 'System',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
-            '$WIDGETS$' => LinkBuilder::createLink('UserModule:Settings:updateDefaultUserRights', 'Update default user rights')
+            '$WIDGETS$' => $widgets
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -451,9 +494,11 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New metadata form',
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$FORM$' => $this->internalCreateNewMetadataForm()
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -464,10 +509,12 @@ class Settings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'New user form',
             '$FORM$' => $this->internalCreateNewUserForm()
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -478,10 +525,12 @@ class Settings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
         $data = array(
-            '$SETTINGS_PANEL$' => Panels::createSettingsPanel(),
             '$PAGE_TITLE$' => 'New group form',
             '$FORM$' => $this->internalCreateNewGroupForm()
         );
+
+        $this->drawSubpanel = true;
+        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -611,6 +660,7 @@ class Settings extends APresenter {
         }
 
         $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
+        $data['password_change_status'] = UserPasswordChangeStatus::FORCE;
 
         $app->userModel->insertUser($data);
         $idUser = $app->userModel->getLastInsertedUser()->getId();
@@ -844,12 +894,7 @@ class Settings extends APresenter {
             'Lastname',
             'Username',
             'Email',
-            'Status',
-            'Address Street',
-            'Address House number',
-            'Address City',
-            'Address Zip code',
-            'Address Country'
+            'Status'
         );
 
         $headerRow = null;
@@ -898,12 +943,7 @@ class Settings extends APresenter {
                     $user->getLastname() ?? '-',
                     $user->getUsername() ?? '-',
                     $user->getEmail() ?? '-',
-                    UserStatus::$texts[$user->getStatus()],
-                    $user->getAddressStreet() ?? '-',
-                    $user->getAddressHouseNumber() ?? '-',
-                    $user->getAddressCity() ?? '-',
-                    $user->getAddressZipCode() ?? '-',
-                    $user->getAddressCountry() ?? '-'
+                    UserStatus::$texts[$user->getStatus()]
                 );
 
                 foreach($userData as $ud) {
@@ -970,6 +1010,7 @@ class Settings extends APresenter {
         $groups = count($app->groupModel->getAllGroups());
         $documents = count($app->documentModel->getAllDocuments());
         $folders = count($app->folderModel->getAllFolders());
+        $emails = $app->mailModel->getMailQueue()->num_rows;
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -983,6 +1024,7 @@ class Settings extends APresenter {
                             <p><b>Total groups: </b>' . $groups . '</p>
                             <p><b>Total documents: </b>' . $documents . '</p>
                             <p><b>Total folders: </b>' . $folders . '</p>
+                            <p><b>Total emails in queue: </b>' . $emails . '</p>
                         </div>
                     </div>
                 </div>';
@@ -1286,13 +1328,54 @@ class Settings extends APresenter {
         ;
 
         foreach($serviceCfg as $key => $value) {
-            $fb ->addElement($fb->createLabel()->setText($key)->setFor($key));
+            $fb ->addElement($fb->createLabel()->setText(ServiceMetadata::$texts[$key] . ' (' . $key . ')')->setFor($key));
 
-            if($key == ServiceMetadata::FILES_KEEP_LENGTH) {
-                $fb
-                ->addElement($fb->createSpecial('<span id="files_keep_length_text_value">__VAL__</span>'))
-                ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))
-                ;
+            switch($key) {
+                case ServiceMetadata::FILES_KEEP_LENGTH:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="files_keep_length_text_value">__VAL__</span>'))
+                    ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))
+                    ;
+                    break;
+
+                case ServiceMetadata::PASSWORD_CHANGE_PERIOD:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="password_change_period_text_value">__VAL__</span>'))
+                    ->addElement($fb->createInput()->setType('range')->setMin('0')->setMax('60')->setName($key)->setValue($value))
+                    ;
+                    break;
+
+                case ServiceMetadata::PASSWORD_CHANGE_FORCE_ADMINISTRATORS:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="password_change_force_administrators_text_value">__VAL__</span>'))
+                    ;
+
+                    $checkbox = $fb->createInput()->setType('checkbox')->setName($key);
+
+                    if($value == '1') {
+                        $checkbox->setSpecial('checked');
+                    }
+
+                    $fb->addElement($checkbox);
+
+                    break;
+
+                case ServiceMetadata::PASSWORD_CHANGE_FORCE:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="password_change_force_text_value">__VAL__</span>'))
+                    ;
+
+                    $checkbox = $fb->createInput()->setType('checkbox')->setName($key);
+
+                    if($value == '1') {
+                        $checkbox->setSpecial('checked');
+                    }
+
+                    $fb->addElement($checkbox);
+
+                    break;
+
+                    break;
             }
         }
 
@@ -1343,8 +1426,7 @@ class Settings extends APresenter {
         $widget11loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11);
 
         foreach($allWidgets as $name => $content) {
-            $text = $content['name'];
-            $code = $content['code'];
+            $text = $content['text'];
 
             if(!is_null($widget00loc) && ($name == $widget00loc['widget_name'])) {
                 $widgets00Select[] = array(

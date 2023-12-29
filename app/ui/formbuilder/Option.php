@@ -25,6 +25,8 @@ class Option implements IBuildable {
     $this->text = '';
     $this->selected = '';
 
+    $this->script = '';
+
     return $this;
   }
 

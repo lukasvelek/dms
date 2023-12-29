@@ -17,6 +17,8 @@ use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\FlashMessageTypes;
+use DMS\Constants\UserPasswordChangeStatus;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\DocumentCommentModel;
@@ -25,6 +27,7 @@ use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
+use DMS\Models\MailModel;
 use DMS\Models\MetadataModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ProcessCommentModel;
@@ -35,6 +38,9 @@ use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
 use DMS\Panels\Panels;
+use DMS\Repositories\DocumentCommentRepository;
+use DMS\Repositories\DocumentRepository;
+use FFI;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -49,9 +55,12 @@ class Application {
     public const URL_SETTINGS_PAGE = 'UserModule:Settings:showDashboard';
     public const URL_DOCUMENTS_PAGE = 'UserModule:Documents:showAll';
     public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
+    public const URL_LOGOUT_PAGE = 'UserModule:UserLogout:logoutUser';
 
-    public const SYSTEM_VERSION = '1.3';
-    public const SYSTEM_BUILD_DATE = '2023/12/5';
+    public const SYSTEM_VERSION = '1.4';
+    public const SYSTEM_BUILD_DATE = '2023/12/30';
+    public const SYSTEM_IS_BETA = false;
+    public const SYSTEM_DEBUG = false && self::SYSTEM_IS_BETA;
 
     public array $cfg;
     public ?string $currentUrl;
@@ -79,6 +88,7 @@ class Application {
     public ProcessCommentModel $processCommentModel;
     public WidgetModel $widgetModel;
     public NotificationModel $notificationModel;
+    public MailModel $mailModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -92,9 +102,15 @@ class Application {
     public SharingComponent $sharingComponent;
     public NotificationComponent $notificationComponent;
 
+    public DocumentCommentRepository $documentCommentRepository;
+    public DocumentRepository $documentRepository;
+
+    public MailManager $mailManager;
+
     private array $modules;
     private ?string $pageContent;
     private string $baseDir;
+    private ?string $flashMessage;
 
     private Database $conn;
 
@@ -111,6 +127,7 @@ class Application {
         $this->modules = array();
         $this->pageContent = null;
         $this->user = null;
+        $this->flashMessage = null;
 
         $this->fileManager = new FileManager($this->baseDir . $this->cfg['log_dir'], $this->baseDir . $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager, $this->cfg);
@@ -133,6 +150,7 @@ class Application {
         $this->processCommentModel = new ProcessCommentModel($this->conn, $this->logger);
         $this->widgetModel = new WidgetModel($this->conn, $this->logger);
         $this->notificationModel = new NotificationModel($this->conn, $this->logger);
+        $this->mailModel = new MailModel($this->conn, $this->logger);
         
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -144,18 +162,23 @@ class Application {
         }
         
         $this->fsManager = new FileStorageManager($this->baseDir . $this->cfg['file_dir'], $this->fileManager, $this->logger);
+        $this->mailManager = new MailManager($this->cfg);
         
         $serviceManagerCacheManager = new CacheManager($this->cfg['serialize_cache'], CacheCategories::SERVICE_CONFIG);
         
         $this->notificationComponent = new NotificationComponent($this->conn, $this->logger, $this->notificationModel);
-        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel, $this->notificationComponent);
-        $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel);
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel, $this->notificationComponent, $this->processCommentModel);
+        $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel);
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
         
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent);
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager);
+
+        $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
+        $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
+
         
         //$this->conn->installer->updateDefaultUserPanelRights();
     }
@@ -236,11 +259,28 @@ class Application {
             die('Presenter does not exist');
         }
 
+        $pageBody = $module->currentPresenter->performAction($action);
+
+        $this->pageContent = '';
+
         if($presenter::DRAW_TOPPANEL) {
-            $this->pageContent = $toppanel;
+            $this->pageContent .= $toppanel;
         }
 
-        $this->pageContent .= $module->currentPresenter->performAction($action);
+        if($module->currentPresenter->drawSubpanel) {
+            $this->pageContent .= $module->currentPresenter->subpanel;
+        }
+
+        if($this->flashMessage != null) {
+            $this->pageContent .= $this->flashMessage;
+        } else if(isset($_SESSION['flash_message'])) {
+            $this->flashMessage = $_SESSION['flash_message'];
+            $this->pageContent .= $this->flashMessage;
+
+            unset($_SESSION['flash_message']);
+        }
+
+        $this->pageContent .= $pageBody;
     }
 
     /**
@@ -298,6 +338,37 @@ class Application {
      */
     public function getConn() {
         return $this->conn;
+    }
+
+    public function flashMessage(string $message, string $type = FlashMessageTypes::INFO) {
+        unset($_SESSION['flash_message']);
+
+        $code = '<div id="flash-message" class="' . $type . '">';
+        $code .= '<div class="row">';
+        $code .= '<div class="col-md">';
+        $code .= $message;
+        $code .= '</div>';
+        $code .= '<div class="col-md" id="right">';
+        $code .= '<a style="cursor: pointer" onclick="hideFlashMessage()">x</a>';
+        $code .= '</div>';
+        $code .= '</div>';
+        $code .= '</div>';
+
+        $this->flashMessage = $code;
+
+        $_SESSION['flash_message'] = $code;
+    }
+
+    public function clearFlashMessage(bool $clearFromSession = true) {
+        $this->flashMessage = null;
+
+        if($clearFromSession) {
+            unset($_SESSION['flash_message']);
+        }
+    }
+
+    public function getGridSize() {
+        return $this->cfg['grid_size'];
     }
 
     /**

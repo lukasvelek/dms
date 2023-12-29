@@ -4,15 +4,19 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
+use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
+use DMS\Core\CryptManager;
 use DMS\Core\TemplateManager;
 use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
+use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -41,6 +45,65 @@ class Users extends APresenter {
         return $this->name;
     }
 
+    protected function showChangePasswordForm() {
+        global $app;
+
+        if(!isset($_GET['id'])) {
+            $app->redirect('UserModule:HomePage:showHomepage');
+        }
+
+        $id = htmlspecialchars($_GET['id']);
+        $user = $app->userModel->getUserById($id);
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Update password for user <i>' . $user->getFullname() . '</i>',
+            '$FORM$' => $this->internalCreateChangePasswordForm($user)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function changePassword() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+        $user = $app->userModel->getUserById($id);
+
+        $currentPassword = htmlspecialchars($_POST['current_password']);
+        $password1 = htmlspecialchars($_POST['password1']);
+        $password2 = htmlspecialchars($_POST['password2']);
+
+        if($app->userAuthenticator->authUser($user->getUsername(), $currentPassword) == $id) {
+            // password check ok
+
+            if($app->userAuthenticator->checkPasswordMatch(array($password1, $password2)) && !$app->userAuthenticator->checkPasswordMatch(array($password1, $currentPassword))) {
+                // new password check ok
+
+                $password = CryptManager::hashPassword($password1);
+
+                $data = array(
+                    'password_change_status' => UserPasswordChangeStatus::OK,
+                    'date_password_changed' => date('Y-m-d H:i:s')
+                );
+
+                $app->userModel->updateUser($id, $data);
+                $app->userModel->updateUserPassword($id, $password);
+
+                $app->redirect('UserModule:HomePage:showHomepage');
+            } else {
+                $app->flashMessage('New passwords do not match or they match the current password used', FlashMessageTypes::ERROR);
+                $app->redirect('UserModule:Users:showChangePasswordForm', array('id' => $id));
+            }
+        } else {
+            $app->flashMessage('Entered current password does not match the one this account has!', FlashMessageTypes::ERROR);
+            $app->redirect('UserModule:Users:showChangePasswordForm', array('id' => $id));
+        }
+    }
+
     protected function showProfile() {
         global $app;
 
@@ -54,14 +117,138 @@ class Users extends APresenter {
 
         $user = $app->userModel->getUserById($id);
 
+        $editLink = '';
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER)) {
+            $editLink = LinkBuilder::createAdvLink(array(
+                'page' => 'UserModule:Users:showEditForm',
+                'id' => $id
+            ), 'Edit user');
+        }
+
         $data = array(
             '$PAGE_TITLE$' => '<i>' . $user->getFullname() . '</i>\'s profile',
-            '$USER_PROFILE_GRID$' => $this->internalCreateUserProfileGrid($id)
+            '$USER_PROFILE_GRID$' => $this->internalCreateUserProfileGrid($id),
+            '$LINKS$' => array($editLink)
+        );
+
+        $requestPasswordChangeLink = '';
+        $forcePasswordChangeLink = '';
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::REQUEST_PASSWORD_CHANGE_USER)) {
+            $requestPasswordChangeLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
+                'page' => 'UserModule:Users:requestPasswordChange',
+                'id' => $id
+            ), 'Request password change');
+
+            $forcePasswordChangeLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
+                'page' => 'UserModule:Users:forcePasswordChange',
+                'id' => $id
+            ), 'Force password change');
+        }
+
+        if($id == $app->user->getId()) {
+            // current user
+            $changePasswordLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
+                'page' => 'UserModule:Users:showChangePasswordForm',
+                'id' => $id
+            ), 'Change password');
+
+            $data['$LINKS$'][] = $changePasswordLink;
+        } else {
+            $data['$LINKS$'][] = $requestPasswordChangeLink;
+            $data['$LINKS$'][] = $forcePasswordChangeLink;
+        }
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function forcePasswordChange() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $data = array(
+            'status' => UserStatus::PASSWORD_UPDATE_REQUIRED,
+            'password_change_status' => UserPasswordChangeStatus::FORCE
+        );
+
+        $app->userModel->updateUser($id, $data);
+
+        $app->flashMessage('Request password change for user #' . $id . ' successful.');
+        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
+    }
+
+    protected function requestPasswordChange() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $data = array(
+            'password_change_status' => UserPasswordChangeStatus::WARNING
+        );
+
+        $app->userModel->updateUser($id, $data);
+
+        $app->flashMessage('Request password change for user #' . $id . ' successful.');
+        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
+    }
+
+    protected function showEditForm() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
+
+        $id = htmlspecialchars($_GET['id']);
+        $user = $app->userModel->getUserById($id);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Edit user \'' . $user->getFullname() . '\'',
+            '$FORM$' => $this->internalCreateEditUserForm($user)
         );
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function saveUserEdit() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+        
+        $required = array('firstname', 'lastname', 'username');
+        
+        $data = [];
+        foreach($required as $r) {
+            $data[$r] = htmlspecialchars($_POST[$r]);
+        }
+
+        if(isset($_POST['email']) && !empty($_POST['email'])) {
+            $data['email'] = htmlspecialchars($_POST['email']);
+        }
+        if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
+            $data['address_street'] = htmlspecialchars($_POST['address_street']);
+        }
+        if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
+            $data['address_house_number'] = htmlspecialchars($_POST['address_house_number']);
+        }
+        if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
+            $data['address_city'] = htmlspecialchars($_POST['address_city']);
+        }
+        if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
+            $data['address_zip_code'] = htmlspecialchars($_POST['address_zip_code']);
+        }
+        if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
+            $data['address_country'] = htmlspecialchars($_POST['address_country']);
+        }
+
+        $app->userModel->updateUser($id, $data);
+
+        $app->flashMessage('Successfully edited user #' . $id);
+        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
     }
 
     protected function showUserRights() {
@@ -106,17 +293,33 @@ class Users extends APresenter {
 
         $allow = true;
 
+        $app->getConn()->beginTransaction();
+
         foreach(UserActionRights::$all as $ar) {
-            $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+            if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
+                $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+            } else {
+                $app->userRightModel->insertActionRightForIdUser($idUser, $ar, $allow);
+            }
         }
 
         foreach(PanelRights::$all as $pr) {
-            $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+            if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
+                $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+            } else {
+                $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
+            }
         }
 
         foreach(BulkActionRights::$all as $bar) {
-            $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+            if($app->userRightModel->checkBulkActionRightExists($idUser, $bar)) {
+                $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+            } else {
+                $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
+            }
         }
+
+        $app->getConn()->commit();
 
         $cms = array(
             CacheManager::getTemporaryObject(CacheCategories::ACTIONS),
@@ -138,17 +341,33 @@ class Users extends APresenter {
 
         $allow = false;
 
+        $app->getConn()->beginTransaction();
+
         foreach(UserActionRights::$all as $ar) {
-            $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+            if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
+                $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+            } else {
+                $app->userRightModel->insertActionRightForIdUser($idUser, $ar, $allow);
+            }
         }
 
         foreach(PanelRights::$all as $pr) {
-            $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+            if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
+                $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+            } else {
+                $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
+            }
         }
 
         foreach(BulkActionRights::$all as $bar) {
-            $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+            if($app->userRightModel->checkBulkActionRightExists($idUser, $bar)) {
+                $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+            } else {
+                $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
+            }
         }
+
+        $app->getConn()->commit();
 
         $cms = array(
             CacheManager::getTemporaryObject(CacheCategories::ACTIONS),
@@ -169,7 +388,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updateActionRight($idUser, $name, true);
+        if($app->userRightModel->checkActionRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updateActionRight($idUser, $name, true);
+        } else {
+            $app->userRightModel->insertActionRightForIdUser($idUser, $name, true);
+        }
 
         $app->logger->info('Allowed action right to user #' . $idUser, __METHOD__);
 
@@ -185,7 +408,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updateActionRight($idUser, $name, false);
+        if($app->userRightModel->checkActionRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updateActionRight($idUser, $name, false);
+        } else {
+            $app->userRightModel->insertActionRightForIdUser($idUser, $name, false);
+        }
 
         $app->logger->info('Denied action right to user #' . $idUser, __METHOD__);
 
@@ -201,7 +428,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updatePanelRight($idUser, $name, true);
+        if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updatePanelRight($idUser, $name, true);
+        } else {
+            $app->userRightModel->insertPanelRightForIdUser($idUser, $name, true);
+        }
 
         $app->logger->info('Allowed panel right to user #' . $idUser, __METHOD__);
 
@@ -217,7 +448,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updatePanelRight($idUser, $name, false);
+        if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updatePanelRight($idUser, $name, false);
+        } else {
+            $app->userRightModel->insertPanelRightForIdUser($idUser, $name, false);
+        }
 
         $app->logger->info('Denied panel right to user #' . $idUser, __METHOD__);
 
@@ -233,7 +468,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updateBulkActionRight($idUser, $name, true);
+        if($app->userRightModel->checkBulkActionRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updateBulkActionRight($idUser, $name, true);
+        } else {
+            $app->userRightModel->insertBulkActionRightForIdUser($idUser, $name, true);
+        }
 
         $app->logger->info('Allowed bulk action right to user #' . $idUser, __METHOD__);
 
@@ -249,7 +488,11 @@ class Users extends APresenter {
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
-        $app->userRightModel->updateBulkActionRight($idUser, $name, false);
+        if($app->userRightModel->checkBulkActionRightExists($idUser, $name) === TRUE) {
+            $app->userRightModel->updateBulkActionRight($idUser, $name, false);
+        } else {
+            $app->userRightModel->insertBulkActionRightForIdUser($idUser, $name, false);
+        }
 
         $app->logger->info('Denied bulk action right to user #' . $idUser, __METHOD__);
 
@@ -263,6 +506,8 @@ class Users extends APresenter {
         global $app;
 
         $tb = TableBuilder::getTemporaryObject();
+
+        $tb->showRowBorder();
 
         $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('Actions')->setBold()->setColspan('2'))
                                     ->addCol($tb->createCol()->setText('Status')->setBold())
@@ -411,6 +656,70 @@ class Users extends APresenter {
         $code .= '</table>';
 
         return $code;
+    }
+
+    private function internalCreateEditUserForm(User $user) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Users:saveUserEdit&id=' . $user->getId())
+            ->addElement($fb->createLabel()->setFor('firstname')->setText('First name'))
+            ->addElement($fb->createInput()->setType('text')->setName('firstname')->require()->setValue($user->getFirstname() ?? ''))
+
+            ->addElement($fb->createLabel()->setFor('lastname')->setText('Last name'))
+            ->addElement($fb->createInput()->setType('text')->setName('lastname')->require()->setValue($user->getLastname() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('email')->setText('Email'))
+            ->addElement($fb->createInput()->setType('email')->setName('email')->setValue($user->getEmail() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('username')->setText('Username'))
+            ->addElement($fb->createInput()->setType('text')->setName('username')->setValue($user->getUsername())->setSpecial('readonly'))
+
+            ->addElement($fb->createlabel()->setText('Address'))
+            ->addElement($fb->createlabel()->setFor('address_street')->setText('Street'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_street')->setValue($user->getAddressStreet() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('address_house_number')->setText('House number'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_house_number')->setValue($user->getAddressHouseNumber() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('address_city')->setText('City'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_city')->setValue($user->getAddressCity() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('address_zip_code')->setText('Zip code'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_zip_code')->setValue($user->getAddressZipCode() ?? ''))
+
+            ->addElement($fb->createlabel()->setFor('address_country')->setText('Country'))
+            ->addElement($fb->createInput()->setType('text')->setName('address_country')->setValue($user->getAddressCountry() ?? ''))
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        $form = $fb->build();
+
+        return $form;
+    }
+
+    private function internalCreateChangePasswordForm(User $user) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb
+        ->setMethod('POST')
+        ->setAction('?page=UserModule:Users:changePassword&id=' . $user->getId())
+
+        ->addElement($fb->createLabel()->setFor('current_password')->setText('Current password'))
+        ->addElement($fb->createInput()->setType('password')->setName('current_password')->require())
+
+        ->addElement($fb->createLabel()->setFor('password1')->setText('New password'))
+        ->addElement($fb->createInput()->setType('password')->setName('password1')->require())
+
+        ->addElement($fb->createLabel()->setFor('password2')->setText('New password again'))
+        ->addElement($fb->createInput()->setType('password')->setName('password2')->require())
+
+        ->addElement($fb->createSubmit('Save')->setId('submit'))
+        ;
+
+        $form = $fb->build();
+
+        return $form;
     }
 }
 

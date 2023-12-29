@@ -56,10 +56,10 @@ body {
     font-size: 20px;
 }
 
-#toppanel, #toppanel-right {
+#toppanel, #toppanel-right, #subpanel {
     padding: 5px;
 
-    background-color: /*lightblue*/ rgb(212, 212, 212, 0.5);
+    background-color: rgb(212, 212, 212, 0.5);
     backdrop-filter: blur(5px);
 
     font-size: 20px;
@@ -69,7 +69,7 @@ body {
     text-align: right;
 }
 
-#toppanel .general-link {
+#toppanel .general-link, #subpanel .general-link {
     margin-left: 10px;
 }
 
@@ -107,8 +107,6 @@ body {
     left: 0;
     z-index: 9999;
 
-    /*backdrop-filter: blur(1px);*/
-    /*background-color: rgba(0, 0, 0, 0.01);*/
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -129,9 +127,6 @@ body {
 }
 
 .widget {
-    /*border: 1px solid black;
-    padding: 10px;*/
-
     background-color: rgb(212, 212, 212, 0.5);
     backdrop-filter: blur(5px);
 
@@ -156,4 +151,32 @@ body {
     backdrop-filter: blur(5px);
 
     padding: 10px;
+
+    overflow-y: scroll;
+}
+
+.info {
+    background-color: lightgreen;
+    border: 1px solid green;
+    color: green;
+}
+
+.warn {
+    background-color: orange;
+    border: 1px solid red;
+    color: red;
+}
+
+.error {
+    background-color: lightcoral;
+    border: 1px solid darkred;
+    color: darkred;
+}
+
+#flash-message {
+    padding: 10px;
+
+    margin: 10px;
+
+    border-radius: 5px;
 }

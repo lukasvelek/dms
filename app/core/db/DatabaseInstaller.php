@@ -2,6 +2,7 @@
 
 namespace DMS\Core\DB;
 
+use DMS\Authenticators\UserAuthenticator;
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
@@ -12,6 +13,7 @@ use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
+use DMS\Core\CryptManager;
 use DMS\Core\Logger\Logger;
 
 class DatabaseInstaller {
@@ -41,6 +43,12 @@ class DatabaseInstaller {
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
+
+        $this->insertDefaultGroupPanelRights();
+        $this->insertDefaultGroupBulkActionRights();
+        $this->insertDefaultGroupActionRights();
+        $this->insertDefaultGroupMetadataRights();
+
         $this->insertDefaultServiceConfig();
     }
 
@@ -65,7 +73,9 @@ class DatabaseInstaller {
                 'address_city' => 'VARCHAR(256) NULL',
                 'address_zip_code' => 'VARCHAR(256) NULL',
                 'address_country' => 'VARCHAR(256) NULL',
-                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'date_password_changed' => 'DATETIME NOT NULL',
+                'password_change_status' => 'INT(2) NOT NULL DEFAULT 1'
             ),
             'user_panel_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -196,7 +206,7 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_author' => 'INT(32) NOT NULL',
                 'id_document' => 'INT(32) NOT NULL',
-                'text' => 'VARCHAR(256)',
+                'text' => 'VARCHAR(32768)',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'process_comments' => array(
@@ -230,6 +240,25 @@ class DatabaseInstaller {
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'action' => 'VARCHAR(256) NOT NULL'
+            ),
+            'service_log' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'text' => 'VARCHAR(32768) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'mail_queue' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'recipient' => 'VARCHAR(256) NOT NULL',
+                'title' => 'VARCHAR(256) NOT NULL',
+                'body' => 'VARCHAR(32768) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'password_reset_hashes' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'hash' => 'VARCHAR(256)',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 
@@ -260,7 +289,7 @@ class DatabaseInstaller {
     }
 
     private function insertDefaultUsers() {
-        $defaultUsersUsernames = array('serviceuser', 'admin');
+        $defaultUsersUsernames = array('service_user', 'admin');
         $insertUsers = array();
 
         $defaultUserData = array(
@@ -291,13 +320,14 @@ class DatabaseInstaller {
 
         foreach($insertUsers as $iu) {
             $userData = $defaultUserData[$iu];
-            $password = password_Hash($userData['password'], PASSWORD_BCRYPT);
+            $password = CryptManager::hashPassword($userData['password'], $iu);
             $firstname = $userData['firstname'];
             $lastname = $userData['lastname'];
             $username = $iu;
+            $datePasswordChanged = date('Y-m-d H:i:s');
 
-            $sql = "INSERT INTO `users` (`firstname`, `lastname`, `username`, `password`)
-                    VALUES ('$firstname', '$lastname', '$username', '$password')";
+            $sql = "INSERT INTO `users` (`firstname`, `lastname`, `username`, `password`, `date_password_changed`)
+                    VALUES ('$firstname', '$lastname', '$username', '$password', '$datePasswordChanged')";
 
             $this->logger->sql($sql, __METHOD__);
 
@@ -341,17 +371,23 @@ class DatabaseInstaller {
 
     private function insertDefaultUserGroups() {
         $groupCodes = array(
-            'ADMINISTRATORS' => 'admin'
+            'ADMINISTRATORS',
+            'ARCHMAN'
         );
 
-        $managers = array(
-            'admin' => '1'
+        $groupUsers = array(
+            'ARCHMAN' => array(
+                'admin' => '1'
+            ),
+            'ADMINISTRATORS' => array(
+                'admin' => '1'
+            )
         );
 
         $idGroup = null;
         $idUser = null;
 
-        foreach($groupCodes as $groupCode => $username) {
+        foreach($groupCodes as $groupCode) {
             $idGroup = null;
             $idUser = null;
 
@@ -364,32 +400,82 @@ class DatabaseInstaller {
                 }
             }
 
-            $sql = "SELECT * FROM `users` WHERE `username` = '$username'";
-            $rows = $this->db->query($sql);
+            if($idGroup != NULL) {
+                foreach($groupUsers[$groupCode] as $user => $isManager) {
+                    $sql = "SELECT `id` FROM `users` WHERE `username` = '$user'";
+                    $rows = $this->db->query($sql);
 
-            if($rows->num_rows > 0) {
-                foreach($rows as $row) {
-                    $idUser = $row['id'];
-                }
-            }
+                    $idUser = null;
 
-            if($idUser != NULL && $idGroup != NULL) {
-                $manager = $managers[$username];
+                    foreach($rows as $row) {
+                        $idUser = $row['id'];
+                    }
 
-                $sql = "INSERT INTO `group_users` (`id_user`, `id_group`, `is_manager`) VALUES ('$idUser', '$idGroup', '$manager')";
-                $this->db->query($sql);
+                    if($idUser == null) {
+                        continue;
+                    }
+
+                    $sql = "INSERT INTO `group_users` (`id_user`, `id_group`, `is_manager`) VALUES ('$idUser', '$idGroup', '$isManager')";
+                    $result = $this->db->query($sql);
+                } 
             }
         }
 
         return true;
     }
 
-    private function insertDefaultUserPanelRights() {
-        $idUsers = array();
+    private function insertDefaultGroupPanelRights() {
+        $idGroups = [];
         $panels = PanelRights::$all;
 
-        $userPanels = array();
-        $dbUserPanels = array();
+        $sql = "SELECT `id`, `code` FROM `groups`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $allowPanels = [];
+
+        foreach($rows as $row) {
+            $idGroups[] = $row['id'];
+
+            switch($row['code']) {
+                case 'ARCHMAN':
+                    $allowPanels[$row['id']] = array(
+                        PanelRights::DOCUMENTS,
+                        PanelRights::PROCESSES
+                    );
+                    break;
+                
+                case 'ADMINISTRATORS':
+                    $allowPanels[$row['id']] = $panels;
+                    break;
+            }
+        }
+
+        foreach($idGroups as $id) {
+            foreach($panels as $panel) {
+                if(in_array($panel, $allowPanels[$id])) {
+                    // allow
+                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '1')";
+                } else {
+                    // deny
+                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '0')";
+                }
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    private function insertDefaultUserPanelRights() {
+        $idUsers = [];
+        $panels = PanelRights::$all;
+
+        $userPanels = [];
+        $dbUserPanels = [];
 
         $sql = 'SELECT * FROM `users`';
 
@@ -433,6 +519,51 @@ class DatabaseInstaller {
             foreach($upanels as $upanel) {
                 $sql = "INSERT INTO `user_panel_rights` (`id_user`, `panel_name`, `is_visible`)
                 VALUES ('$id', '$upanel', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    private function insertDefaultGroupBulkActionRights() {
+        $idGroups = [];
+        $actions = BulkActionRights::$all;
+
+        $sql = "SELECT `id`, `code` FROM `groups`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $allowActions = [];
+
+        if($rows->num_rows > 0) {
+            foreach($rows as $row) {
+                $idGroups[] = $row['id'];
+
+                switch($row['code']) {
+                    case 'ARCHMAN':
+                        $allowActions[$row['id']] = $actions;
+                        break;
+
+                    case 'ADMINISTRATORS':
+                        $allowActions[$row['id']] = $actions;
+                        break;
+                }
+            }
+        }
+
+        foreach($idGroups as $id) {
+            foreach($actions as $action) {
+                if(in_array($action, $allowActions[$id])) {
+                    // allow
+                    $sql = "INSERT INTO `group_bulk_rights` (`id_group`, `action_name`, `is_executable`) VALUES ('$id', '$action', '1')";
+                } else {
+                    // deny
+                    $sql = "INSERT INTO `group_bulk_rights` (`id_group`, `action_name`, `is_executable`) VALUES ('$id', '$action', '0')";
+                }
 
                 $this->logger->sql($sql, __METHOD__);
 
@@ -490,6 +621,49 @@ class DatabaseInstaller {
             foreach($uactions as $uaction) {
                 $sql = "INSERT INTO `user_bulk_rights` (`id_user`, `action_name`, `is_executable`)
                 VALUES ('$id', '$uaction', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    private function insertDefaultGroupActionRights() {
+        $idGroups = [];
+        $actions = UserActionRights::$all;
+
+        $sql = "SELECT `id`, `code` FROM `groups`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $allowActions = [];
+
+        foreach($rows as $row) {
+            $idGroups[] = $row['id'];
+
+            switch($row['code']) {
+                case 'ARCHMAN':
+                    $allowActions[$row['id']] = [];
+                    break;
+
+                case 'ADMINISTRATORS':
+                    $allowActions[$row['id']] = $actions;
+                    break;
+            }
+        }
+
+        foreach($idGroups as $id) {
+            foreach($actions as $action) {
+                if(in_array($action, $allowActions[$id])) {
+                    // allow
+                    $sql = "INSERT INTO `group_action_rights` (`id_group`, `action_name`, `is_executable`) VALUES ('$id', '$action', '1')";
+                } else {
+                    // deny
+                    $sql = "INSERT INTO `group_action_rights` (`id_group`, `action_name`, `is_executable`) VALUES ('$id', '$action', '0')";
+                }
 
                 $this->logger->sql($sql, __METHOD__);
 
@@ -740,10 +914,50 @@ class DatabaseInstaller {
         }
     }
 
+    public function insertDefaultGroupMetadataRights() {
+        $sql = "SELECT `id` FROM `groups`";
+        
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+        
+        $idGroups = [];
+        foreach($rows as $row) {
+            $idGroups[] = $row['id'];
+        }
+
+        $sql = "SELECT `id` FROM `metadata`";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $rows = $this->db->query($sql);
+
+        $idMetadata = [];
+        foreach($rows as $row) {
+            $idMetadata[] = $row['id'];
+        }
+
+        foreach($idGroups as $idGroup) {
+            foreach($idMetadata as $idMeta) {
+                $sql = "INSERT INTO `group_metadata_rights` (`id_metadata`, `id_group`, `view`, `edit`, `view_values`, `edit_values`)
+                        VALUES ('$idMeta', '$idGroup', '1', '1', '1', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+
+                $this->db->query($sql);
+            }
+        }
+    }
+
     public function insertDefaultServiceConfig() {
         $serviceCfg = array(
             'LogRotateService' => array(
                 'files_keep_length' => '7'
+            ),
+            'PasswordPolicyService' => array(
+                'password_change_period' => '30',
+                'password_change_force_administrators' => '0',
+                'password_change_force' => '0'
             )
         );
 

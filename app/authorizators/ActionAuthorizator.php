@@ -87,25 +87,24 @@ class ActionAuthorizator extends AAuthorizator {
                     }
                 }
 
-                $finalRights = [];
+                $userRight = false;
+                $groupRight = false;
 
-                foreach($rights as $k => $v) {
-                    if(array_key_exists($k, $groupRights)) {
-                        if($groupRights[$k] != $v && $v == '1') {
-                            $finalRights[$k] = $v;
-                        }
-                    } else {
-                        $finalRights[$k] = $v;
-                    }
+                if(array_key_exists($actionName, $rights)) {
+                    $userRight = $rights[$actionName] ? true : false;
                 }
 
-                $cm->saveActionRight($idUser, $actionName, $finalRights[$actionName]);
+                if(array_key_exists($actionName, $groupRights)) {
+                    $groupRight = $groupRights[$actionName] ? true : false;
+                }
 
-                if(array_key_exists($actionName, $finalRights)) {
-                    $result = $finalRights[$actionName];
+                if($userRight == true || $groupRight == true) {
+                    $result = true;
                 } else {
-                    $result = 0;
+                    $result = false;
                 }
+
+                $cm->saveActionRight($idUser, $actionName, $result);
             }
         } else {
             $rights = $this->userRightModel->getActionRightsForIdUser($idUser);
@@ -129,22 +128,21 @@ class ActionAuthorizator extends AAuthorizator {
                 }
             }
 
-            $finalRights = [];
+            $userRight = false;
+            $groupRight = false;
 
-            foreach($rights as $k => $v) {
-                if(array_key_exists($k, $groupRights)) {
-                    if($groupRights[$k] != $v && $v == '1') {
-                        $finalRights[$k] = $v;
-                    }
-                } else {
-                    $finalRights[$k] = $v;
-                }
+            if(array_key_exists($actionName, $rights)) {
+                $userRight = $rights[$actionName] ? true : false;
             }
 
-            if(array_key_exists($actionName, $finalRights)) {
-                $result = $finalRights[$actionName];
+            if(array_key_exists($actionName, $groupRights)) {
+                $groupRight = $groupRights[$actionName] ? true : false;
+            }
+
+            if($userRight == true || $groupRight == true) {
+                $result = true;
             } else {
-                $result = 0;
+                $result = false;
             }
         }
 

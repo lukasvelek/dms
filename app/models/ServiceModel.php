@@ -10,6 +10,10 @@ class ServiceModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertServiceLog(array $data) {
+        return $this->insertNew($data, 'service_log');
+    }
+
     public function updateService(string $name, string $key, string $value) {
         $qb = $this->qb(__METHOD__);
 

@@ -11,6 +11,66 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deletePasswordResetHashByIdHash(string $hash) {
+        return $this->deleteByCol('hash', $hash, 'password_reset_hashes');
+    }
+
+    public function insertPasswordResetHash(array $data) {
+        return $this->insertNew($data, 'password_reset_hashes');
+    }
+
+    public function getAllUsersMeetingCondition(string $condition) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('users')
+                   ->explicit($condition)
+                   ->execute()
+                   ->fetch();
+
+        $users = [];
+        foreach($rows as $row) {
+            $users[] = $this->getUserObjectFromDbRow($row);
+        }
+
+        return $users;
+    }
+
+    public function nullUserPassword(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('users')
+                     ->setNull(array('password'))
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function updateUser(int $id, array $data) {
+        $qb = $this->qb(__METHOD__);
+
+        $values = [];
+        $params = [];
+
+        foreach($data as $k => $v) {
+            $values[$k] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $result = $qb->update('users')
+                     ->set($values)
+                     ->where('id=:id')
+                     ->setParams($params)
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function updateUserStatus(int $id, int $status) {
         $qb = $this->qb(__METHOD__);
 
@@ -28,9 +88,9 @@ class UserModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $result = $qb->update('users')
-                     ->set(array('password' => ':password'))
+                     ->set(array('password' => ':password', 'date_password_changed' => ':date_password_changed'))
                      ->where('id=:id')
-                     ->setParams(array(':password' => $hashedPassword, ':id' => $id))
+                     ->setParams(array(':password' => $hashedPassword, ':id' => $id, ':date_password_changed' => date('Y-m-d H:i:s')))
                      ->execute()
                      ->fetch();
 
@@ -43,7 +103,6 @@ class UserModel extends AModel {
         $row = $qb->select('*')
                   ->from('users')
                   ->where('username=:username')
-                  ->explicit('AND `password` IS NULL')
                   ->setParam(':username', $username)
                   ->execute()
                   ->fetchSingle();
@@ -106,6 +165,8 @@ class UserModel extends AModel {
         $values['Lastname'] = $row['lastname'];
         $values['Username'] = $row['username'];
         $values['Status'] = $row['status'];
+        $values['DatePasswordChanged'] = $row['date_password_changed'];
+        $values['PasswordChangeStatus'] = $row['password_change_status'];
         
         if(isset($row['email'])) {
             $values['Email'] = $row['email'];    

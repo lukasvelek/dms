@@ -13,8 +13,10 @@ class User extends AEntity {
     private ?string $addressCity;
     private ?string $addressZipCode;
     private ?string $addressCountry;
+    private ?string $datePasswordChanged;
+    private int $passwordChangeStatus;
 
-    public function __construct(int $id, string $dateCreated, string $firstname, string $lastname, string $username, ?string $email, int $status, ?string $addressStreet, ?string $addressHouseNumber, ?string $addressCity, ?string $addressZipCode, ?string $addressCountry) {
+    public function __construct(int $id, string $dateCreated, string $firstname, string $lastname, string $username, ?string $email, int $status, ?string $addressStreet, ?string $addressHouseNumber, ?string $addressCity, ?string $addressZipCode, ?string $addressCountry, ?string $datePasswordChanged, int $passwordChangeStatus) {
         parent::__construct($id, $dateCreated);
 
         $this->firstname = $firstname;
@@ -27,6 +29,8 @@ class User extends AEntity {
         $this->addressCity = $addressCity;
         $this->addressZipCode = $addressZipCode;
         $this->addressCountry = $addressCountry;
+        $this->datePasswordChanged = $datePasswordChanged;
+        $this->passwordChangeStatus = $passwordChangeStatus;
     }
 
     public function getFullname() {
@@ -113,6 +117,22 @@ class User extends AEntity {
         $this->addressCountry = $addressCountry;
     }
 
+    public function getDatePasswordChanged() {
+        return $this->datePasswordChanged;
+    }
+
+    public function setDatePasswordChanged(?string $date) {
+        $this->datePasswordChanged = $date;
+    }
+
+    public function getPasswordChangeStatus() {
+        return $this->passwordChangeStatus;
+    }
+
+    public function setPasswordChangeStatus(int $status) {
+        $this->passwordChangeStatus = $status;
+    }
+
     public static function createUserObjectFromArrayValues(array $values) {
         $emptyUser = self::createEmptyUser();
 
@@ -136,7 +156,7 @@ class User extends AEntity {
     }
 
     public static function createEmptyUser() {
-        return new self(0, date('Y-m-d H:i:s'), '', '', '', null, false, null, null, null, null, null);
+        return new self(0, date('Y-m-d H:i:s'), '', '', '', null, false, null, null, null, null, null, null, 1);
     }
 }
 

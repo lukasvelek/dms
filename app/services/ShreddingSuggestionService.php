@@ -40,6 +40,8 @@ class ShreddingSuggestionService extends AService {
 
         $this->log(sprintf('Found %s documents that have been suggested for shredding', count($toSuggest)), __METHOD__);
 
+        $this->documentModel->beginTran();
+
         foreach($toSuggest as $id) {
             $this->documentModel->updateDocument($id, array(
                 'shredding_status' => DocumentShreddingStatus::IN_APPROVAL
@@ -47,6 +49,8 @@ class ShreddingSuggestionService extends AService {
 
             $this->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $this->cfg['id_service_user']);
         }
+
+        $this->documentModel->commitTran();
 
         $this->stopService();
     }

@@ -3,6 +3,8 @@
 namespace DMS\Core;
 
 use DMS\Constants\CacheCategories;
+use DMS\Entities\Folder;
+use DMS\Entities\User;
 
 /**
  * CacheManager allows the application to cache data
@@ -20,11 +22,55 @@ class CacheManager {
      * @param bool $serialize True if cache should be serialized and false if not
      * @param string $category Cache category
      */
-    public function __construct(bool $serialize, string $category) {
-        $this->fm = new FileManager('logs/', 'cache/');
+    public function __construct(bool $serialize, string $category, string $logdir = 'logs/', string $cachedir = 'cache/') {
+        $this->fm = new FileManager($logdir, $cachedir);
 
         $this->serialize = $serialize;
         $this->category = $category;
+    }
+
+    public function saveFolderToCache(Folder $folder) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[CacheCategories::FOLDERS][$folder->getId()] = $folder;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadFolderByIdFromCache(int $id) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($id, $cacheData[CacheCategories::FOLDERS])) {
+            return $cacheData[CacheCategories::FOLDERS][$id];
+        } else {
+            return null;
+        }
+    }
+
+    public function saveUserToCache(User $user) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[CacheCategories::USERS][$user->getId()] = $user;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadUserByIdFromCache(int $id) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($id, $cacheData[CacheCategories::USERS])) {
+            return $cacheData[CacheCategories::USERS][$id];
+        } else {
+            return null;
+        }
     }
 
     /**

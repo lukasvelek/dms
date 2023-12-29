@@ -49,6 +49,8 @@ class NotificationComponent extends AComponent {
             'action' => $action
         ));
 
+        $this->clearSession();
+
         return true;
     }
 
@@ -74,7 +76,14 @@ class NotificationComponent extends AComponent {
             'action' => $action
         ));
 
+        $this->clearSession();
+
         return true;
+    }
+
+    private function clearSession() {
+        unset($_SESSION['user_notification_count']);
+        unset($_SESSION['user_notification_count_timestamp']);
     }
 }
 

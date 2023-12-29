@@ -75,6 +75,7 @@ abstract class AService implements IServiceRunnable {
      */
     protected function stopService() : void {
         $this->logger->info('Stopping service \'' . $this->name . '\'', __METHOD__);
+        $this->insertServiceLog($this->getServiceStopLogMessage());
     }
 
     /**
@@ -86,6 +87,30 @@ abstract class AService implements IServiceRunnable {
      */
     protected function log(string $text, string $method) : void {
         $this->logger->info($text, $method);
+    }
+
+    /**
+     * Inserts a service log entry
+     * 
+     * @param string $text Log entry message
+     * @return void
+     */
+    protected function insertServiceLog(string $text) : void {
+        $data = array(
+            'text' => $text,
+            'name' => $this->name
+        );
+
+        $this->serviceModel->insertServiceLog($data);
+    }
+
+    /**
+     * Returns a service stop log message
+     * 
+     * @return string Service stop log message
+     */
+    protected function getServiceStopLogMessage() {
+        return 'Service ' . $this->name . ' finished running';
     }
 }
 

@@ -2,10 +2,13 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
+use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
+use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
@@ -448,6 +451,8 @@ class SingleDocument extends APresenter {
         $status = '-';
         $statusMetadata = $app->metadataModel->getMetadataByName('status', 'documents');
         $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($statusMetadata->getId());
+        
+        $rank = DocumentRank::$texts[$document->getRank()];
 
         foreach($dbStatuses as $dbs) {
             if($dbs->getValue() == $document->getStatus()) {
@@ -466,6 +471,7 @@ class SingleDocument extends APresenter {
             'Author' => $this->createUserLink($document->getIdAuthor()),
             'Manager' => $this->createUserLink($document->getIdManager()),
             'Status' => $status,
+            'Rank' => $rank,
             'Group' => $this->createGroupLink($document->getIdGroup()),
             'Deleted?' => $document->getIsDeleted() ? 'Yes' : 'No',
             'Folder' => $folder,
@@ -502,6 +508,10 @@ class SingleDocument extends APresenter {
         }
 
         foreach($data as $k => $v) {
+            if(is_null($v)) {
+                $v = '-';
+            }
+
             $row = $tb->createRow();
 
             $row->addCol($tb->createCol()->setText($k)->setBold())
@@ -550,7 +560,17 @@ class SingleDocument extends APresenter {
     private function createUserLink(int $id) {
         global $app;
 
-        $user = $app->userModel->getUserById($id);
+        $ucm = new CacheManager(true, CacheCategories::USERS);
+
+        $cacheUser = $ucm->loadUserByIdFromCache($id);
+
+        if(is_null($cacheUser)) {
+            $user = $app->userModel->getUserById($id);
+
+            $ucm->saveUserToCache($user);
+        } else {
+            $user = $cacheUser;
+        }
 
         return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $id), $user->getFullname());
     }
@@ -576,9 +596,9 @@ class SingleDocument extends APresenter {
 
         $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
-        return '<script type="text/javascript" src="js/DocumentAjaxComment.js"></script>
-        <textarea name="text" id="text" required></textarea><br><br>
-        <button onclick="sendComment(' . $app->user->getId() . ', ' . $document->getId() . ', ' . $canDelete . ')">Send</button>
+        return '<!--<script type="text/javascript" src="js/DocumentAjaxComment.js"></script>-->
+        <textarea name="text" id="text" maxlength="32768" required></textarea><br><br>
+        <button onclick="sendDocumentComment(' . $app->user->getId() . ', ' . $document->getId() . ', ' . $canDelete . ')">Send</button>
         ';
     }
 
@@ -590,8 +610,8 @@ class SingleDocument extends APresenter {
         return '
         <img id="comments-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">
         <script type="text/javascript">
-            $(document).on("load", showLoading())
-                       .ready(loadComments("' . $document->getId() . '", "' . $canDelete . '"));
+            $(document).on("load", showCommentsLoading())
+                       .ready(loadDocumentComments("' . $document->getId() . '", "' . $canDelete . '"));
         </script>';
     }
 

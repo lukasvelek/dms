@@ -4,6 +4,7 @@ namespace DMS\Models;
 
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use QueryBuilder\QueryBuilder;
 
 abstract class AModel {
     protected Database $db;
@@ -26,7 +27,7 @@ abstract class AModel {
      * @param string $methodName Calling method name
      * @return QueryBuilder QueryBuilder instance
      */
-    protected function qb(string $methodName) {
+    protected function qb(string $methodName) : QueryBuilder {
         $qb = $this->db->createQueryBuilder();
         $qb->setMethod($methodName);
         return $qb;
@@ -59,6 +60,35 @@ abstract class AModel {
                      ->fetch();
 
         return $result;
+    }
+
+    protected function deleteById(int $id, string $tableName) {
+        return $this->deleteByCol('id', $id, $tableName);
+    }
+
+    protected function deleteByCol(string $colName, string $colValue, string $tableName) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from($tableName)
+                     ->where($colName . '=:' . $colName)
+                     ->setParam(':' . $colName, $colValue)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function beginTran() {
+        return $this->db->beginTransaction();
+    }
+
+    public function commitTran() {
+        return $this->db->commit();
+    }
+
+    public function rollbackTran() {
+        return $this->db->rollback();
     }
 }
 
