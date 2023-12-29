@@ -2,6 +2,7 @@
 
 use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
+use DMS\Core\CypherManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
@@ -633,6 +634,42 @@ function searchDocumentsSharedWithMe() {
     }
 
     echo $tb->build();
+}
+
+function generateDocuments() {
+    global $documentModel, $user;
+
+    if($user == null) {
+        exit;
+    }
+
+    $id_folder = $_GET['id_folder'];
+    $count = $_GET['count'];
+
+    $data = [];
+    for($i = 0; $i < $count; $i++) {
+        $data[$i] = array(
+            'name' => 'DG_' . CypherManager::createCypher(8),
+            'id_author' => $user->getId(),
+            'id_officer' => $user->getId(),
+            'status' => '1',
+            'id_manager' => '2',
+            'id_group' => '1',
+            'is_deleted' => '0',
+            'rank' => 'public',
+            'shred_year' => '2023',
+            'after_shred_action' => 'showAsShredded',
+            'shredding_status' => '5'
+        );
+
+        if($id_folder != '0') {
+            $data[$i]['id_folder'] = $id_folder;
+        }
+    }
+
+    foreach($data as $index => $d) {
+        $documentModel->insertNewDocument($d);
+    }
 }
 
 // PRIVATE METHODS

@@ -9,6 +9,7 @@ use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Constants\WidgetLocations;
+use DMS\Core\Application;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
@@ -457,9 +458,17 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
 
+        $widgets = array(
+            LinkBuilder::createLink('UserModule:Settings:updateDefaultUserRights', 'Update default user rights') . '<br>'
+        );
+
+        if(Application::SYSTEM_DEBUG) {
+            $widgets[] = LinkBuilder::createLink('UserModule:DocumentGenerator:showForm', 'Document generator');
+        }
+
         $data = array(
             '$PAGE_TITLE$' => 'System',
-            '$WIDGETS$' => LinkBuilder::createLink('UserModule:Settings:updateDefaultUserRights', 'Update default user rights')
+            '$WIDGETS$' => $widgets
         );
 
         $this->drawSubpanel = true;
