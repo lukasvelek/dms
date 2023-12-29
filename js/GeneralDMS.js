@@ -376,3 +376,27 @@ async function loadMailQueue() {
         $('#mailqueue-loading').hide();
     });
 }
+
+async function generateDocuments() {
+    var _id_folder = $("#id_folder").val();
+    var _count = $("#count").val();
+
+    $.ajax({
+        url: 'app/ajax/Documents.php',
+        type: 'GET',
+        data: {
+            action: "generateDocuments",
+            id_folder: _id_folder,
+            count: _count
+        }
+    })
+    .done(function(data) {
+        $('#documents-loading').hide();
+
+        if(_id_folder != "0") {
+            location.replace("?page=UserModule:Documents:showAll&id_folder=" + _id_folder);
+        } else {
+            location.replace("?page=UserModule:Documents:showAll");
+        }
+    });
+}

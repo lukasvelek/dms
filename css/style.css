@@ -174,8 +174,8 @@ body {
 
 .error {
     background-color: lightcoral;
-    border: 1px solid red;
-    color: red;
+    border: 1px solid darkred;
+    color: darkred;
 }
 
 #flash-message {

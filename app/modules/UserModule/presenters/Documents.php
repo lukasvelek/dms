@@ -569,7 +569,14 @@ class Documents extends APresenter {
         $app->documentModel->updateOfficer($idDocument, $documentIdManager);
 
         $app->flashMessage('Created new document');
-        $app->redirect('UserModule:Documents:showAll');
+        
+        $url = 'UserModule:Documents:showAll';
+
+        if(isset($data['id_folder'])) {
+            $app->redirect($url, array('id_folder' => $data['id_folder']));
+        } else {
+            $app->redirect($url);
+        }
     }
 
     private function _suggest_for_shredding(array $ids) {
