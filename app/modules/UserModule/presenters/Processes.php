@@ -228,26 +228,26 @@ class Processes extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($processCount <= ($page * 20)) {
+        if($processCount <= ($page * $app->getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($processCount / 20));
+        $lastPageLink .= '&grid_page=' . (ceil($processCount / $app->getGridSize()));
         $lastPageLink .= '"';
 
-        if($processCount <= ($page * 20)) {
+        if($processCount <= ($page * $app->getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($processCount > 20) {
-            if(($page * 20) > $processCount) {
+        if($processCount > $app->getGridSize()) {
+            if(($page * $app->getGridSize()) > $processCount) {
                 $processPageControl = $processCount;
             } else {
-                $processPageControl = ($page * 20) . '+';
+                $processPageControl = ($page * $app->getGridSize()) . '+';
             }
         } else {
             $processPageControl = $processCount;

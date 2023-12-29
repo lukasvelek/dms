@@ -24,4 +24,6 @@ $cfg['mail_server_port'] = '';
 $cfg['mail_login_username'] = '';
 $cfg['mail_login_password'] = '';
 
+$cfg['grid_size'] = '25';
+
 ?>

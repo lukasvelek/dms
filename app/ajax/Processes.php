@@ -128,7 +128,7 @@ function getComments() {
 }
 
 function search() {
-    global $userModel, $processModel, $user, $ucm;
+    global $userModel, $processModel, $user, $ucm, $gridSize;
 
     $filter = 'waitingForMe';
     $page = 1;
@@ -168,20 +168,20 @@ function search() {
 
     switch($filter) {
         case 'startedByMe':
-            $processes = $processModel->getProcessesWhereIdUserIsAuthor($idUser, ($page * 20));
+            $processes = $processModel->getProcessesWhereIdUserIsAuthor($idUser, ($page * $gridSize));
             break;
 
         case 'waitingForMe':
-            $processes = $processModel->getProcessesWithIdUser($idUser, ($page * 20));
+            $processes = $processModel->getProcessesWithIdUser($idUser, ($page * $gridSize));
             break;
 
         case 'finished':
-            $processes = $processModel->getFinishedProcessesWithIdUser($idUser, ($page * 20));
+            $processes = $processModel->getFinishedProcessesWithIdUser($idUser, ($page * $gridSize));
             break;
     }
 
     $skip = 0;
-    $maxSkip = ($page - 1) * 20;
+    $maxSkip = ($page - 1) * $gridSize;
 
     if(empty($processes)) {
         $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));

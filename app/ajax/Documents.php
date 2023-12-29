@@ -304,7 +304,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm;
+    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize;
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
@@ -461,10 +461,10 @@ function search() {
 
         $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
 
-        $documents = $documentModel->getStandardDocuments($idFolder, $filter, ($page * 20));
+        $documents = $documentModel->getStandardDocuments($idFolder, $filter, ($page * $gridSize));
 
         $skip = 0;
-        $maxSkip = ($page - 1) * 20;
+        $maxSkip = ($page - 1) * $gridSize;
     
         if(empty($documents)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));

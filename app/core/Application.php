@@ -367,6 +367,10 @@ class Application {
         }
     }
 
+    public function getGridSize() {
+        return $this->cfg['grid_size'];
+    }
+
     /**
      * Performs the initial database installation.
      * After installing, it creates a file that shows whether the database has been installed or not.

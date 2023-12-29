@@ -781,26 +781,26 @@ class Documents extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($documentCount < ($page * 20)) {
+        if($documentCount < ($page * $app->getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($documentCount / 20));
+        $lastPageLink .= '&grid_page=' . (ceil($documentCount / $app->getGridSize()));
         $lastPageLink .= '"';
 
-        if($documentCount <= ($page * 20)) {
+        if($documentCount <= ($page * $app->getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($documentCount > 20) {
-            if(($page * 20) > $documentCount) {
+        if($documentCount > $app->getGridSize()) {
+            if(($page * $app->getGridSize()) > $documentCount) {
                 $documentPageControl = $documentCount;
             } else {
-                $documentPageControl = ($page * 20) . '+';
+                $documentPageControl = ($page * $app->getGridSize()) . '+';
             }
         } else {
             $documentPageControl = $documentCount;
