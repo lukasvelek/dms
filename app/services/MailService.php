@@ -26,6 +26,8 @@ class MailService extends AService {
 
         $this->log('Found ' . $mails->num_rows . ' emails to be sent', __METHOD__);
 
+        $this->mailModel->beginTran();
+
         foreach($mails as $mail) {
             $recipient = $mail['recipient'];
             $body = $mail['body'];
@@ -34,6 +36,8 @@ class MailService extends AService {
             $this->mailManager->sendEmail($recipient, $title, $body);
             $this->mailModel->deleteFromQueue($mail['id']);
         }
+
+        $this->mailModel->commitTran();
 
         $this->stopService();
     }

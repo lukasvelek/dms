@@ -78,6 +78,18 @@ abstract class AModel {
 
         return $result;
     }
+
+    public function beginTran() {
+        return $this->db->beginTransaction();
+    }
+
+    public function commitTran() {
+        return $this->db->commit();
+    }
+
+    public function rollbackTran() {
+        return $this->db->rollback();
+    }
 }
 
 ?>

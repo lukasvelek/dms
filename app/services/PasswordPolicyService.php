@@ -88,9 +88,13 @@ class PasswordPolicyService extends AService {
             }
         }
 
+        $this->userModel->beginTran();
+
         foreach($userData as $id => $data) {
             $this->userModel->updateUser($id, $data);
         }
+
+        $this->userModel->commitTran();
 
         $this->log('Warned ' . $warnings . ' users', __METHOD__);
         $this->log('Forced ' . $forces . ' users', __METHOD__);
