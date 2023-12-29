@@ -412,7 +412,8 @@ function search() {
 
                 $folderName = '-';
 
-                $folder = null;
+                if(!is_null($document->getIdFolder())) {
+                    $folder = null;
 
                 $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
 
@@ -429,6 +430,9 @@ function search() {
                 }
 
                 $docuRow->addCol($tb->createCol()->setText($folderName));
+                }else{
+                    $docuRow->addCol($tb->createCol()->setText('-'));
+                }
                 
                 $tb->addRow($docuRow);
             }

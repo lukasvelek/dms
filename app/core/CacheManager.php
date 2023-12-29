@@ -45,7 +45,7 @@ class CacheManager {
         }
 
         if(array_key_exists($id, $cacheData[CacheCategories::FOLDERS])) {
-            return $cacheData[CacheCategories::USERS][$id];
+            return $cacheData[CacheCategories::FOLDERS][$id];
         } else {
             return null;
         }

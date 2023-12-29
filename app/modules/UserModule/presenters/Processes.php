@@ -62,21 +62,27 @@ class Processes extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/process-grid.html');
 
         $filter = 'waitingForMe';
+        $page = 1;
 
         if(isset($_GET['filter'])) {
             $filter = htmlspecialchars($_GET['filter']);
         }
 
+        if(isset($_GET['grid_page'])) {
+            $page = (int)(htmlspecialchars($_GET['grid_page']));
+        }
+
         $processGrid = '<!--<script type="text/javascript" src="js/ProcessAjaxSearch.js"></script>-->';
 
-        $app->logger->logFunction(function() use (&$processGrid, $filter) {
-            $processGrid .= $this->internalCreateStandardProcessGrid($filter);
+        $app->logger->logFunction(function() use (&$processGrid, $filter, $page) {
+            $processGrid .= $this->internalCreateStandardProcessGrid($filter, $page);
         }, __METHOD__);
 
         $data = array(
             '$PAGE_TITLE$' => 'Processes',
             '$PROCESS_PANEL$' => /*Panels::createProcessesPanel()*/ '',
-            '$PROCESS_GRID$' => $processGrid
+            '$PROCESS_GRID$' => $processGrid,
+            '$PROCESS_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $filter)
         );
 
         $this->drawSubpanel = true;
@@ -169,13 +175,87 @@ class Processes extends APresenter {
         return $table;
     }
 
-    private function internalCreateStandardProcessGrid(string $filter = 'waitingForMe') {
+    private function internalCreateStandardProcessGrid(string $filter = 'waitingForMe', int $page) {
         return '
             <script type="text/javascript">
-            loadProcesses("' . $filter . '");
+            loadProcesses("' . $page . '", "' . $filter . '");
             </script>
             <table border="1"><img id="processes-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
         ';
+    }
+
+    private function internalCreateGridPageControl(int $page, string $filter) {
+        global $app;
+
+        $processCount = count($app->processModel->getAllProcessIds());
+
+        $add = function(string $key, string $value, string &$link) {
+            $link .= $key . '=' . $value;
+        };
+
+        $processPageControl = '';
+        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Processes:showAll';
+        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Processes:showAll';
+        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Processes:showAll';
+        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Processes:showAll';
+
+        if($filter != 'waitingForMe') {
+            $add('filter', $filter, $firstPageLink);
+            $add('filter', $filter, $previousPageLink);
+            $add('filter', $filter, $nextPageLink);
+            $add('filter', $filter, $lastPageLink);
+        }
+
+        $firstPageLink .= '"';
+
+        if($page == 1) {
+            $firstPageLink .= ' hidden';
+        }
+
+        $firstPageLink .= '>&lt;&lt;</a>';
+
+        if($page > 2) {
+            $previousPageLink .= '&grid_page=' . ($page - 1);
+        }
+        $previousPageLink .= '"';
+
+        if($page == 1) {
+            $previousPageLink .= ' hidden';
+        }
+
+        $previousPageLink .= '>&lt;</a>';
+
+        $nextPageLink .= '&grid_page=' . ($page + 1);
+        $nextPageLink .= '"';
+
+        if($processCount < ($page * 20)) {
+            $nextPageLink .= ' hidden';
+        }
+
+        $nextPageLink .= '>&gt;</a>';
+
+        $lastPageLink .= '&grid_page=' . (ceil($processCount / 20));
+        $lastPageLink .= '"';
+
+        if($processCount < ($page * 20)) {
+            $lastPageLink .= ' hidden';
+        }
+
+        $lastPageLink .= '>&gt;&gt;</a>';
+
+        if($processCount > 20) {
+            if(($page * 20) > $processCount) {
+                $processPageControl = $processCount;
+            } else {
+                $processPageControl = ($page * 20) . '+';
+            }
+        } else {
+            $processPageControl = $processCount;
+        }
+
+        $processPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
+
+        return $processPageControl;
     }
 }
 

@@ -272,7 +272,7 @@ async function loadDocumentsSharedWithMe(_page) {
     });
 }
 
-async function loadProcesses(_filter = 'waitingForMe') {
+async function loadProcesses(_page, _filter = 'waitingForMe') {
     await sleep(250);
 
     $.ajax({
@@ -280,7 +280,8 @@ async function loadProcesses(_filter = 'waitingForMe') {
         type: 'POST',
         data: {
             filter: _filter,
-            action: "search"
+            action: "search",
+            page: _page
         }
     })
     .done(function(data) {

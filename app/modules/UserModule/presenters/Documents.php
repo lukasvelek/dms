@@ -800,7 +800,7 @@ class Documents extends APresenter {
             if(($page * 20) > $documentCount) {
                 $documentPageControl = $documentCount;
             } else {
-                $documentPageControl = ($page * 20) .  '+';
+                $documentPageControl = ($page * 20) . '+';
             }
         } else {
             $documentPageControl = $documentCount;

@@ -131,6 +131,7 @@ function search() {
     global $userModel, $processModel, $user, $ucm;
 
     $filter = 'waitingForMe';
+    $page = 1;
 
     if(is_null($user)) {
         echo 'User is null';
@@ -141,6 +142,10 @@ function search() {
 
     if(isset($_POST['filter'])) {
         $filter = htmlspecialchars($_POST['filter']);
+    }
+
+    if(isset($_POST['page'])) {
+        $page = (int)(htmlspecialchars($_POST['page']));
     }
 
     $tb = TableBuilder::getTemporaryObject();
@@ -163,22 +168,30 @@ function search() {
 
     switch($filter) {
         case 'startedByMe':
-            $processes = $processModel->getProcessesWhereIdUserIsAuthor($idUser);
+            $processes = $processModel->getProcessesWhereIdUserIsAuthor($idUser, ($page * 20));
             break;
 
         case 'waitingForMe':
-            $processes = $processModel->getProcessesWithIdUser($idUser);
+            $processes = $processModel->getProcessesWithIdUser($idUser, ($page * 20));
             break;
 
         case 'finished':
-            $processes = $processModel->getFinishedProcessesWithIdUser($idUser);
+            $processes = $processModel->getFinishedProcessesWithIdUser($idUser, ($page * 20));
             break;
     }
+
+    $skip = 0;
+    $maxSkip = ($page - 1) * 20;
 
     if(empty($processes)) {
         $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
     } else {
         foreach($processes as $process) {
+            if($skip < $maxSkip) {
+                $skip++;
+                continue;
+            }
+
             $actionLinks = array(
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()), 'Open')
             );
