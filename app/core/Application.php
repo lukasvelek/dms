@@ -57,10 +57,10 @@ class Application {
     public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
     public const URL_LOGOUT_PAGE = 'UserModule:UserLogout:logoutUser';
 
-    public const SYSTEM_VERSION = '1.4_beta';
-    public const SYSTEM_BUILD_DATE = '2023/12/05';
-    public const SYSTEM_IS_BETA = true;
-    public const SYSTEM_DEBUG = true && self::SYSTEM_IS_BETA;
+    public const SYSTEM_VERSION = '1.4';
+    public const SYSTEM_BUILD_DATE = '2023/12/30';
+    public const SYSTEM_IS_BETA = false;
+    public const SYSTEM_DEBUG = false && self::SYSTEM_IS_BETA;
 
     public array $cfg;
     public ?string $currentUrl;
