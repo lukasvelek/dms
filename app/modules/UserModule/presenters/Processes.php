@@ -228,7 +228,7 @@ class Processes extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($processCount < ($page * 20)) {
+        if($processCount <= ($page * 20)) {
             $nextPageLink .= ' hidden';
         }
 
@@ -237,7 +237,7 @@ class Processes extends APresenter {
         $lastPageLink .= '&grid_page=' . (ceil($processCount / 20));
         $lastPageLink .= '"';
 
-        if($processCount < ($page * 20)) {
+        if($processCount <= ($page * 20)) {
             $lastPageLink .= ' hidden';
         }
 

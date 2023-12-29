@@ -790,7 +790,7 @@ class Documents extends APresenter {
         $lastPageLink .= '&grid_page=' . (ceil($documentCount / 20));
         $lastPageLink .= '"';
 
-        if($documentCount < ($page * 20)) {
+        if($documentCount <= ($page * 20)) {
             $lastPageLink .= ' hidden';
         }
 
