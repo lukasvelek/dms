@@ -5,7 +5,9 @@ It also enables users to manage metadata and their values.
 
 ## Changelog
 ### v1.5
+- added notification manager service
 - updated core code
+- optimized application
 
 ### v1.4
 - added document filters

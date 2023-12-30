@@ -781,7 +781,7 @@ class Documents extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($documentCount < ($page * $app->getGridSize())) {
+        if($documentCount <= ($page * $app->getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
@@ -797,7 +797,7 @@ class Documents extends APresenter {
         $lastPageLink .= '>&gt;&gt;</a>';
 
         if($documentCount > $app->getGridSize()) {
-            if(($page * $app->getGridSize()) > $documentCount) {
+            if(($page * $app->getGridSize()) >= $documentCount) {
                 $documentPageControl = $documentCount;
             } else {
                 $documentPageControl = ($page * $app->getGridSize()) . '+';

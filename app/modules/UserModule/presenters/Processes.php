@@ -244,7 +244,7 @@ class Processes extends APresenter {
         $lastPageLink .= '>&gt;&gt;</a>';
 
         if($processCount > $app->getGridSize()) {
-            if(($page * $app->getGridSize()) > $processCount) {
+            if(($page * $app->getGridSize()) >= $processCount) {
                 $processPageControl = $processCount;
             } else {
                 $processPageControl = ($page * $app->getGridSize()) . '+';
