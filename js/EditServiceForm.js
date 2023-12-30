@@ -92,3 +92,28 @@ if(document.getElementById('password_change_force_text_value') != null && docume
         }
     };
 }
+
+
+// NOTIFICATION_KEEP_LENGTH
+if(document.getElementById('notification_keep_length_text_value') != null && document.getElementById('notification_keep_length') != null) {
+    var notification_keep_length_text_value = document.getElementById('notification_keep_length_text_value');
+    var notification_keep_length_range = document.getElementById('notification_keep_length');
+
+    if(notification_keep_length_range.value == 1) {
+        notification_keep_length_text_value.innerHTML = notification_keep_length_range.value + " day";
+    } else if(notification_keep_length_range.value == 0) {
+        notification_keep_length_text_value.innerHTML = "Delete seen";
+    } else {
+        notification_keep_length_text_value.innerHTML = notification_keep_length_range.value + " days";
+    }
+
+    notification_keep_length_range.oninput = function() {
+        if(notification_keep_length_range.value == 1) {
+            notification_keep_length_text_value.innerHTML = notification_keep_length_range.value + " day";
+        } else if(notification_keep_length_range.value == 0) {
+            notification_keep_length_text_value.innerHTML = "Delete seen";
+        } else {
+            notification_keep_length_text_value.innerHTML = notification_keep_length_range.value + " days";
+        }
+    };
+}

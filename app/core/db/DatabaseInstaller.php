@@ -958,6 +958,9 @@ class DatabaseInstaller {
                 'password_change_period' => '30',
                 'password_change_force_administrators' => '0',
                 'password_change_force' => '0'
+            ),
+            'NotificationManagerService' => array(
+                'notification_keep_length' => '1'
             )
         );
 

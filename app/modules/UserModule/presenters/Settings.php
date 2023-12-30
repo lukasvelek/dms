@@ -1375,6 +1375,11 @@ class Settings extends APresenter {
 
                     break;
 
+                case ServiceMetadata::NOTIFICATION_KEEP_LENGTH:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="notification_keep_length_text_value">__VAL__</span>'))
+                    ->addElement($fb->createInput()->setType('range')->setMin('0')->setMax('30')->setName($key)->setValue($value))
+                    ;
                     break;
             }
         }
