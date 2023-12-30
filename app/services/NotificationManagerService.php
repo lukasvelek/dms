@@ -9,11 +9,13 @@ use DMS\Models\ServiceModel;
 
 class NotificationManagerService extends AService {
     private NotificationModel $notificationModel;
+    private array $cfg;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cacheManager, NotificationModel $notificationModel) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cacheManager, NotificationModel $notificationModel, array $cfg) {
         parent::__construct('NotificationManagerService', 'Service responsible for deleting old notifications', $logger, $serviceModel, $cacheManager);
 
         $this->notificationModel = $notificationModel;
+        $this->cfg = $cfg;
 
         $this->loadCfg();
     }
@@ -33,6 +35,14 @@ class NotificationManagerService extends AService {
         }
 
         $this->log('Found ' . count($toDelete) . ' notifications to delete', __METHOD__);
+
+        $serviceUserNotifications = $this->notificationModel->getNotificationsForUser($this->cfg['id_service_user']);
+        
+        foreach($serviceUserNotifications as $notification) {
+            $toDelete[] = $notification->getId();
+        }
+
+        $this->log('Found ' . count($serviceUserNotifications) . ' service user notifications to delete', __METHOD__);
 
         $this->notificationModel->beginTran();
 
