@@ -261,7 +261,6 @@ class SingleProcess extends APresenter {
             $author = $cacheUser;
         }
 
-        //$author = $app->userModel->getUserById($process->getIdAuthor());
         $author = $link($author->getId(), $author->getFullname());
 
         $currentOfficer = ${'workflow' . $process->getWorkflowStatus() . 'User'};
@@ -342,9 +341,17 @@ class SingleProcess extends APresenter {
 
         $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
+        $submitStyle = '';
+        $textareaStyle = 'required';
+
+        if($process->getStatus() == ProcessStatus::FINISHED) {
+            $submitStyle = 'disabled';
+            $textareaStyle = 'disabled';
+        }
+
         return '<!--<script type="text/javascript" src="js/ProcessAjaxComment.js"></script>-->
-        <textarea name="text" id="text" required></textarea><br><br>
-        <button onclick="sendProcessComment(' . $app->user->getId() . ', ' . $process->getId() . ', ' . $canDelete . ')">Send</button>
+        <textarea name="text" id="text" ' . $textareaStyle . '></textarea><br><br>
+        <button onclick="sendProcessComment(' . $app->user->getId() . ', ' . $process->getId() . ', ' . $canDelete . ')" ' . $submitStyle . '>Send</button>
         ';
     }
 
