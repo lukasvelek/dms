@@ -92,3 +92,53 @@ if(document.getElementById('password_change_force_text_value') != null && docume
         }
     };
 }
+
+
+// NOTIFICATION_KEEP_LENGTH
+if(document.getElementById('notification_keep_length_text_value') != null && document.getElementById('notification_keep_length') != null) {
+    var notification_keep_length_text_value = document.getElementById('notification_keep_length_text_value');
+    var notification_keep_length_range = document.getElementById('notification_keep_length');
+
+    if(notification_keep_length_range.value == 1) {
+        notification_keep_length_text_value.innerHTML = notification_keep_length_range.value + " day";
+    } else if(notification_keep_length_range.value == 0) {
+        notification_keep_length_text_value.innerHTML = "Delete seen";
+    } else {
+        notification_keep_length_text_value.innerHTML = notification_keep_length_range.value + " days";
+    }
+
+    notification_keep_length_range.oninput = function() {
+        if(notification_keep_length_range.value == 1) {
+            notification_keep_length_text_value.innerHTML = notification_keep_length_range.value + " day";
+        } else if(notification_keep_length_range.value == 0) {
+            notification_keep_length_text_value.innerHTML = "Delete seen";
+        } else {
+            notification_keep_length_text_value.innerHTML = notification_keep_length_range.value + " days";
+        }
+    };
+}
+
+
+// NOTIFICATION_KEEP_UNSEEN_SERVICE_USER
+if(document.getElementById('notification_keep_unseen_service_user_text_value') != null && document.getElementById('notification_keep_unseen_service_user') != null) {
+    var notification_keep_unseen_service_user_text_value = document.getElementById('notification_keep_unseen_service_user_text_value');
+    var notification_keep_unseen_service_user = document.getElementById('notification_keep_unseen_service_user');
+
+    if(notification_keep_unseen_service_user.checked == 1) {
+        notification_keep_unseen_service_user_text_value.innerHTML = 'Keep';
+        notification_keep_unseen_service_user_text_value.style.color = 'green';
+    } else {
+        notification_keep_unseen_service_user_text_value.innerHTML = 'Don\'t keep';
+        notification_keep_unseen_service_user_text_value.style.color = 'red';
+    }
+
+    notification_keep_unseen_service_user.oninput = function() {
+        if(notification_keep_unseen_service_user.checked == 1) {
+            notification_keep_unseen_service_user_text_value.innerHTML = 'Keep';
+            notification_keep_unseen_service_user_text_value.style.color = 'green';
+        } else {
+            notification_keep_unseen_service_user_text_value.innerHTML = 'Don\'t keep';
+            notification_keep_unseen_service_user_text_value.style.color = 'red';
+        }
+    };
+}

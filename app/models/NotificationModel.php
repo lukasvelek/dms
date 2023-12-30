@@ -12,6 +12,37 @@ class NotificationModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteNotificationById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('notifications')
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function getSeenNotifications() {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('notifications')
+                   ->where('status=:status')
+                   ->setParam(':status', NotificationStatus::SEEN)
+                   ->execute()
+                   ->fetch();
+
+        $notifications = [];
+        foreach($rows as $row) {
+            $notifications[] = $this->createNotificationObjectFromDbRow($row);
+        }
+
+        return $notifications;
+    }
+
     public function setSeen(int $id) {
         return $this->updateStatus($id, NotificationStatus::SEEN);
     }
