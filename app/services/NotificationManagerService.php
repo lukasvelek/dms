@@ -36,13 +36,17 @@ class NotificationManagerService extends AService {
 
         $this->log('Found ' . count($toDelete) . ' notifications to delete', __METHOD__);
 
-        $serviceUserNotifications = $this->notificationModel->getNotificationsForUser($this->cfg['id_service_user']);
+        if($this->scfg['notification_keep_unseen_service_user'] == '1') {
+            $serviceUserNotifications = $this->notificationModel->getNotificationsForUser($this->cfg['id_service_user']);
         
-        foreach($serviceUserNotifications as $notification) {
-            $toDelete[] = $notification->getId();
-        }
+            foreach($serviceUserNotifications as $notification) {
+                $toDelete[] = $notification->getId();
+            }
 
-        $this->log('Found ' . count($serviceUserNotifications) . ' service user notifications to delete', __METHOD__);
+            $this->log('Found ' . count($serviceUserNotifications) . ' service user notifications to delete', __METHOD__);
+        } else {
+            $this->log('Keeping unseen service user\'s notifications is enabled -> skipping...', __METHOD__);
+        }
 
         $this->notificationModel->beginTran();
 

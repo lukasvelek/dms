@@ -8,13 +8,15 @@ class ServiceMetadata {
     public const PASSWORD_CHANGE_FORCE_ADMINISTRATORS = 'password_change_force_administrators';
     public const PASSWORD_CHANGE_FORCE = 'password_change_force';
     public const NOTIFICATION_KEEP_LENGTH = 'notification_keep_length';
+    public const NOTIFICATION_KEEP_UNSEEN_SERVICE_USER = 'notification_keep_unseen_service_user';
 
     public static $texts = array(
         self::FILES_KEEP_LENGTH => 'Files keep length',
         self::PASSWORD_CHANGE_PERIOD => 'Password change period',
         self::PASSWORD_CHANGE_FORCE_ADMINISTRATORS => 'Force password change for administrators',
         self::PASSWORD_CHANGE_FORCE => 'Force password change for general users',
-        self::NOTIFICATION_KEEP_LENGTH => 'Notification keep length'
+        self::NOTIFICATION_KEEP_LENGTH => 'Notification keep length',
+        self::NOTIFICATION_KEEP_UNSEEN_SERVICE_USER => 'Keep unseen service user\'s notifications'
     );
 }
 

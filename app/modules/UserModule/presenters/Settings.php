@@ -130,6 +130,12 @@ class Settings extends APresenter {
             } else {
                 $values['password_change_force'] = '1';
             }
+        } else if($name == 'NotificationManagerService') {
+            if(!array_key_exists('notification_keep_unseen_service_user', $values)) {
+                $values['notification_keep_unseen_service_user'] = '0';
+            } else {
+                $values['notification_keep_unseen_service_user'] = '1';
+            }
         }
 
         foreach($values as $k => $v) {
@@ -1380,6 +1386,21 @@ class Settings extends APresenter {
                     ->addElement($fb->createSpecial('<span id="notification_keep_length_text_value">__VAL__</span>'))
                     ->addElement($fb->createInput()->setType('range')->setMin('0')->setMax('30')->setName($key)->setValue($value))
                     ;
+                    break;
+
+                case ServiceMetadata::NOTIFICATION_KEEP_UNSEEN_SERVICE_USER:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="notification_keep_unseen_service_user_text_value">__VAL__</span>'))
+                    ;
+
+                    $checkbox = $fb->createInput()->setType('checkbox')->setName($key);
+
+                    if($value == '1') {
+                        $checkbox->setSpecial('checked');
+                    }
+
+                    $fb->addElement($checkbox);
+
                     break;
             }
         }

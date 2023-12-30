@@ -117,3 +117,28 @@ if(document.getElementById('notification_keep_length_text_value') != null && doc
         }
     };
 }
+
+
+// NOTIFICATION_KEEP_UNSEEN_SERVICE_USER
+if(document.getElementById('notification_keep_unseen_service_user_text_value') != null && document.getElementById('notification_keep_unseen_service_user') != null) {
+    var notification_keep_unseen_service_user_text_value = document.getElementById('notification_keep_unseen_service_user_text_value');
+    var notification_keep_unseen_service_user = document.getElementById('notification_keep_unseen_service_user');
+
+    if(notification_keep_unseen_service_user.checked == 1) {
+        notification_keep_unseen_service_user_text_value.innerHTML = 'Keep';
+        notification_keep_unseen_service_user_text_value.style.color = 'green';
+    } else {
+        notification_keep_unseen_service_user_text_value.innerHTML = 'Don\'t keep';
+        notification_keep_unseen_service_user_text_value.style.color = 'red';
+    }
+
+    notification_keep_unseen_service_user.oninput = function() {
+        if(notification_keep_unseen_service_user.checked == 1) {
+            notification_keep_unseen_service_user_text_value.innerHTML = 'Keep';
+            notification_keep_unseen_service_user_text_value.style.color = 'green';
+        } else {
+            notification_keep_unseen_service_user_text_value.innerHTML = 'Don\'t keep';
+            notification_keep_unseen_service_user_text_value.style.color = 'red';
+        }
+    };
+}
