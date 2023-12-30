@@ -18,7 +18,6 @@ use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
-use DMS\Constants\UserPasswordChangeStatus;
 use \DMS\Core\Logger\Logger;
 use \DMS\Core\FileManager;
 use DMS\Models\DocumentCommentModel;
@@ -40,7 +39,6 @@ use DMS\Models\WidgetModel;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
-use FFI;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -57,9 +55,14 @@ class Application {
     public const URL_PROCESSES_PAGE = 'UserModule:Processes:showAll';
     public const URL_LOGOUT_PAGE = 'UserModule:UserLogout:logoutUser';
 
+    public const SYSTEM_VERSION_MAJOR = 1;
+    public const SYSTEM_VERSION_MINOR = 5;
+    public const SYSTEM_VERSION_PATCH = 0;
+    public const SYSTEM_VERSION_PATCH_DISPLAY = false;
+
     public const SYSTEM_IS_BETA = true;
     public const SYSTEM_DEBUG = true && self::SYSTEM_IS_BETA;
-    public const SYSTEM_VERSION = '1.5' . (self::SYSTEM_IS_BETA ? '_beta' : '');
+    public const SYSTEM_VERSION = self::SYSTEM_VERSION_MAJOR . '.' . self::SYSTEM_VERSION_MINOR . (self::SYSTEM_VERSION_PATCH_DISPLAY ? ('.' . self::SYSTEM_VERSION_PATCH) : '') . (self::SYSTEM_IS_BETA ? '_beta' : '');
     public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2023/12/30';
 
     public array $cfg;

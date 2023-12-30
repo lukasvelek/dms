@@ -415,21 +415,17 @@ function search() {
                 if(!is_null($document->getIdFolder())) {
                     $folder = null;
 
-                $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
+                    $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
 
-                if(is_null($cacheFolder)) {
-                    $folder = $folderModel->getFolderById($document->getIdFolder());
-                    $fcm->saveFolderToCache($folder);
-                } else {
-                    $folder = $cacheFolder;
-                }
+                    if(is_null($cacheFolder)) {
+                        $folder = $folderModel->getFolderById($document->getIdFolder());
+                        $fcm->saveFolderToCache($folder);
+                    } else {
+                        $folder = $cacheFolder;
+                        $folderName = $folder->getName();
+                    }
 
-                if($document->getIdFolder() !== NULL) {
-                    $folder = $folderModel->getFolderById($document->getIdFolder());
-                    $folderName = $folder->getName();
-                }
-
-                $docuRow->addCol($tb->createCol()->setText($folderName));
+                    $docuRow->addCol($tb->createCol()->setText($folderName));
                 }else{
                     $docuRow->addCol($tb->createCol()->setText('-'));
                 }
@@ -530,10 +526,19 @@ function search() {
                 }
     
                 $folderName = '-';
-    
-                if($document->getIdFolder() !== NULL) {
-                    $folder = $folderModel->getFolderById($document->getIdFolder());
-                    $folderName = $folder->getName();
+
+                if(!is_null($document->getIdFolder())) {
+                    $folder = null;
+
+                    $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
+
+                    if(is_null($cacheFolder)) {
+                        $folder = $folderModel->getFolderById($document->getIdFolder());
+                        $fcm->saveFolderToCache($folder);
+                    } else {
+                        $folder = $cacheFolder;
+                        $folderName = $folder->getName();
+                    }
                 }
     
                 $docuRow->addCol($tb->createCol()->setText($folderName));
