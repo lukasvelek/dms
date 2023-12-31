@@ -28,7 +28,7 @@ class ProcessStats extends AWidget {
         $this->add('Processes in progress', $inProgressCount);
         $this->add('Finished processes', $finishedCount);
 
-        $this->updateLink(LinkBuilder::createAdvLink(array('page' => 'UserModule:Widgets:updateProcessStats'), 'Update'), $dateCreated);
+        $this->updateLink(LinkBuilder::createAdvLink(array('page' => 'UserModule:Widgets:updateAllStats'), 'Update'), $dateCreated);
 
         return parent::render();
     }

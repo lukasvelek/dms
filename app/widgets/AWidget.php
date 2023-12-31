@@ -17,7 +17,7 @@ abstract class AWidget implements IRenderable {
     }
 
     protected function updateLink(string $link, string $lastUpdate) {
-        $this->code[] = '<p>Last update: ' . $lastUpdate . ' | ' . $link . '</p>';
+        $this->code[] = '<p><b>Last update:</b> ' . $lastUpdate . ' | ' . $link . '</p>';
     }
 
     public function render() {

@@ -32,7 +32,7 @@ class DocumentStats extends AWidget {
         $this->add('New documents', $newCount);
         $this->add('Documents waiting for archivation', $waitingForArchivationCount);
 
-        $this->updateLink(LinkBuilder::createAdvLink(array('page' => 'UserModule:Widgets:updateDocumentStats'), 'Update'), $lastUpdateDate);
+        $this->updateLink(LinkBuilder::createAdvLink(array('page' => 'UserModule:Widgets:updateAllStats'), 'Update'), $lastUpdateDate);
 
         return parent::render();
     }
