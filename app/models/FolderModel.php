@@ -11,6 +11,10 @@ class FolderModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getFolderCount() {
+        return $this->getRowCount('folders');
+    }
+
     public function deleteFolder(int $id) {
         $qb = $this->qb(__METHOD__);
 

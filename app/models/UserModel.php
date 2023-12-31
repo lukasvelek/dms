@@ -11,6 +11,10 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getUserCount() {
+        return $this->getRowCount('users');
+    }
+
     public function deletePasswordResetHashByIdHash(string $hash) {
         return $this->deleteByCol('hash', $hash, 'password_reset_hashes');
     }

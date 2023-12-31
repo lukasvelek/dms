@@ -86,21 +86,19 @@ class WidgetComponent extends AComponent {
 
                     $idUser = $_SESSION['id_current_user'];
 
-                    $waitingForMe = $this->processModel->getProcessesWaitingForUser($idUser);
+                    $count = 5;
+
+                    $waitingForMe = $this->processModel->getProcessesWaitingForUser($idUser, $count);
 
                     if($waitingForMe != null) {
-                        $i = 0;
-            
                         foreach($waitingForMe as $process) {
-                            if($i == 4) {
+                            /*if($i == 4) {
                                 break;
-                            }
+                            }*/
 
                             $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()), 'Process #' . $process->getId() . ' - ' . ProcessTypes::$texts[$process->getType()]);
 
                             $code[] = '<p>' . $link . '</p>';
-
-                            $i++;
                         }
                     } else {
                         $code[] = '<p>No processes found</p>';

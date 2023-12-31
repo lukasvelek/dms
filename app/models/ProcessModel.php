@@ -12,6 +12,23 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getLastProcessStatsEntry() {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('process_stats')
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
+    public function insertProcessStatsEntry(array $data) {
+        return $this->insertNew($data, 'process_stats');
+    }
+
     public function getAllProcessIds() {
         $qb = $this->qb(__METHOD__);
 
@@ -88,7 +105,7 @@ class ProcessModel extends AModel {
         return $result;
     }
 
-    public function getProcessesWaitingForUser(int $idUser) {
+    public function getProcessesWaitingForUser(int $idUser, int $limit = 0) {
         $qb = $this->qb(__METHOD__);
 
         $rows = $qb->select('*')
@@ -119,9 +136,13 @@ class ProcessModel extends AModel {
                    ->setParams(array(
                     ':id_user' => $idUser,
                     ':status' => ProcessStatus::IN_PROGRESS
-                   ))
-                   ->execute()
-                   ->fetch();
+                   ));
+
+        if($limit > 0) {
+            $rows->limit($limit);
+        }
+
+        $rows = $rows->execute()->fetch();
 
         $processes = [];
         foreach($rows as $row) {

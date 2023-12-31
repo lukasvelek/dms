@@ -259,6 +259,22 @@ class DatabaseInstaller {
                 'id_user' => 'INT(32) NOT NULL',
                 'hash' => 'VARCHAR(256)',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'document_stats' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'total_count' => 'INT(32) NOT NULL',
+                'shredded_count' => 'INT(32) NOT NULL',
+                'archived_count' => 'INT(32) NOT NULL',
+                'new_count' => 'INT(32) NOT NULL',
+                'waiting_for_archivation_count' => 'INT(32) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'process_stats' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'total_count' => 'INT(32) NOT NULL',
+                'in_progress_count' => 'INT(32) NOT NULL',
+                'finished_count' => 'INT(32) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 

@@ -14,6 +14,27 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getLastDocumentStatsEntry() {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('document_stats')
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
+    public function insertDocumentStatsEntry(array $data) {
+        return $this->insertNew($data, 'document_stats');
+    }
+
+    public function getTotalDocumentCount() {
+        return $this->getRowCount('documents');
+    }
+
     public function getAllDocumentIds() {
         $qb = $this->qb(__METHOD__);
 

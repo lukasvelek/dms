@@ -1012,11 +1012,11 @@ class Settings extends APresenter {
     private function internalCreateCountWidget() {
         global $app;
 
-        $users = count($app->userModel->getAllUsers());
-        $groups = count($app->groupModel->getAllGroups());
-        $documents = count($app->documentModel->getAllDocuments());
-        $folders = count($app->folderModel->getAllFolders());
-        $emails = $app->mailModel->getMailQueue()->num_rows;
+        $users = $app->userModel->getUserCount();
+        $groups = $app->groupModel->getGroupCount();
+        $documents = $app->documentModel->getTotalDocumentCount();
+        $folders = $app->folderModel->getFolderCount();
+        $emails = $app->mailModel->getMailInQueueCount();
 
         $code = '<div class="col-md">
                     <div class="row">
