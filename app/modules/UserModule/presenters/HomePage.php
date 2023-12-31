@@ -35,6 +35,13 @@ class HomePage extends APresenter {
     protected function showHomePage() {
         global $app;
 
+        $documentStats = $app->documentModel->getLastDocumentStatsEntry();
+        $processStats = $app->processModel->getLastProcessStatsEntry();
+
+        if(is_null($documentStats) || is_null($processStats)) {
+            $app->redirect('UserModule:Widgets:updateAllStats');
+        }
+
         $idUser = $app->user->getId();
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/homepage.html');
