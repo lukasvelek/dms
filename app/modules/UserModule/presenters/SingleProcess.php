@@ -4,7 +4,6 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Components\Process\DeleteProcess;
 use DMS\Components\Process\ShreddingProcess;
-use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
