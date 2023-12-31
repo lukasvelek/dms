@@ -5,7 +5,6 @@ namespace DMS\Widgets\HomeDashboard;
 use DMS\Constants\DocumentStatus;
 use DMS\Models\DocumentModel;
 use DMS\Widgets\AWidget;
-use DMS\Widgets\IRenderable;
 
 class DocumentStats extends AWidget {
     private DocumentModel $documentModel;
@@ -17,29 +16,11 @@ class DocumentStats extends AWidget {
     }
 
     public function render() {
-        $documents = $this->documentModel->getAllDocuments();
-        $documentCount = count($documents);
-        $shreddedCount = $archivedCount = $waitingForArchivationCount = $newCount = 0;
-
-        foreach($documents as $document) {
-            switch($document->getStatus()) {
-                case DocumentStatus::SHREDDED:
-                    $shreddedCount++;
-                    break;
-
-                case DocumentStatus::ARCHIVED:
-                    $archivedCount++;
-                    break;
-
-                case DocumentStatus::ARCHIVATION_APPROVED:
-                    $waitingForArchivationCount++;
-                    break;
-
-                case DocumentStatus::NEW:
-                    $newCount++;
-                    break;
-            }
-        }
+        $documentCount = $this->documentModel->getTotalDocumentCount();
+        $shreddedCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED);
+        $archivedCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED);
+        $newCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::NEW);
+        $waitingForArchivationCount = $this->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED);
 
         $this->add('Total documents', $documentCount);
         $this->add('Shredded documents', $shreddedCount);
