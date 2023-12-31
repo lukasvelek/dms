@@ -105,7 +105,7 @@ class ProcessModel extends AModel {
         return $result;
     }
 
-    public function getProcessesWaitingForUser(int $idUser) {
+    public function getProcessesWaitingForUser(int $idUser, int $limit = 0) {
         $qb = $this->qb(__METHOD__);
 
         $rows = $qb->select('*')
@@ -136,9 +136,13 @@ class ProcessModel extends AModel {
                    ->setParams(array(
                     ':id_user' => $idUser,
                     ':status' => ProcessStatus::IN_PROGRESS
-                   ))
-                   ->execute()
-                   ->fetch();
+                   ));
+
+        if($limit > 0) {
+            $rows->limit($limit);
+        }
+
+        $rows = $rows->execute()->fetch();
 
         $processes = [];
         foreach($rows as $row) {
