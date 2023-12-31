@@ -12,6 +12,23 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getLastProcessStatsEntry() {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('process_stats')
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
+    public function insertProcessStatsEntry(array $data) {
+        return $this->insertNew($data, 'process_stats');
+    }
+
     public function getAllProcessIds() {
         $qb = $this->qb(__METHOD__);
 

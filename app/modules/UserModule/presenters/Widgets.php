@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\ProcessStatus;
 use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
@@ -44,6 +45,20 @@ class Widgets extends APresenter {
         );
 
         $app->documentModel->insertDocumentStatsEntry($data);
+
+        $app->redirect('UserModule:HomePage:showHomepage');
+    }
+
+    protected function updateProcessStats() {
+        global $app;
+
+        $data = array(
+            'total_count' => $app->processModel->getProcessCountByStatus(),
+            'finished_count' => $app->processModel->getProcessCountByStatus(ProcessStatus::FINISHED),
+            'in_progress_count' => $app->processModel->getProcessCountByStatus(ProcessStatus::IN_PROGRESS)
+        );
+
+        $app->processModel->insertProcessStatsEntry($data);
 
         $app->redirect('UserModule:HomePage:showHomepage');
     }
