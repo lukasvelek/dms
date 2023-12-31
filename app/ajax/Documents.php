@@ -1,6 +1,7 @@
 <?php
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\DocumentStatus;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Helpers\ArrayStringHelper;
@@ -693,9 +694,27 @@ function generateDocuments() {
         }
     }
 
+    $documentModel->beginTran();
+
     foreach($data as $index => $d) {
         $documentModel->insertNewDocument($d);
     }
+
+    $documentModel->commitTran();
+
+    $data = array(
+        'total_count' => $documentModel->getTotalDocumentCount(),
+        'shredded_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
+        'archived_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
+        'new_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
+        'waiting_for_archivation_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED)
+    );
+
+    $documentModel->beginTran();
+
+    $documentModel->insertDocumentStatsEntry($data);
+
+    $documentModel->commitTran();
 }
 
 // PRIVATE METHODS
