@@ -7,6 +7,7 @@ It also enables users to manage metadata and their values.
 ### v1.5
 - added notification manager service
 - updated core code
+- updated debug tools
 - optimized application
 
 ### v1.4

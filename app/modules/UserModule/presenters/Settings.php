@@ -991,6 +991,7 @@ class Settings extends APresenter {
 
         $systemVersion = $app::SYSTEM_VERSION;
         $systemBuildDate = $app::SYSTEM_BUILD_DATE;
+        $systemIsDebugEnabled = $app::SYSTEM_DEBUG ? 'Enabled' : 'Disabled';
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -1002,6 +1003,7 @@ class Settings extends APresenter {
                         <div class="col-md">
                             <p><b>System version: </b>' . $systemVersion . '</p>
                             <p><b>System build date: </b>' . $systemBuildDate . '</p>
+                            <p><b>System is debug enabled: </b>' . $systemIsDebugEnabled . '</p>
                         </div>
                     </div>
                  </div>';
