@@ -11,6 +11,10 @@ class GroupModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getGroupCount() {
+        return $this->getRowCount('groups');
+    }
+
     public function getLastInsertedGroup() {
         $qb = $this->qb(__METHOD__);
 

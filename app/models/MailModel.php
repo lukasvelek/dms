@@ -11,7 +11,7 @@ class MailModel extends AModel {
     }
 
     public function getMailInQueueCount() {
-        return $this->getMailQueue()->num_rows;
+        return $this->getRowCount('mail_queue');
     }
 
     public function insertNewQueueEntry(array $data) {

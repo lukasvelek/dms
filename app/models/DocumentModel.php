@@ -14,6 +14,10 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getTotalDocumentCount() {
+        return $this->getRowCount('documents');
+    }
+
     public function getAllDocumentIds() {
         $qb = $this->qb(__METHOD__);
 

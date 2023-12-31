@@ -90,6 +90,20 @@ abstract class AModel {
     public function rollbackTran() {
         return $this->db->rollback();
     }
+
+    public function getRowCount(string $tableName, string $rowName = 'id') {
+        $sql = "SELECT COUNT(`$rowName`) AS `count` FROM `$tableName`";
+
+        $count = 0;
+
+        $rows = $this->db->query($sql);
+
+        foreach($rows as $row) {
+            $count = $row['count'];
+        }
+
+        return $count;
+    }
 }
 
 ?>
