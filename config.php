@@ -26,4 +26,6 @@ $cfg['mail_login_password'] = '';
 
 $cfg['grid_size'] = '25';
 
+$cfg['grid_use_fast_load'] = true;
+
 ?>

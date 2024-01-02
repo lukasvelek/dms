@@ -759,6 +759,8 @@ class Documents extends APresenter {
             $lastPageLink .= '&id_folder=' . $idFolder;
         }
 
+        $pageCheck = $page - 1;
+
         $firstPageLink .= '"';
 
         if($page == 1) {
@@ -797,10 +799,18 @@ class Documents extends APresenter {
         $lastPageLink .= '>&gt;&gt;</a>';
 
         if($documentCount > $app->getGridSize()) {
-            if(($page * $app->getGridSize()) >= $documentCount) {
+            /*if(($pageCheck * $app->getGridSize()) >= $documentCount) {
                 $documentPageControl = $documentCount;
             } else {
                 $documentPageControl = ($page * $app->getGridSize()) . '+';
+            }*/
+
+            
+            if($pageCheck * $app->getGridSize() >= $documentCount) {
+                
+                $documentPageControl = (1 + ($page * $app->getGridSize()));
+            } else {
+                $documentPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
             }
         } else {
             $documentPageControl = $documentCount;

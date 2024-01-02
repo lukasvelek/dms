@@ -183,5 +183,6 @@ $documentRepository = new DocumentRepository($db, $logger, $documentModel, $docu
 $mailManager = new MailManager($cfg);
 
 $gridSize = $cfg['grid_size'];
+$gridUseFastLoad = $cfg['grid_use_fast_load'];
 
 ?>
