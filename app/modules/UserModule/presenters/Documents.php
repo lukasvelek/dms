@@ -79,7 +79,7 @@ class Documents extends APresenter {
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
             '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
+            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder, 'showSharedWithMe')
         );
 
         $this->templateManager->fill($data, $template);
@@ -741,16 +741,17 @@ class Documents extends APresenter {
         ';
     }
 
-    private function internalCreateGridPageControl(int $page, ?string $idFolder) {
+    private function internalCreateGridPageControl(int $page, ?string $idFolder, string $action = 'showAll') {
         global $app;
 
-        $documentCount = count($app->documentModel->getAllDocumentIds());
+        //$documentCount = $app->documentModel->getTotalDocumentCount();
+        $documentCount = $app->documentModel->getCountDocumentsSharedWithUser($app->user->getId());
 
         $documentPageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Documents:showAll';
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Documents:showAll';
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Documents:showAll';
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Documents:showAll';
+        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Documents:' . $action;
+        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Documents:' . $action;
+        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Documents:' . $action;
+        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Documents:' . $action;
 
         if(!is_null($idFolder)) {
             $firstPageLink .= '&id_folder=' . $idFolder;

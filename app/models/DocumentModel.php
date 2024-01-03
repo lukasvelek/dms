@@ -19,7 +19,11 @@ class DocumentModel extends AModel {
         return $this->getFirstRowWithCount($gridPage, 'documents', ['id']);
     }
 
-    public function getStandardDocumentsFromId(int $idFrom, ?int $idFolder, ?string $filter, int $limit) {
+    public function getStandardDocumentsFromId(?int $idFrom, ?int $idFolder, ?string $filter, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
         $qb = $this->composeQueryStandardDocuments();
 
         if($idFrom == 1) {
@@ -139,6 +143,10 @@ class DocumentModel extends AModel {
                   ->fetchSingle();
 
         return $row;
+    }
+
+    public function getCountDocumentsSharedWithUser(int $idUser) {
+        return $this->getRowCount('document_sharing', 'id', "WHERE `id_user`='" . $idUser . "' AND (`date_from` < current_timestamp AND `date_to` > current_timestamp)");
     }
 
     public function getDocumentSharingsSharedWithUser(int $idUser) {

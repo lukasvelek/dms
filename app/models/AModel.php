@@ -91,8 +91,14 @@ abstract class AModel {
         return $this->db->rollback();
     }
 
-    public function getRowCount(string $tableName, string $rowName = 'id') {
+    public function getRowCount(string $tableName, string $rowName = 'id', ?string $condition = null) {
         $sql = "SELECT COUNT(`$rowName`) AS `count` FROM `$tableName`";
+
+        if(!is_null($condition)) {
+            $sql .= ' ' . $condition;
+        }
+
+        $this->logger->sql($sql, __METHOD__);
 
         $count = 0;
 
@@ -120,6 +126,8 @@ abstract class AModel {
         }
 
         $sql .= " FROM `$tableName`) `t2` WHERE `row_num` = $count";
+
+        $this->logger->sql($sql, __METHOD__);
 
         $row = $this->db->query($sql);
 
