@@ -11,10 +11,10 @@ class UsersEnum extends AEnum {
         parent::__construct('UsersEnum');
         $this->userModel = $userModel;
 
-        $this->loadValues($this->values);
+        $this->loadValues();
     }
 
-    private function loadValues(array &$values) {
+    private function loadValues() {
         $users = $this->userModel->getAllUsers();
 
         foreach($users as $user) {

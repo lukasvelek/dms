@@ -4,7 +4,9 @@ namespace DMS\Components;
 
 use DMS\Enums\AEnum;
 use DMS\Enums\DocumentMarkColorEnum;
+use DMS\Enums\GroupsEnum;
 use DMS\Enums\UsersEnum;
+use DMS\Models\GroupModel;
 use DMS\Models\UserModel;
 
 class ExternalEnumComponent {
@@ -13,12 +15,20 @@ class ExternalEnumComponent {
      */
     private array $enums;
 
-    private UserModel $userModel;
+    private array $models;
 
-    public function __construct(UserModel $userModel) {
-        $this->userModel = $userModel;
+    public function __construct(array $models) {
+        $this->models = $models;
         
         $this->initEnums();
+    }
+
+    public function getModelByName(string $name) {
+        if(array_key_exists($name, $this->models)) {
+            return $this->models[$name];
+        } else {
+            return null;
+        }
     }
 
     public function getEnumByName(string $name) {
@@ -42,11 +52,10 @@ class ExternalEnumComponent {
     }
 
     private function initEnums() {
-        $usersEnum = new UsersEnum($this->userModel);
-
         $this->enums = array(
             'DocumentMarkColorEnum' => DocumentMarkColorEnum::getEnum(),
-            'UsersEnum' => $usersEnum
+            'UsersEnum' => new UsersEnum($this->getModelByName('userModel')),
+            'GroupsEnum' => new GroupsEnum($this->getModelByName('groupModel'))
         );
     }
 }

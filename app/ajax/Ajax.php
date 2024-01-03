@@ -181,7 +181,7 @@ $documentRepository = new DocumentRepository($db, $logger, $documentModel, $docu
 
 $mailManager = new MailManager($cfg);
 
-$externalEnumComponent = new ExternalEnumComponent($userModel);
+//$externalEnumComponent = new ExternalEnumComponent($userModel);
 
 $gridSize = $cfg['grid_size'];
 $gridUseFastLoad = $cfg['grid_use_fast_load'];

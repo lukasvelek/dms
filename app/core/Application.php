@@ -112,6 +112,7 @@ class Application {
 
     public MailManager $mailManager;
 
+    private array $models;
     private array $modules;
     private ?string $pageContent;
     private string $baseDir;
@@ -157,6 +158,25 @@ class Application {
         $this->notificationModel = new NotificationModel($this->conn, $this->logger);
         $this->mailModel = new MailModel($this->conn, $this->logger);
         
+        $this->models = array(
+            'userModel' => $this->userModel,
+            'userRightModel' => $this->userRightModel,
+            'documentModel' => $this->documentModel,
+            'groupModel' => $this->groupModel,
+            'groupUserModel' => $this->groupUserModel,
+            'processModel' => $this->processModel,
+            'groupRightModel' => $this->groupRightModel,
+            'metadataModel' => $this->metadataModel,
+            'tableModel' => $this->tableModel,
+            'folderModel' => $this->folderModel,
+            'serviceModel' => $this->serviceModel,
+            'documentCommentModel' => $this->documentCommentModel,
+            'processCommentModel' => $this->processCommentModel,
+            'widgetModel' => $this->widgetModel,
+            'notificationModel' => $this->notificationModel,
+            'mailModel' => $this->mailModel
+        );
+
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -184,7 +204,7 @@ class Application {
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
 
-        $this->externalEnumComponent = new ExternalEnumComponent($this->userModel);
+        $this->externalEnumComponent = new ExternalEnumComponent($this->models);
     }
 
     /**
