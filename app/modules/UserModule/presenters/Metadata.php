@@ -68,7 +68,7 @@ class Metadata extends APresenter {
         $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value');
         $backLink = LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-');
 
-        if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $idMetadata) && !$metadata->getIsSystem()) {
+        if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $idMetadata) && !$metadata->getIsSystem() && ($metadata->getInputType() != 'select_external')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>';
         } else {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . $backLink . '</div></div>';
@@ -263,53 +263,89 @@ class Metadata extends APresenter {
 
         $headerRow = null;
 
-        $values = $app->metadataModel->getAllValuesForIdMetadata($id);
+        $metadata = $app->metadataModel->getMetadataById($id);
 
-        if(empty($values)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($values as $v) {
-                $actionLinks = array('new' => '-');
+        if($metadata->getInputType() == 'select_external') {
+            $enum = $app->externalEnumComponent->getEnumByName($metadata->getSelectExternalEnumName());
 
-                if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $id) && !$isSystem) {
-                    $actionLinks['new'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
-                }
-
+            if(empty($enum->getValues())) {
+                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+            } else {
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();
-
+    
                     foreach($headers as $header) {
                         $col = $tb->createCol()->setText($header)
                                                ->setBold();
-
-                        if($headers == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
+    
                         $row->addCol($col);
                     }
-
+    
                     $headerRow = $row;
-                    
+                
                     $tb->addRow($row);
                 }
 
-                $valueRow = $tb->createRow();
+                foreach($enum->getValues() as $name => $text) {
+                    $valueRow = $tb->createRow();
 
-                foreach($actionLinks as $actionLink) {
-                    $valueRow->addCol($tb->createCol()->setText($actionLink));
+                    $valueRow   ->addCol($tb->createCol()->setText('-'))
+                                ->addCol($tb->createCol()->setText($text))
+                                ->addCol($tb->createCol()->setText($name))
+                    ;
+
+                    $tb->addRow($valueRow);
                 }
+            }
+        } else {
+            $values = $app->metadataModel->getAllValuesForIdMetadata($id);
 
-                $valueArray = array(
-                    $v->getName(),
-                    $v->getValue()
-                );
+            if(empty($values)) {
+                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+            } else {
+                foreach($values as $v) {
+                    $actionLinks = array('new' => '-');
+                    
+                    if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $id) && !$isSystem) {
+                        $actionLinks['new'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
+                    }
 
-                foreach($valueArray as $va) {
-                    $valueRow->addCol($tb->createCol()->setText($va));
+                    if(is_null($headerRow)) {
+                        $row = $tb->createRow();
+
+                        foreach($headers as $header) {
+                            $col = $tb->createCol()->setText($header)
+                                                   ->setBold();
+
+                            if($headers == 'Actions') {
+                                $col->setColspan(count($actionLinks));
+                            }
+
+                            $row->addCol($col);
+                        }
+
+                        $headerRow = $row;
+                    
+                        $tb->addRow($row);
+                    }
+
+                    $valueRow = $tb->createRow();
+
+                    foreach($actionLinks as $actionLink) {
+                        $valueRow->addCol($tb->createCol()->setText($actionLink));
+                    }
+
+                    $valueArray = array(
+                        $v->getName(),
+                        $v->getValue()
+                    );
+
+                    foreach($valueArray as $va) {
+                        $valueRow->addCol($tb->createCol()->setText($va));
+                    }
+
+                    $tb->addRow($valueRow);
                 }
-
-                $tb->addRow($valueRow);
             }
         }
 

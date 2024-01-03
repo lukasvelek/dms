@@ -6,6 +6,7 @@ use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
+use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
@@ -179,6 +180,8 @@ $documentCommentRepository = new DocumentCommentRepository($db, $logger, $docume
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator);
 
 $mailManager = new MailManager($cfg);
+
+$externalEnumComponent = new ExternalEnumComponent();
 
 $gridSize = $cfg['grid_size'];
 $gridUseFastLoad = $cfg['grid_use_fast_load'];

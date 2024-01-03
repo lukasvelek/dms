@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Components\ExternalEnumComponent;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
@@ -554,6 +555,10 @@ class Settings extends APresenter {
         $length = htmlspecialchars($_POST['length']);
         $inputType = htmlspecialchars($_POST['input_type']);
 
+        if(isset($_POST['select_external_enum']) && $inputType == 'select_external') {
+            $data['select_external_enum_name'] = htmlspecialchars($_POST['select_external_enum']);
+        }
+
         $data['name'] = htmlspecialchars($_POST['name']);
         $data['text'] = htmlspecialchars($_POST['text']);
         $data['table_name'] = htmlspecialchars($_POST['table_name']);
@@ -784,6 +789,8 @@ class Settings extends APresenter {
     }
 
     private function internalCreateNewMetadataForm() {
+        global $app;
+
         $fb = FormBuilder::getTemporaryObject();
 
         $metadataTypesConst = MetadataInputType::$texts;
@@ -791,6 +798,16 @@ class Settings extends APresenter {
         $metadataInputTypes = [];
         foreach($metadataTypesConst as $k => $v) {
             $metadataInputTypes[] = array(
+                'value' => $k,
+                'text' => $v
+            );
+        }
+
+        $selectExternalEnumsList = $app->externalEnumComponent->getEnumsList();
+
+        $selectExternalEnums = [];
+        foreach($selectExternalEnumsList as $k => $v) {
+            $selectExternalEnums[] = array(
                 'value' => $k,
                 'text' => $v
             );
@@ -811,6 +828,9 @@ class Settings extends APresenter {
 
             ->addElement($fb->createLabel()->setFor('length')->setText('Length'))
             ->addElement($fb->createInput()->setType('text')->setName('length')->require()->setId('length')->setValue(''))
+
+            ->addElement($fb->createLabel()->setFor('select_external_enum')->setText('External select enumerator'))
+            ->addElement($fb->createSelect()->setName('select_external_enum')->addOptionsBasedOnArray($selectExternalEnums)->setId('select_external_enum'))
 
             ->addElement($fb->createSubmit('Create'))
         ;
@@ -1074,7 +1094,7 @@ class Settings extends APresenter {
                     $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete');
                 }
 
-                if($m->getInputType() == 'select' && $app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId()) && $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
+                if(($m->getInputType() == 'select' || $m->getInputType() == 'select_external') && $app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId()) && $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
                     $actionLinks['values'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values');
                 }
 

@@ -9,6 +9,7 @@ class MetadataInputType {
     public const BOOLEAN = 'boolean';
     public const DATE = 'date';
     public const DATETIME = 'datetime';
+    public const SELECT_EXTERNAL = 'select_external';
 
     public static $texts = array(
         self::SELECT => 'Select',
@@ -16,7 +17,8 @@ class MetadataInputType {
         self::NUMBER => 'Number',
         self::BOOLEAN => 'Boolean',
         self::DATE => 'Date',
-        self::DATETIME => 'Datetime'
+        self::DATETIME => 'Datetime',
+        self::SELECT_EXTERNAL => 'External Select'
     );
 }
 
