@@ -9,11 +9,12 @@ class GroupsEnum extends AEnum {
 
     public function __construct(GroupModel $groupModel) {
         parent::__construct('GroupsEnum');
-
         $this->groupModel = $groupModel;
+
+        $this->loadValues();
     }
 
-    public function loadValues() {
+    private function loadValues() {
         $groups = $this->groupModel->getAllGroups();
 
         foreach($groups as $group) {

@@ -44,7 +44,7 @@ class ExternalEnumComponent {
 
         foreach($this->enums as $enum) {
             if($enum instanceof AEnum) {
-                $list[$enum->getName()] = $enum->getName();
+                $list[$enum->getName()] = $enum;
             }
         }
 

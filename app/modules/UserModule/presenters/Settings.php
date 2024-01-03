@@ -184,7 +184,7 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Services',
             '$SETTINGS_GRID$' => $servicesGrid,
-            '$NEW_ENTITY_LINK$' => ''
+            '$LINKS$' => ''
         );
 
         $this->drawSubpanel = true;
@@ -396,7 +396,7 @@ class Settings extends APresenter {
         $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_user')) {
-            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user') . '</div></div>';
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user');
         }
 
         $this->templateManager->fill($data, $template);
@@ -425,7 +425,7 @@ class Settings extends APresenter {
         $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
-            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group') . '</div></div>';
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group');
         }
 
         $this->templateManager->fill($data, $template);
@@ -452,8 +452,10 @@ class Settings extends APresenter {
         $this->drawSubpanel = true;
         $this->subpanel = Panels::createSettingsPanel();
 
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:ExternalEnumViewer:showList', 'External enums') . '&nbsp;&nbsp;';
+
         if($app->actionAuthorizator->checkActionRight('create_metadata')) {
-            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewMetadataForm', 'New metadata') . '</div></div>';
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewMetadataForm', 'New metadata');
         }
 
         $this->templateManager->fill($data, $template);
