@@ -128,7 +128,7 @@ function getComments() {
 }
 
 function search() {
-    global $userModel, $processModel, $user, $ucm, $gridSize;
+    global $userModel, $processModel, $user, $ucm, $gridSize, $gridUseFastLoad;
 
     $filter = 'waitingForMe';
     $page = 1;
@@ -168,15 +168,42 @@ function search() {
 
     switch($filter) {
         case 'startedByMe':
-            $processes = $processModel->getProcessesWhereIdUserIsAuthor($idUser, ($page * $gridSize));
+            if($gridUseFastLoad) {
+                $page -= 1;
+
+                $firstIdProcessOnPage = $processModel->getFirstIdProcessOnAGridPage(($page * $gridSize));
+
+                $processes = $processModel->getProcessesWhereIdUserIsAuthorFromId($firstIdProcessOnPage, $idUser, $gridSize);
+            } else {
+                $processes = $processModel->getProcessesWhereIdUserIsAuthor($idUser, ($page * $gridSize));
+            }
+
             break;
 
         case 'waitingForMe':
-            $processes = $processModel->getProcessesWithIdUser($idUser, ($page * $gridSize));
+            if($gridUseFastLoad) {
+                $page -= 1;
+
+                $firstIdProcessOnPage = $processModel->getFirstIdProcessOnAGridPage(($page * $gridSize));
+
+                $processes = $processModel->getProcessesWithIdUserFromId($firstIdProcessOnPage, $idUser, $gridSize);
+            } else {
+                $processes = $processModel->getProcessesWithIdUser($idUser, ($page * $gridSize));
+            }
+
             break;
 
         case 'finished':
-            $processes = $processModel->getFinishedProcessesWithIdUser($idUser, ($page * $gridSize));
+            if($gridUseFastLoad) {
+                $page -= 1;
+
+                $firstIdProcessOnPage = $processModel->getFirstIdProcessOnAGridPage(($page * $gridSize));
+
+                $processes = $processModel->getProcessesWithIdUserFromId($firstIdProcessOnPage, $idUser, $gridSize);
+            } else {
+                $processes = $processModel->getFinishedProcessesWithIdUser($idUser, ($page * $gridSize));
+            }
+
             break;
     }
 

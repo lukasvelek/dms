@@ -79,7 +79,7 @@ class Documents extends APresenter {
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
             '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
+            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder, 'showSharedWithMe')
         );
 
         $this->templateManager->fill($data, $template);
@@ -741,16 +741,27 @@ class Documents extends APresenter {
         ';
     }
 
-    private function internalCreateGridPageControl(int $page, ?string $idFolder) {
+    private function internalCreateGridPageControl(int $page, ?string $idFolder, string $action = 'showAll') {
         global $app;
 
-        $documentCount = count($app->documentModel->getAllDocumentIds());
+        $documentCount = 0;
+
+        switch($action) {
+            case 'showSharedWithMe':
+                $documentCount = $app->documentModel->getCountDocumentsSharedWithUser($app->user->getId());
+                break;
+
+            default:
+            case 'showAll':
+                $documentCount = $app->documentModel->getTotalDocumentCount();
+                break;
+        }
 
         $documentPageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Documents:showAll';
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Documents:showAll';
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Documents:showAll';
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Documents:showAll';
+        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Documents:' . $action;
+        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Documents:' . $action;
+        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Documents:' . $action;
+        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Documents:' . $action;
 
         if(!is_null($idFolder)) {
             $firstPageLink .= '&id_folder=' . $idFolder;
@@ -758,6 +769,8 @@ class Documents extends APresenter {
             $nextPageLink .= '&id_folder=' . $idFolder;
             $lastPageLink .= '&id_folder=' . $idFolder;
         }
+
+        $pageCheck = $page - 1;
 
         $firstPageLink .= '"';
 
@@ -797,10 +810,18 @@ class Documents extends APresenter {
         $lastPageLink .= '>&gt;&gt;</a>';
 
         if($documentCount > $app->getGridSize()) {
-            if(($page * $app->getGridSize()) >= $documentCount) {
+            /*if(($pageCheck * $app->getGridSize()) >= $documentCount) {
                 $documentPageControl = $documentCount;
             } else {
                 $documentPageControl = ($page * $app->getGridSize()) . '+';
+            }*/
+
+            
+            if($pageCheck * $app->getGridSize() >= $documentCount) {
+                
+                $documentPageControl = (1 + ($page * $app->getGridSize()));
+            } else {
+                $documentPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
             }
         } else {
             $documentPageControl = $documentCount;

@@ -14,6 +14,44 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getFirstIdDocumentOnAGridPage(int $gridPage) {
+        if($gridPage == 0) $gridPage = 1;
+        return $this->getFirstRowWithCount($gridPage, 'documents', ['id']);
+    }
+
+    public function getStandardDocumentsFromId(?int $idFrom, ?int $idFolder, ?string $filter, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->composeQueryStandardDocuments();
+
+        if($idFrom == 1) {
+            $qb->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $qb->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        if($idFolder != null) {
+            $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+        }
+
+        if($filter != null) {
+            $this->addFilterCondition($filter, $qb);
+        }
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
+
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function getLastDocumentStatsEntry() {
         $qb = $this->qb(__METHOD__);
 
@@ -105,6 +143,10 @@ class DocumentModel extends AModel {
                   ->fetchSingle();
 
         return $row;
+    }
+
+    public function getCountDocumentsSharedWithUser(int $idUser) {
+        return $this->getRowCount('document_sharing', 'id', "WHERE `id_user`='" . $idUser . "' AND (`date_from` < current_timestamp AND `date_to` > current_timestamp)");
     }
 
     public function getDocumentSharingsSharedWithUser(int $idUser) {

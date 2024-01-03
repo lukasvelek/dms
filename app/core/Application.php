@@ -2,9 +2,9 @@
 
 namespace DMS\Core;
 
-use \DMS\Entities\User;
-use \DMS\Modules\IModule;
-use \DMS\Core\DB\Database;
+use DMS\Entities\User;
+use DMS\Modules\IModule;
+use DMS\Core\DB\Database;
 use DMS\Authenticators\UserAuthenticator;
 use DMS\Authorizators\ActionAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
@@ -18,8 +18,8 @@ use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
-use \DMS\Core\Logger\Logger;
-use \DMS\Core\FileManager;
+use DMS\Core\Logger\Logger;
+use DMS\Core\FileManager;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
@@ -181,9 +181,6 @@ class Application {
 
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
-
-        
-        //$this->conn->installer->updateDefaultUserPanelRights();
     }
 
     /**

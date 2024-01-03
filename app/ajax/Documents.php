@@ -305,7 +305,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize;
+    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize, $gridUseFastLoad;
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
@@ -458,18 +458,28 @@ function search() {
 
         $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
 
-        $documents = $documentModel->getStandardDocuments($idFolder, $filter, ($page * $gridSize));
+        if($gridUseFastLoad) {
+            $page -= 1;
 
-        $skip = 0;
-        $maxSkip = ($page - 1) * $gridSize;
+            $firstIdDocumentOnPage = $documentModel->getFirstIdDocumentOnAGridPage(($page * $gridSize));
+
+            $documents = $documentModel->getStandardDocumentsFromId($firstIdDocumentOnPage, $idFolder, $filter, $gridSize);
+        } else {
+            $documents = $documentModel->getStandardDocuments($idFolder, $filter, ($page * $gridSize));
+        }
     
         if(empty($documents)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
+            $skip = 0;
+            $maxSkip = ($page - 1) * $gridSize;
+
             foreach($documents as $document) {
-                if($skip < $maxSkip) {
-                    $skip++;
-                    continue;
+                if(!$gridUseFastLoad) {
+                    if($skip < $maxSkip) {
+                        $skip++;
+                        continue;
+                    }
                 }
 
                 $actionLinks = array(
