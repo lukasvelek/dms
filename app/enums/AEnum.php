@@ -2,15 +2,17 @@
 
 namespace DMS\Enums;
 
-class DocumentMarkColorEnum implements IExternalEnum {
+abstract class AEnum implements IExternalEnum {
     private string $name;
-    private array $values;
+    protected array $values;
 
-    public function __construct() {
-        $this->name = 'DocumentMarkColorEnum';
+    protected function __construct(string $name) {
         $this->values = [];
+        $this->name = $name;
+    }
 
-        $this->loadValues();
+    public function addValue(string $name, string $text) {
+        $this->values[$name] = $text;
     }
 
     public function getValues() {
@@ -39,20 +41,8 @@ class DocumentMarkColorEnum implements IExternalEnum {
         return $this->name;
     }
 
-    private function loadValues() {
-        $values = $this->values;
-
-        $add = function(string $name, string $text) use (&$values) {
-            $values[$name] = $text;
-        };
-
-        $add('green', 'Green');
-
-        $this->values = $values;
-    }
-
     public static function getEnum() {
-        return new self();
+        return new self('');
     }
 }
 

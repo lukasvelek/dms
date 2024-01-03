@@ -347,10 +347,16 @@ class SingleDocument extends APresenter {
 
                     $options = [];
                     foreach($values as $value => $vtext) {
-                        $options[] = array(
+                        $option = array(
                             'value' => $value,
                             'text' => $vtext
                         );
+
+                        if(!is_null($document->getMetadata($name))) {
+                            $option['selected'] = 'selected';
+                        }
+
+                        $options[] = $option;
                     }
 
                     $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());

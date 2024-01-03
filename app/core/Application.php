@@ -184,7 +184,7 @@ class Application {
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
 
-        $this->externalEnumComponent = new ExternalEnumComponent();
+        $this->externalEnumComponent = new ExternalEnumComponent($this->userModel);
     }
 
     /**

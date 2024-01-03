@@ -2,8 +2,10 @@
 
 namespace DMS\Components;
 
+use DMS\Enums\AEnum;
 use DMS\Enums\DocumentMarkColorEnum;
-use DMS\Enums\IExternalEnum;
+use DMS\Enums\UsersEnum;
+use DMS\Models\UserModel;
 
 class ExternalEnumComponent {
     /**
@@ -11,7 +13,11 @@ class ExternalEnumComponent {
      */
     private array $enums;
 
-    public function __construct() {
+    private UserModel $userModel;
+
+    public function __construct(UserModel $userModel) {
+        $this->userModel = $userModel;
+        
         $this->initEnums();
     }
 
@@ -27,7 +33,7 @@ class ExternalEnumComponent {
         $list = [];
 
         foreach($this->enums as $enum) {
-            if($enum instanceof IExternalEnum) {
+            if($enum instanceof AEnum) {
                 $list[$enum->getName()] = $enum->getName();
             }
         }
@@ -36,8 +42,11 @@ class ExternalEnumComponent {
     }
 
     private function initEnums() {
+        $usersEnum = new UsersEnum($this->userModel);
+
         $this->enums = array(
-            'DocumentMarkColorEnum' => DocumentMarkColorEnum::getEnum()
+            'DocumentMarkColorEnum' => DocumentMarkColorEnum::getEnum(),
+            'UsersEnum' => $usersEnum
         );
     }
 }
