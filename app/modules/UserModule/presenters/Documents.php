@@ -744,8 +744,18 @@ class Documents extends APresenter {
     private function internalCreateGridPageControl(int $page, ?string $idFolder, string $action = 'showAll') {
         global $app;
 
-        //$documentCount = $app->documentModel->getTotalDocumentCount();
-        $documentCount = $app->documentModel->getCountDocumentsSharedWithUser($app->user->getId());
+        $documentCount = 0;
+
+        switch($action) {
+            case 'showSharedWithMe':
+                $documentCount = $app->documentModel->getCountDocumentsSharedWithUser($app->user->getId());
+                break;
+
+            default:
+            case 'showAll':
+                $documentCount = $app->documentModel->getTotalDocumentCount();
+                break;
+        }
 
         $documentPageControl = '';
         $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Documents:' . $action;
