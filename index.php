@@ -40,6 +40,8 @@ include('app/dms_loader.php');
                 unset($_SESSION['id_current_user']);
                 unset($_SESSION['session_end_date']);
 
+                $app->flashMessage('You have exceeded login time. Please log in again.', FlashMessageTypes::ERROR);
+
                 if($app->currentUrl != $app::URL_LOGIN_PAGE) {
                     $app->redirect($app::URL_LOGIN_PAGE);
                 }

@@ -89,6 +89,7 @@ class Settings extends APresenter {
             }
         }
 
+        $app->flashMessage('Successfully updated widgets.');
         $app->redirect('UserModule:Settings:showDashboardWidgets');
     }
 
