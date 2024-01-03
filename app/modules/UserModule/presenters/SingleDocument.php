@@ -340,25 +340,41 @@ class SingleDocument extends APresenter {
                 continue;
             }
 
-            $name = $cm->getName();
-            $text = $cm->getText();
-            $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
+            if($cm->getInputType() == 'select_external') {
+                $name = $cm->getName();
+                    $text = $cm->getText();
+                    $values = $app->externalEnumComponent->getEnumByName($cm->getSelectExternalEnumName())->getValues();
 
-            $options = [];
-            foreach($values as $v) {
-                $option = array(
-                    'value' => $v->getValue(),
-                    'text' => $v->getName()
-                );
+                    $options = [];
+                    foreach($values as $value => $vtext) {
+                        $options[] = array(
+                            'value' => $value,
+                            'text' => $vtext
+                        );
+                    }
+
+                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());
+            } else {
+                $name = $cm->getName();
+                $text = $cm->getText();
+                $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
+
+                $options = [];
+                foreach($values as $v) {
+                    $option = array(
+                        'value' => $v->getValue(),
+                        'text' => $v->getName()
+                    );
                 
-                if(!is_null($document->getMetadata($name))) {
-                    $option['selected'] = 'selected';
+                    if(!is_null($document->getMetadata($name))) {
+                        $option['selected'] = 'selected';
+                    }
+
+                    $options[] = $option;
                 }
 
-                $options[] = $option;
+                $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
             }
-
-            $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
         }
 
         $fb = FormBuilder::getTemporaryObject();
