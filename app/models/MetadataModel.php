@@ -172,6 +172,11 @@ class MetadataModel extends AModel {
         $isSystem = $row['is_system'];
         $inputType = $row['input_type'];
         $inputLength = $row['length'];
+        $selectExternalEnumName = null;
+
+        if(isset($row['select_external_enum_name']) && $row['select_external_enum_name'] != NULL) {
+            $selectExternalEnumName = $row['select_external_enum_name'];
+        }
 
         if($isSystem == '1') {
             $isSystem = true;
@@ -179,7 +184,7 @@ class MetadataModel extends AModel {
             $isSystem = false;
         }
 
-        return new Metadata($id, $name, $text, $tableName, $isSystem, $inputType, $inputLength);
+        return new Metadata($id, $name, $text, $tableName, $isSystem, $inputType, $inputLength, $selectExternalEnumName);
     }
 
     private function createMetadataValueObjectFromDbRow($row) {

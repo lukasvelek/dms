@@ -383,20 +383,36 @@ class Documents extends APresenter {
                 if($cm->getIsSystem()) {
                     continue;
                 }
+
+                if($cm->getInputType() == 'select_external') {
+                    $name = $cm->getName();
+                    $text = $cm->getText();
+                    $values = $app->externalEnumComponent->getEnumByName($cm->getSelectExternalEnumName())->getValues();
+
+                    $options = [];
+                    foreach($values as $value => $vtext) {
+                        $options[] = array(
+                            'value' => $value,
+                            'text' => $vtext
+                        );
+                    }
+
+                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());
+                } else {
+                    $name = $cm->getName();
+                    $text = $cm->getText();
+                    $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
     
-                $name = $cm->getName();
-                $text = $cm->getText();
-                $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
+                    $options = [];
+                    foreach($values as $v) {
+                        $options[] = array(
+                            'value' => $v->getValue(),
+                            'text' => $v->getName()
+                        );
+                    }
     
-                $options = [];
-                foreach($values as $v) {
-                    $options[] = array(
-                        'value' => $v->getValue(),
-                        'text' => $v->getName()
-                    );
+                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
                 }
-    
-                $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
             }
         }
 

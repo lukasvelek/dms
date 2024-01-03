@@ -12,6 +12,7 @@ use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
+use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
@@ -104,6 +105,7 @@ class Application {
     public WidgetComponent $widgetComponent;
     public SharingComponent $sharingComponent;
     public NotificationComponent $notificationComponent;
+    public ExternalEnumComponent $externalEnumComponent;
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
@@ -181,6 +183,8 @@ class Application {
 
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
+
+        $this->externalEnumComponent = new ExternalEnumComponent();
     }
 
     /**
