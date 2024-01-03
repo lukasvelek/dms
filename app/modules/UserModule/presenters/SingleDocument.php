@@ -482,29 +482,36 @@ class SingleDocument extends APresenter {
 
         foreach($document->getMetadata() as $k => $v) {
             $m = $app->metadataModel->getMetadataByName($k, 'documents');
-            $mValues = $app->metadataModel->getAllValuesForIdMetadata($m->getId());
             
-            $vText = '-';
+            if($m->getInputType() == 'select_external') {
+                $mValues = $app->externalEnumComponent->getEnumByName($m->getSelectExternalEnumName())->getValues();
 
-            if(empty($mValues)) {
-                // not select
-                $vText = $v;
-
-                if($m->getInputType() == 'boolean') {
-                    $checkboxTrue = '<input type="checkbox" checked disabled>';
-                    $checkboxFalse = '<input type="checkbox" disabled>';
-
-                    $vText = $v ? $checkboxTrue : $checkboxFalse;
-                }
+                $data[$m->getText()] = $mValues[$v];
             } else {
-                foreach($mValues as $mv) {
-                    if($mv->getValue() == $v) {
-                        $vText = $mv->getName();
+                $mValues = $app->metadataModel->getAllValuesForIdMetadata($m->getId());
+            
+                $vText = '-';
+
+                if(empty($mValues)) {
+                    // not select
+                    $vText = $v;
+
+                    if($m->getInputType() == 'boolean') {
+                        $checkboxTrue = '<input type="checkbox" checked disabled>';
+                        $checkboxFalse = '<input type="checkbox" disabled>';
+
+                        $vText = $v ? $checkboxTrue : $checkboxFalse;
+                    }
+                } else {
+                    foreach($mValues as $mv) {
+                        if($mv->getValue() == $v) {
+                            $vText = $mv->getName();
+                        }
                     }
                 }
-            }
 
-            $data[$m->getText()] = $vText;
+                $data[$m->getText()] = $vText;
+            }
         }
 
         foreach($data as $k => $v) {
