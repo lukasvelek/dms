@@ -134,8 +134,6 @@ if(!file_exists('../../config.local.php')) {
 
 include('../../config.local.php');
 
-//$app = new Application($cfg, '../', false);
-
 $user = null;
 
 $fm = new FileManager('../../' . $cfg['log_dir'], '../../' . $cfg['cache_dir']);
