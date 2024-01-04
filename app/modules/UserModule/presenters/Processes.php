@@ -14,6 +14,8 @@ class Processes extends APresenter {
 
     public function __construct() {
         parent::__construct('Processes');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showMenu() {

@@ -7,6 +7,7 @@ interface IModule {
     function getTitle();
     function getPresenterByName(string $name);
     function setPresenter(IPresenter $presenter);
+    function getPresenters();
 }
 
 ?>

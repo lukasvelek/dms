@@ -19,6 +19,8 @@ class Documents extends APresenter {
 
     public function __construct() {
         parent::__construct('Documents');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showSharedWithMe() {

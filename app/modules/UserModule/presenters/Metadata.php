@@ -12,6 +12,8 @@ class Metadata extends APresenter {
 
     public function __construct() {
         parent::__construct('Metadata');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function deleteValue() {

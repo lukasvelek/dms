@@ -18,6 +18,8 @@ class Groups extends APresenter {
 
     public function __construct() {
         parent::__construct('Groups');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showNewUserForm() {

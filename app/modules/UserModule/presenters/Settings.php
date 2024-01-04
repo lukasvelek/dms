@@ -26,6 +26,8 @@ class Settings extends APresenter {
 
     public function __construct() {
         parent::__construct('Settings');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function updateDashboardWidgets() {

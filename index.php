@@ -65,6 +65,7 @@ if(!is_null($app->user)) {
     }
 }
 
+$app->loadPages();
 $app->renderPage();
 
 $title = 'DMS | ' . $app->currentPresenter->getTitle();

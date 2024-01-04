@@ -74,6 +74,8 @@ class Application {
     public IPresenter $currentPresenter;
     public string $currentAction;
 
+    public array $pageList;
+
     public ?User $user;
     public Logger $logger;
     public FileManager $fileManager;
@@ -135,10 +137,11 @@ class Application {
         $this->baseDir = $baseDir;
 
         $this->currentUrl = null;
-        $this->modules = array();
+        $this->modules = [];
         $this->pageContent = null;
         $this->user = null;
         $this->flashMessage = null;
+        $this->pageList = [];
 
         $this->fileManager = new FileManager($this->baseDir . $this->cfg['log_dir'], $this->baseDir . $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager, $this->cfg);
@@ -401,6 +404,31 @@ class Application {
 
     public function getGridSize() {
         return $this->cfg['grid_size'];
+    }
+
+    public function loadPages() {
+        $pcm = CacheManager::getTemporaryObject(CacheCategories::PAGES);
+
+        $cachePages = $pcm->loadStringsFromCache();
+
+        if(!is_null($cachePages) || $cachePages === FALSE) {
+            $this->pageList = $cachePages;
+        } else {
+            foreach($this->modules as $module) {
+                if(in_array($module->getName(), array('AnonymModule'))) continue;
+    
+                foreach($module->getPresenters() as $presenter) {
+                    foreach($presenter->getActions() as $realAction => $action) {
+                        $page = $module->getName() . ':' . $presenter->getName() . ':' . $action;
+                        $realPage = $module->getName() . ':' . $presenter->getName() . ':' . $realAction;
+
+                        $this->pageList[$realPage] = $page;
+                    }
+                }
+            }
+
+            $pcm->saveArrayToCache($this->pageList);
+        }
     }
 
     /**

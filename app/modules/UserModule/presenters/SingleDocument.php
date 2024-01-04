@@ -21,6 +21,8 @@ class SingleDocument extends APresenter {
 
     public function __construct() {
         parent::__construct('SingleDocument', 'Document');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function shareDocument() {

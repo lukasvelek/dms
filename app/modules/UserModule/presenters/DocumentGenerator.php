@@ -11,6 +11,8 @@ class DocumentGenerator extends APresenter {
 
     public function __construct() {
         parent::__construct('DocumentGenerator', 'Document generator');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showForm() {

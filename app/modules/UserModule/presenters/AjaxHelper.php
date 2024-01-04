@@ -9,6 +9,8 @@ class AjaxHelper extends APresenter {
 
     public function __construct() {
         parent::__construct('AjaxHelper');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function flashMessage() {

@@ -17,6 +17,8 @@ class LoginPage extends APresenter {
 
     public function __construct() {
         parent::__construct('LoginPage', 'Login page');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showForm() {

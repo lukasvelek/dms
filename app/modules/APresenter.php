@@ -8,6 +8,7 @@ abstract class APresenter implements IPresenter {
     private string $name;
     private string $title;
     private IModule $module;
+    private array $actions;
 
     protected TemplateManager $templateManager;
     
@@ -24,6 +25,12 @@ abstract class APresenter implements IPresenter {
         }
 
         $this->templateManager = TemplateManager::getTemporaryObject();
+
+        $this->actions = [];
+    }
+
+    public function getActions() {
+        return $this->actions;
     }
 
     public function getModule() {
@@ -47,6 +54,28 @@ abstract class APresenter implements IPresenter {
             return $this->$name();
         } else {
             die('Method does not exist!');
+        }
+    }
+
+    protected function setActions(array $actions) {
+        $this->actions = $actions;
+    }
+
+    protected function getActionNamesFromClass(object $class, bool $save = true) {
+        $methods = get_class_methods($class);
+
+        $tempMethods = [];
+        foreach($methods as $method) {
+            if(str_contains($method, 'show')) {
+                $tempMethods[$method] = substr($method, 4);
+            }
+        }
+
+        if($save) {
+            $this->actions = $tempMethods;
+            return null;
+        } else {
+            return $tempMethods;
         }
     }
 }

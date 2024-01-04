@@ -9,6 +9,8 @@ class UserLogout extends APresenter {
 
     public function __construct() {
         parent::__construct('UserLogout', 'Logout user');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function logoutUser() {

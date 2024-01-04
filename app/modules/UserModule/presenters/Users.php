@@ -23,6 +23,20 @@ class Users extends APresenter {
 
     public function __construct() {
         parent::__construct('Users');
+
+        $this->getActionNamesFromClass($this);
+    }
+
+    protected function saveSettings() {
+        global $app;
+
+        $id = htmlspecialchars($_GET['id']);
+        $defaultUserPageUrl = htmlspecialchars($_POST['default_user_page_url']);
+
+        $app->userModel->updateUser($id, array('default_user_page_url' => $defaultUserPageUrl));
+
+        $app->flashMessage('Successfully changed default page for user #' . $id, 'success');
+        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
     }
 
     protected function showSettingsForm() {
@@ -723,9 +737,34 @@ class Users extends APresenter {
     }
 
     private function internalCreateUserSettingsForm(User $user) {
-        $fb = FormBuilder::getTemporaryObject();
+        global $app;
 
-        //$fb
+        $fb = FormBuilder::getTemporaryObject();
+        
+        $pages = array();
+
+        foreach($app->pageList as $realLink => $fakeLink) {
+            $page = array(
+                'value' => $realLink,
+                'text' => $fakeLink
+            );
+
+            if($realLink == $user->getDefaultUserPageUrl()) {
+                $page['selected'] = 'selected';
+            }
+
+            $pages[] = $page;
+        }
+
+        $fb
+        ->setMethod('POST')
+        ->setAction('?page=UserModule:Users:saveSettings&id=' . $user->getId())
+
+        ->addElement($fb->createLabel()->setFor('default_user_page_url')->setText('Default page'))
+        ->addElement($fb->createSelect()->setName('default_user_page_url')->addOptionsBasedOnArray($pages))
+
+        ->addElement($fb->createSubmit('Save'))
+        ;
 
         return $fb->build();
     }

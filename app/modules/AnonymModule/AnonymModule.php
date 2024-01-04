@@ -37,6 +37,10 @@ class AnonymModule implements IModule {
     public function registerPresenter(IPresenter $presenter) {
         $this->presenters[$presenter->getName()] = $presenter;
     }
+
+    public function getPresenters() {
+        return $this->presenters;
+    }
 }
 
 ?>

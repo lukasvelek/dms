@@ -11,6 +11,8 @@ class ExternalEnumViewer extends APresenter {
 
     public function __construct() {
         parent::__construct('ExternalEnumViewer', 'External Enum Viewer');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showList() {

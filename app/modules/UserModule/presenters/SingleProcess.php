@@ -22,6 +22,8 @@ class SingleProcess extends APresenter {
 
     public function __construct() {
         parent::__construct('SingleProcess', 'Process');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showProcess() {
