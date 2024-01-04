@@ -562,7 +562,8 @@ class Documents extends APresenter {
         }
 
         if(is_null($documentIdManager)) {
-            die('Document group has no manager!');
+            $app->flashMessage('Group #' . $idGroup . ' has no manager!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
         }
 
         $app->documentModel->updateOfficer($idDocument, $documentIdManager);

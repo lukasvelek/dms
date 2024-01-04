@@ -90,6 +90,8 @@ $title = 'DMS | ' . $app->currentPresenter->getTitle();
 
         $app->showPage();
 
+        if(isset($_SESSION['flash_message'])) unset($_SESSION['flash_message']);
+
         ?>
     </body>
 </html>

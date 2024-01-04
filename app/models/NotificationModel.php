@@ -91,6 +91,10 @@ class NotificationModel extends AModel {
     }
 
     private function createNotificationObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+        
         $id = $row['id'];
         $dateCreated = $row['date_created'];
         $idUser = $row['id_user'];

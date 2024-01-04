@@ -49,13 +49,21 @@ class Users extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
 
+        $id = null;
+
         if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
+            $id = $app->user->getId();
+            $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
+        } else {
+            $id = htmlspecialchars($_GET['id']);
         }
 
-        $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $data = array(
             '$PAGE_TITLE$' => 'Settings for user <i>' . $user->getFullname() . '</i>',
@@ -77,6 +85,11 @@ class Users extends APresenter {
 
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
 
@@ -100,6 +113,11 @@ class Users extends APresenter {
 
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $currentPassword = htmlspecialchars($_POST['current_password']);
         $password1 = htmlspecialchars($_POST['password1']);
@@ -138,13 +156,18 @@ class Users extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-profile-grid.html');
 
         if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
+            $id = $app->user->getId();
+            $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
+        } else {
+            $id = htmlspecialchars($_GET['id']);
         }
 
-        $id = htmlspecialchars($_GET['id']);
-
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $editLink = '';
 
@@ -250,6 +273,11 @@ class Users extends APresenter {
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
 
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $data = array(
             '$PAGE_TITLE$' => 'Edit user \'' . $user->getFullname() . '\'',
             '$FORM$' => $this->internalCreateEditUserForm($user)
@@ -318,6 +346,11 @@ class Users extends APresenter {
 
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $userRights = '';
 
@@ -724,6 +757,11 @@ class Users extends APresenter {
         global $app;
 
         $user = $app->userModel->getUserById($idUser);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $idUser . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $code = '';
         $code .= '<table border="1">';

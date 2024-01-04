@@ -70,6 +70,11 @@ class SingleDocument extends APresenter {
         $idDocument = htmlspecialchars($_GET['id']);
         $document = $app->documentModel->getDocumentById($idDocument);
 
+        if(is_null($document)) {
+            $app->flashMessage('Document #' . $idDocument . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/document-sharing-grid.html');
 
         $data = array(
@@ -161,6 +166,11 @@ class SingleDocument extends APresenter {
         $id = htmlspecialchars($_GET['id']);
         $document = $app->documentModel->getDocumentById($id);
 
+        if(is_null($document)) {
+            $app->flashMessage('Document #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/single-document-grid.html');
 
         $documentGrid = '';
@@ -196,6 +206,11 @@ class SingleDocument extends APresenter {
 
         $id = htmlspecialchars($_GET['id']);
         $document  = $app->documentModel->getDocumentById($id);
+
+        if(is_null($document)) {
+            $app->flashMessage('Document #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
 

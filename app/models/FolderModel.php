@@ -98,6 +98,10 @@ class FolderModel extends AModel {
     }
 
     private function createFolderObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+        
         $name = $row['name'];
         $id = $row['id'];
         $dateCreated = $row['date_created'];

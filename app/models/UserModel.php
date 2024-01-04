@@ -161,6 +161,10 @@ class UserModel extends AModel {
     }
 
     private function getUserObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+
         $values = array();
 
         $values['id'] = $row['id'];

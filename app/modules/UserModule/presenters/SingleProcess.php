@@ -39,6 +39,11 @@ class SingleProcess extends APresenter {
 
         $process = $app->processModel->getProcessById($id);
 
+        if(is_null($process)) {
+            $app->flashMessage('Process #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/single-process.html');
 
         $data = array(
@@ -173,6 +178,11 @@ class SingleProcess extends APresenter {
 
         $id = htmlspecialchars($_GET['id']);
         $process = $app->processModel->getProcessById($id);
+
+        if(is_null($process)) {
+            $app->flashMessage('Process #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         switch($process->getType()) {
             case ProcessTypes::DELETE:
