@@ -27,23 +27,23 @@ if(isset($_SESSION['id_current_user'])) {
         if($app->currentUrl != $app::URL_LOGIN_PAGE) {
             $app->redirect($app::URL_LOGIN_PAGE);
         }
-    }
-
-    $ucm = new CacheManager(true, CacheCategories::USERS);
-
-    $user = null;
-
-    $cacheUser = $ucm->loadUserByIdFromCache($_SESSION['id_current_user']);
-
-    if(is_null($cacheUser)) {
-        $user = $app->userModel->getUserById($_SESSION['id_current_user']);
-
-        $ucm->saveUserToCache($user);
     } else {
-        $user = $cacheUser;
-    }
+        $ucm = new CacheManager(true, CacheCategories::USERS);
 
-    $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
+        $user = null;
+
+        $cacheUser = $ucm->loadUserByIdFromCache($_SESSION['id_current_user']);
+
+        if(is_null($cacheUser)) {
+            $user = $app->userModel->getUserById($_SESSION['id_current_user']);
+
+            $ucm->saveUserToCache($user);
+        } else {
+            $user = $cacheUser;
+        }
+
+        $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
+    }
 } else {
     if(!isset($_SESSION['login_in_process'])) {
         if($app->currentUrl != $app::URL_LOGIN_PAGE && $app->currentUrl != 'AnonymModule:LoginPage:showFirstLoginForm') {

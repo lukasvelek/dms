@@ -48,6 +48,10 @@ class CacheManager {
     public function loadStringsFromCache() {
         $cacheData = $this->loadFromCache();
 
+        if($cacheData === FALSE) {
+            return null;
+        }
+
         return $cacheData[$this->category];
     }
 
