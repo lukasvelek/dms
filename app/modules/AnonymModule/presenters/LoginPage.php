@@ -103,7 +103,7 @@ class LoginPage extends APresenter {
             $user = $app->userModel->getUserById($authResult);
 
             if(!in_array($user->getStatus(), array(UserStatus::ACTIVE))) {
-                $app->flashMessage('Password change for your account has been requested. Please create a new password!');
+                $app->flashMessage('Password change for your account has been requested. Please create a new password!', FlashMessageTypes::WARNING);
                 $app->redirect('AnonymModule:LoginPage:showFirstLoginForm');
                 exit;
             }

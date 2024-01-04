@@ -564,7 +564,7 @@ class Documents extends APresenter {
 
         $app->documentModel->updateOfficer($idDocument, $documentIdManager);
 
-        $app->flashMessage('Created new document');
+        $app->flashMessage('Created new document', 'success');
         
         $url = 'UserModule:Documents:showAll';
 
@@ -585,7 +585,7 @@ class Documents extends APresenter {
             $app->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $app->user->getId());
         }
 
-        $app->flashMessage('Process has started');
+        $app->flashMessage('Process has started', 'success');
         $app->redirect('UserModule:Documents:showAll');
     }
 
@@ -596,7 +596,7 @@ class Documents extends APresenter {
             $app->processComponent->startProcess(ProcessTypes::DELETE, $id, $app->user->getId());
         }
 
-        $app->flashMessage('Process has started');
+        $app->flashMessage('Process has started', 'success');
         $app->redirect('UserModule:Documents:showAll');
     }
 
@@ -610,9 +610,9 @@ class Documents extends APresenter {
         }
 
         if(count($ids) == 1) {
-            $app->flashMessage('Declined archivation for selected document');
+            $app->flashMessage('Declined archivation for selected document', 'success');
         } else {
-            $app->flashMessage('Declined archivation for selected documents');
+            $app->flashMessage('Declined archivation for selected documents', 'success');
         }
 
         $app->redirect('UserModule:Documents:showAll');
@@ -628,9 +628,9 @@ class Documents extends APresenter {
         }
 
         if(count($ids) == 1) {
-            $app->flashMessage('Approved archivation for selected document');
+            $app->flashMessage('Approved archivation for selected document', 'success');
         } else {
-            $app->flashMessage('Approved archivation for selected documents');
+            $app->flashMessage('Approved archivation for selected documents', 'success');
         }
 
         $app->redirect('UserModule:Documents:showAll');
@@ -646,9 +646,9 @@ class Documents extends APresenter {
         }
 
         if(count($ids) == 1) {
-            $app->flashMessage('Archived selected document');
+            $app->flashMessage('Archived selected document', 'success');
         } else {
-            $app->flashMessage('Archived selected documents');
+            $app->flashMessage('Archived selected documents', 'success');
         }
 
         $app->redirect('UserModule:Documents:showAll');

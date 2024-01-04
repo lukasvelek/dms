@@ -157,7 +157,7 @@ class Users extends APresenter {
 
         $app->userModel->updateUser($id, $data);
 
-        $app->flashMessage('Request password change for user #' . $id . ' successful.');
+        $app->flashMessage('Request password change for user #' . $id . ' successful.', 'success');
         $app->redirect('UserModule:Users:showProfile', array('id' => $id));
     }
 
@@ -172,7 +172,7 @@ class Users extends APresenter {
 
         $app->userModel->updateUser($id, $data);
 
-        $app->flashMessage('Request password change for user #' . $id . ' successful.');
+        $app->flashMessage('Request password change for user #' . $id . ' successful.', 'success');
         $app->redirect('UserModule:Users:showProfile', array('id' => $id));
     }
 
@@ -227,7 +227,7 @@ class Users extends APresenter {
 
         $app->userModel->updateUser($id, $data);
 
-        $app->flashMessage('Successfully edited user #' . $id);
+        $app->flashMessage('Successfully edited user #' . $id, 'success');
         $app->redirect('UserModule:Users:showProfile', array('id' => $id));
     }
 

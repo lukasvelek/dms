@@ -22,7 +22,7 @@ class Metadata extends APresenter {
 
         $app->metadataModel->deleteMetadataValueByIdMetadataValue($idMetadataValue);
 
-        $app->flashMessage('Deleted metadata value for metadata #' . $idMetadata);
+        $app->flashMessage('Deleted metadata value for metadata #' . $idMetadata, 'warning');
         $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
 

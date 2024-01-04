@@ -155,7 +155,7 @@ body {
     overflow-y: scroll;
 }
 
-.info {
+.success {
     background-color: lightgreen;
     border: 1px solid green;
     color: green;
@@ -171,6 +171,12 @@ body {
     background-color: lightcoral;
     border: 1px solid darkred;
     color: darkred;
+}
+
+.info {
+    background-color: lightblue;
+    border: 1px solid lightskyblue;
+    color: lightskyblue;
 }
 
 #flash-message {
