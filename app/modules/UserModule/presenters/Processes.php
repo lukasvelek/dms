@@ -4,36 +4,16 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Components\Process\HomeOffice;
 use DMS\Constants\ProcessTypes;
-use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 use DMS\Panels\Panels;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 class Processes extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'Processes';
-        
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        parent::__construct('Processes');
     }
 
     protected function showMenu() {

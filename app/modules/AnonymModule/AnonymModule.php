@@ -8,14 +8,20 @@ use \DMS\Modules\IPresenter;
 class AnonymModule implements IModule {
     public IPresenter $currentPresenter;
     private string $name;
+    private string $title;
     private array $presenters;
 
     public function __construct() {
         $this->name = 'AnonymModule';
+        $this->title = 'Anonym Module';
     }
 
     public function getName() {
         return $this->name;
+    }
+
+    public function getTitle() {
+        return $this->title;
     }
 
     public function getPresenterByName(string $name) {

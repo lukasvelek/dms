@@ -7,37 +7,16 @@ use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
 use DMS\Core\CypherManager;
-use DMS\Core\Logger\LogCategoryEnum;
 use DMS\Core\ScriptLoader;
-use \DMS\Modules\IModule;
-use \DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
 use \DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 
 class LoginPage extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'LoginPage';
-
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        parent::__construct('LoginPage', 'Login page');
     }
 
     protected function showForm() {
@@ -45,7 +24,6 @@ class LoginPage extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Login form',
-            //'$FIRST_LOGIN_LINK$' => LinkBuilder::createLink('AnonymModule:LoginPage:showFirstLoginForm', 'First login'),
             '$FORM$' => $this->internalRenderForm()
         );
 

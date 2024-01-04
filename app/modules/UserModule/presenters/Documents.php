@@ -7,38 +7,18 @@ use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\ScriptLoader;
-use DMS\Core\TemplateManager;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 
 class Documents extends APresenter {
     public const DRAW_TOPPANEL = true;
-    
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
 
     public function __construct() {
-        $this->name = 'Documents';
-
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        parent::__construct('Documents');
     }
 
     protected function showSharedWithMe() {

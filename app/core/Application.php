@@ -37,6 +37,7 @@ use DMS\Models\TableModel;
 use DMS\Models\UserModel;
 use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
+use DMS\Modules\IPresenter;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
@@ -68,6 +69,10 @@ class Application {
 
     public array $cfg;
     public ?string $currentUrl;
+    
+    public IModule $currentModule;
+    public IPresenter $currentPresenter;
+    public string $currentAction;
 
     public ?User $user;
     public Logger $logger;
@@ -270,13 +275,16 @@ class Application {
         $presenter = $parts[1];
         $action = $parts[2];
 
+        $this->currentAction = $parts[2];
+
         if(array_key_exists($module, $this->modules)) {
-            $module = $this->modules[$module];
+            //$module = $this->modules[$module];
+            $this->currentModule = $module = $this->modules[$module];
         } else {
             die('Module does not exist!');
         }
 
-        $presenter = $module->getPresenterByName($presenter);
+        $this->currentPresenter = $presenter = $module->getPresenterByName($presenter);
         if(!is_null($presenter)) {
             $module->setPresenter($presenter);
         } else {

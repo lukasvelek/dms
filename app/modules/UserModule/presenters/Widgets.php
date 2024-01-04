@@ -4,33 +4,13 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessStatus;
-use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 
 class Widgets extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'Widgets';
-
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        parent::__construct('Widgets');
     }
 
     protected function updateDocumentStats() {

@@ -53,7 +53,6 @@ class ExternalEnumComponent {
 
     private function initEnums() {
         $this->enums = array(
-            'DocumentMarkColorEnum' => DocumentMarkColorEnum::getEnum(),
             'UsersEnum' => new UsersEnum($this->getModelByName('userModel')),
             'GroupsEnum' => new GroupsEnum($this->getModelByName('groupModel'))
         );
