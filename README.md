@@ -8,6 +8,7 @@ It also enables users to manage metadata and their values.
 - added notification manager service
 - added support for external enums
 - added form and metadata support for external enums
+- added new services (Document archivator)
 - updated core code
 - updated debug tools
 - optimized application

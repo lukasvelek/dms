@@ -12,6 +12,7 @@ use DMS\Models\NotificationModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\UserModel;
 use DMS\Services\CacheRotateService;
+use DMS\Services\DeclinedDocumentRemoverService;
 use DMS\Services\DocumentArchivationService;
 use DMS\Services\FileManagerService;
 use DMS\Services\LogRotateService;
@@ -74,6 +75,7 @@ class ServiceManager {
         $this->services['Mail Service'] = new MailService($this->logger, $this->serviceModel, $this->cm, $this->mailModel, $this->mailManager);
         $this->services['Notification manager'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel, $this->cfg);
         $this->services['Document archivator'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator);
+        $this->services['Declined document remover'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator);
     }
 }
 

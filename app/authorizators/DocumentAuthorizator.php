@@ -110,18 +110,20 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param int $id Document ID
      * @return bool True if the document can be deleted and false if not
      */
-    public function canDeleteDocument(int $id) {
+    public function canDeleteDocument(int $id, bool $checkStatus = true) {
         $document = $this->documentModel->getDocumentById($id);
 
         if($this->processComponent->checkIfDocumentIsInProcess($id)) {
             return false;
         }
 
-        if(!in_array($document->getStatus(), array(
-            DocumentStatus::ARCHIVED,
-            DocumentStatus::SHREDDED
-        ))) {
-            return false;
+        if($checkStatus) {
+            if(!in_array($document->getStatus(), array(
+                DocumentStatus::ARCHIVED,
+                DocumentStatus::SHREDDED
+            ))) {
+                return false;
+            }
         }
 
         return true;

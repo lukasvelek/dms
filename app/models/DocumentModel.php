@@ -14,6 +14,22 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllDocumentsByStatus(int $status) {
+        $qb = $this->composeQueryStandardDocuments();
+
+        $qb ->andWhere('status=:status')
+            ->setParam(':status', $status);
+
+        $rows = $qb->execute()->fetch();
+
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function getFirstIdDocumentOnAGridPage(int $gridPage) {
         if($gridPage == 0) $gridPage = 1;
         return $this->getFirstRowWithCount($gridPage, 'documents', ['id']);
