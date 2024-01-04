@@ -30,6 +30,11 @@ class Users extends APresenter {
     protected function saveSettings() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
         $defaultUserPageUrl = htmlspecialchars($_POST['default_user_page_url']);
 
@@ -43,6 +48,11 @@ class Users extends APresenter {
         global $app;
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
@@ -60,8 +70,9 @@ class Users extends APresenter {
     protected function showChangePasswordForm() {
         global $app;
 
-        if(!isset($_GET['id'])) {
-            $app->redirect('UserModule:HomePage:showHomepage');
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
         }
 
         $id = htmlspecialchars($_GET['id']);
@@ -81,6 +92,11 @@ class Users extends APresenter {
 
     protected function changePassword() {
         global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
@@ -121,8 +137,9 @@ class Users extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-profile-grid.html');
 
-        if(!isset($_GET['id'])) {
-            $app->redirect('UserModule:HomePage:showHomepage');
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
         }
 
         $id = htmlspecialchars($_GET['id']);
@@ -182,6 +199,11 @@ class Users extends APresenter {
     protected function forcePasswordChange() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
 
         $data = array(
@@ -198,6 +220,11 @@ class Users extends APresenter {
     protected function requestPasswordChange() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
 
         $data = array(
@@ -212,6 +239,11 @@ class Users extends APresenter {
 
     protected function showEditForm() {
         global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
 
@@ -230,6 +262,11 @@ class Users extends APresenter {
 
     protected function saveUserEdit() {
         global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $id = htmlspecialchars($_GET['id']);
         
@@ -274,6 +311,11 @@ class Users extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-rights-grid.html');
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
 
@@ -302,6 +344,11 @@ class Users extends APresenter {
 
     protected function allowAllRights() {
         global $app;
+
+        if(!$app->isset('id_user')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $idUser = htmlspecialchars($_GET['id_user']);
 
@@ -351,6 +398,11 @@ class Users extends APresenter {
     protected function denyAllRights() {
         global $app;
 
+        if(!$app->isset('id_user')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $idUser = htmlspecialchars($_GET['id_user']);
 
         $allow = false;
@@ -399,6 +451,11 @@ class Users extends APresenter {
     protected function allowActionRight() {
         global $app;
 
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
@@ -418,6 +475,11 @@ class Users extends APresenter {
 
     protected function denyActionRight() {
         global $app;
+
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
@@ -439,6 +501,11 @@ class Users extends APresenter {
     protected function allowPanelRight() {
         global $app;
 
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
@@ -458,6 +525,11 @@ class Users extends APresenter {
 
     protected function denyPanelRight() {
         global $app;
+
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
@@ -479,6 +551,11 @@ class Users extends APresenter {
     protected function allowBulkActionRight() {
         global $app;
 
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
@@ -498,6 +575,11 @@ class Users extends APresenter {
 
     protected function denyBulkActionRight() {
         global $app;
+
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);

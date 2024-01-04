@@ -207,8 +207,9 @@ class Documents extends APresenter {
     protected function performBulkAction() {
         global $app;
 
-        if(!isset($_GET['select'])) {
-            $app->redirect('UserModule:Documents:showAll');
+        if(!$app->isset('select')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
         }
 
         $ids = $_GET['select'];
@@ -808,13 +809,6 @@ class Documents extends APresenter {
         $lastPageLink .= '>&gt;&gt;</a>';
 
         if($documentCount > $app->getGridSize()) {
-            /*if(($pageCheck * $app->getGridSize()) >= $documentCount) {
-                $documentPageControl = $documentCount;
-            } else {
-                $documentPageControl = ($page * $app->getGridSize()) . '+';
-            }*/
-
-            
             if($pageCheck * $app->getGridSize() >= $documentCount) {
                 
                 $documentPageControl = (1 + ($page * $app->getGridSize()));

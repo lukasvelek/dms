@@ -33,6 +33,11 @@ class Settings extends APresenter {
     protected function updateDashboardWidgets() {
         global $app;
 
+        if(!$app->isset('id_user', 'widget00', 'widget01', 'widget10', 'widget11')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $idUser = htmlspecialchars($_GET['id_user']);
 
         $widget0_0 = htmlspecialchars($_POST['widget00']);
@@ -95,6 +100,11 @@ class Settings extends APresenter {
     protected function editService() {
         global $app;
 
+        if(!$app->isset('name')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $name = htmlspecialchars($_GET['name']);
         
         $values = $_POST;
@@ -135,8 +145,15 @@ class Settings extends APresenter {
     }
 
     protected function editServiceForm() {
+        global $app;
+        
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
-
+        
+        if(!$app->isset('name')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+        
         $name = htmlspecialchars($_GET['name']);
 
         $data = array(
@@ -178,6 +195,13 @@ class Settings extends APresenter {
     }
 
     protected function askToRunService() {
+        global $app;
+
+        if(!$app->isset('name')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $name = htmlspecialchars($_GET['name']);
 
         $urlConfirm = array(
@@ -196,6 +220,11 @@ class Settings extends APresenter {
 
     protected function runService() {
         global $app;
+
+        if(!$app->isset('name')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $name = htmlspecialchars($_GET['name']);
 
@@ -287,6 +316,11 @@ class Settings extends APresenter {
 
     protected function createNewFolder() {
         global $app;
+
+        if(!$app->isset('parent_folder', 'name')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $data = [];
 
@@ -532,6 +566,11 @@ class Settings extends APresenter {
     protected function createNewMetadata() {
         global $app;
 
+        if(!$app->isset('name', 'table_name', 'length', 'input_type')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $data = [];
 
         $name = htmlspecialchars($_POST['name']);
@@ -587,6 +626,11 @@ class Settings extends APresenter {
     protected function deleteMetadata() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
         $metadata = $app->metadataModel->getMetadataById($id);
 
@@ -605,6 +649,11 @@ class Settings extends APresenter {
 
     protected function createNewGroup() {
         global $app;
+
+        if(!$app->isset('name')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $name = htmlspecialchars($_POST['name']);
         $code = null;
@@ -634,6 +683,11 @@ class Settings extends APresenter {
 
         foreach($required as $r) {
             $data[$r] = htmlspecialchars($_POST[$r]);
+        }
+
+        if(!$app->isset($required)) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
@@ -672,6 +726,13 @@ class Settings extends APresenter {
     }
 
     protected function askToDeleteFolder() {
+        global $app;
+
+        if(!$app->isset('id_folder')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id_folder']);
 
         $urlConfirm = array(
@@ -690,6 +751,11 @@ class Settings extends APresenter {
 
     protected function deleteFolder() {
         global $app;
+
+        if(!$app->isset('id_folder')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $idFolder = htmlspecialchars($_GET['id_folder']);
         $folder = $app->folderModel->getFolderById($idFolder);

@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
@@ -19,6 +20,11 @@ class Metadata extends APresenter {
     protected function deleteValue() {
         global $app;
 
+        if(!$app->isset('id_metadata', 'id_metadata_value')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $idMetadataValue = htmlspecialchars($_GET['id_metadata_value']);
 
@@ -30,6 +36,11 @@ class Metadata extends APresenter {
 
     protected function showValues() {
         global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $idMetadata = htmlspecialchars($_GET['id']);
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
@@ -62,6 +73,13 @@ class Metadata extends APresenter {
     }
 
     protected function showNewValueForm() {
+        global $app;
+
+        if(!$app->isset('id_metadata')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-new-entity-form.html');
@@ -82,6 +100,11 @@ class Metadata extends APresenter {
     protected function createNewValue() {
         global $app;
 
+        if(!$app->isset('id_metadata', 'name', 'value')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $name = htmlspecialchars($_POST['name']);
         $value = htmlspecialchars($_POST['value']);
@@ -95,6 +118,11 @@ class Metadata extends APresenter {
 
     protected function showUserRights() {
         global $app;
+
+        if(!$app->isset('id_metadata')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
@@ -116,6 +144,11 @@ class Metadata extends APresenter {
 
     protected function updateRight() {
         global $app;
+
+        if(!$app->isset('id_metadata', 'id_user', 'name', 'action')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $idUser = htmlspecialchars($_GET['id_user']);

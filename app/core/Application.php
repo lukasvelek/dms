@@ -75,6 +75,7 @@ class Application {
     public string $currentAction;
 
     public array $pageList;
+    public array $missingUrlValues;
 
     public ?User $user;
     public Logger $logger;
@@ -142,6 +143,7 @@ class Application {
         $this->user = null;
         $this->flashMessage = null;
         $this->pageList = [];
+        $this->missingUrlValues = [];
 
         $this->fileManager = new FileManager($this->baseDir . $this->cfg['log_dir'], $this->baseDir . $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager, $this->cfg);
@@ -429,6 +431,19 @@ class Application {
 
             $pcm->saveArrayToCache($this->pageList);
         }
+    }
+
+    public function isset(...$values) {
+        $present = true;
+
+        foreach($values as $value) {
+            if(!isset($_POST[$value]) && !isset($_GET[$value])) {
+                $this->missingUrlValues[] = $value;
+                $present = false;
+            }
+        }
+
+        return $present;
     }
 
     /**

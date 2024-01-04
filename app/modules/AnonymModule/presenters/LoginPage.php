@@ -8,6 +8,7 @@ use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use \DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
@@ -40,8 +41,6 @@ class LoginPage extends APresenter {
     }
 
     protected function showForgotPasswordForm() {
-        global $app;
-
         $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/GeneralForm.html');
 
         $data = array(
@@ -58,6 +57,11 @@ class LoginPage extends APresenter {
 
     protected function forgotPassword() {
         global $app;
+
+        if(!$app->isset('email', 'username')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect('AnonymModule:LoginPage:showForgotPasswordForm');
+        }
 
         $emailAddress = htmlspecialchars($_POST['email']);
         $username = htmlspecialchars($_POST['username']);
@@ -92,14 +96,17 @@ class LoginPage extends APresenter {
     }
 
     protected function tryLogin() {
+        global $app;
+        
+        if(!$app->isset('username', 'password')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect('AnonymModule:LoginPage:showForm');
+        }
+
         $username = htmlspecialchars($_POST['username']);
         $password = htmlspecialchars($_POST['password']);
-        
-        global $app;
 
-        $userAuthenticator = $app->getComponent('userAuthenticator');
-
-        $authResult = $userAuthenticator->authUser($username, $password);
+        $authResult = $app->userAuthenticator->authUser($username, $password);
 
         if($authResult != false) {
             $user = $app->userModel->getUserById($authResult);
@@ -107,15 +114,12 @@ class LoginPage extends APresenter {
             if(!in_array($user->getStatus(), array(UserStatus::ACTIVE))) {
                 $app->flashMessage('Password change for your account has been requested. Please create a new password!', FlashMessageTypes::WARNING);
                 $app->redirect('AnonymModule:LoginPage:showFirstLoginForm');
-                exit;
             }
 
             $_SESSION['id_current_user'] = $authResult;
             $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60))); // 1 day
 
             unset($_SESSION['login_in_process']);
-
-            //$app->redirect('UserModule:HomePage:showHomepage');
 
             if(!is_null($user)) {
                 if(!is_null($user->getDefaultUserPageUrl())) {
@@ -148,12 +152,16 @@ class LoginPage extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/GeneralForm.html');
 
+        if(!$app->isset('username')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect('AnonymModule:LoginPage:showForm');
+        }
+
         $username = htmlspecialchars($_POST['username']);
 
         $user = $app->userModel->getUserForFirstLoginByUsername($username);
 
         $data = [];
-
         if($user === NULL) {
             $data = array(
                 '$PAGE_TITLE$' => '',
@@ -177,6 +185,11 @@ class LoginPage extends APresenter {
 
     protected function savePassword() {
         global $app;
+
+        if(!$app->isset('id', 'password1', 'password2', 'suggested_password', 'username')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect('AnonymModule:LoginPage:findUser');
+        }
 
         $id = htmlspecialchars($_GET['id']);
 
