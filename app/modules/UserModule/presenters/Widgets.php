@@ -11,6 +11,8 @@ class Widgets extends APresenter {
 
     public function __construct() {
         parent::__construct('Widgets');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function updateDocumentStats() {

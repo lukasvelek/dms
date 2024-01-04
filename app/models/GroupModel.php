@@ -94,6 +94,10 @@ class GroupModel extends AModel {
     }
 
     private function createGroupObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+
         $id = $row['id'];
         $dateCreated = $row['date_created'];
         $name = $row['name'];

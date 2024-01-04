@@ -510,6 +510,10 @@ class DocumentModel extends AModel {
     }
 
     private function createDocumentObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+        
         $id = $row['id'];
         $dateCreated = $row['date_created'];
         $idAuthor = $row['id_author'];

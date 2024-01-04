@@ -29,10 +29,36 @@ class CacheManager {
         $this->category = $category;
     }
 
+    public function saveArrayToCache(array $array) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[$this->category] = $array;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function saveStringToCache(string $text) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[$this->category][] = $text;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadStringsFromCache() {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        return $cacheData[$this->category];
+    }
+
     public function saveFolderToCache(Folder $folder) {
         $cacheData = $this->loadFromCache();
 
-        $cacheData[CacheCategories::FOLDERS][$folder->getId()] = $folder;
+        $cacheData[$this->category][$folder->getId()] = $folder;
 
         $this->saveToCache($cacheData);
     }
@@ -44,8 +70,8 @@ class CacheManager {
             return null;
         }
 
-        if(array_key_exists($id, $cacheData[CacheCategories::FOLDERS])) {
-            return $cacheData[CacheCategories::FOLDERS][$id];
+        if(array_key_exists($id, $cacheData[$this->category])) {
+            return $cacheData[$this->category][$id];
         } else {
             return null;
         }
@@ -54,7 +80,7 @@ class CacheManager {
     public function saveUserToCache(User $user) {
         $cacheData = $this->loadFromCache();
 
-        $cacheData[CacheCategories::USERS][$user->getId()] = $user;
+        $cacheData[$this->category][$user->getId()] = $user;
 
         $this->saveToCache($cacheData);
     }
@@ -66,8 +92,8 @@ class CacheManager {
             return null;
         }
 
-        if(array_key_exists($id, $cacheData[CacheCategories::USERS])) {
-            return $cacheData[CacheCategories::USERS][$id];
+        if(array_key_exists($id, $cacheData[$this->category])) {
+            return $cacheData[$this->category][$id];
         } else {
             return null;
         }

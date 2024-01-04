@@ -3,18 +3,14 @@
 namespace DMS\Components;
 
 use DMS\Enums\AEnum;
-use DMS\Enums\DocumentMarkColorEnum;
 use DMS\Enums\GroupsEnum;
 use DMS\Enums\UsersEnum;
-use DMS\Models\GroupModel;
-use DMS\Models\UserModel;
 
 class ExternalEnumComponent {
     /**
      * @var array IExternalEnum array
      */
     private array $enums;
-
     private array $models;
 
     public function __construct(array $models) {

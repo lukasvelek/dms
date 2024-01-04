@@ -162,9 +162,9 @@ body {
 }
 
 .warn {
-    background-color: orange;
-    border: 1px solid red;
-    color: red;
+    background-color: rgb(253, 255, 142);
+    border: 1px solid rgb(255, 102, 0);
+    color: rgb(255, 102, 0);
 }
 
 .error {
@@ -175,8 +175,8 @@ body {
 
 .info {
     background-color: lightblue;
-    border: 1px solid lightskyblue;
-    color: lightskyblue;
+    border: 1px solid darkblue;
+    color: darkblue;
 }
 
 #flash-message {

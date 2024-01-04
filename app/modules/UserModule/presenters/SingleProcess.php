@@ -12,6 +12,7 @@ use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Process;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\UI\LinkBuilder;
@@ -22,14 +23,26 @@ class SingleProcess extends APresenter {
 
     public function __construct() {
         parent::__construct('SingleProcess', 'Process');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showProcess() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
 
         $process = $app->processModel->getProcessById($id);
+
+        if(is_null($process)) {
+            $app->flashMessage('Process #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/single-process.html');
 
@@ -47,6 +60,13 @@ class SingleProcess extends APresenter {
     }
 
     protected function askToFinish() {
+        global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
 
         $urlConfirm = array(
@@ -65,6 +85,13 @@ class SingleProcess extends APresenter {
     }
 
     protected function askToApprove() {
+        global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
 
         $urlConfirm = array(
@@ -83,6 +110,13 @@ class SingleProcess extends APresenter {
     }
 
     protected function askToDecline() {
+        global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
 
         $urlConfirm = array(
@@ -103,6 +137,11 @@ class SingleProcess extends APresenter {
     protected function approve() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
 
         $app->processComponent->moveProcessToNextWorkflowUser($id);
@@ -114,6 +153,11 @@ class SingleProcess extends APresenter {
 
     protected function decline() {
         global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $id = htmlspecialchars($_GET['id']);
 
@@ -127,8 +171,18 @@ class SingleProcess extends APresenter {
     protected function finish() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
         $process = $app->processModel->getProcessById($id);
+
+        if(is_null($process)) {
+            $app->flashMessage('Process #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         switch($process->getType()) {
             case ProcessTypes::DELETE:

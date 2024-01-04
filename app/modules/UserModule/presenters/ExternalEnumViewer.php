@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
@@ -11,6 +12,8 @@ class ExternalEnumViewer extends APresenter {
 
     public function __construct() {
         parent::__construct('ExternalEnumViewer', 'External Enum Viewer');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showList() {
@@ -28,7 +31,14 @@ class ExternalEnumViewer extends APresenter {
     }
 
     protected function showValues() {
+        global $app;
+        
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/external-enum-viewer/external-enum-viewer-grid.html');
+
+        if(!$app->isset('name')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $name = htmlspecialchars($_GET['name']);
 
@@ -49,7 +59,6 @@ class ExternalEnumViewer extends APresenter {
 
         $tb = TableBuilder::getTemporaryObject();
 
-        $enums = $app->externalEnumComponent->getEnumsList();
         $values = $app->externalEnumComponent->getEnumByName($name)->getValues();
 
         $headers = array(

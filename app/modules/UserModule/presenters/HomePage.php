@@ -10,6 +10,8 @@ class HomePage extends APresenter {
 
     public function __construct() {
         parent::__construct('HomePage', 'Home page');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showHomePage() {

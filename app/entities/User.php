@@ -15,8 +15,9 @@ class User extends AEntity {
     private ?string $addressCountry;
     private ?string $datePasswordChanged;
     private int $passwordChangeStatus;
+    private ?string $defaultUserPageUrl;
 
-    public function __construct(int $id, string $dateCreated, string $firstname, string $lastname, string $username, ?string $email, int $status, ?string $addressStreet, ?string $addressHouseNumber, ?string $addressCity, ?string $addressZipCode, ?string $addressCountry, ?string $datePasswordChanged, int $passwordChangeStatus) {
+    public function __construct(int $id, string $dateCreated, string $firstname, string $lastname, string $username, ?string $email, int $status, ?string $addressStreet, ?string $addressHouseNumber, ?string $addressCity, ?string $addressZipCode, ?string $addressCountry, ?string $datePasswordChanged, int $passwordChangeStatus, ?string $defaultUserPageUrl) {
         parent::__construct($id, $dateCreated);
 
         $this->firstname = $firstname;
@@ -31,6 +32,7 @@ class User extends AEntity {
         $this->addressCountry = $addressCountry;
         $this->datePasswordChanged = $datePasswordChanged;
         $this->passwordChangeStatus = $passwordChangeStatus;
+        $this->defaultUserPageUrl = $defaultUserPageUrl;
     }
 
     public function getFullname() {
@@ -133,6 +135,14 @@ class User extends AEntity {
         $this->passwordChangeStatus = $status;
     }
 
+    public function getDefaultUserPageUrl() {
+        return $this->defaultUserPageUrl;
+    }
+
+    public function setDefaultUserPageUrl(?string $defaultUserPageUrl) {
+        $this->defaultUserPageUrl = $defaultUserPageUrl;
+    }
+
     public static function createUserObjectFromArrayValues(array $values) {
         $emptyUser = self::createEmptyUser();
 
@@ -156,7 +166,7 @@ class User extends AEntity {
     }
 
     public static function createEmptyUser() {
-        return new self(0, date('Y-m-d H:i:s'), '', '', '', null, false, null, null, null, null, null, null, 1);
+        return new self(0, date('Y-m-d H:i:s'), '', '', '', null, false, null, null, null, null, null, null, 1, null);
     }
 }
 

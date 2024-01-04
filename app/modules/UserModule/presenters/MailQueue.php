@@ -9,6 +9,8 @@ class MailQueue extends APresenter {
 
     public function __construct() {
         parent::__construct('MailQueue', 'Mail queue');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showQueue() {

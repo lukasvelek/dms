@@ -165,6 +165,10 @@ class MetadataModel extends AModel {
     }
 
     private function createMetadataObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+        
         $id = $row['id'];
         $name = $row['name'];
         $text = $row['text'];
@@ -188,6 +192,10 @@ class MetadataModel extends AModel {
     }
 
     private function createMetadataValueObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+
         $id = $row['id'];
         $idMetadata = $row['id_metadata'];
         $name = $row['name'];

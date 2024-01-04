@@ -23,17 +23,73 @@ class Users extends APresenter {
 
     public function __construct() {
         parent::__construct('Users');
+
+        $this->getActionNamesFromClass($this);
+    }
+
+    protected function saveSettings() {
+        global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
+        $id = htmlspecialchars($_GET['id']);
+        $defaultUserPageUrl = htmlspecialchars($_POST['default_user_page_url']);
+
+        $app->userModel->updateUser($id, array('default_user_page_url' => $defaultUserPageUrl));
+
+        $app->flashMessage('Successfully changed default page for user #' . $id, 'success');
+        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
+    }
+
+    protected function showSettingsForm() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
+
+        $id = null;
+
+        if(!$app->isset('id')) {
+            $id = $app->user->getId();
+            $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
+        } else {
+            $id = htmlspecialchars($_GET['id']);
+        }
+
+        $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Settings for user <i>' . $user->getFullname() . '</i>',
+            '$FORM$' => $this->internalCreateUserSettingsForm($user)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
     }
 
     protected function showChangePasswordForm() {
         global $app;
 
-        if(!isset($_GET['id'])) {
-            $app->redirect('UserModule:HomePage:showHomepage');
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
         }
 
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
 
@@ -50,8 +106,18 @@ class Users extends APresenter {
     protected function changePassword() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $currentPassword = htmlspecialchars($_POST['current_password']);
         $password1 = htmlspecialchars($_POST['password1']);
@@ -89,13 +155,19 @@ class Users extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-profile-grid.html');
 
-        if(!isset($_GET['id'])) {
-            $app->redirect('UserModule:HomePage:showHomepage');
+        if(!$app->isset('id')) {
+            $id = $app->user->getId();
+            $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
+        } else {
+            $id = htmlspecialchars($_GET['id']);
         }
 
-        $id = htmlspecialchars($_GET['id']);
-
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $editLink = '';
 
@@ -140,6 +212,8 @@ class Users extends APresenter {
             $data['$LINKS$'][] = $forcePasswordChangeLink;
         }
 
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinKBuilder::createAdvLink(array('page' => 'UserModule:Users:showSettingsForm', 'id' => $id), 'Settings');
+
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -147,6 +221,11 @@ class Users extends APresenter {
 
     protected function forcePasswordChange() {
         global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $id = htmlspecialchars($_GET['id']);
 
@@ -164,6 +243,11 @@ class Users extends APresenter {
     protected function requestPasswordChange() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
 
         $data = array(
@@ -179,10 +263,20 @@ class Users extends APresenter {
     protected function showEditForm() {
         global $app;
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
 
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $data = array(
             '$PAGE_TITLE$' => 'Edit user \'' . $user->getFullname() . '\'',
@@ -196,6 +290,11 @@ class Users extends APresenter {
 
     protected function saveUserEdit() {
         global $app;
+
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $id = htmlspecialchars($_GET['id']);
         
@@ -240,8 +339,18 @@ class Users extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-rights-grid.html');
 
+        if(!$app->isset('id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
+
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $userRights = '';
 
@@ -268,6 +377,11 @@ class Users extends APresenter {
 
     protected function allowAllRights() {
         global $app;
+
+        if(!$app->isset('id_user')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $idUser = htmlspecialchars($_GET['id_user']);
 
@@ -317,6 +431,11 @@ class Users extends APresenter {
     protected function denyAllRights() {
         global $app;
 
+        if(!$app->isset('id_user')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $idUser = htmlspecialchars($_GET['id_user']);
 
         $allow = false;
@@ -365,6 +484,11 @@ class Users extends APresenter {
     protected function allowActionRight() {
         global $app;
 
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
@@ -384,6 +508,11 @@ class Users extends APresenter {
 
     protected function denyActionRight() {
         global $app;
+
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
@@ -405,6 +534,11 @@ class Users extends APresenter {
     protected function allowPanelRight() {
         global $app;
 
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
@@ -424,6 +558,11 @@ class Users extends APresenter {
 
     protected function denyPanelRight() {
         global $app;
+
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
@@ -445,6 +584,11 @@ class Users extends APresenter {
     protected function allowBulkActionRight() {
         global $app;
 
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
 
@@ -464,6 +608,11 @@ class Users extends APresenter {
 
     protected function denyBulkActionRight() {
         global $app;
+
+        if(!$app->isset('name', 'id')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $name = htmlspecialchars($_GET['name']);
         $idUser = htmlspecialchars($_GET['id']);
@@ -609,6 +758,11 @@ class Users extends APresenter {
 
         $user = $app->userModel->getUserById($idUser);
 
+        if(is_null($user)) {
+            $app->flashMessage('User #' . $idUser . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
         $code = '';
         $code .= '<table border="1">';
 
@@ -700,6 +854,39 @@ class Users extends APresenter {
         $form = $fb->build();
 
         return $form;
+    }
+
+    private function internalCreateUserSettingsForm(User $user) {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+        
+        $pages = array();
+
+        foreach($app->pageList as $realLink => $fakeLink) {
+            $page = array(
+                'value' => $realLink,
+                'text' => $fakeLink
+            );
+
+            if($realLink == $user->getDefaultUserPageUrl()) {
+                $page['selected'] = 'selected';
+            }
+
+            $pages[] = $page;
+        }
+
+        $fb
+        ->setMethod('POST')
+        ->setAction('?page=UserModule:Users:saveSettings&id=' . $user->getId())
+
+        ->addElement($fb->createLabel()->setFor('default_user_page_url')->setText('Default page'))
+        ->addElement($fb->createSelect()->setName('default_user_page_url')->addOptionsBasedOnArray($pages))
+
+        ->addElement($fb->createSubmit('Save'))
+        ;
+
+        return $fb->build();
     }
 }
 

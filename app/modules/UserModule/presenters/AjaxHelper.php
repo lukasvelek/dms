@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 
 class AjaxHelper extends APresenter {
@@ -9,10 +10,16 @@ class AjaxHelper extends APresenter {
 
     public function __construct() {
         parent::__construct('AjaxHelper');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function flashMessage() {
         global $app;
+
+        if(!$app->isset('message', 'type', 'redirect')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+        }
 
         $message = htmlspecialchars($_GET['message']);
         $type = htmlspecialchars($_GET['type']);

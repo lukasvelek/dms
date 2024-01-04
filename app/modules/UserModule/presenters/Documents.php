@@ -19,6 +19,8 @@ class Documents extends APresenter {
 
     public function __construct() {
         parent::__construct('Documents');
+
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showSharedWithMe() {
@@ -205,8 +207,9 @@ class Documents extends APresenter {
     protected function performBulkAction() {
         global $app;
 
-        if(!isset($_GET['select'])) {
-            $app->redirect('UserModule:Documents:showAll');
+        if(!$app->isset('select')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
         }
 
         $ids = $_GET['select'];
@@ -559,7 +562,8 @@ class Documents extends APresenter {
         }
 
         if(is_null($documentIdManager)) {
-            die('Document group has no manager!');
+            $app->flashMessage('Group #' . $idGroup . ' has no manager!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
         }
 
         $app->documentModel->updateOfficer($idDocument, $documentIdManager);
@@ -806,13 +810,6 @@ class Documents extends APresenter {
         $lastPageLink .= '>&gt;&gt;</a>';
 
         if($documentCount > $app->getGridSize()) {
-            /*if(($pageCheck * $app->getGridSize()) >= $documentCount) {
-                $documentPageControl = $documentCount;
-            } else {
-                $documentPageControl = ($page * $app->getGridSize()) . '+';
-            }*/
-
-            
             if($pageCheck * $app->getGridSize() >= $documentCount) {
                 
                 $documentPageControl = (1 + ($page * $app->getGridSize()));
