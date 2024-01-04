@@ -25,6 +25,24 @@ class Users extends APresenter {
         parent::__construct('Users');
     }
 
+    protected function showSettingsForm() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
+
+        $id = htmlspecialchars($_GET['id']);
+        $user = $app->userModel->getUserById($id);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Settings for user <i>' . $user->getFullname() . '</i>',
+            '$FORM$' => $this->internalCreateUserSettingsForm($user)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showChangePasswordForm() {
         global $app;
 
@@ -139,6 +157,8 @@ class Users extends APresenter {
             $data['$LINKS$'][] = $requestPasswordChangeLink;
             $data['$LINKS$'][] = $forcePasswordChangeLink;
         }
+
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinKBuilder::createAdvLink(array('page' => 'UserModule:Users:showSettingsForm', 'id' => $id), 'Settings');
 
         $this->templateManager->fill($data, $template);
 
@@ -700,6 +720,14 @@ class Users extends APresenter {
         $form = $fb->build();
 
         return $form;
+    }
+
+    private function internalCreateUserSettingsForm(User $user) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        //$fb
+
+        return $fb->build();
     }
 }
 
