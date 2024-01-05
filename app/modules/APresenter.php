@@ -9,14 +9,16 @@ abstract class APresenter implements IPresenter {
     private string $title;
     private IModule $module;
     private array $actions;
-
+    
     protected TemplateManager $templateManager;
     
+    public bool $allowWhenLoginProcess;
     public string $subpanel = '';
     public bool $drawSubpanel = false;
 
-    protected function __construct(string $name, string $title = '') {
+    protected function __construct(string $name, string $title = '', bool $allowWhenLoginProcess = false) {
         $this->name = $name;
+        $this->allowWhenLoginProcess = $allowWhenLoginProcess;
 
         if($title == '') {
             $this->title = $this->name;

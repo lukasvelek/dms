@@ -17,7 +17,7 @@ class LoginPage extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        parent::__construct('LoginPage', 'Login page');
+        parent::__construct('LoginPage', 'Login page', true);
 
         $this->getActionNamesFromClass($this);
     }

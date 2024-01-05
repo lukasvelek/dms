@@ -280,15 +280,17 @@ class Application {
         $presenter = $parts[1];
         $action = $parts[2];
 
+        // Get current action
         $this->currentAction = $parts[2];
 
+        // Get module
         if(array_key_exists($module, $this->modules)) {
-            //$module = $this->modules[$module];
             $this->currentModule = $module = $this->modules[$module];
         } else {
             die('Module does not exist!');
         }
 
+        // Get presenter
         $this->currentPresenter = $presenter = $module->getPresenterByName($presenter);
         if(!is_null($presenter)) {
             $module->setPresenter($presenter);
@@ -296,7 +298,16 @@ class Application {
             die('Presenter does not exist');
         }
 
+        // User is allowed to visit specific pages before logging in
+        if($this->currentPresenter->allowWhenLoginProcess === false && isset($_SESSION['login_in_process'])) {
+            $this->flashMessage('You must login first!', 'warn');
+            $this->redirect(self::URL_LOGIN_PAGE);
+        }
+
+        // Load page body
         $pageBody = $module->currentPresenter->performAction($action);
+
+        // --- PAGE CONTENT CREATION ---
 
         $this->pageContent = '';
 
@@ -313,11 +324,13 @@ class Application {
         } else if(isset($_SESSION['flash_message'])) {
             $this->flashMessage = $_SESSION['flash_message'];
             $this->pageContent .= $this->flashMessage;
-
-            unset($_SESSION['flash_message']);
+            
+            $this->clearFlashMessage();
         }
 
         $this->pageContent .= $pageBody;
+
+        // --- END OF PAGE CONTENT CREATION ---
     }
 
     /**
