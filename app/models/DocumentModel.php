@@ -525,6 +525,20 @@ class DocumentModel extends AModel {
         return $documents;
     }
 
+    public function composeQueryStandardDocuments(bool $ignoreDeleted = true) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select('*')
+            ->from('documents');
+
+        if($ignoreDeleted) {
+            $qb ->where('is_deleted=:deleted')
+                ->setParam(':deleted', '0');
+        }
+
+        return $qb;
+    }
+
     private function createDocumentObjectFromDbRow($row) {
         if($row === NULL) {
             return null;
@@ -560,17 +574,6 @@ class DocumentModel extends AModel {
         $document->setMetadata($row);
 
         return $document;
-    }
-
-    private function composeQueryStandardDocuments() {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select('*')
-            ->from('documents')
-            ->where('is_deleted=:deleted')
-            ->setParam(':deleted', '0');
-
-        return $qb;
     }
 
     private function addFilterCondition(string $filter, QueryBuilder &$qb) {
