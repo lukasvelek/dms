@@ -11,6 +11,7 @@ It also enables users to manage metadata and their values.
 - added new services (Document archivator, Declined document remover)
 - updated core code
 - updated debug tools
+- fixed bugs and potential bugs
 - optimized application
 
 ### v1.4
