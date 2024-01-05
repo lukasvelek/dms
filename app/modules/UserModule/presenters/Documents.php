@@ -6,6 +6,7 @@ use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
@@ -21,6 +22,149 @@ class Documents extends APresenter {
         parent::__construct('Documents');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function downloadReport() {
+        global $app;
+
+        if(!$app->isset('hash')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
+        $filename = 'cache/temp_' . htmlspecialchars($_GET['hash']) . '.csv';
+        $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
+
+        copy($filename, $downloadFilename);
+
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary"); 
+        header("Content-disposition: attachment; filename=\"" . basename($downloadFilename) . "\"");
+
+        readfile($downloadFilename);
+
+        unlink($filename);
+        unlink($downloadFilename);
+
+        $app->flashMessage('Report has been generated and downloaded', 'success');
+
+        ScriptLoader::loadJSScript('DocumentReportGenerator.js');
+    }
+
+    protected function generateReport() {
+        global $app;
+
+        if(!$app->isset('id_folder', 'filter', 'limit_range', 'order', 'total_count')) {
+            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
+
+        $idFolder = htmlspecialchars($_GET['id_folder']);
+        $totalCount = htmlspecialchars($_GET['total_count']);
+        $filter = htmlspecialchars($_POST['filter']);
+        $limit = htmlspecialchars($_POST['limit_range']);
+        $order = htmlspecialchars($_POST['order']);
+
+        $isCondition = false;
+
+        $qb = $app->documentModel->composeQueryStandardDocuments(false);
+
+        if($idFolder > 0) {
+            $qb->where('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+            $isCondition = true;
+        }
+
+        switch($filter) {
+            case 'shredded':
+                if($isCondition) {
+                    $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
+                } else {
+                    $qb->where('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
+                    $isCondition = true;
+                }
+                break;
+
+            case 'waitingForArchivation':
+                if($isCondition) {
+                    $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
+                } else {
+                    $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
+                    $isCondition = true;
+                }
+                break;
+
+            case 'archived':
+                if($isCondition) {
+                    $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
+                } else {
+                    $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
+                    $isCondition = true;
+                }
+                break;
+
+            default:
+            case 'all':
+                break;
+        }
+
+        if($limit < ($totalCount + 1)) {
+            $qb->limit($limit);
+        }
+
+        if($order == 'desc') {
+            $qb->orderBy('id', $order);
+        }
+
+        $rows = null;
+        $app->logger->logFunction(function() use ($app, &$rows, $qb) {
+            $rows = $qb->execute()->fetch();
+        }, __METHOD__);
+
+        if($rows === FALSE || $rows === NULL) {
+            die('Error!');
+        }
+
+        $fileRow = array(
+            'id;id_folder;name;date_created' . "\r\n"
+        );
+
+        $app->logger->logFunction(function() use ($app, $rows, &$fileRow) {
+            foreach($rows as $row) {
+                $fileRow[] = $row['id'] . ';' . ($row['id_folder'] ?? '-') . ';' . $row['name'] . ';' . $row['date_created'] . "\r\n";
+            }
+        }, __METHOD__);
+
+        $hash = CypherManager::createCypher(32);
+        $filename = 'temp_' . $hash . '.csv';
+
+        $app->fileManager->write('cache/' . $filename, $fileRow, false);
+
+        $filename = 'cache/temp_' . $hash . '.csv';
+        $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
+
+        copy($filename, $downloadFilename);
+
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary"); 
+        header("Content-disposition: attachment; filename=\"" . basename($downloadFilename) . "\"");
+
+        readfile($downloadFilename);
+
+        unlink($filename);
+        unlink($downloadFilename);
+    }
+
+    protected function showReportForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Document report generator',
+            '$NEW_DOCUMENT_FORM$' => $this->internalCreateDocumentReportForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
     }
 
     protected function showSharedWithMe() {
@@ -57,7 +201,7 @@ class Documents extends APresenter {
             '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => '',
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
-            '$NEW_DOCUMENT_LINK$' => $newEntityLink,
+            '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
             '$SEARCH_FIELD$' => $searchField,
@@ -116,7 +260,7 @@ class Documents extends APresenter {
             '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => '',
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
-            '$NEW_DOCUMENT_LINK$' => $newEntityLink,
+            '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
             '$SEARCH_FIELD$' => $searchField,
@@ -174,12 +318,14 @@ class Documents extends APresenter {
             '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => '',
             '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
-            '$NEW_DOCUMENT_LINK$' => $newEntityLink,
+            '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
             '$SEARCH_FIELD$' => $searchField,
             '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
         );
+
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
 
         $this->drawSubpanel = true;
         $this->subpanel = Panels::createDocumentsPanel();
@@ -711,6 +857,7 @@ class Documents extends APresenter {
         }
 
         $childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
+
         $folderLink = $linkCreationMethod($link, $folder->getName(), $folder->getId(), $filter);
         
         $spaces = '&nbsp;&nbsp;';
@@ -823,6 +970,66 @@ class Documents extends APresenter {
         $documentPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
 
         return $documentPageControl;
+    }
+
+    private function internalCreateDocumentReportForm() {
+        global $app;
+
+        $idFolder = 0;
+
+        if(isset($_GET['id_folder'])) {
+            $idFolder = htmlspecialchars($_GET['id_folder']);
+        }
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $filterArray = [];
+
+        $addFilter = function(string $key, string $value) use (&$filterArray) {
+            $filterArray[] = array('value' => $key, 'text' => $value);
+        };
+
+        $addFilter('all', 'All');
+        $addFilter('waitingForArchivation', 'Waiting for archivation');
+        $addFilter('shredded', 'Shredded');
+        $addFilter('archived', 'Archived');
+
+        $orderArray = array(
+            array('value' => 'asc', 'text' => 'Ascending'),
+            array('value' => 'desc', 'text' => 'Descending')
+        );
+
+        $count = 0;
+
+        $app->logger->logFunction(function() use (&$count, $app) {
+            $count = $app->documentModel->getDocumentCountByStatus();
+        }, __METHOD__);
+
+        $step = 1;
+
+        if($count >= 20) {
+            $step = $count / 20;
+        }
+
+        $fb
+            ->setMethod('POST')->setAction('?page=UserModule:Documents:generateReport&id_folder=' . $idFolder . '&total_count=' . $count)
+
+            ->addElement($fb->createLabel()->setText('Filter')->setFor('filter'))
+            ->addElement($fb->createSelect()->setName('filter')->addOptionsBasedOnArray($filterArray))
+
+            ->addElement($fb->createLabel()->setText('Limit')->setFor('limit_range'))
+            ->addElement($fb->createLabel()->setText('')->setId('limit_text'))
+            ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax(($count + 1))->setName('limit_range')->setStep($step)->setValue(($count / 2)))
+
+            ->addElement($fb->createLabel()->setText('Order')->setFor('order'))
+            ->addElement($fb->createSelect()->setName('order')->addOptionsBasedOnArray($orderArray))
+
+            ->addJSScript(ScriptLoader::loadJSScript('js/ReportForm.js'))
+
+            ->addElement($fb->createSubmit('Generate'))
+        ;
+
+        return $fb->build();
     }
 }
 
