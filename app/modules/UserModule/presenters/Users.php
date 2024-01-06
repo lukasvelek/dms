@@ -343,7 +343,8 @@ class Users extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => '<i>' . $user->getFullname() . '</i> rights',
             '$USER_RIGHTS_GRID$' => $userRights,
-            '$LINKS$' => '<div class="row"><div class="col-md">' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($links) . '</div></div>'
+            '$LINKS$' => ArrayStringHelper::createUnindexedStringFromUnindexedArray($links),
+            '$BACK_LINK$' => LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showUsers'), '<-')
         );
 
         $this->templateManager->fill($data, $template);
