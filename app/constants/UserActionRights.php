@@ -21,6 +21,8 @@ class UserActionRights {
     public const EDIT_DOCUMENT = 'edit_document';
     public const SHARE_DOCUMENT = 'share_document';
     public const CREATE_DOCUMENT = 'create_document';
+    public const UPDATE_DEFAULT_USER_RIGHTS = 'update_default_user_rights';
+    public const USE_DOCUMENT_GENERATOR = 'use_document_generator';
 
     public static $all = array(
         self::CREATE_USER,
@@ -39,7 +41,9 @@ class UserActionRights {
         self::EDIT_SERVICE,
         self::SEE_DOCUMENT_INFORMATION,
         self::EDIT_DOCUMENT, 
-        self::SHARE_DOCUMENT
+        self::SHARE_DOCUMENT,
+        self::UPDATE_DEFAULT_USER_RIGHTS,
+        self::USE_DOCUMENT_GENERATOR
     );
 }
 
