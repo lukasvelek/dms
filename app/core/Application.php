@@ -507,13 +507,13 @@ class Application {
 
         if(!$present) {
             $this->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($this->missingUrlValues, ',') . ' are missing!', 'error');
-        }
-
-        if($redirect) {
-            if(is_null($redirectUrl) || empty($redirectUrl)) {
-                $this->redirect(self::URL_HOME_PAGE);
-            } else {
-                $this->redirect($redirectUrl['page'], $redirectUrl);
+            
+            if($redirect) {
+                if(is_null($redirectUrl) || empty($redirectUrl)) {
+                    $this->redirect(self::URL_HOME_PAGE);
+                } else {
+                    $this->redirect($redirectUrl['page'], $redirectUrl);
+                }
             }
         }
     }

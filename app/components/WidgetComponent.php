@@ -88,7 +88,11 @@ class WidgetComponent extends AComponent {
 
                     $count = 5;
 
-                    $waitingForMe = $this->processModel->getProcessesWaitingForUser($idUser, $count);
+                    $waitingForMe = null;
+
+                    $this->logger->logFunction(function() use (&$waitingForMe, $idUser, $count) {
+                        $waitingForMe = $this->processModel->getProcessesWaitingForUser($idUser, $count);
+                    }, __METHOD__);
 
                     if($waitingForMe != null) {
                         foreach($waitingForMe as $process) {

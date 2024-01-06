@@ -356,6 +356,7 @@ class ProcessModel extends AModel {
         $rows = $qb->select('*')
                    ->from('processes')
                    ->whereNot('status=:status')
+                   ->explicit(' AND ')
                    ->leftBracket()
                    ->where('workflow1=:id_user', false, false)
                    ->orWhere('workflow2=:id_user')
@@ -385,7 +386,7 @@ class ProcessModel extends AModel {
         return $processes;
     }
 
-    public function getProcessesWithIdUser(int $idUser, int $limit) {
+    public function getProcessesWithIdUser(int $idUser, int $limit = 25) {
         $qb = $this->qb(__METHOD__);
 
         $rows = $qb->select('*')
