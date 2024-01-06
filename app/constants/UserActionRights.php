@@ -14,6 +14,13 @@ class UserActionRights {
     public const DELETE_COMMENTS = 'delete_comments';
     public const EDIT_USER = 'edit_user';
     public const REQUEST_PASSWORD_CHANGE_USER = 'request_password_change_user';
+    public const GENERATE_DOCUMENT_REPORT = 'generate_document_report';
+    public const RUN_SERVICE = 'run_service';
+    public const EDIT_SERVICE = 'edit_service';
+    public const SEE_DOCUMENT_INFORMATION = 'see_document_information';
+    public const EDIT_DOCUMENT = 'edit_document';
+    public const SHARE_DOCUMENT = 'share_document';
+    public const CREATE_DOCUMENT = 'create_document';
 
     public static $all = array(
         self::CREATE_USER,
@@ -26,7 +33,13 @@ class UserActionRights {
         self::EDIT_USER_METADATA_RIGHTS,
         self::DELETE_COMMENTS,
         self::EDIT_USER,
-        self::REQUEST_PASSWORD_CHANGE_USER
+        self::REQUEST_PASSWORD_CHANGE_USER,
+        self::GENERATE_DOCUMENT_REPORT,
+        self::RUN_SERVICE,
+        self::EDIT_SERVICE,
+        self::SEE_DOCUMENT_INFORMATION,
+        self::EDIT_DOCUMENT, 
+        self::SHARE_DOCUMENT
     );
 }
 

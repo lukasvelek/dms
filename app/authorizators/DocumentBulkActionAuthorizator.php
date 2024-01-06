@@ -121,6 +121,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if bulk action "Approve shredding" can be displayed.
+     * 
+     * @param Document Document object
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     */
     public function canApproveShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
@@ -137,6 +144,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if bulk action "Decline shredding" can be displayed.
+     * 
+     * @param Document Document object
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     */
     public function canDeclineShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
@@ -153,6 +167,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if bulk action "Suggest for shredding" can be displayed.
+     * 
+     * @param Document Document object
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     */
     public function canSuggestForShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
@@ -169,6 +190,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if bulk action "Shred" can be displayed.
+     * 
+     * @param Document Document object
+     * @param null|int $idUser User ID
+     * @param bool $checkCache True if cache should be checked and false if not
+     */
     public function canShred(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;

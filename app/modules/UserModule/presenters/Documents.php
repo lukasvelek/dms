@@ -2,10 +2,12 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Authorizators\ActionAuthorizator;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Constants\UserActionRights;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
@@ -168,9 +170,13 @@ class Documents extends APresenter {
 
         $idFolder = null;
         $folderName = 'Main folder';
-        $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        $newEntityLink = '';
         $page = 1;
 
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
+            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        }
+        
         if(isset($_GET['grid_page'])) {
             $page = (int)(htmlspecialchars($_GET['grid_page']));
         }
@@ -214,8 +220,12 @@ class Documents extends APresenter {
 
         $idFolder = null;
         $folderName = 'Main folder';
-        $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        $newEntityLink = '';
         $page = 1;
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
+            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        }
 
         if(isset($_GET['id_folder'])) {
             $idFolder = htmlspecialchars($_GET['id_folder']);
@@ -276,8 +286,12 @@ class Documents extends APresenter {
 
         $idFolder = null;
         $folderName = 'Main folder';
-        $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        $newEntityLink = '';
         $page = 1;
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
+            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        }
 
         if(isset($_GET['id_folder'])) {
             $idFolder = htmlspecialchars($_GET['id_folder']);
@@ -319,7 +333,9 @@ class Documents extends APresenter {
             '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
         );
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT)) {
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
+        }
 
         $this->drawSubpanel = true;
         $this->subpanel = Panels::createDocumentsPanel();

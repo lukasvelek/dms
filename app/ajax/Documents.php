@@ -2,6 +2,7 @@
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Helpers\ArrayStringHelper;
@@ -305,7 +306,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize, $gridUseFastLoad;
+    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize, $gridUseFastLoad, $actionAuthorizator;
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
@@ -352,15 +353,26 @@ function search() {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($documents as $document) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
-                );
+                $actionLinks = [];
+
+                if($actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
+                } else {
+                    $actionLinks[] = '-';
+                }
+
+                if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
+                } else {
+                    $actionLinks[] = '-';
+                }
 
                 $shared = false;
 
-                if(!$shared) {
+                if(!$shared && $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
+                } else {
+                    $actionLinks[] = '-';
                 }
 
                 if(is_null($headerRow)) {
@@ -482,11 +494,27 @@ function search() {
                     }
                 }
 
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share')
-                );
+                $actionLinks = [];
+
+                if($actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION, null, false)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
+                } else {
+                    $actionLinks[] = '-';
+                }
+
+                if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT, null, false)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
+                } else {
+                    $actionLinks[] = '-';
+                }
+
+                $shared = false;
+
+                if(!$shared && $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
+                } else {
+                    $actionLinks[] = '-';
+                }
     
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();

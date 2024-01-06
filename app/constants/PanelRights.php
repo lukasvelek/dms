@@ -12,6 +12,10 @@ class PanelRights {
     public const SETTINGS_SYSTEM = 'settings.system';
     public const SETTINGS_FOLDERS = 'settings.folders';
     public const SETTINGS_SERVICES = 'settings.services';
+    public const SETTINGS_DASHBOARD_WIDGETS = 'settings.dashboard_widgets';
+    //public const DOCUMENTS_ALL = 'documents.all';
+    public const DOCUMENTS_NEW = 'documents.new';
+    public const DOCUMENTS_WAITING_FOR_ARCHIVATION = 'documents.waiting_for_archivation';
 
     public static $all = array(
         self::SETTINGS,
@@ -22,7 +26,11 @@ class PanelRights {
         self::SETTINGS_METADATA,
         self::SETTINGS_SYSTEM,
         self::SETTINGS_FOLDERS,
-        self::SETTINGS_SERVICES
+        self::SETTINGS_SERVICES,
+        self::SETTINGS_DASHBOARD_WIDGETS,
+        //self::DOCUMENTS_ALL,
+        self::DOCUMENTS_NEW,
+        self::DOCUMENTS_WAITING_FOR_ARCHIVATION
     );
 }
 

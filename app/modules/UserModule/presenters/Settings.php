@@ -1291,10 +1291,19 @@ class Settings extends APresenter {
         $services = $app->serviceManager->services;
 
         foreach($services as $serviceName => $service) {
-            $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run'),
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->name), 'Edit')
-            );
+            $actionLinks = [];
+
+            if($app->actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE)) {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run');
+            } else {
+                $actionLinks[] = '-';
+            }
+
+            if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE)) {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->name), 'Edit');
+            } else {
+                $actionLinks[] = '-';
+            }
 
             if(is_null($headerRow)) {
                 $row = $tb->createRow();
