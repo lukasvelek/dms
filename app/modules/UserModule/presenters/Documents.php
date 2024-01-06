@@ -3,11 +3,13 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Authorizators\ActionAuthorizator;
+use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
+use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
@@ -16,6 +18,7 @@ use DMS\Modules\APresenter;
 use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
+use DMS\UI\TableBuilder\TableBuilder;
 
 class Documents extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -246,9 +249,13 @@ class Documents extends APresenter {
         if(isset($_GET['filter'])) {
             $filter = htmlspecialchars($_GET['filter']);
         }
-        
-        $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter, $page) {
-            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $filter, $page);
+
+        $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter, $page, $app) {
+            if($app->getGridUseAjax()) {
+                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $filter, $page);
+            } else{
+                $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $filter, $page);
+            }
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder, $filter) {
@@ -307,8 +314,12 @@ class Documents extends APresenter {
         $documentGrid = '';
         $folderList = '';
         
-        $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $page) {
-            $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, null, $page);
+        $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $page, $app) {
+            if($app->getGridUseAjax()) {
+                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $page);
+            } else{
+                $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $page);
+            }
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder) {
@@ -345,7 +356,281 @@ class Documents extends APresenter {
         return $template;
     }
 
-    private function internalCreateStandardDocumentGrid(?int $idFolder, ?string $filter, int $page = 1) {
+    private function internalCreateStandardDocumentGrid(?int $idFolder, ?string $filter, int $page = 1, ?string $query = null) {
+        global $app;
+
+        $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
+        $fcm = CacheManager::getTemporaryObject(CacheCategories::FOLDERS);
+
+        if($query != null) {
+            $query = str_replace('_', '%', $query);
+
+            $tb = TableBuilder::getTemporaryObject();
+
+            $tb->showRowBorder();
+
+            $headers = array(
+                '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
+                'Actions',
+                'Name',
+                'Author',
+                'Status',
+                'Folder'
+            );
+
+            $headerRow = null;
+
+            if($idFolder == 'null') {
+            $idFolder = null;
+            }
+
+            $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($app->metadataModel->getMetadataByName('status', 'documents')->getId());
+            
+            $documents = $app->documentModel->getDocumentsForName($query, $idFolder, $filter);
+
+            if(empty($documents)) {
+                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+            } else {
+                foreach($documents as $document) {
+                    $actionLinks = [];
+
+                    if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION)) {
+                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
+                    } else {
+                        $actionLinks[] = '-';
+                    }
+
+                    if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT)) {
+                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
+                    } else {
+                        $actionLinks[] = '-';
+                    }
+
+                    $shared = false;
+
+                    if(!$shared && $app->actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
+                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
+                    } else {
+                        $actionLinks[] = '-';
+                    }
+
+                    if(is_null($headerRow)) {
+                        $row = $tb->createRow();
+
+                        foreach($headers as $header) {
+                            $col = $tb->createCol()->setText($header)
+                                            ->setBold();
+
+                            if($header == 'Actions') {
+                                $col->setColspan(count($actionLinks));
+                            }
+
+                            $row->addCol($col);
+                        }
+
+                        $headerRow = $row;
+
+                        $tb->addRow($row);
+                    }
+
+                    $docuRow = $tb->createRow();
+
+                    $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">'));
+
+                    foreach($actionLinks as $actionLink) {
+                        $docuRow->addCol($tb->createCol()->setText($actionLink));
+                    }
+
+                    $author = null;
+
+                    $cacheAuthor = $ucm->loadUserByIdFromCache($document->getIdAuthor());
+
+                    if(is_null($cacheAuthor)) {
+                        $author = $app->userModel->getUserById($document->getIdAuthor());
+                        $ucm->saveUserToCache($author);
+                    } else {
+                        $author = $cacheAuthor;
+                    }
+
+                    $docuRow->addCol($tb->createCol()->setText($document->getName()))
+                            ->addCol($tb->createCol()->setText($author->getFullname()))
+                    ;
+
+                    foreach($dbStatuses as $dbs) {
+                        if($dbs->getValue() == $document->getStatus()) {
+                            $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
+                        }
+                    }
+
+                    $folderName = '-';
+
+                    if(!is_null($document->getIdFolder())) {
+                        $folder = null;
+
+                        $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
+
+                        if(is_null($cacheFolder)) {
+                            $folder = $app->folderModel->getFolderById($document->getIdFolder());
+                            $fcm->saveFolderToCache($folder);
+                        } else {
+                            $folder = $cacheFolder;
+                            $folderName = $folder->getName();
+                        }
+
+                        $docuRow->addCol($tb->createCol()->setText($folderName));
+                    }else{
+                        $docuRow->addCol($tb->createCol()->setText('-'));
+                    }
+                    
+                    $tb->addRow($docuRow);
+                }
+            }
+
+            return $tb->build();
+        } else {
+            $tb = TableBuilder::getTemporaryObject();
+
+            $tb->showRowBorder();
+
+            $headers = array(
+                '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
+                'Actions',
+                'Name',
+                'Author',
+                'Status',
+                'Folder'
+            );
+        
+            $headerRow = null;
+        
+            if($idFolder == 'null') {
+                $idFolder = null;
+            }
+
+            $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($app->metadataModel->getMetadataByName('status', 'documents')->getId());
+
+            if($app->cfg['grid_use_fast_load']) {
+                $page -= 1;
+
+                $firstIdDocumentOnPage = $app->documentModel->getFirstIdDocumentOnAGridPage(($page * $app->getGridSize()));
+
+                $documents = $app->documentModel->getStandardDocumentsFromId($firstIdDocumentOnPage, $idFolder, $filter, $app->getGridSize());
+            } else {
+                $documents = $app->documentModel->getStandardDocuments($idFolder, $filter, ($page * $app->getGridSize()));
+            }
+        
+            if(empty($documents)) {
+                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+            } else {
+                $skip = 0;
+                $maxSkip = ($page - 1) * $app->getGridSize();
+
+                foreach($documents as $document) {
+                    if(!$app->cfg['grid_use_fast_load']) {
+                        if($skip < $maxSkip) {
+                            $skip++;
+                            continue;
+                        }
+                    }
+
+                    $actionLinks = [];
+
+                    if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION, null, false)) {
+                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
+                    } else {
+                        $actionLinks[] = '-';
+                    }
+
+                    if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT, null, false)) {
+                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
+                    } else {
+                        $actionLinks[] = '-';
+                    }
+
+                    $shared = false;
+
+                    if(!$shared && $app->actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
+                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
+                    } else {
+                        $actionLinks[] = '-';
+                    }
+        
+                    if(is_null($headerRow)) {
+                        $row = $tb->createRow();
+        
+                        foreach($headers as $header) {
+                            $col = $tb->createCol()->setText($header)
+                                                ->setBold();
+        
+                            if($header == 'Actions') {
+                                $col->setColspan(count($actionLinks));
+                            }
+        
+                            $row->addCol($col);
+                        }
+        
+                        $headerRow = $row;
+        
+                        $tb->addRow($row);
+                    }
+        
+                    $docuRow = $tb->createRow();
+                    $docuRow->setId($document->getId());
+        
+                    $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">'));
+                    
+                    foreach($actionLinks as $actionLink) {
+                        $docuRow->addCol($tb->createCol()->setText($actionLink));
+                    }
+
+                    $author = null;
+
+                    $cacheAuthor = $ucm->loadUserByIdFromCache($document->getIdAuthor());
+
+                    if(is_null($cacheAuthor)) {
+                        $author = $app->userModel->getUserById($document->getIdAuthor());
+                        $ucm->saveUserToCache($author);
+                    } else {
+                        $author = $cacheAuthor;
+                    }
+
+                    $docuRow->addCol($tb->createCol()->setText($document->getName()))
+                            ->addCol($tb->createCol()->setText($author->getFullname()))
+                    ;
+        
+                    foreach($dbStatuses as $dbs) {
+                        if($dbs->getValue() == $document->getStatus()) {
+                            $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
+                        }
+                    }
+        
+                    $folderName = '-';
+
+                    if(!is_null($document->getIdFolder())) {
+                        $folder = null;
+
+                        $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
+
+                        if(is_null($cacheFolder)) {
+                            $folder = $app->folderModel->getFolderById($document->getIdFolder());
+                            $fcm->saveFolderToCache($folder);
+                        } else {
+                            $folder = $cacheFolder;
+                            $folderName = $folder->getName();
+                        }
+                    }
+        
+                    $docuRow->addCol($tb->createCol()->setText($folderName));
+                        
+                    $tb->addRow($docuRow);
+                }
+            }
+        
+            return $tb->build();
+        }
+    }
+
+    private function internalCreateStandardDocumentGridAjax(?int $idFolder, ?string $filter, int $page = 1) {
         $code = '<script type="text/javascript">';
 
         if($filter != null) {

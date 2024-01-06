@@ -440,6 +440,10 @@ class Application {
         return $this->cfg['grid_size'];
     }
 
+    public function getGridUseAjax() {
+        return $this->cfg['grid_use_ajax'];
+    }
+
     /**
      * Loads a list of pages available to be set as default. 
      * Nothing is returned because it is saved to cache.

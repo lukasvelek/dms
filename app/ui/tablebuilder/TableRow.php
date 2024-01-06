@@ -12,6 +12,7 @@ class TableRow implements IBuildable {
   private array $cols;
   private string $colspan;
   private string $class;
+  private string $id;
 
   public string $script;
 
@@ -24,6 +25,7 @@ class TableRow implements IBuildable {
     $this->cols = array();
     $this->colspan = '';
     $this->class = '';
+    $this->id = '';
     
     $this->script = '';
 
@@ -82,6 +84,12 @@ class TableRow implements IBuildable {
     return $this;
   }
 
+  public function setId(string $id) {
+    $this->id = 'id="' . $id . '"';
+
+    return $this;
+  }
+
   /**
    * Creates a table column instance
    * 
@@ -92,7 +100,7 @@ class TableRow implements IBuildable {
   }
 
   public function build() {
-    $code[] = '<tr ' . $this->colspan . ' ' . $this->class . '>';
+    $code[] = '<tr ' . $this->colspan . ' ' . $this->class . ' ' . $this->id . '>';
 
     foreach($this->cols as $col) {
       $code[] = $col->build()->script;

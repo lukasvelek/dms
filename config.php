@@ -26,5 +26,6 @@ $cfg['mail_login_password'] = ''; // Mail server login password
 
 $cfg['grid_size'] = '25'; // grid size (number of rows)
 $cfg['grid_use_fast_load'] = true; // grid fast load usage (useful with lots of documents)
+$cfg['grid_use_ajax'] = true;
 
 ?>

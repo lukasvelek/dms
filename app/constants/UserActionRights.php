@@ -43,7 +43,8 @@ class UserActionRights {
         self::EDIT_DOCUMENT, 
         self::SHARE_DOCUMENT,
         self::UPDATE_DEFAULT_USER_RIGHTS,
-        self::USE_DOCUMENT_GENERATOR
+        self::USE_DOCUMENT_GENERATOR,
+        self::CREATE_DOCUMENT
     );
 }
 
