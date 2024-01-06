@@ -333,7 +333,7 @@ class CacheManager {
     public function createFilename() {
         global $app;
 
-        $name = /*$app->user->getId() . */date('Y-m-d') . $this->category;
+        $name = date('Y-m-d') . $this->category;
 
         $file = md5($name) . '.tmp';
 
@@ -382,10 +382,18 @@ class CacheManager {
      * @param string $category Cache category
      * @return CacheManager self
      */
-    public static function getTemporaryObject(string $category) {
-        global $app;
+    public static function getTemporaryObject(string $category, bool $isAjax = false, array $cfg = []) {
+        if($isAjax) {
+            if(empty($cfg)) {
+                die();
+            } else {
+                return new self($cfg['serialize_cache'], $category, '../../logs/', '../../cache/');
+            }
+        } else {
+            global $app;
 
-        return new self($app->cfg['serialize_cache'], $category);
+            return new self($app->cfg['serialize_cache'], $category);
+        }
     }
 
     /**
