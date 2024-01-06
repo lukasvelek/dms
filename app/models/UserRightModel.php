@@ -45,7 +45,7 @@ class UserRightModel extends AModel {
     public function insertPanelRightForIdUser(int $idUser, string $panelName, bool $status) {
         return $this->insertNew(array(
             'id_user' => $idUser,
-            'action_name' => $panelName,
+            'panel_name' => $panelName,
             'is_visible' => $status ? '1' : '0'
             ), 'user_panel_rights');
     }
