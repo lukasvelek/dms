@@ -27,10 +27,7 @@ class Documents extends APresenter {
     protected function downloadReport() {
         global $app;
 
-        if(!$app->isset('hash')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['hash']);
 
         $filename = 'cache/temp_' . htmlspecialchars($_GET['hash']) . '.csv';
         $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
@@ -54,10 +51,7 @@ class Documents extends APresenter {
     protected function generateReport() {
         global $app;
 
-        if(!$app->isset('id_folder', 'filter', 'limit_range', 'order', 'total_count')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_folder', 'filter', 'limit_range', 'order', 'total_count']);
 
         $idFolder = htmlspecialchars($_GET['id_folder']);
         $totalCount = htmlspecialchars($_GET['total_count']);
@@ -353,10 +347,7 @@ class Documents extends APresenter {
     protected function performBulkAction() {
         global $app;
 
-        if(!$app->isset('select')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['select']);
 
         $ids = $_GET['select'];
         $action = htmlspecialchars($_GET['action']);

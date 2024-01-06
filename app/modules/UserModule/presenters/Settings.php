@@ -33,10 +33,7 @@ class Settings extends APresenter {
     protected function updateDashboardWidgets() {
         global $app;
 
-        if(!$app->isset('id_user', 'widget00', 'widget01', 'widget10', 'widget11')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_user', 'widget00', 'widget01', 'widget10', 'widget11']);
 
         $idUser = htmlspecialchars($_GET['id_user']);
 
@@ -100,10 +97,7 @@ class Settings extends APresenter {
     protected function editService() {
         global $app;
 
-        if(!$app->isset('name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['name']);
 
         $name = htmlspecialchars($_GET['name']);
         
@@ -149,10 +143,7 @@ class Settings extends APresenter {
         
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
         
-        if(!$app->isset('name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['name']);
         
         $name = htmlspecialchars($_GET['name']);
 
@@ -197,10 +188,7 @@ class Settings extends APresenter {
     protected function askToRunService() {
         global $app;
 
-        if(!$app->isset('name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['name']);
 
         $name = htmlspecialchars($_GET['name']);
 
@@ -221,10 +209,7 @@ class Settings extends APresenter {
     protected function runService() {
         global $app;
 
-        if(!$app->isset('name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['name']);
 
         $name = htmlspecialchars($_GET['name']);
 
@@ -317,10 +302,7 @@ class Settings extends APresenter {
     protected function createNewFolder() {
         global $app;
 
-        if(!$app->isset('parent_folder', 'name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['name', 'parent_folder']);
 
         $data = [];
 
@@ -566,10 +548,7 @@ class Settings extends APresenter {
     protected function createNewMetadata() {
         global $app;
 
-        if(!$app->isset('name', 'table_name', 'length', 'input_type')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['name', 'table_name', 'length', 'input_type']);
 
         $data = [];
 
@@ -626,10 +605,7 @@ class Settings extends APresenter {
     protected function deleteMetadata() {
         global $app;
 
-        if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id']);
 
         $id = htmlspecialchars($_GET['id']);
         $metadata = $app->metadataModel->getMetadataById($id);
@@ -650,10 +626,7 @@ class Settings extends APresenter {
     protected function createNewGroup() {
         global $app;
 
-        if(!$app->isset('name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['name']);
 
         $name = htmlspecialchars($_POST['name']);
         $code = null;
@@ -680,14 +653,11 @@ class Settings extends APresenter {
         $data = [];
 
         $required = array('firstname', 'lastname', 'username');
+        
+        $app->flashMessageIfNotIsset($required);
 
         foreach($required as $r) {
             $data[$r] = htmlspecialchars($_POST[$r]);
-        }
-
-        if(!$app->isset($required)) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
@@ -728,10 +698,7 @@ class Settings extends APresenter {
     protected function askToDeleteFolder() {
         global $app;
 
-        if(!$app->isset('id_folder')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_folder']);
 
         $id = htmlspecialchars($_GET['id_folder']);
 
@@ -752,10 +719,7 @@ class Settings extends APresenter {
     protected function deleteFolder() {
         global $app;
 
-        if(!$app->isset('id_folder')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_folder']);
 
         $idFolder = htmlspecialchars($_GET['id_folder']);
         $folder = $app->folderModel->getFolderById($idFolder);
@@ -1270,7 +1234,11 @@ class Settings extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $foldersDb = $app->folderModel->getAllFolders();
+        $foldersDb = [];
+
+        $app->logger->logFunction(function() use ($app, &$foldersDb) {
+            $foldersDb = $app->folderModel->getAllFolders();
+        }, __METHOD__);
 
         $foldersArr = array(array(
             'value' => '-1',
@@ -1519,10 +1487,14 @@ class Settings extends APresenter {
             )
         );
 
-        $widget00loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00);
-        $widget01loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET01);
-        $widget10loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10);
-        $widget11loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11);
+        $widget00loc = $widget01loc = $widget10loc = $widget11loc = null;
+
+        $app->logger->logFunction(function() use ($app, &$widget00loc, &$widget01loc, &$widget10loc, &$widget11loc, $idUser) {
+            $widget00loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00);
+            $widget01loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET01);
+            $widget10loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10);
+            $widget11loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11);
+        }, __METHOD__);
 
         foreach($allWidgets as $name => $content) {
             $text = $content['text'];

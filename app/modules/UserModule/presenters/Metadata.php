@@ -20,10 +20,7 @@ class Metadata extends APresenter {
     protected function deleteValue() {
         global $app;
 
-        if(!$app->isset('id_metadata', 'id_metadata_value')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_metadata', 'id_metadata_value']);
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $idMetadataValue = htmlspecialchars($_GET['id_metadata_value']);
@@ -37,10 +34,7 @@ class Metadata extends APresenter {
     protected function showValues() {
         global $app;
 
-        if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id']);
 
         $idMetadata = htmlspecialchars($_GET['id']);
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
@@ -75,10 +69,7 @@ class Metadata extends APresenter {
     protected function showNewValueForm() {
         global $app;
 
-        if(!$app->isset('id_metadata')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_metadata']);
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
 
@@ -100,10 +91,7 @@ class Metadata extends APresenter {
     protected function createNewValue() {
         global $app;
 
-        if(!$app->isset('id_metadata', 'name', 'value')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_metadata', 'name', 'value']);
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $name = htmlspecialchars($_POST['name']);
@@ -119,10 +107,7 @@ class Metadata extends APresenter {
     protected function showUserRights() {
         global $app;
 
-        if(!$app->isset('id_metadata')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_metadata']);
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
@@ -145,10 +130,7 @@ class Metadata extends APresenter {
     protected function updateRight() {
         global $app;
 
-        if(!$app->isset('id_metadata', 'id_user', 'name', 'action')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_metadata', 'id_user', 'name', 'action']);
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $idUser = htmlspecialchars($_GET['id_user']);

@@ -35,10 +35,7 @@ class ExternalEnumViewer extends APresenter {
         
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/external-enum-viewer/external-enum-viewer-grid.html');
 
-        if(!$app->isset('name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['name']);
 
         $name = htmlspecialchars($_GET['name']);
 

@@ -26,10 +26,7 @@ class Groups extends APresenter {
     protected function showNewUserForm() {
         global $app;
 
-        if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id']);
         
         $idGroup = htmlspecialchars($_GET['id']);
         $group = $app->groupModel->getGroupById($idGroup);
@@ -51,11 +48,8 @@ class Groups extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/groups/groups-grid.html');
 
-        if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
-
+        $app->flashMessageIfNotIsset(['id']);
+        
         $id = htmlspecialchars($_GET['id']);
         $group = $app->groupModel->getGroupById($id);
 
@@ -75,10 +69,7 @@ class Groups extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/groups/group-rights-grid.html');
 
-        if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id']);
 
         $id = htmlspecialchars($_GET['id']);
         $group = $app->groupModel->getGroupById($id);
@@ -96,10 +87,7 @@ class Groups extends APresenter {
     protected function allowActionRight() {
         global $app;
 
-        if(!$app->isset('id', 'name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id', 'name']);
 
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
@@ -121,10 +109,7 @@ class Groups extends APresenter {
     protected function denyActionRight() {
         global $app;
 
-        if(!$app->isset('id', 'name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id', 'name']);
 
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
@@ -146,10 +131,7 @@ class Groups extends APresenter {
     protected function allowPanelRight() {
         global $app;
 
-        if(!$app->isset('id', 'name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id', 'name']);
 
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
@@ -171,10 +153,7 @@ class Groups extends APresenter {
     protected function denyPanelRight() {
         global $app;
 
-        if(!$app->isset('id', 'name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id', 'name']);
 
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
@@ -196,10 +175,7 @@ class Groups extends APresenter {
     protected function allowBulkActionRight() {
         global $app;
 
-        if(!$app->isset('id', 'name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id', 'name']);
 
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
@@ -221,10 +197,7 @@ class Groups extends APresenter {
     protected function denyBulkActionRight() {
         global $app;
 
-        if(!$app->isset('id', 'name')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id', 'name']);
 
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
@@ -246,10 +219,7 @@ class Groups extends APresenter {
     protected function addUserToGroup() {
         global $app;
 
-        if(!$app->isset('id_group', 'user')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_group', 'user']);
 
         $idGroup = htmlspecialchars($_GET['id_group']);
         $idUser = htmlspecialchars($_POST['user']);
@@ -266,10 +236,7 @@ class Groups extends APresenter {
     protected function removeUserFromGroup() {
         global $app;
 
-        if(!$app->isset('id_group', 'id_user')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
         $idGroup = htmlspecialchars($_GET['id_group']);
         $idUser = htmlspecialchars($_GET['id_user']);
@@ -286,10 +253,7 @@ class Groups extends APresenter {
     protected function setUserAsManager() {
         global $app;
 
-        if(!$app->isset('id_group', 'id_user')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
         $idGroup = htmlspecialchars($_GET['id_group']);
         $idUser = htmlspecialchars($_GET['id_user']);
@@ -318,10 +282,7 @@ class Groups extends APresenter {
     protected function unsetUserAsManager() {
         global $app;
 
-        if(!$app->isset('id_group', 'id_user')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
         $idGroup = htmlspecialchars($_GET['id_group']);
         $idUser = htmlspecialchars($_GET['id_user']);

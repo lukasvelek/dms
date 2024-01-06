@@ -21,6 +21,7 @@ use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Core\Logger\Logger;
 use DMS\Core\FileManager;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
@@ -229,6 +230,8 @@ class Application {
         $newParams = array('page' => $url);
 
         foreach($params as $k => $v) {
+            if($k == 'page') continue;
+
             $newParams[$k] = $v;
         }
 
@@ -390,6 +393,12 @@ class Application {
         return $this->conn;
     }
 
+    /**
+     * Flashes a message to the user
+     * 
+     * @param string $message Message text
+     * @param string $type Message type (options defined in DMS\Constants\FlashMessageTypes)
+     */
     public function flashMessage(string $message, string $type = FlashMessageTypes::INFO) {
         unset($_SESSION['flash_message']);
 
@@ -409,6 +418,11 @@ class Application {
         $_SESSION['flash_message'] = $code;
     }
 
+    /**
+     * Clears a flash message
+     * 
+     * @param bool $clearFromSession If the flash message should be removed entirely
+     */
     public function clearFlashMessage(bool $clearFromSession = true) {
         $this->flashMessage = null;
 
@@ -417,10 +431,19 @@ class Application {
         }
     }
 
+    /**
+     * Returns the grid size config parameter as defined in the config file
+     * 
+     * @return int Grid size
+     */
     public function getGridSize() {
         return $this->cfg['grid_size'];
     }
 
+    /**
+     * Loads a list of pages available to be set as default. 
+     * Nothing is returned because it is saved to cache.
+     */
     public function loadPages() {
         $pcm = CacheManager::getTemporaryObject(CacheCategories::PAGES);
 
@@ -446,6 +469,12 @@ class Application {
         }
     }
 
+    /**
+     * Checks is passed parameters exist in the global variables $_POST and $_GET. If one of the passed is missing it returns false, otherwise true.
+     * 
+     * @param array $values Values to be checked
+     * @return bool True if all exist or false if one or more do not exist
+     */
     public function isset(...$values) {
         $present = true;
 
@@ -457,6 +486,36 @@ class Application {
         }
 
         return $present;
+    }
+
+    /**
+     * Flashes a message to the user that one of given values is missing in the $_GET or $_POST global variables.
+     * 
+     * @param array $values Values to be checked
+     * @param bool $redirect True if the page should be redirected automatically
+     * @param array|null $redirectUrl The URL where should the page redirect to
+     */
+    public function flashMessageIfNotIsset(array $values, bool $redirect = true, ?array $redirectUrl = []) {
+        $present = true;
+
+        foreach($values as $value) {
+            if(!isset($_POST[$value]) && !isset($_GET[$value])) {
+                $this->missingUrlValues[] = $value;
+                $present = false;
+            }
+        }
+
+        if(!$present) {
+            $this->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($this->missingUrlValues, ',') . ' are missing!', 'error');
+        }
+
+        if($redirect) {
+            if(is_null($redirectUrl) || empty($redirectUrl)) {
+                $this->redirect(self::URL_HOME_PAGE);
+            } else {
+                $this->redirect($redirectUrl['page'], $redirectUrl);
+            }
+        }
     }
 
     /**

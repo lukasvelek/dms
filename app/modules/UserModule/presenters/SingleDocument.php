@@ -29,10 +29,7 @@ class SingleDocument extends APresenter {
     protected function shareDocument() {
         global $app;
 
-        if(!$app->isset('id_document', 'user', 'date_from', 'date_to')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_document', 'user', 'date_from', 'date_to']);
 
         $idDocument = htmlspecialchars($_GET['id_document']);
         $idUser = htmlspecialchars($_POST['user']);
@@ -62,10 +59,7 @@ class SingleDocument extends APresenter {
     protected function showShare() {
         global $app;
 
-        if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id']);
 
         $idDocument = htmlspecialchars($_GET['id']);
         $document = $app->documentModel->getDocumentById($idDocument);
@@ -90,10 +84,7 @@ class SingleDocument extends APresenter {
     protected function deleteComment() {
         global $app;
 
-        if(!$app->isset('id_comment', 'id_document')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_comment', 'id_document']);
 
         $idComment = htmlspecialchars($_GET['id_comment']);
         $idDocument = htmlspecialchars($_GET['id_document']);
@@ -108,10 +99,7 @@ class SingleDocument extends APresenter {
     protected function askToDeleteComment() {
         global $app;
 
-        if(!$app->isset('id_document', 'id_comment')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_comment', 'id_document']);
 
         $idDocument = htmlspecialchars($_GET['id_document']);
         $idComment = htmlspecialchars($_GET['id_comment']);
@@ -135,10 +123,7 @@ class SingleDocument extends APresenter {
     protected function saveComment() {
         global $app;
 
-        if(!$app->isset('id_document', 'text')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id_comment', 'text']);
 
         $idDocument = htmlspecialchars($_GET['id_document']);
         $idAuthor = $app->user->getId();
@@ -158,10 +143,7 @@ class SingleDocument extends APresenter {
     protected function showInfo() {
         global $app;
 
-        if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id']);
 
         $id = htmlspecialchars($_GET['id']);
         $document = $app->documentModel->getDocumentById($id);
@@ -199,10 +181,7 @@ class SingleDocument extends APresenter {
     protected function showEdit() {
         global $app;
 
-        if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id']);
 
         $id = htmlspecialchars($_GET['id']);
         $document  = $app->documentModel->getDocumentById($id);
@@ -227,10 +206,7 @@ class SingleDocument extends APresenter {
     protected function updateDocument() {
         global $app;
 
-        if(!$app->isset('id')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect($app::URL_HOME_PAGE);
-        }
+        $app->flashMessageIfNotIsset(['id']);
 
         $id = htmlspecialchars($_GET['id']);
 

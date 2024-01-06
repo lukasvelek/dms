@@ -23,7 +23,7 @@ class Processes extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Process menu',
-            '$PROCESS_PANEL$' => /*Panels::createProcessesPanel()*/ ''
+            '$PROCESS_PANEL$' => ''
         );
 
         $this->drawSubpanel = true;
@@ -62,7 +62,7 @@ class Processes extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Processes',
-            '$PROCESS_PANEL$' => /*Panels::createProcessesPanel()*/ '',
+            '$PROCESS_PANEL$' => '',
             '$PROCESS_GRID$' => $processGrid,
             '$PROCESS_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $filter)
         );
@@ -76,6 +76,10 @@ class Processes extends APresenter {
     }
 
     protected function newProcess() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['type']);
+
         $type = htmlspecialchars($_GET['type']);
         $name = ProcessTypes::$texts[$type];
 
@@ -83,7 +87,7 @@ class Processes extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New process: <i>' . $name . '</i>',
-            '$PROCESS_PANEL$' => /*Panels::createProcessesPanel()*/ '',
+            '$PROCESS_PANEL$' => '',
             '$PROCESS_FORM$' => $this->internalCreateProcessForm($type)
         );
 
