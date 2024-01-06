@@ -35,7 +35,11 @@ class ProcessComponent extends AComponent {
     }
 
     public function getProcessesWhereIdUserIsCurrentOfficer(int $idUser) {
-        $userProcesses = $this->processModel->getProcessesWithIdUser($idUser);
+        $userProcesses = [];
+
+        $this->logger->logFunction(function() use ($idUser, &$userProcesses) {
+            $userProcesses = $this->processModel->getProcessesWithIdUser($idUser);
+        }, __METHOD__);
 
         $processes = [];
 
@@ -79,10 +83,22 @@ class ProcessComponent extends AComponent {
 
         switch($type) {
             case ProcessTypes::DELETE:
-                $archmanIdGroup = $this->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
-                $groupUsers = $this->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
+                $groupUsers = [];
+                $document = null;
 
-                $document = $this->documentModel->getDocumentById($idDocument);
+                $this->logger->logFunction(function() use (&$groupUsers) {
+                    $archmanIdGroup = $this->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
+                    $groupUsers = $this->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
+                }, __METHOD__);
+
+                $this->logger->logFunction(function() use (&$document, $idDocument) {
+                    $document = $this->documentModel->getDocumentById($idDocument);
+                }, __METHOD__);
+
+                if($document == null) {
+                    die();
+                }
+
                 $data['workflow1'] = $document->getIdManager();
 
                 if(count($groupUsers) > 0) {
@@ -100,8 +116,21 @@ class ProcessComponent extends AComponent {
                 break;
 
             case ProcessTypes::SHREDDING:
-                $archmanIdGroup = $this->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
-                $groupUsers = $this->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
+                $groupUsers = [];
+                $document = null;
+
+                $this->logger->logFunction(function() use (&$groupUsers) {
+                    $archmanIdGroup = $this->groupModel->getGroupByCode(Groups::ARCHIVE_MANAGER)->getId();
+                    $groupUsers = $this->groupUserModel->getGroupUsersByGroupId($archmanIdGroup);
+                }, __METHOD__);
+
+                $this->logger->logFunction(function() use (&$document, $idDocument) {
+                    $document = $this->documentModel->getDocumentById($idDocument);
+                }, __METHOD__);
+
+                if($document == null) {
+                    die();
+                }
 
                 $document = $this->documentModel->getDocumentById($idDocument);
                 $data['workflow1'] = $document->getIdAuthor();
@@ -131,7 +160,11 @@ class ProcessComponent extends AComponent {
             $this->processModel->insertNewProcess($data);
             $this->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
             
-            $idProcess = $this->processModel->getLastInsertedIdProcess();
+            $idProcess = null;
+
+            $this->logger->logFunction(function() use (&$idProcess) {
+                $idProcess = $this->processModel->getLastInsertedIdProcess();
+            }, __METHOD__);
 
             $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
                 'id_process' => $idProcess,
@@ -145,7 +178,11 @@ class ProcessComponent extends AComponent {
     }
 
     public function moveProcessToNextWorkflowUser(int $idProcess) {
-        $process = $this->processModel->getProcessById($idProcess);
+        $process = null;
+
+        $this->logger->logFunction(function() use (&$process, $idProcess) {
+            $process = $this->processModel->getProcessById($idProcess);
+        }, __METHOD__);
 
         if(is_null($process)) {
             return false;
@@ -168,7 +205,15 @@ class ProcessComponent extends AComponent {
     public function endProcess(int $idProcess) {
         $this->processModel->updateStatus($idProcess, ProcessStatus::FINISHED);
 
-        $process = $this->processModel->getProcessById($idProcess);
+        $process = null;
+
+        $this->logger->logFunction(function() use (&$process, $idProcess) {
+            $process = $this->processModel->getProcessById($idProcess);
+        }, __METHOD__);
+
+        if(is_null($process)) {
+            return false;
+        }
 
         $this->notificationComponent->createNewNotification(Notifications::PROCESS_FINISHED, array(
             'id_user' => $process->getIdAuthor(),
@@ -181,7 +226,11 @@ class ProcessComponent extends AComponent {
     }
 
     public function checkIfDocumentIsInProcess(int $idDocument) {
-        $process = $this->processModel->getProcessForIdDocument($idDocument);
+        $process = null;
+
+        $this->logger->logFunction(function() use (&$process, $idDocument) {
+            $process = $this->processModel->getProcessForIdDocument($idDocument);
+        }, __METHOD__);
 
         if(!is_null($process) && $process->getStatus() == ProcessStatus::IN_PROGRESS) {
             return true;
@@ -198,7 +247,12 @@ class ProcessComponent extends AComponent {
     }
 
     public function deleteProcessesForIdDocument(int $idDocument) {
-        $processes = $this->processModel->getProcessesForIdDocument($idDocument);
+        $processes = [];
+
+        $this->logger->logFunction(function() use (&$processes, $idDocument) {
+            $processes = $this->processModel->getProcessesForIdDocument($idDocument);
+        }, __METHOD__);
+        
         $this->processModel->removeProcessesForIdDocument($idDocument);
 
         foreach($processes as $process) {

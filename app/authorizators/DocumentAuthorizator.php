@@ -7,6 +7,7 @@ use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\Document;
 use DMS\Entities\User;
 use DMS\Models\DocumentModel;
 use DMS\Models\ProcessModel;
@@ -45,14 +46,14 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be archived
      * 
-     * @param int $id Document ID
+     * @param Document Document object
      * @return bool True if the document can be archived and false if not
      */
-    public function canArchive(int $id) {
-        $document = $this->documentModel->getDocumentById($id);
-
-        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
-            return false;
+    public function canArchive(Document $document, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
         }
 
         if($document->getStatus() != DocumentStatus::ARCHIVATION_APPROVED) {
@@ -65,14 +66,14 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be approved for archivation
      * 
-     * @param int $id Document ID
+     * @param Document Document object
      * @return bool True if the document can be approved for archivation and false if not
      */
-    public function canApproveArchivation(int $id) {
-        $document = $this->documentModel->getDocumentById($id);
-
-        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
-            return false;
+    public function canApproveArchivation(Document $document, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
         }
 
         // STATUS
@@ -86,14 +87,14 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be declined for archivation
      * 
-     * @param int $id Document ID
+     * @param Document Document object
      * @return bool True if the document can be declined for archivation and false if not
      */
-    public function canDeclineArchivation(int $id) {
-        $document = $this->documentModel->getDocumentById($id);
-
-        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
-            return false;
+    public function canDeclineArchivation(Document $document, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
         }
 
         //STATUS
@@ -107,14 +108,14 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be deleted
      * 
-     * @param int $id Document ID
+     * @param Document Document object
      * @return bool True if the document can be deleted and false if not
      */
-    public function canDeleteDocument(int $id, bool $checkStatus = true) {
-        $document = $this->documentModel->getDocumentById($id);
-
-        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
-            return false;
+    public function canDeleteDocument(Document $document, bool $checkStatus = true, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
         }
 
         if($checkStatus) {
@@ -132,14 +133,14 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be shredded
      * 
-     * @param int $id Document ID
+     * @param Document Document object
      * @return bool True if the document can be shredded and false if not
      */
-    public function canShred(int $id) {
-        $document = $this->documentModel->getDocumentById($id);
-
-        if(!$this->processComponent->checkIfDocumentIsInProcess($id)) {
-            return false;
+    public function canShred(Document $document, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
         }
 
         if($document->getStatus() != DocumentStatus::ARCHIVED) {
@@ -157,11 +158,11 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
-    public function canSuggestForShredding(int $id) {
-        $document = $this->documentModel->getDocumentById($id);
-
-        if($this->processComponent->checkIfDocumentIsInProcess($id)) {
-            return false;
+    public function canSuggestForShredding(Document $document, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
         }
 
         if($document->getStatus() != DocumentStatus::ARCHIVED) {
@@ -179,11 +180,11 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
     
-    public function canApproveShredding(int $id) {
-        $document = $this->documentModel->getDocumentById($id);
-
-        if(!$this->processComponent->checkIfDocumentIsInProcess($id)) {
-            return false;
+    public function canApproveShredding(Document $document, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
         }
 
         if($document->getStatus() != DocumentStatus::ARCHIVED) {
@@ -201,11 +202,11 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
-    public function canDeclineShredding(int $id) {
-        $document = $this->documentModel->getDocumentById($id);
-
-        if(!$this->processComponent->checkIfDocumentIsInProcess($id)) {
-            return false;
+    public function canDeclineShredding(Document $document, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
         }
 
         if($document->getStatus() != DocumentStatus::ARCHIVED) {

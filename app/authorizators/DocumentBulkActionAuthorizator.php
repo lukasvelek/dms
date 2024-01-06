@@ -4,6 +4,7 @@ namespace DMS\Authorizators;
 
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\Document;
 use DMS\Entities\User;
 
 /**
@@ -31,20 +32,20 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
     /**
      * Checks if bulk action "Approve archivation" can be displayed.
      * 
-     * @param int $idDocument Document ID
+     * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canApproveArchivation(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+    public function canApproveArchivation(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('approve_archivation', $idUser, $checkCache)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('approve_archivation', $idUser, $checkCache, $cfg)) {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canApproveArchivation($idDocument)) {
+        if(!$this->documentAuthorizator->canApproveArchivation($document, $checkForExistingProcess)) {
             return false;
         }
 
@@ -54,20 +55,20 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
     /**
      * Checks if bulk action "Decline archivation" can be displayed.
      * 
-     * @param int $idDocument Document ID
+     * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canDeclineArchivation(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+    public function canDeclineArchivation(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('decline_archivation', $idUser, $checkCache)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('decline_archivation', $idUser, $checkCache, $cfg)) {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canDeclineArchivation($idDocument)) {
+        if(!$this->documentAuthorizator->canDeclineArchivation($document, $checkForExistingProcess)) {
             return false;
         }
 
@@ -77,20 +78,20 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
     /**
      * Checks if bulk action "Archive" can be displayed.
      * 
-     * @param int $idDocument Document ID
+     * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canArchive(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+    public function canArchive(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('archive', $idUser, $checkCache)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('archive', $idUser, $checkCache, $cfg)) {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canArchive($idDocument)) {
+        if(!$this->documentAuthorizator->canArchive($document, $checkForExistingProcess)) {
             return false;
         }
 
@@ -100,84 +101,84 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
     /**
      * Checks if bulk action "Delete document" can be displayed.
      * 
-     * @param int $idDocument Document ID
+     * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canDelete(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+    public function canDelete(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('delete_documents', $idUser, $checkCache)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('delete_documents', $idUser, $checkCache, $cfg)) {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canDeleteDocument($idDocument)) {
+        if(!$this->documentAuthorizator->canDeleteDocument($document, true, $checkForExistingProcess)) {
             return false;
         }
 
         return true;
     }
 
-    public function canApproveShredding(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+    public function canApproveShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('approve_shredding', $idUser, $checkCache)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('approve_shredding', $idUser, $checkCache, $cfg)) {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canApproveShredding($idDocument)) {
+        if(!$this->documentAuthorizator->canApproveShredding($document, true, $checkForExistingProcess)) {
             return false;
         }
 
         return true;
     }
 
-    public function canDeclineShredding(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+    public function canDeclineShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('decline_shredding', $idUser, $checkCache)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('decline_shredding', $idUser, $checkCache, $cfg)) {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canDeclineShredding($idDocument)) {
+        if(!$this->documentAuthorizator->canDeclineShredding($document, true, $checkForExistingProcess)) {
             return false;
         }
 
         return true;
     }
 
-    public function canSuggestForShredding(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+    public function canSuggestForShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('suggest_shredding', $idUser, $checkCache)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('suggest_shredding', $idUser, $checkCache, $cfg)) {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canSuggestForShredding($idDocument)) {
+        if(!$this->documentAuthorizator->canSuggestForShredding($document, true, $checkForExistingProcess)) {
             return false;
         }
 
         return true;
     }
 
-    public function canShred(int $idDocument, ?int $idUser = null, bool $checkCache = true) {
+    public function canShred(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('shred', $idUser, $checkCache)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('shred', $idUser, $checkCache, $cfg)) {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canShred($idDocument)) {
+        if(!$this->documentAuthorizator->canShred($document, true, $checkForExistingProcess)) {
             return false;
         }
 

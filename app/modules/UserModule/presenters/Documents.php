@@ -745,8 +745,18 @@ class Documents extends APresenter {
         global $app;
         
         foreach($ids as $id) {
-            if($app->documentAuthorizator->canDeclineArchivation($id)) {
-                $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVATION_DECLINED);
+            $document = null;
+
+            $app->logger->logFunction(function() use (&$document, $id, $app) {
+                $document = $app->documentModel->getDocumentById($id);
+            }, __METHOD__);
+
+            if($document == null) {
+                die();
+            }
+
+            if($app->documentAuthorizator->canDeclineArchivation($document)) {
+                $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVATION_DECLINED);
             }
         }
 
@@ -763,8 +773,18 @@ class Documents extends APresenter {
         global $app;
 
         foreach($ids as $id) {
-            if($app->documentAuthorizator->canApproveArchivation($id)) {
-                $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVATION_APPROVED);
+            $document = null;
+
+            $app->logger->logFunction(function() use (&$document, $id, $app) {
+                $document = $app->documentModel->getDocumentById($id);
+            }, __METHOD__);
+
+            if($document == null) {
+                die();
+            }
+
+            if($app->documentAuthorizator->canApproveArchivation($document)) {
+                $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVATION_APPROVED);
             }
         }
 
@@ -781,8 +801,18 @@ class Documents extends APresenter {
         global $app;
 
         foreach($ids as $id) {
-            if($app->documentAuthorizator->canArchive($id)) {
-                $app->documentModel->updateStatus($id, DocumentStatus::ARCHIVED);
+            $document = null;
+
+            $app->logger->logFunction(function() use (&$document, $id, $app) {
+                $document = $app->documentModel->getDocumentById($id);
+            }, __METHOD__);
+
+            if($document == null) {
+                die();
+            }
+
+            if($app->documentAuthorizator->canArchive($document)) {
+                $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVED);
             }
         }
 
