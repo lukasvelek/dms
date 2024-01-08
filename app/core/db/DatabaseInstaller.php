@@ -50,6 +50,10 @@ class DatabaseInstaller {
         $this->insertDefaultGroupMetadataRights();
 
         $this->insertDefaultServiceConfig();
+
+        $this->insertDefaultRibbons();
+        $this->insertDefaultRibbonGroupRights();
+        $this->insertDefaultRibbonUserRights();
     }
 
     public function updateDefaultUserRights() {
@@ -1065,7 +1069,7 @@ class DatabaseInstaller {
                 'code' => 'settings',
                 'image' => 'img/settings.svg',
                 'is_visible' => '1',
-                'page_url' => '?page=UserModule:Documents:showDashboard'
+                'page_url' => '?page=UserModule:Settings:showDashboard'
             )
         );
 
@@ -1160,49 +1164,59 @@ class DatabaseInstaller {
                     'name' => 'Dashboard',
                     'code' => 'settings.dashboard',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showDashboard'
+                    'page_url' => '?page=UserModule:Settings:showDashboard',
+                    'image' => 'img/dashboard.svg'
                 ),
                 array(
                     'name' => 'Document folders',
                     'code' => 'settings.document_folders',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showFolders'
+                    ,
+                    'image' => 'img/folder.svg'
                 ),
                 array(
                     'name' => 'Users',
                     'code' => 'settings.users',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showUsers'
+                    'page_url' => '?page=UserModule:Settings:showUsers',
+                    'image' => 'img/users.svg'
                 ),
                 array(
                     'name' => 'Groups',
                     'code' => 'settings.groups',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showGroups'
+                    ,
+                    'image' => 'img/groups.svg'
                 ),
                 array(
                     'name' => 'Metadata',
                     'code' => 'settings.metadata',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showMetadata'
+                    'page_url' => '?page=UserModule:Settings:showMetadata',
+                    'image' => 'img/metadata.svg'
                 ),
                 array(
                     'name' => 'System',
                     'code' => 'settings.system',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showSystem'
+                    'page_url' => '?page=UserModule:Settings:showSystem',
+                    'image' => 'img/system.svg'
                 ),
                 array(
                     'name' => 'Services',
                     'code' => 'settings.services',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showServices'
+                    'page_url' => '?page=UserModule:Settings:showServices',
+                    'image' => 'img/services.svg'
                 ),
                 array(
                     'name' => 'Dashboard widgets',
                     'code' => 'settings.dashboard_widgets',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showDashboardWidgets'
+                    'page_url' => '?page=UserModule:Settings:showDashboardWidgets',
+                    'image' => 'img/dashboard-widgets.svg'
                 )
             )
         );
@@ -1222,50 +1236,55 @@ class DatabaseInstaller {
                 break;
             }
 
-            $this->db->beginTransaction();
+            if(array_key_exists($code, $subpanelRibbons)) {
+                $this->db->beginTransaction();
 
-            foreach($subpanelRibbons[$code] as $ribbon) {
-                $sql = "INSERT INTO `ribbons` (";
+                foreach($subpanelRibbons[$code] as $ribbon) {
+                    $keys = [];
+                    $values = [];
 
-                foreach($ribbon as $k => $v) {
-                    $keys[] = $k;
-                    $values[] = $v;
-                }
-
-                $keys[] = 'id_parent_ribbon';
-                $values[] = $id;
+                    $sql = "INSERT INTO `ribbons` (";
     
-                $i = 0;
-                foreach($keys as $k) {
-                    if(($i + 1) == count($keys)) {
-                        $sql .= '`' . $k . '`';
-                    } else {
-                        $sql .= '`' . $k . '`, ';
+                    foreach($ribbon as $k => $v) {
+                        $keys[] = $k;
+                        $values[] = $v;
                     }
     
-                    $i++;
-                }
-    
-                $sql .= ") VALUES (";
-    
-                $i = 0;
-                foreach($values as $v) {
-                    if(($i + 1) == count($values)) {
-                        $sql .= "'" . $v . "'";
-                    } else {
-                        $sql .= "'" . $v . "', ";
+                    $keys[] = 'id_parent_ribbon';
+                    $values[] = $id;
+        
+                    $i = 0;
+                    foreach($keys as $k) {
+                        if(($i + 1) == count($keys)) {
+                            $sql .= '`' . $k . '`';
+                        } else {
+                            $sql .= '`' . $k . '`, ';
+                        }
+        
+                        $i++;
                     }
+        
+                    $sql .= ") VALUES (";
+        
+                    $i = 0;
+                    foreach($values as $v) {
+                        if(($i + 1) == count($values)) {
+                            $sql .= "'" . $v . "'";
+                        } else {
+                            $sql .= "'" . $v . "', ";
+                        }
+        
+                        $i++;
+                    }
+        
+                    $sql .= ")";
     
-                    $i++;
+                    $this->logger->sql($sql, __METHOD__);
+                    $this->db->query($sql);
                 }
     
-                $sql .= ")";
-
-                $this->logger->sql($sql, __METHOD__);
-                $this->db->query($sql);
+                $this->db->commit();
             }
-
-            $this->db->commit();
         }
     }
 

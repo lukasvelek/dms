@@ -554,7 +554,11 @@ class Application {
      */
     private function installDb() {
         if(!file_exists('app/core/install')) {
-            $this->conn->installer->install();
+            $conn = $this->conn;
+
+            $this->logger->logFunction(function() use ($conn) {
+                $conn->installer->install();
+            }, __METHOD__);
 
             file_put_contents('app/core/install', 'installed');
         }
