@@ -33,6 +33,7 @@ use DMS\Models\MetadataModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
+use DMS\Models\RibbonModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\TableModel;
 use DMS\Models\UserModel;
@@ -102,6 +103,7 @@ class Application {
     public WidgetModel $widgetModel;
     public NotificationModel $notificationModel;
     public MailModel $mailModel;
+    public RibbonModel $ribbonModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -168,6 +170,7 @@ class Application {
         $this->widgetModel = new WidgetModel($this->conn, $this->logger);
         $this->notificationModel = new NotificationModel($this->conn, $this->logger);
         $this->mailModel = new MailModel($this->conn, $this->logger);
+        $this->ribbonModel = new RibbonModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -185,7 +188,8 @@ class Application {
             'processCommentModel' => $this->processCommentModel,
             'widgetModel' => $this->widgetModel,
             'notificationModel' => $this->notificationModel,
-            'mailModel' => $this->mailModel
+            'mailModel' => $this->mailModel,
+            'ribbonModel' => $this->ribbonModel
         );
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
