@@ -80,6 +80,30 @@ class CacheManager {
         }
     }
 
+    public function loadSiblingRibbons(int $idRibbon) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        foreach($cacheData as $k => $cd) {
+            if($k == $idRibbon) {
+                echo('1');
+                return $cd;
+            } else {
+                foreach($cacheData[$k] as $cdk => $cdcd) {
+                    if($cdk == $idRibbon) {
+                        echo('2');
+                        return $cdcd;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function saveUserRibbonRight(int $idRibbon, int $idUser, string $category, bool $result) {
         $cacheData = $this->loadFromCache();
 

@@ -69,6 +69,10 @@ class Panels {
             return null;
         }
 
+        /*$currentRibbon = 
+
+        $subRibbons = $app->ribbonComponent->getSiblingRibbonsVisibleToUser($app->user->getId(), $currentIdRibbon);*/
+
         $currentRibbon = $app->ribbonModel->getRibbonById($currentIdRibbon);
         
         $idRibbon = $currentRibbon->getId();

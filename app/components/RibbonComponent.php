@@ -20,6 +20,37 @@ class RibbonComponent extends AComponent {
         $this->ribbonAuthorizator = $ribbonAuthorizator;
     }
 
+    public function getRibbonVisibleToUser(int $idUser, int $idRibbon) {
+        /*$cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+
+        $valFromCache = $cm->loadRibbons();
+        
+        if(!is_null($valFromCache)) {
+            //$ribbons = $valFromCache;
+
+            foreach($valFromCache as $k1 => $v1) {
+                if($)
+            }
+        } else {
+            $ribbons = $this->ribbonModel->getRibbonsForIdParentRibbon($idParentRibbon);
+
+            foreach($ribbons as $ribbon) {
+                $cm->saveRibbon($ribbon);
+            }
+        }
+
+        $visibleRibbons = [];
+        foreach($ribbons as $ribbon) {
+            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon->getId());
+
+            if($result === TRUE) {
+                $visibleRibbons[] = $ribbon;
+            }
+        }
+
+        return $visibleRibbons;*/
+    }
+
     public function getToppanelRibbonsVisibleToUser(int $idUser) {
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
 
@@ -61,6 +92,38 @@ class RibbonComponent extends AComponent {
                 $cm->saveRibbon($ribbon);
             }
         }
+
+        $visibleRibbons = [];
+        foreach($ribbons as $ribbon) {
+            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon->getId());
+
+            if($result === TRUE) {
+                $visibleRibbons[] = $ribbon;
+            }
+        }
+
+        return $visibleRibbons;
+    }
+
+    public function getSiblingRibbonsVisibleToUser(int $idUser, int $idRibbon) {
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+
+        $valFromCache = $cm->loadSiblingRibbons($idRibbon);
+
+        if(!is_null($valFromCache)) {
+            $ribbons = $valFromCache;
+        } else {
+            $ribbon = $this->ribbonModel->getRibbonById($idRibbon);
+            $idParentRibbon = $ribbon->getIdParentRibbon();
+
+            $ribbons = $this->ribbonModel->getRibbonsForIdParentRibbon($idParentRibbon);
+
+            foreach($ribbons as $ribbon) {
+                $cm->saveRibbon($ribbon);
+            }
+        }
+
+        var_dump($valFromCache);
 
         $visibleRibbons = [];
         foreach($ribbons as $ribbon) {
