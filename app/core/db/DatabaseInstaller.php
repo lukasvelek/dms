@@ -282,6 +282,7 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_parent_ribbon' => 'INT(32) NULL',
                 'name' => 'VARCHAR(256) NOT NULL',
+                'code' => 'VARCHAR(256) NOT NULL',
                 'title' => 'VARCHAR(256) NULL',
                 'image' => 'VARCHAR(256) NULL',
                 'is_visible' => 'INT(2) NOT NULL DEFAULT 1',
@@ -1013,6 +1014,237 @@ class DatabaseInstaller {
 
                 $this->logger->sql($sql, __METHOD__);
 
+                $this->db->query($sql);
+            }
+        }
+    }
+
+    public function insertDefaultRibbons() {
+        $toppanelCodes = array(
+            'home',
+            'documents',
+            'processes',
+            'settings'
+        );
+
+        $toppanelRibbons = array(
+            array(
+                'name' => 'Home',
+                'code' => 'home',
+                'image' => 'img/home.svg',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:HomePage:showHomepage'
+            ),
+            array(
+                'name' => 'Documents',
+                'code' => 'documents',
+                'image' => 'img/documents.svg',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:Documents:showAll'
+            ),
+            array(
+                'name' => 'Processes',
+                'code' => 'processes',
+                'image' => 'img/processes.svg',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:Processes:showAll'
+            ),
+            array(
+                'name' => 'Settings',
+                'code' => 'settings',
+                'image' => 'img/settings.svg',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:Documents:showDashboard'
+            )
+        );
+
+        foreach($toppanelRibbons as $ribbon) {
+            $keys = [];
+            $values = [];
+
+            foreach($ribbon as $k => $v) {
+                $keys[] = $k;
+                $values[] = $v;
+            }
+
+            $sql = "INSERT INTO `ribbons` (";
+
+            $i = 0;
+            foreach($keys as $k) {
+                if(($i + 1) == count($keys)) {
+                    $sql .= '`' . $k . '`';
+                } else {
+                    $sql .= '`' . $k . '`, ';
+                }
+
+                $i++;
+            }
+
+            $sql .= ") VALUES (";
+
+            $i = 0;
+            foreach($values as $v) {
+                if(($i + 1) == count($values)) {
+                    $sql .= "'" . $v . "'";
+                } else {
+                    $sql .= "'" . $v . "', ";
+                }
+
+                $i++;
+            }
+
+            $sql .= ")";
+
+            $this->logger->sql($sql, __METHOD__);
+            $this->db->query($sql);
+        }
+
+        $subpanelRibbons = array(
+            'documents' => array(
+                array(
+                    'name' => 'All documents',
+                    'code' => 'documents.all_documents',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Documents:showAll'
+                ),
+                array(
+                    'name' => 'Waiting for archivation',
+                    'code' => 'documents.waiting_for_archivation',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Documents:showFiltered&filter=waitingForArchivation'
+                ),
+                array(
+                    'name' => 'New documents',
+                    'code' => 'documents.new_documents',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Documents:showFiltered&filter=new'
+                )
+            ),
+            'processes' => array(
+                array(
+                    'name' => 'Processes started by me',
+                    'code' => 'processes.started_by_me',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Processes:showAll&filter=startedByMe'
+                ),
+                array(
+                    'name' => 'Processes waiting for me',
+                    'code' => 'processes.waiting_for_me',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Processes:showAll&filter=waitingForMe'
+                ),
+                array(
+                    'name' => 'Finished processes',
+                    'code' => 'processes.finished',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Processes:showAll&filter=finished'
+                )
+            ),
+            'settings' => array(
+                array(
+                    'name' => 'Dashboard',
+                    'code' => 'settings.dashboard',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showDashboard'
+                ),
+                array(
+                    'name' => 'Document folders',
+                    'code' => 'settings.document_folders',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showFolders'
+                ),
+                array(
+                    'name' => 'Users',
+                    'code' => 'settings.users',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showUsers'
+                ),
+                array(
+                    'name' => 'Groups',
+                    'code' => 'settings.groups',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showGroups'
+                ),
+                array(
+                    'name' => 'Metadata',
+                    'code' => 'settings.metadata',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showMetadata'
+                ),
+                array(
+                    'name' => 'System',
+                    'code' => 'settings.system',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showSystem'
+                ),
+                array(
+                    'name' => 'Services',
+                    'code' => 'settings.services',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showServices'
+                ),
+                array(
+                    'name' => 'Dashboard widgets',
+                    'code' => 'settings.dashboard_widgets',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showDashboardWidgets'
+                )
+            )
+        );
+
+        foreach($toppanelCodes as $code) {
+            $sql = "SELECT `id` FROM `ribbons` WHERE `code` = '$code'";
+
+            $this->logger->sql($sql, __METHOD__);
+            $result = $this->db->query($sql);
+
+            $id = null;
+            foreach($result as $row) {
+                $id = $row['id'];
+            }
+
+            if($id == null) {
+                break;
+            }
+
+            foreach($subpanelRibbons[$code] as $ribbon) {
+                $sql = "INSERT INTO `ribbons` (";
+
+                foreach($ribbon as $k => $v) {
+                    $keys[] = $k;
+                    $values[] = $v;
+                }
+
+                $keys[] = 'id_parent_ribbon';
+                $values[] = $id;
+    
+                $i = 0;
+                foreach($keys as $k) {
+                    if(($i + 1) == count($keys)) {
+                        $sql .= '`' . $k . '`';
+                    } else {
+                        $sql .= '`' . $k . '`, ';
+                    }
+    
+                    $i++;
+                }
+    
+                $sql .= ") VALUES (";
+    
+                $i = 0;
+                foreach($values as $v) {
+                    if(($i + 1) == count($values)) {
+                        $sql .= "'" . $v . "'";
+                    } else {
+                        $sql .= "'" . $v . "', ";
+                    }
+    
+                    $i++;
+                }
+    
+                $sql .= ")";
+
+                $this->logger->sql($sql, __METHOD__);
                 $this->db->query($sql);
             }
         }

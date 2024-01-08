@@ -11,6 +11,17 @@ class RibbonModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getRibbonById(int $id) {
+        $qb = $this->composeStandardRibbonQuery(__METHOD__);
+
+        $row = $qb ->where('id=:id')
+                   ->setParam(':id', $id)
+                   ->execute()
+                   ->fetchSingle();
+
+        return $this->createRibbonObjectFromDbRow($row);
+    }
+
     public function getRibbonByCode(string $code) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 

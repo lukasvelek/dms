@@ -2,8 +2,11 @@
 
 namespace DMS\Panels;
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\PanelRights;
+use DMS\Core\CacheManager;
 use DMS\Core\TemplateManager;
+use DMS\Entities\Ribbon;
 use DMS\UI\LinkBuilder;
 
 class Panels {
@@ -60,12 +63,21 @@ class Panels {
         );
 
         $currentIdRibbon = $app->currentIdRibbon;
+        $currentRibbon = null;
 
         if(is_null($currentIdRibbon)) {
             return null;
         }
 
-        $subRibbons = $app->ribbonComponent->getChildrenRibbonsVisibleToUser($app->user->getId(), $currentIdRibbon);
+        $currentRibbon = $app->ribbonModel->getRibbonById($currentIdRibbon);
+        
+        $idRibbon = $currentRibbon->getId();
+        
+        if($currentRibbon->hasParent()) {
+            $idRibbon = $currentRibbon->getIdParentRibbon();
+        }
+
+        $subRibbons = $app->ribbonComponent->getChildrenRibbonsVisibleToUser($app->user->getId(), $idRibbon);
 
         if(empty($subRibbons)) {
             return null;
