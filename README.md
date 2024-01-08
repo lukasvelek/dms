@@ -4,6 +4,8 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.6
+
 ### v1.5
 - added notification manager service
 - added support for external enums
