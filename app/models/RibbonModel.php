@@ -11,6 +11,17 @@ class RibbonModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getRibbonByCode(string $code) {
+        $qb = $this->composeStandardRibbonQuery(__METHOD__);
+
+        $row = $qb ->where('code=:code')
+                   ->setParam(':code', $code)
+                   ->execute()
+                   ->fetchSingle();
+
+        return $this->createRibbonObjectFromDbRow($row);
+    }
+
     public function getRibbonsForIdParentRibbon(int $idParentRibbon) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
@@ -70,12 +81,13 @@ class RibbonModel extends AModel {
         $idParentRibbon = null;
         $image = null;
         $title = null;
+        $code = $row['code'];
 
         if($row['is_visible'] == 1) {
             $visible = true;
         }
 
-        if(isset($row['id_parent_folder'])) {
+        if(isset($row['id_parent_ribbon'])) {
             $idParentRibbon = $row['id_parent_ribbon'];
         }
 
@@ -87,7 +99,7 @@ class RibbonModel extends AModel {
             $title = $row['title'];
         }
 
-        return new Ribbon($id, $name, $title, $idParentRibbon, $image, $visible, $pageUrl);
+        return new Ribbon($id, $name, $title, $idParentRibbon, $image, $visible, $pageUrl, $code);
     }
 }
 

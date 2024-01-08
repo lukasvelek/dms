@@ -12,9 +12,11 @@ use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
+use DMS\Authorizators\RibbonAuthorizator;
 use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
+use DMS\Components\RibbonComponent;
 use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
@@ -34,6 +36,7 @@ use DMS\Models\NotificationModel;
 use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
 use DMS\Models\RibbonModel;
+use DMS\Models\RibbonRightsModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\TableModel;
 use DMS\Models\UserModel;
@@ -75,6 +78,7 @@ class Application {
     public IModule $currentModule;
     public IPresenter $currentPresenter;
     public string $currentAction;
+    public ?int $currentIdRibbon;
 
     public array $pageList;
     public array $missingUrlValues;
@@ -104,6 +108,7 @@ class Application {
     public NotificationModel $notificationModel;
     public MailModel $mailModel;
     public RibbonModel $ribbonModel;
+    public RibbonRightsModel $ribbonRightsModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -111,12 +116,14 @@ class Application {
     public ActionAuthorizator $actionAuthorizator;
     public MetadataAuthorizator $metadataAuthorizator;
     public DocumentBulkActionAuthorizator $documentBulkActionAuthorizator;
+    public RibbonAuthorizator $ribbonAuthorizator;
 
     public ProcessComponent $processComponent;
     public WidgetComponent $widgetComponent;
     public SharingComponent $sharingComponent;
     public NotificationComponent $notificationComponent;
     public ExternalEnumComponent $externalEnumComponent;
+    public RibbonComponent $ribbonComponent;
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
@@ -147,6 +154,7 @@ class Application {
         $this->flashMessage = null;
         $this->pageList = [];
         $this->missingUrlValues = [];
+        $this->currentIdRibbon = null;
 
         $this->fileManager = new FileManager($this->baseDir . $this->cfg['log_dir'], $this->baseDir . $this->cfg['cache_dir']);
         $this->logger = new Logger($this->fileManager, $this->cfg);
@@ -171,6 +179,7 @@ class Application {
         $this->notificationModel = new NotificationModel($this->conn, $this->logger);
         $this->mailModel = new MailModel($this->conn, $this->logger);
         $this->ribbonModel = new RibbonModel($this->conn, $this->logger);
+        $this->ribbonRightsModel = new RibbonRightsModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -196,6 +205,7 @@ class Application {
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user, $this->userModel, $this->groupUserModel);
+        $this->ribbonAuthorizator = new RibbonAuthorizator($this->conn, $this->logger, $this->user, $this->ribbonModel, $this->ribbonRightsModel, $this->groupUserModel);
         
         if($install) {
             $this->installDb();
@@ -210,6 +220,7 @@ class Application {
         $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel, $this->notificationComponent, $this->processCommentModel);
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel);
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
+        $this->ribbonComponent = new RibbonComponent($this->conn, $this->logger, $this->ribbonModel, $this->ribbonAuthorizator);
         
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
@@ -273,6 +284,7 @@ class Application {
         // --- TOPPANEL ---
 
         $toppanel = $this->renderToppanel();
+        $subpanel = $this->renderSubpanel();
 
         // --- TOPPANEL ---
 
@@ -322,8 +334,12 @@ class Application {
             $this->pageContent .= $toppanel;
         }
 
-        if($module->currentPresenter->drawSubpanel) {
+        /*if($module->currentPresenter->drawSubpanel) {
             $this->pageContent .= $module->currentPresenter->subpanel;
+        }*/
+
+        if(!is_null($subpanel)) {
+            $this->pageContent .= $subpanel;
         }
 
         if($this->flashMessage != null) {
@@ -347,6 +363,12 @@ class Application {
      */
     public function renderToppanel() {
         $panel = Panels::createTopPanel();
+
+        return $panel;
+    }
+
+    public function renderSubpanel() {
+        $panel = Panels::createSubpanel();
 
         return $panel;
     }

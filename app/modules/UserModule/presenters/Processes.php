@@ -26,9 +26,6 @@ class Processes extends APresenter {
             '$PROCESS_PANEL$' => ''
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createProcessesPanel();
-
         $table = $this->internalCreateProcessMenuGrid();
 
         $data['$PROCESS_GRID$'] = $table;
@@ -67,9 +64,6 @@ class Processes extends APresenter {
             '$PROCESS_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $filter)
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createProcessesPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -90,9 +84,6 @@ class Processes extends APresenter {
             '$PROCESS_PANEL$' => '',
             '$PROCESS_FORM$' => $this->internalCreateProcessForm($type)
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createProcessesPanel();
 
         $this->templateManager->fill($data, $template);
 

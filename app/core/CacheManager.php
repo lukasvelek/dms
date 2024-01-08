@@ -4,6 +4,7 @@ namespace DMS\Core;
 
 use DMS\Constants\CacheCategories;
 use DMS\Entities\Folder;
+use DMS\Entities\Ribbon;
 use DMS\Entities\User;
 
 /**
@@ -27,6 +28,108 @@ class CacheManager {
 
         $this->serialize = $serialize;
         $this->category = $category;
+    }
+
+    public function saveRibbon(Ribbon $ribbon) {
+        $cacheData = $this->loadFromCache();
+
+        if($ribbon->hasParent()) {
+            $cacheData[$ribbon->getIdParentRibbon()][] = $ribbon;
+        } else {
+            $cacheData['null'][] = $ribbon;
+        }
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadRibbons() {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        return $cacheData;
+    }
+
+    public function loadTopRibbons() {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists('null', $cacheData)) {
+            return $cacheData['null'];
+        } else {
+            return null;
+        }
+    }
+
+    public function loadChildrenRibbons(int $idParentRibbon) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($idParentRibbon, $cacheData)) {
+            return $cacheData[$idParentRibbon];
+        } else {
+            return null;
+        }
+    }
+
+    public function saveUserRibbonRight(int $idRibbon, int $idUser, string $category, bool $result) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[$idRibbon][$idUser][$category] = $result;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadUserRibbonRight(int $idRibbon, int $idUser, string $category) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($idRibbon, $cacheData)) {
+            if(array_key_exists($idUser, $cacheData[$idRibbon])) {
+                if(array_key_exists($category, $cacheData[$idRibbon][$idUser])) {
+                    return $cacheData[$idRibbon][$idUser][$category];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function saveGroupRibbonRight(int $idRibbon, int $idGroup, string $category, bool $result) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[$idRibbon][$idGroup][$category] = $result;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadGroupRibbonRight(int $idRibbon, int $idGroup, string $category) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($idRibbon, $cacheData)) {
+            if(array_key_exists($idGroup, $cacheData[$idRibbon])) {
+                if(array_key_exists($category, $cacheData[$idRibbon][$idGroup])) {
+                    return $cacheData[$idRibbon][$idGroup][$category];
+                }
+            }
+        }
+
+        return null;
     }
 
     public function saveArrayToCache(array $array) {

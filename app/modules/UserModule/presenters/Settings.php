@@ -86,9 +86,6 @@ class Settings extends APresenter {
             '$SETTINGS_FORM$' => $this->internalCreateDashboardWidgetsForm()
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -152,9 +149,6 @@ class Settings extends APresenter {
             '$FORM$' => $this->internalCreateEditServiceForm($name)
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -176,9 +170,6 @@ class Settings extends APresenter {
             '$SETTINGS_GRID$' => $servicesGrid,
             '$LINKS$' => ''
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -269,9 +260,6 @@ class Settings extends APresenter {
             '$FOLDERS_GRID$' => $foldersGrid
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -290,9 +278,6 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'New document folder form',
             '$FORM$' => $this->internalCreateNewFolderForm($idParentFolder)
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -357,9 +342,6 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'Settings'
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $widgets = '';
 
         $app->logger->logFunction(function() use (&$widgets) {
@@ -390,9 +372,6 @@ class Settings extends APresenter {
             '$SETTINGS_GRID$' => $usersGrid
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         if($app->actionAuthorizator->checkActionRight('create_user')) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user');
         }
@@ -419,9 +398,6 @@ class Settings extends APresenter {
             '$SETTINGS_GRID$' => $groupsGrid
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         if($app->actionAuthorizator->checkActionRight('create_group')) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group');
         }
@@ -446,9 +422,6 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'Metadata manager',
             '$SETTINGS_GRID$' => $metadataGrid
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:ExternalEnumViewer:showList', 'External enums') . '&nbsp;&nbsp;';
 
@@ -481,9 +454,6 @@ class Settings extends APresenter {
             '$WIDGETS$' => $widgets
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -507,9 +477,6 @@ class Settings extends APresenter {
             '$FORM$' => $this->internalCreateNewMetadataForm()
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -523,9 +490,6 @@ class Settings extends APresenter {
             '$FORM$' => $this->internalCreateNewUserForm()
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -538,9 +502,6 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'New group form',
             '$FORM$' => $this->internalCreateNewGroupForm()
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
