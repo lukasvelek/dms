@@ -11,6 +11,10 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getUserCount() {
+        return $this->getRowCount('users');
+    }
+
     public function deletePasswordResetHashByIdHash(string $hash) {
         return $this->deleteByCol('hash', $hash, 'password_reset_hashes');
     }
@@ -157,6 +161,10 @@ class UserModel extends AModel {
     }
 
     private function getUserObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+
         $values = array();
 
         $values['id'] = $row['id'];
@@ -185,6 +193,9 @@ class UserModel extends AModel {
         }
         if(isset($row['address_country'])) {
             $values['AddressCountry'] = $row['address_country'];
+        }
+        if(isset($row['default_user_page_url'])) {
+            $values['DefaultUserPageUrl'] = $row['default_user_page_url'];
         }
 
         $user = User::createUserObjectFromArrayValues($values);

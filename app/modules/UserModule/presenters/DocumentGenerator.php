@@ -3,38 +3,16 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\FlashMessageTypes;
-use DMS\Constants\Groups;
 use DMS\Core\Application;
-use DMS\Core\CypherManager;
-use DMS\Core\TemplateManager;
-use DMS\Entities\Document;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
-use DMS\UI\FormBuilder\FormBuilder;
 
 class DocumentGenerator extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'DocumentGenerator';
+        parent::__construct('DocumentGenerator', 'Document generator');
 
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showForm() {

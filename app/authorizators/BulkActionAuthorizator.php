@@ -47,7 +47,7 @@ class BulkActionAuthorizator extends AAuthorizator {
      * @param bool $checkCache True if cache should be checked and false if not
      * @return bool True if user is allowed to perform the bulk action and false if not
      */
-    public function checkBulkActionRight(string $bulkActionName, ?int $idUser = null, bool $checkCache = false) {
+    public function checkBulkActionRight(string $bulkActionName, ?int $idUser = null, bool $checkCache = false, array $cfg = []) {
         if(is_null($idUser)) {
             if(empty($this->idUser)) {
                 return false;
@@ -59,7 +59,7 @@ class BulkActionAuthorizator extends AAuthorizator {
         $result = '';
 
         if($checkCache) {
-            $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
+            $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS, true, $cfg);
 
             $valFromCache = $cm->loadBulkActionRight($idUser, $bulkActionName);
 

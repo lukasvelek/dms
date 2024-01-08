@@ -1,6 +1,8 @@
 <?php
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\DocumentStatus;
+use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Helpers\ArrayStringHelper;
@@ -27,7 +29,7 @@ if($action == null) {
 echo($action());
 
 function getBulkActions() {
-    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user;
+    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user, $cfg;
 
     $bulkActions = [];
     $text = '';
@@ -44,7 +46,7 @@ function getBulkActions() {
             $inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
             $document = $documentModel->getDocumentById($idDocument);
 
-            if($documentBulkActionAuthorizator->canDelete($idDocument, null, false) && 
+            if($documentBulkActionAuthorizator->canDelete($document, null, true, false, $cfg) && 
                 (is_null($canDelete) || $canDelete) &&
                 !$inProcess) {
                 $canDelete = true;
@@ -52,7 +54,7 @@ function getBulkActions() {
                 $canDelete = false;
             }
 
-            if($documentBulkActionAuthorizator->canApproveArchivation($idDocument, null, false) && 
+            if($documentBulkActionAuthorizator->canApproveArchivation($document, null, true, false, $cfg) && 
                 (is_null($canApproveArchivation) || $canApproveArchivation) &&
                 !$inProcess) {
                 $canApproveArchivation = true;
@@ -60,7 +62,7 @@ function getBulkActions() {
                 $canApproveArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canDeclineArchivation($idDocument, null, false) &&
+            if($documentBulkActionAuthorizator->canDeclineArchivation($document, null, true, false, $cfg) &&
                 (is_null($canDeclineArchivation) || $canDeclineArchivation) &&
                 !$inProcess) {
                 $canDeclineArchivation = true;
@@ -68,7 +70,7 @@ function getBulkActions() {
                 $canDeclineArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canArchive($idDocument, null, false) &&
+            if($documentBulkActionAuthorizator->canArchive($document, null, true, false, $cfg) &&
                 (is_null($canArchive) || $canArchive) &&
                 !$inProcess) {
                 $canArchive = true;
@@ -76,7 +78,7 @@ function getBulkActions() {
                 $canArchive = false;
             }
 
-            if($documentBulkActionAuthorizator->canSuggestForShredding($idDocument, null, false) &&
+            if($documentBulkActionAuthorizator->canSuggestForShredding($document, null, true, false, $cfg) &&
               (is_null($canSuggestShredding) || $canSuggestShredding) &&
               !$inProcess) {
                 $canSuggestShredding = true;
@@ -304,7 +306,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize;
+    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize, $gridUseFastLoad, $actionAuthorizator;
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
@@ -351,15 +353,26 @@ function search() {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($documents as $document) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
-                );
+                $actionLinks = [];
+
+                if($actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
+                } else {
+                    $actionLinks[] = '-';
+                }
+
+                if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
+                } else {
+                    $actionLinks[] = '-';
+                }
 
                 $shared = false;
 
-                if(!$shared) {
+                if(!$shared && $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
+                } else {
+                    $actionLinks[] = '-';
                 }
 
                 if(is_null($headerRow)) {
@@ -415,21 +428,17 @@ function search() {
                 if(!is_null($document->getIdFolder())) {
                     $folder = null;
 
-                $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
+                    $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
 
-                if(is_null($cacheFolder)) {
-                    $folder = $folderModel->getFolderById($document->getIdFolder());
-                    $fcm->saveFolderToCache($folder);
-                } else {
-                    $folder = $cacheFolder;
-                }
+                    if(is_null($cacheFolder)) {
+                        $folder = $folderModel->getFolderById($document->getIdFolder());
+                        $fcm->saveFolderToCache($folder);
+                    } else {
+                        $folder = $cacheFolder;
+                        $folderName = $folder->getName();
+                    }
 
-                if($document->getIdFolder() !== NULL) {
-                    $folder = $folderModel->getFolderById($document->getIdFolder());
-                    $folderName = $folder->getName();
-                }
-
-                $docuRow->addCol($tb->createCol()->setText($folderName));
+                    $docuRow->addCol($tb->createCol()->setText($folderName));
                 }else{
                     $docuRow->addCol($tb->createCol()->setText('-'));
                 }
@@ -461,25 +470,51 @@ function search() {
 
         $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
 
-        $documents = $documentModel->getStandardDocuments($idFolder, $filter, ($page * $gridSize));
+        if($gridUseFastLoad) {
+            $page -= 1;
 
-        $skip = 0;
-        $maxSkip = ($page - 1) * $gridSize;
+            $firstIdDocumentOnPage = $documentModel->getFirstIdDocumentOnAGridPage(($page * $gridSize));
+
+            $documents = $documentModel->getStandardDocumentsFromId($firstIdDocumentOnPage, $idFolder, $filter, $gridSize);
+        } else {
+            $documents = $documentModel->getStandardDocuments($idFolder, $filter, ($page * $gridSize));
+        }
     
         if(empty($documents)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
+            $skip = 0;
+            $maxSkip = ($page - 1) * $gridSize;
+
             foreach($documents as $document) {
-                if($skip < $maxSkip) {
-                    $skip++;
-                    continue;
+                if(!$gridUseFastLoad) {
+                    if($skip < $maxSkip) {
+                        $skip++;
+                        continue;
+                    }
                 }
 
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share')
-                );
+                $actionLinks = [];
+
+                if($actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION, null, false)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
+                } else {
+                    $actionLinks[] = '-';
+                }
+
+                if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT, null, false)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
+                } else {
+                    $actionLinks[] = '-';
+                }
+
+                $shared = false;
+
+                if(!$shared && $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
+                } else {
+                    $actionLinks[] = '-';
+                }
     
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();
@@ -530,10 +565,19 @@ function search() {
                 }
     
                 $folderName = '-';
-    
-                if($document->getIdFolder() !== NULL) {
-                    $folder = $folderModel->getFolderById($document->getIdFolder());
-                    $folderName = $folder->getName();
+
+                if(!is_null($document->getIdFolder())) {
+                    $folder = null;
+
+                    $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
+
+                    if(is_null($cacheFolder)) {
+                        $folder = $folderModel->getFolderById($document->getIdFolder());
+                        $fcm->saveFolderToCache($folder);
+                    } else {
+                        $folder = $cacheFolder;
+                        $folderName = $folder->getName();
+                    }
                 }
     
                 $docuRow->addCol($tb->createCol()->setText($folderName));
@@ -688,9 +732,27 @@ function generateDocuments() {
         }
     }
 
+    $documentModel->beginTran();
+
     foreach($data as $index => $d) {
         $documentModel->insertNewDocument($d);
     }
+
+    $documentModel->commitTran();
+
+    $data = array(
+        'total_count' => $documentModel->getTotalDocumentCount(),
+        'shredded_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
+        'archived_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
+        'new_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
+        'waiting_for_archivation_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED)
+    );
+
+    $documentModel->beginTran();
+
+    $documentModel->insertDocumentStatsEntry($data);
+
+    $documentModel->commitTran();
 }
 
 // PRIVATE METHODS

@@ -2,52 +2,39 @@
 
 namespace DMS\Modules\UserModule;
 
-use DMS\Core\TemplateManager;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 class Metadata extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'Metadata';
+        parent::__construct('Metadata');
 
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function deleteValue() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id_metadata', 'id_metadata_value']);
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $idMetadataValue = htmlspecialchars($_GET['id_metadata_value']);
 
         $app->metadataModel->deleteMetadataValueByIdMetadataValue($idMetadataValue);
 
-        $app->flashMessage('Deleted metadata value for metadata #' . $idMetadata);
+        $app->flashMessage('Deleted metadata value for metadata #' . $idMetadata, 'warning');
         $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
 
     protected function showValues() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
 
         $idMetadata = htmlspecialchars($_GET['id']);
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
@@ -68,7 +55,7 @@ class Metadata extends APresenter {
         $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value');
         $backLink = LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-');
 
-        if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $idMetadata) && !$metadata->getIsSystem()) {
+        if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $idMetadata) && !$metadata->getIsSystem() && ($metadata->getInputType() != 'select_external')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>';
         } else {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . $backLink . '</div></div>';
@@ -80,6 +67,10 @@ class Metadata extends APresenter {
     }
 
     protected function showNewValueForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_metadata']);
+
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-new-entity-form.html');
@@ -100,6 +91,8 @@ class Metadata extends APresenter {
     protected function createNewValue() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id_metadata', 'name', 'value']);
+
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $name = htmlspecialchars($_POST['name']);
         $value = htmlspecialchars($_POST['value']);
@@ -113,6 +106,8 @@ class Metadata extends APresenter {
 
     protected function showUserRights() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id_metadata']);
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
@@ -134,6 +129,8 @@ class Metadata extends APresenter {
 
     protected function updateRight() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id_metadata', 'id_user', 'name', 'action']);
 
         $idMetadata = htmlspecialchars($_GET['id_metadata']);
         $idUser = htmlspecialchars($_GET['id_user']);
@@ -263,53 +260,89 @@ class Metadata extends APresenter {
 
         $headerRow = null;
 
-        $values = $app->metadataModel->getAllValuesForIdMetadata($id);
+        $metadata = $app->metadataModel->getMetadataById($id);
 
-        if(empty($values)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($values as $v) {
-                $actionLinks = array('new' => '-');
+        if($metadata->getInputType() == 'select_external') {
+            $enum = $app->externalEnumComponent->getEnumByName($metadata->getSelectExternalEnumName());
 
-                if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $id) && !$isSystem) {
-                    $actionLinks['new'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
-                }
-
+            if(empty($enum->getValues())) {
+                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+            } else {
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();
-
+    
                     foreach($headers as $header) {
                         $col = $tb->createCol()->setText($header)
                                                ->setBold();
-
-                        if($headers == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
+    
                         $row->addCol($col);
                     }
-
+    
                     $headerRow = $row;
-                    
+                
                     $tb->addRow($row);
                 }
 
-                $valueRow = $tb->createRow();
+                foreach($enum->getValues() as $name => $text) {
+                    $valueRow = $tb->createRow();
 
-                foreach($actionLinks as $actionLink) {
-                    $valueRow->addCol($tb->createCol()->setText($actionLink));
+                    $valueRow   ->addCol($tb->createCol()->setText('-'))
+                                ->addCol($tb->createCol()->setText($text))
+                                ->addCol($tb->createCol()->setText($name))
+                    ;
+
+                    $tb->addRow($valueRow);
                 }
+            }
+        } else {
+            $values = $app->metadataModel->getAllValuesForIdMetadata($id);
 
-                $valueArray = array(
-                    $v->getName(),
-                    $v->getValue()
-                );
+            if(empty($values)) {
+                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+            } else {
+                foreach($values as $v) {
+                    $actionLinks = array('new' => '-');
+                    
+                    if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $id) && !$isSystem) {
+                        $actionLinks['new'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
+                    }
 
-                foreach($valueArray as $va) {
-                    $valueRow->addCol($tb->createCol()->setText($va));
+                    if(is_null($headerRow)) {
+                        $row = $tb->createRow();
+
+                        foreach($headers as $header) {
+                            $col = $tb->createCol()->setText($header)
+                                                   ->setBold();
+
+                            if($headers == 'Actions') {
+                                $col->setColspan(count($actionLinks));
+                            }
+
+                            $row->addCol($col);
+                        }
+
+                        $headerRow = $row;
+                    
+                        $tb->addRow($row);
+                    }
+
+                    $valueRow = $tb->createRow();
+
+                    foreach($actionLinks as $actionLink) {
+                        $valueRow->addCol($tb->createCol()->setText($actionLink));
+                    }
+
+                    $valueArray = array(
+                        $v->getName(),
+                        $v->getValue()
+                    );
+
+                    foreach($valueArray as $va) {
+                        $valueRow->addCol($tb->createCol()->setText($va));
+                    }
+
+                    $tb->addRow($valueRow);
                 }
-
-                $tb->addRow($valueRow);
             }
         }
 

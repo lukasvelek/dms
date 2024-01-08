@@ -3,37 +3,26 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\WidgetLocations;
-use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 
 class HomePage extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'HomePage';
+        parent::__construct('HomePage', 'Home page');
 
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showHomePage() {
         global $app;
+
+        $documentStats = $app->documentModel->getLastDocumentStatsEntry();
+        $processStats = $app->processModel->getLastProcessStatsEntry();
+
+        if(is_null($documentStats) || is_null($processStats)) {
+            $app->redirect('UserModule:Widgets:updateAllStats');
+        }
 
         $idUser = $app->user->getId();
 

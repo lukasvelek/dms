@@ -8,40 +8,25 @@ use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
-use DMS\Core\TemplateManager;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 class Groups extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'Groups';
+        parent::__construct('Groups');
 
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModuleE() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showNewUserForm() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
         
         $idGroup = htmlspecialchars($_GET['id']);
         $group = $app->groupModel->getGroupById($idGroup);
@@ -63,10 +48,8 @@ class Groups extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/groups/groups-grid.html');
 
-        if(!isset($_GET['id'])) {
-            $app->redirect('UserModule:Settings:showGroups');
-        }
-
+        $app->flashMessageIfNotIsset(['id']);
+        
         $id = htmlspecialchars($_GET['id']);
         $group = $app->groupModel->getGroupById($id);
 
@@ -86,12 +69,15 @@ class Groups extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/groups/group-rights-grid.html');
 
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
         $group = $app->groupModel->getGroupById($id);
 
         $data = array(
             '$PAGE_TITLE$' => '<i>' . $group->getName() . '</i> rights',
-            '$GROUP_RIGHTS_GRID$' => $this->internalCreateGroupRightsGrid($id)
+            '$GROUP_RIGHTS_GRID$' => $this->internalCreateGroupRightsGrid($id),
+            '$BACK_LINK$' => LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showGroups'), '<-')
         );
 
         $this->templateManager->fill($data, $template);
@@ -101,6 +87,8 @@ class Groups extends APresenter {
 
     protected function allowActionRight() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'name']);
 
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
@@ -122,6 +110,8 @@ class Groups extends APresenter {
     protected function denyActionRight() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id', 'name']);
+
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
 
@@ -141,6 +131,8 @@ class Groups extends APresenter {
 
     protected function allowPanelRight() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'name']);
 
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
@@ -162,6 +154,8 @@ class Groups extends APresenter {
     protected function denyPanelRight() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id', 'name']);
+
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
 
@@ -181,6 +175,8 @@ class Groups extends APresenter {
 
     protected function allowBulkActionRight() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'name']);
 
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
@@ -202,6 +198,8 @@ class Groups extends APresenter {
     protected function denyBulkActionRight() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id', 'name']);
+
         $name = htmlspecialchars($_GET['name']);
         $idGroup = htmlspecialchars($_GET['id']);
 
@@ -222,6 +220,8 @@ class Groups extends APresenter {
     protected function addUserToGroup() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id_group', 'user']);
+
         $idGroup = htmlspecialchars($_GET['id_group']);
         $idUser = htmlspecialchars($_POST['user']);
 
@@ -237,6 +237,8 @@ class Groups extends APresenter {
     protected function removeUserFromGroup() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id_group', 'id_user']);
+
         $idGroup = htmlspecialchars($_GET['id_group']);
         $idUser = htmlspecialchars($_GET['id_user']);
 
@@ -251,6 +253,8 @@ class Groups extends APresenter {
 
     protected function setUserAsManager() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
         $idGroup = htmlspecialchars($_GET['id_group']);
         $idUser = htmlspecialchars($_GET['id_user']);
@@ -278,6 +282,8 @@ class Groups extends APresenter {
 
     protected function unsetUserAsManager() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
         $idGroup = htmlspecialchars($_GET['id_group']);
         $idUser = htmlspecialchars($_GET['id_user']);

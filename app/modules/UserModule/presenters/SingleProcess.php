@@ -4,49 +4,42 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Components\Process\DeleteProcess;
 use DMS\Components\Process\ShreddingProcess;
-use DMS\Constants\BulkActionRights;
+use DMS\Constants\CacheCategories;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
+use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Core\TemplateManager;
 use DMS\Entities\Process;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\Modules\IModule;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 class SingleProcess extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'SingleProcess';
+        parent::__construct('SingleProcess', 'Process');
 
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showProcess() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
 
         $process = $app->processModel->getProcessById($id);
+
+        if(is_null($process)) {
+            $app->flashMessage('Process #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/single-process.html');
 
@@ -64,6 +57,10 @@ class SingleProcess extends APresenter {
     }
 
     protected function askToFinish() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
 
         $urlConfirm = array(
@@ -82,6 +79,10 @@ class SingleProcess extends APresenter {
     }
 
     protected function askToApprove() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
 
         $urlConfirm = array(
@@ -100,6 +101,10 @@ class SingleProcess extends APresenter {
     }
 
     protected function askToDecline() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
 
         $urlConfirm = array(
@@ -120,6 +125,8 @@ class SingleProcess extends APresenter {
     protected function approve() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
 
         $app->processComponent->moveProcessToNextWorkflowUser($id);
@@ -131,6 +138,8 @@ class SingleProcess extends APresenter {
 
     protected function decline() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
 
         $id = htmlspecialchars($_GET['id']);
 
@@ -144,8 +153,15 @@ class SingleProcess extends APresenter {
     protected function finish() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
         $process = $app->processModel->getProcessById($id);
+
+        if(is_null($process)) {
+            $app->flashMessage('Process #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         switch($process->getType()) {
             case ProcessTypes::DELETE:
@@ -167,6 +183,8 @@ class SingleProcess extends APresenter {
     private function internalCreateProcessInfoTable(Process $process) {
         global $app;
 
+        $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
+
         $link = function(int $id, string $name) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $id), $name);
         };
@@ -174,34 +192,89 @@ class SingleProcess extends APresenter {
         $tb = TableBuilder::getTemporaryObject();
 
         if($process->getWorkflowStep(0) != null) {
-            $workflow1User = $app->userModel->getUserById($process->getWorkflowStep(0));
+            $workflow1User = null;
+
+            $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(0));
+
+            if(is_null($cacheUser)) {
+                $workflow1User = $app->userModel->getUserById($process->getWorkflowStep(0));
+
+                $ucm->saveUserToCache($workflow1User);
+            } else {
+                $workflow1User = $cacheUser;
+            }
+
             $workflow1User = $link($workflow1User->getId(), $workflow1User->getFullname());
         } else {
             $workflow1User = '-';
         }
 
         if($process->getWorkflowStep(1) != null) {
-            $workflow2User = $app->userModel->getUserById($process->getWorkflowStep(1));
+            $workflow2User = null;
+
+            $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(1));
+
+            if(is_null($cacheUser)) {
+                $workflow2User = $app->userModel->getUserById($process->getWorkflowStep(1));
+
+                $ucm->saveUserToCache($workflow2User);
+            } else {
+                $workflow2User = $cacheUser;
+            }
+
             $workflow2User = $link($workflow2User->getId(), $workflow2User->getFullname());
         } else {
             $workflow2User = '-';
         }
 
         if($process->getWorkflowStep(2) != null) {
-            $workflow3User = $app->userModel->getUserById($process->getWorkflowStep(2));
+            $workflow3User = null;
+
+            $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(2));
+
+            if(is_null($cacheUser)) {
+                $workflow3User = $app->userModel->getUserById($process->getWorkflowStep(2));
+
+                $ucm->saveUserToCache($workflow3User);
+            } else {
+                $workflow3User = $cacheUser;
+            }
+
             $workflow3User = $link($workflow3User->getId(), $workflow3User->getFullname());
         } else {
             $workflow3User = '-';
         }
 
         if($process->getWorkflowStep(3) != null) {
-            $workflow4User = $app->userModel->getUserById($process->getWorkflowStep(3));
+            $workflow4User = null;
+
+            $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(3));
+
+            if(is_null($cacheUser)) {
+                $workflow4User = $app->userModel->getUserById($process->getWorkflowStep(4));
+
+                $ucm->saveUserToCache($workflow4User);
+            } else {
+                $workflow4User = $cacheUser;
+            }
+
             $workflow4User = $link($workflow4User->getId(), $workflow4User->getFullname());
         } else {
             $workflow4User = '-';
         }
 
-        $author = $app->userModel->getUserById($process->getIdAuthor());
+        $author = null;
+
+        $cacheUser = $ucm->loadUserByIdFromCache($process->getIdAuthor());
+
+        if(is_null($cacheUser)) {
+            $author = $app->userModel->getUserById($process->getIdAuthor());
+
+            $ucm->saveUserToCache($author);
+        } else {
+            $author = $cacheUser;
+        }
+
         $author = $link($author->getId(), $author->getFullname());
 
         $currentOfficer = ${'workflow' . $process->getWorkflowStatus() . 'User'};
@@ -282,9 +355,17 @@ class SingleProcess extends APresenter {
 
         $canDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_COMMENTS) ? '1' : '0';
 
+        $submitStyle = '';
+        $textareaStyle = 'required';
+
+        if($process->getStatus() == ProcessStatus::FINISHED) {
+            $submitStyle = 'disabled';
+            $textareaStyle = 'disabled';
+        }
+
         return '<!--<script type="text/javascript" src="js/ProcessAjaxComment.js"></script>-->
-        <textarea name="text" id="text" required></textarea><br><br>
-        <button onclick="sendProcessComment(' . $app->user->getId() . ', ' . $process->getId() . ', ' . $canDelete . ')">Send</button>
+        <textarea name="text" id="text" ' . $textareaStyle . '></textarea><br><br>
+        <button onclick="sendProcessComment(' . $app->user->getId() . ', ' . $process->getId() . ', ' . $canDelete . ')" ' . $submitStyle . '>Send</button>
         ';
     }
 

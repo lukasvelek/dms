@@ -96,10 +96,12 @@ class Panels {
             }
         }
 
-        if(self::SETTINGSPANEL_USE_TEXT) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets');
-        } else {
-            $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets', 'img/dashboard-widgets.svg');
+        if($panelAuthorizator->checkPanelRight(PanelRights::SETTINGS_DASHBOARD_WIDGETS)) {
+            if(self::SETTINGSPANEL_USE_TEXT) {
+                $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets');
+            } else {
+                $data['$LINKS$'][] = LinkBuilder::createImgLink('UserModule:Settings:showDashboardWidgets', 'Dashboard widgets', 'img/dashboard-widgets.svg');
+            }
         }
 
         $templateManager->fill($data, $template);
@@ -175,6 +177,10 @@ class Panels {
     }
 
     public static function createDocumentsPanel() {
+        global $app;
+
+        $panelAuthorizator = $app->panelAuthorizator;
+
         $templateManager = self::tm();
 
         $template = $templateManager->loadTemplate('app/panels/templates/general-subpanel.html');
@@ -212,8 +218,14 @@ class Panels {
         };
 
         $data['$LINKS$'][] = $createFilter('all', 'All documents', false);
-        $data['$LINKS$'][] = $createFilter('new', 'New documents', false);
-        $data['$LINKS$'][] = $createFilter('waitingForArchivation', 'Documents waiting for archivation', false);
+        
+        if($panelAuthorizator->checkPanelRight(PanelRights::DOCUMENTS_NEW)) {
+            $data['$LINKS$'][] = $createFilter('new', 'New documents', false);
+        }
+
+        if($panelAuthorizator->checkPanelRight(PanelRights::DOCUMENTS_WAITING_FOR_ARCHIVATION)) {
+            $data['$LINKS$'][] = $createFilter('waitingForArchivation', 'Documents waiting for archivation', false);
+        }
 
         $templateManager->fill($data, $template);
 

@@ -2,33 +2,15 @@
 
 namespace DMS\Modules\UserModule;
 
-use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 
 class UserLogout extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'UserLogout';
+        parent::__construct('UserLogout', 'Logout user');
 
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function logoutUser() {

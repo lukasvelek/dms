@@ -4,8 +4,8 @@ namespace DMS\Widgets\HomeDashboard;
 
 use DMS\Constants\DocumentStatus;
 use DMS\Models\DocumentModel;
+use DMS\UI\LinkBuilder;
 use DMS\Widgets\AWidget;
-use DMS\Widgets\IRenderable;
 
 class DocumentStats extends AWidget {
     private DocumentModel $documentModel;
@@ -17,35 +17,22 @@ class DocumentStats extends AWidget {
     }
 
     public function render() {
-        $documents = $this->documentModel->getAllDocuments();
-        $documentCount = count($documents);
-        $shreddedCount = $archivedCount = $waitingForArchivationCount = $newCount = 0;
+        $data = $this->documentModel->getLastDocumentStatsEntry();
 
-        foreach($documents as $document) {
-            switch($document->getStatus()) {
-                case DocumentStatus::SHREDDED:
-                    $shreddedCount++;
-                    break;
-
-                case DocumentStatus::ARCHIVED:
-                    $archivedCount++;
-                    break;
-
-                case DocumentStatus::ARCHIVATION_APPROVED:
-                    $waitingForArchivationCount++;
-                    break;
-
-                case DocumentStatus::NEW:
-                    $newCount++;
-                    break;
-            }
-        }
+        $documentCount = $data['total_count'];
+        $shreddedCount = $data['shredded_count'];
+        $archivedCount = $data['archived_count'];
+        $newCount = $data['new_count'];
+        $waitingForArchivationCount = $data['waiting_for_archivation_count'];
+        $lastUpdateDate = $data['date_created'];
 
         $this->add('Total documents', $documentCount);
         $this->add('Shredded documents', $shreddedCount);
         $this->add('Archived documents', $archivedCount);
         $this->add('New documents', $newCount);
         $this->add('Documents waiting for archivation', $waitingForArchivationCount);
+
+        $this->updateLink(LinkBuilder::createAdvLink(array('page' => 'UserModule:Widgets:updateAllStats'), 'Update'), $lastUpdateDate);
 
         return parent::render();
     }

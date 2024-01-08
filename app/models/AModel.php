@@ -90,6 +90,60 @@ abstract class AModel {
     public function rollbackTran() {
         return $this->db->rollback();
     }
+
+    public function getRowCount(string $tableName, string $rowName = 'id', ?string $condition = null) {
+        $sql = "SELECT COUNT(`$rowName`) AS `count` FROM `$tableName`";
+
+        if(!is_null($condition)) {
+            $sql .= ' ' . $condition;
+        }
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $count = 0;
+
+        $rows = $this->db->query($sql);
+
+        foreach($rows as $row) {
+            $count = $row['count'];
+        }
+
+        return $count;
+    }
+
+    public function getFirstRowWithCount(int $count, string $tableName, array $cols, string $orderBy = 'id') {
+        $sql = "SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY `$orderBy`) AS `row_num`";
+
+        $i = 0;
+        foreach($cols as $col) {
+            if(($i + 1) == count($cols)) {
+                $sql .= ", $col";
+            } else {
+                $sql .= ", $col";
+            }
+
+            $i++;
+        }
+
+        $sql .= " FROM `$tableName`) `t2` WHERE `row_num` = $count";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $row = $this->db->query($sql);
+
+        if(count($cols) == 1) {
+            $result = null;
+
+            foreach($row as $r) {
+                $result = $r[$cols[0]];
+                break;
+            }
+
+            return $result;
+        } else {
+            return $row;
+        }
+    }
 }
 
 ?>

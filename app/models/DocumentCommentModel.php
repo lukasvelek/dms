@@ -93,6 +93,10 @@ class DocumentCommentModel extends AModel {
     }
 
     private function createCommentObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+        
         $id = $row['id'];
         $dateCreated = $row['date_created'];
         $idAuthor = $row['id_author'];

@@ -14,6 +14,7 @@ class TableCol implements IBuildable {
   private string $bold;
   private string $textColor;
   private string $width;
+  private string $id;
 
   public string $script;
 
@@ -29,8 +30,15 @@ class TableCol implements IBuildable {
     $this->textColor = 'black';
     $this->bold = 'td';
     $this->width = '';
+    $this->id = '';
 
     $this->script = '';
+
+    return $this;
+  }
+
+  public function setId(string $id) {
+    $this->id = 'id="' . $id . '"';
 
     return $this;
   }
@@ -100,7 +108,7 @@ class TableCol implements IBuildable {
    * @return self
    */
   public function build() {
-    $this->script = '<' . $this->bold . ' style="color: ' . $this->textColor . '; ' . $this->width . '" ' . $this->colspan . '>' . $this->text . '</' . $this->bold . '>';
+    $this->script = '<' . $this->bold . ' style="color: ' . $this->textColor . '; ' . $this->width . '" ' . $this->colspan . ' ' . $this->id . '>' . $this->text . '</' . $this->bold . '>';
 
     return $this;
   }

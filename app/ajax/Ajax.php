@@ -12,7 +12,6 @@ use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
-use DMS\Core\FileStorageManager;
 use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
 use DMS\Models\DocumentCommentModel;
@@ -134,8 +133,6 @@ if(!file_exists('../../config.local.php')) {
 
 include('../../config.local.php');
 
-//$app = new Application($cfg, '../', false);
-
 $user = null;
 
 $fm = new FileManager('../../' . $cfg['log_dir'], '../../' . $cfg['cache_dir']);
@@ -183,5 +180,6 @@ $documentRepository = new DocumentRepository($db, $logger, $documentModel, $docu
 $mailManager = new MailManager($cfg);
 
 $gridSize = $cfg['grid_size'];
+$gridUseFastLoad = $cfg['grid_use_fast_load'];
 
 ?>

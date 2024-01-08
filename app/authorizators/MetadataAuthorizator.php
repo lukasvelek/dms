@@ -19,6 +19,8 @@ class MetadataAuthorizator extends AAuthorizator {
     private UserModel $userModel;
     private GroupUserModel $groupUserModel;
 
+    private array $administrators;
+
     /**
      * The MetadataAuthorizator constructor creates an object
      */
@@ -27,6 +29,8 @@ class MetadataAuthorizator extends AAuthorizator {
 
         $this->userModel = $userModel;
         $this->groupUserModel = $groupUserModel;
+
+        $this->administrators = [];
     }
 
     /**
@@ -38,9 +42,7 @@ class MetadataAuthorizator extends AAuthorizator {
      * @return bool True if user can view metadata and false if not
      */
     public function canUserViewMetadata(int $idUser, int $idMetadata, bool $checkCache = true) {
-        if($this->groupUserModel->isIdUserInAdministratorsGroup($idUser)) {
-            return true;
-        }
+        if($checkCache) $this->isUserAdmin($idUser);
 
         $row = $this->getRightRow($idUser, $idMetadata, 'view', $checkCache);
 
@@ -60,9 +62,7 @@ class MetadataAuthorizator extends AAuthorizator {
      * @return bool True if user can edit metadata and false if not
      */
     public function canUserEditMetadata(int $idUser, int $idMetadata, bool $checkCache = true) {
-        if($this->groupUserModel->isIdUserInAdministratorsGroup($idUser)) {
-            return true;
-        }
+        if($checkCache) $this->isUserAdmin($idUser);
 
         $row = $this->getRightRow($idUser, $idMetadata, 'edit', $checkCache);
 
@@ -82,9 +82,7 @@ class MetadataAuthorizator extends AAuthorizator {
      * @return bool True if user can view metadata values and false if not
      */
     public function canUserViewMetadataValues(int $idUser, int $idMetadata, bool $checkCache = true) {
-        if($this->groupUserModel->isIdUserInAdministratorsGroup($idUser)) {
-            return true;
-        }
+        if($checkCache) $this->isUserAdmin($idUser);
 
         $row = $this->getRightRow($idUser, $idMetadata, 'view_values', $checkCache);
 
@@ -104,9 +102,7 @@ class MetadataAuthorizator extends AAuthorizator {
      * @return bool True if user can edit metadata values and false if not
      */
     public function canUserEditMetadataValues(int $idUser, int $idMetadata, bool $checkCache = true) {
-        if($this->groupUserModel->isIdUserInAdministratorsGroup($idUser)) {
-            return true;
-        }
+        if($checkCache) $this->isUserAdmin($idUser);
         
         $row = $this->getRightRow($idUser, $idMetadata, 'edit_values', $checkCache);
 
@@ -115,6 +111,22 @@ class MetadataAuthorizator extends AAuthorizator {
         }
 
         return $row ? true : false;
+    }
+
+    private function isUserAdmin($idUser) {
+        if(in_array($idUser, $this->administrators)) {
+            if($this->administrators[$idUser] === TRUE) {
+                return true;
+            }
+        } else {
+            if($this->groupUserModel->isIdUserInAdministratorsGroup($idUser)) {
+                $this->administrators[$idUser] = true;
+                return true;
+            } else {
+                $this->administrators[$idUser] = false;
+                return false;
+            }
+        }
     }
 
     /**

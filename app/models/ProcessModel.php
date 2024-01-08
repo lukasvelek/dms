@@ -6,10 +6,33 @@ use DMS\Constants\ProcessStatus;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Process;
+use DMS\Widgets\HomeDashboard\ProcessStats;
 
 class ProcessModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function getFirstIdProcessOnAGridPage(int $gridPage) {
+        if($gridPage == 0) $gridPage = 1;
+        return $this->getFirstRowWithCount($gridPage, 'processes', ['id']);
+    }
+
+    public function getLastProcessStatsEntry() {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('process_stats')
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
+    public function insertProcessStatsEntry(array $data) {
+        return $this->insertNew($data, 'process_stats');
     }
 
     public function getAllProcessIds() {
@@ -88,7 +111,7 @@ class ProcessModel extends AModel {
         return $result;
     }
 
-    public function getProcessesWaitingForUser(int $idUser) {
+    public function getProcessesWaitingForUser(int $idUser, int $limit = 0) {
         $qb = $this->qb(__METHOD__);
 
         $rows = $qb->select('*')
@@ -119,9 +142,13 @@ class ProcessModel extends AModel {
                    ->setParams(array(
                     ':id_user' => $idUser,
                     ':status' => ProcessStatus::IN_PROGRESS
-                   ))
-                   ->execute()
-                   ->fetch();
+                   ));
+
+        if($limit > 0) {
+            $rows->limit($limit);
+        }
+
+        $rows = $rows->execute()->fetch();
 
         $processes = [];
         foreach($rows as $row) {
@@ -154,6 +181,44 @@ class ProcessModel extends AModel {
         return $row;
     }
 
+    public function getFinishedProcessesWithIdUserFromId(?int $idFrom, int $idUser, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->qb(__METHOD__);
+        
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->where('status=:status')
+                   ->explicit(' AND')
+                   ->leftBracket()
+                   ->where('workflow1=:id_user', false, false)
+                   ->orWhere('workflow2=:id_user')
+                   ->orWhere('workflow3=:id_user')
+                   ->orWhere('workflow4=:id_user')
+                   ->rightBracket()
+                   ->setParams(array(
+                    ':id_user' => $idUser,
+                    ':status' => ProcessStatus::FINISHED
+                   ));
+
+        if($idFrom == 1) {
+            $rows->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $rows->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        $rows = $rows->execute()->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
     public function getFinishedProcessesWithIdUser(int $idUser, int $limit) {
         $qb = $this->qb(__METHOD__);
 
@@ -172,6 +237,40 @@ class ProcessModel extends AModel {
                    ->limit($limit)
                    ->execute()
                    ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
+    public function getProcessesWhereIdUserIsAuthorFromId(?int $idFrom, int $idUser, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->where('id_author=:id_author')
+                   ->andWhereNot('status=:status');
+
+        if($idFrom == 1) {
+            $rows->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $rows->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        $rows = $rows->limit($limit)
+                     ->setParams(array(
+                        ':id_author' => $idUser,
+                        ':status' => ProcessStatus::FINISHED
+                     ))
+                     ->execute()
+                     ->fetch();
 
         $processes = [];
         foreach($rows as $row) {
@@ -247,7 +346,47 @@ class ProcessModel extends AModel {
         return $this->createProcessObjectFromDbRow($row);
     }
 
-    public function getProcessesWithIdUser(int $idUser, int $limit) {
+    public function getProcessesWithIdUserFromId(?int $idFrom, int $idUser, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('processes')
+                   ->whereNot('status=:status')
+                   ->explicit(' AND ')
+                   ->leftBracket()
+                   ->where('workflow1=:id_user', false, false)
+                   ->orWhere('workflow2=:id_user')
+                   ->orWhere('workflow3=:id_user')
+                   ->orWhere('workflow4=:id_user')
+                   ->rightBracket()
+                   ->setParams(array(
+                    ':id_user' => $idUser,
+                    ':status' => ProcessStatus::FINISHED
+                   ));
+
+        if($idFrom == 1) {
+            $rows->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $rows->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        $rows = $rows->limit($limit)
+                     ->execute()
+                     ->fetch();
+
+        $processes = [];
+        foreach($rows as $row) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
+    public function getProcessesWithIdUser(int $idUser, int $limit = 25) {
         $qb = $this->qb(__METHOD__);
 
         $rows = $qb->select('*')

@@ -6,47 +6,30 @@ use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
-use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
-use DMS\Core\TemplateManager;
 use DMS\Entities\Document;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 class SingleDocument extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'SingleDocument';
+        parent::__construct('SingleDocument', 'Document');
 
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function shareDocument() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id_document', 'user', 'date_from', 'date_to']);
 
         $idDocument = htmlspecialchars($_GET['id_document']);
         $idUser = htmlspecialchars($_POST['user']);
@@ -76,8 +59,15 @@ class SingleDocument extends APresenter {
     protected function showShare() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id']);
+
         $idDocument = htmlspecialchars($_GET['id']);
         $document = $app->documentModel->getDocumentById($idDocument);
+
+        if(is_null($document)) {
+            $app->flashMessage('Document #' . $idDocument . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/document-sharing-grid.html');
 
@@ -94,6 +84,8 @@ class SingleDocument extends APresenter {
     protected function deleteComment() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id_comment', 'id_document']);
+
         $idComment = htmlspecialchars($_GET['id_comment']);
         $idDocument = htmlspecialchars($_GET['id_document']);
 
@@ -105,6 +97,10 @@ class SingleDocument extends APresenter {
     }
 
     protected function askToDeleteComment() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_comment', 'id_document']);
+
         $idDocument = htmlspecialchars($_GET['id_document']);
         $idComment = htmlspecialchars($_GET['id_comment']);
 
@@ -127,6 +123,8 @@ class SingleDocument extends APresenter {
     protected function saveComment() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id_comment', 'text']);
+
         $idDocument = htmlspecialchars($_GET['id_document']);
         $idAuthor = $app->user->getId();
         $text = htmlspecialchars($_POST['text']);
@@ -145,8 +143,15 @@ class SingleDocument extends APresenter {
     protected function showInfo() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
         $document = $app->documentModel->getDocumentById($id);
+
+        if(is_null($document)) {
+            $app->flashMessage('Document #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/single-document-grid.html');
 
@@ -176,8 +181,15 @@ class SingleDocument extends APresenter {
     protected function showEdit() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
         $document  = $app->documentModel->getDocumentById($id);
+
+        if(is_null($document)) {
+            $app->flashMessage('Document #' . $id . ' does not exist!', 'error');
+            $app->redirect($app::URL_HOME_PAGE);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
 
@@ -193,6 +205,8 @@ class SingleDocument extends APresenter {
 
     protected function updateDocument() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
 
         $id = htmlspecialchars($_GET['id']);
 
@@ -340,25 +354,47 @@ class SingleDocument extends APresenter {
                 continue;
             }
 
-            $name = $cm->getName();
-            $text = $cm->getText();
-            $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
+            if($cm->getInputType() == 'select_external') {
+                $name = $cm->getName();
+                    $text = $cm->getText();
+                    $values = $app->externalEnumComponent->getEnumByName($cm->getSelectExternalEnumName())->getValues();
 
-            $options = [];
-            foreach($values as $v) {
-                $option = array(
-                    'value' => $v->getValue(),
-                    'text' => $v->getName()
-                );
+                    $options = [];
+                    foreach($values as $value => $vtext) {
+                        $option = array(
+                            'value' => $value,
+                            'text' => $vtext
+                        );
+
+                        if(!is_null($document->getMetadata($name))) {
+                            $option['selected'] = 'selected';
+                        }
+
+                        $options[] = $option;
+                    }
+
+                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());
+            } else {
+                $name = $cm->getName();
+                $text = $cm->getText();
+                $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
+
+                $options = [];
+                foreach($values as $v) {
+                    $option = array(
+                        'value' => $v->getValue(),
+                        'text' => $v->getName()
+                    );
                 
-                if(!is_null($document->getMetadata($name))) {
-                    $option['selected'] = 'selected';
+                    if(!is_null($document->getMetadata($name))) {
+                        $option['selected'] = 'selected';
+                    }
+
+                    $options[] = $option;
                 }
 
-                $options[] = $option;
+                $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
             }
-
-            $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
         }
 
         $fb = FormBuilder::getTemporaryObject();
@@ -482,29 +518,36 @@ class SingleDocument extends APresenter {
 
         foreach($document->getMetadata() as $k => $v) {
             $m = $app->metadataModel->getMetadataByName($k, 'documents');
-            $mValues = $app->metadataModel->getAllValuesForIdMetadata($m->getId());
             
-            $vText = '-';
+            if($m->getInputType() == 'select_external') {
+                $mValues = $app->externalEnumComponent->getEnumByName($m->getSelectExternalEnumName())->getValues();
 
-            if(empty($mValues)) {
-                // not select
-                $vText = $v;
-
-                if($m->getInputType() == 'boolean') {
-                    $checkboxTrue = '<input type="checkbox" checked disabled>';
-                    $checkboxFalse = '<input type="checkbox" disabled>';
-
-                    $vText = $v ? $checkboxTrue : $checkboxFalse;
-                }
+                $data[$m->getText()] = $mValues[$v];
             } else {
-                foreach($mValues as $mv) {
-                    if($mv->getValue() == $v) {
-                        $vText = $mv->getName();
+                $mValues = $app->metadataModel->getAllValuesForIdMetadata($m->getId());
+            
+                $vText = '-';
+
+                if(empty($mValues)) {
+                    // not select
+                    $vText = $v;
+
+                    if($m->getInputType() == 'boolean') {
+                        $checkboxTrue = '<input type="checkbox" checked disabled>';
+                        $checkboxFalse = '<input type="checkbox" disabled>';
+
+                        $vText = $v ? $checkboxTrue : $checkboxFalse;
+                    }
+                } else {
+                    foreach($mValues as $mv) {
+                        if($mv->getValue() == $v) {
+                            $vText = $mv->getName();
+                        }
                     }
                 }
-            }
 
-            $data[$m->getText()] = $vText;
+                $data[$m->getText()] = $vText;
+            }
         }
 
         foreach($data as $k => $v) {

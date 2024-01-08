@@ -14,6 +14,81 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllDocumentsByStatus(int $status) {
+        $qb = $this->composeQueryStandardDocuments();
+
+        $qb ->andWhere('status=:status')
+            ->setParam(':status', $status);
+
+        $rows = $qb->execute()->fetch();
+
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
+    public function getFirstIdDocumentOnAGridPage(int $gridPage) {
+        if($gridPage == 0) $gridPage = 1;
+        return $this->getFirstRowWithCount($gridPage, 'documents', ['id']);
+    }
+
+    public function getStandardDocumentsFromId(?int $idFrom, ?int $idFolder, ?string $filter, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->composeQueryStandardDocuments();
+
+        if($idFrom == 1) {
+            $qb->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $qb->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        if($idFolder != null) {
+            $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+        }
+
+        if($filter != null) {
+            $this->addFilterCondition($filter, $qb);
+        }
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
+
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
+    public function getLastDocumentStatsEntry() {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('document_stats')
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
+    public function insertDocumentStatsEntry(array $data) {
+        return $this->insertNew($data, 'document_stats');
+    }
+
+    public function getTotalDocumentCount() {
+        return $this->getRowCount('documents');
+    }
+
     public function getAllDocumentIds() {
         $qb = $this->qb(__METHOD__);
 
@@ -84,6 +159,10 @@ class DocumentModel extends AModel {
                   ->fetchSingle();
 
         return $row;
+    }
+
+    public function getCountDocumentsSharedWithUser(int $idUser) {
+        return $this->getRowCount('document_sharing', 'id', "WHERE `id_user`='" . $idUser . "' AND (`date_from` < current_timestamp AND `date_to` > current_timestamp)");
     }
 
     public function getDocumentSharingsSharedWithUser(int $idUser) {
@@ -446,7 +525,25 @@ class DocumentModel extends AModel {
         return $documents;
     }
 
+    public function composeQueryStandardDocuments(bool $ignoreDeleted = true) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select('*')
+            ->from('documents');
+
+        if($ignoreDeleted) {
+            $qb ->where('is_deleted=:deleted')
+                ->setParam(':deleted', '0');
+        }
+
+        return $qb;
+    }
+
     private function createDocumentObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+        
         $id = $row['id'];
         $dateCreated = $row['date_created'];
         $idAuthor = $row['id_author'];
@@ -477,17 +574,6 @@ class DocumentModel extends AModel {
         $document->setMetadata($row);
 
         return $document;
-    }
-
-    private function composeQueryStandardDocuments() {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select('*')
-            ->from('documents')
-            ->where('is_deleted=:deleted')
-            ->setParam(':deleted', '0');
-
-        return $qb;
     }
 
     private function addFilterCondition(string $filter, QueryBuilder &$qb) {

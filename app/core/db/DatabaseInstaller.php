@@ -75,7 +75,8 @@ class DatabaseInstaller {
                 'address_country' => 'VARCHAR(256) NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'date_password_changed' => 'DATETIME NOT NULL',
-                'password_change_status' => 'INT(2) NOT NULL DEFAULT 1'
+                'password_change_status' => 'INT(2) NOT NULL DEFAULT 1',
+                'default_user_page_url' => 'VARCHAR(256) NULL'
             ),
             'user_panel_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -162,7 +163,8 @@ class DatabaseInstaller {
                 'table_name' => 'VARCHAR(256) NOT NULL',
                 'is_system' => 'INT(2) NOT NULL DEFAULT 0',
                 'input_type' => 'VARCHAR(256) NOT NULL',
-                'length' => 'VARCHAR(256) NOT NULL'
+                'length' => 'VARCHAR(256) NOT NULL',
+                'select_external_enum_name' => 'VARCHAR(256) NULL'
             ),
             'metadata_values' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -258,6 +260,22 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user' => 'INT(32) NOT NULL',
                 'hash' => 'VARCHAR(256)',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'document_stats' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'total_count' => 'INT(32) NOT NULL',
+                'shredded_count' => 'INT(32) NOT NULL',
+                'archived_count' => 'INT(32) NOT NULL',
+                'new_count' => 'INT(32) NOT NULL',
+                'waiting_for_archivation_count' => 'INT(32) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'process_stats' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'total_count' => 'INT(32) NOT NULL',
+                'in_progress_count' => 'INT(32) NOT NULL',
+                'finished_count' => 'INT(32) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
@@ -958,6 +976,9 @@ class DatabaseInstaller {
                 'password_change_period' => '30',
                 'password_change_force_administrators' => '0',
                 'password_change_force' => '0'
+            ),
+            'NotificationManagerService' => array(
+                'notification_keep_length' => '1'
             )
         );
 

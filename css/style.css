@@ -155,22 +155,28 @@ body {
     overflow-y: scroll;
 }
 
-.info {
+.success {
     background-color: lightgreen;
     border: 1px solid green;
     color: green;
 }
 
 .warn {
-    background-color: orange;
-    border: 1px solid red;
-    color: red;
+    background-color: rgb(253, 255, 142);
+    border: 1px solid rgb(255, 102, 0);
+    color: rgb(255, 102, 0);
 }
 
 .error {
     background-color: lightcoral;
     border: 1px solid darkred;
     color: darkred;
+}
+
+.info {
+    background-color: lightblue;
+    border: 1px solid darkblue;
+    color: darkblue;
 }
 
 #flash-message {

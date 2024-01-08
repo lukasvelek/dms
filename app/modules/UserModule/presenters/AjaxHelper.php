@@ -2,37 +2,22 @@
 
 namespace DMS\Modules\UserModule;
 
-use DMS\Core\TemplateManager;
+use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 
 class AjaxHelper extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'AjaxHelper';
+        parent::__construct('AjaxHelper');
 
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function flashMessage() {
         global $app;
+
+        $app->flashMessageIfNotIsset(array('message'. 'type', 'redirect'), false);
 
         $message = htmlspecialchars($_GET['message']);
         $type = htmlspecialchars($_GET['type']);

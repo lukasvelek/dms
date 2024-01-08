@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Components\ExternalEnumComponent;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
@@ -12,43 +13,27 @@ use DMS\Constants\WidgetLocations;
 use DMS\Core\Application;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
-use DMS\Core\TemplateManager;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 class Settings extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'Settings';
+        parent::__construct('Settings');
 
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
-
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function updateDashboardWidgets() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id_user', 'widget00', 'widget01', 'widget10', 'widget11']);
 
         $idUser = htmlspecialchars($_GET['id_user']);
 
@@ -89,6 +74,7 @@ class Settings extends APresenter {
             }
         }
 
+        $app->flashMessage('Successfully updated widgets.', 'success');
         $app->redirect('UserModule:Settings:showDashboardWidgets');
     }
 
@@ -111,6 +97,8 @@ class Settings extends APresenter {
     protected function editService() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['name']);
+
         $name = htmlspecialchars($_GET['name']);
         
         $values = $_POST;
@@ -130,6 +118,12 @@ class Settings extends APresenter {
             } else {
                 $values['password_change_force'] = '1';
             }
+        } else if($name == 'NotificationManagerService') {
+            if(!array_key_exists('notification_keep_unseen_service_user', $values)) {
+                $values['notification_keep_unseen_service_user'] = '0';
+            } else {
+                $values['notification_keep_unseen_service_user'] = '1';
+            }
         }
 
         foreach($values as $k => $v) {
@@ -145,8 +139,12 @@ class Settings extends APresenter {
     }
 
     protected function editServiceForm() {
+        global $app;
+        
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
-
+        
+        $app->flashMessageIfNotIsset(['name']);
+        
         $name = htmlspecialchars($_GET['name']);
 
         $data = array(
@@ -176,7 +174,7 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Services',
             '$SETTINGS_GRID$' => $servicesGrid,
-            '$NEW_ENTITY_LINK$' => ''
+            '$LINKS$' => ''
         );
 
         $this->drawSubpanel = true;
@@ -188,6 +186,10 @@ class Settings extends APresenter {
     }
 
     protected function askToRunService() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['name']);
+
         $name = htmlspecialchars($_GET['name']);
 
         $urlConfirm = array(
@@ -206,6 +208,8 @@ class Settings extends APresenter {
 
     protected function runService() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['name']);
 
         $name = htmlspecialchars($_GET['name']);
 
@@ -298,6 +302,8 @@ class Settings extends APresenter {
     protected function createNewFolder() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['name', 'parent_folder']);
+
         $data = [];
 
         $parentFolder = htmlspecialchars($_POST['parent_folder']);
@@ -388,7 +394,7 @@ class Settings extends APresenter {
         $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_user')) {
-            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user') . '</div></div>';
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user');
         }
 
         $this->templateManager->fill($data, $template);
@@ -417,7 +423,7 @@ class Settings extends APresenter {
         $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
-            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group') . '</div></div>';
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group');
         }
 
         $this->templateManager->fill($data, $template);
@@ -444,8 +450,10 @@ class Settings extends APresenter {
         $this->drawSubpanel = true;
         $this->subpanel = Panels::createSettingsPanel();
 
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:ExternalEnumViewer:showList', 'External enums') . '&nbsp;&nbsp;';
+
         if($app->actionAuthorizator->checkActionRight('create_metadata')) {
-            $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createLink('UserModule:Settings:showNewMetadataForm', 'New metadata') . '</div></div>';
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewMetadataForm', 'New metadata');
         }
 
         $this->templateManager->fill($data, $template);
@@ -458,11 +466,13 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-dashboard.html');
 
-        $widgets = array(
-            LinkBuilder::createLink('UserModule:Settings:updateDefaultUserRights', 'Update default user rights') . '<br>'
-        );
+        $widgets = [];
 
-        if(Application::SYSTEM_DEBUG) {
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::UPDATE_DEFAULT_USER_RIGHTS)) {
+            $widgets[] = LinkBuilder::createLink('UserModule:Settings:updateDefaultUserRights', 'Update default user rights') . '<br>';
+        }
+
+        if(Application::SYSTEM_DEBUG && $app->actionAuthorizator->checkActionRight(UserActionRights::USE_DOCUMENT_GENERATOR)) {
             $widgets[] = LinkBuilder::createLink('UserModule:DocumentGenerator:showForm', 'Document generator');
         }
 
@@ -540,12 +550,18 @@ class Settings extends APresenter {
     protected function createNewMetadata() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['name', 'table_name', 'length', 'input_type']);
+
         $data = [];
 
         $name = htmlspecialchars($_POST['name']);
         $tableName = htmlspecialchars($_POST['table_name']);
         $length = htmlspecialchars($_POST['length']);
         $inputType = htmlspecialchars($_POST['input_type']);
+
+        if(isset($_POST['select_external_enum']) && $inputType == 'select_external') {
+            $data['select_external_enum_name'] = htmlspecialchars($_POST['select_external_enum']);
+        }
 
         $data['name'] = htmlspecialchars($_POST['name']);
         $data['text'] = htmlspecialchars($_POST['text']);
@@ -591,6 +607,8 @@ class Settings extends APresenter {
     protected function deleteMetadata() {
         global $app;
 
+        $app->flashMessageIfNotIsset(['id']);
+
         $id = htmlspecialchars($_GET['id']);
         $metadata = $app->metadataModel->getMetadataById($id);
 
@@ -609,6 +627,8 @@ class Settings extends APresenter {
 
     protected function createNewGroup() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['name']);
 
         $name = htmlspecialchars($_POST['name']);
         $code = null;
@@ -635,6 +655,8 @@ class Settings extends APresenter {
         $data = [];
 
         $required = array('firstname', 'lastname', 'username');
+        
+        $app->flashMessageIfNotIsset($required);
 
         foreach($required as $r) {
             $data[$r] = htmlspecialchars($_POST[$r]);
@@ -676,6 +698,10 @@ class Settings extends APresenter {
     }
 
     protected function askToDeleteFolder() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_folder']);
+
         $id = htmlspecialchars($_GET['id_folder']);
 
         $urlConfirm = array(
@@ -694,6 +720,8 @@ class Settings extends APresenter {
 
     protected function deleteFolder() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id_folder']);
 
         $idFolder = htmlspecialchars($_GET['id_folder']);
         $folder = $app->folderModel->getFolderById($idFolder);
@@ -777,6 +805,8 @@ class Settings extends APresenter {
     }
 
     private function internalCreateNewMetadataForm() {
+        global $app;
+
         $fb = FormBuilder::getTemporaryObject();
 
         $metadataTypesConst = MetadataInputType::$texts;
@@ -784,6 +814,16 @@ class Settings extends APresenter {
         $metadataInputTypes = [];
         foreach($metadataTypesConst as $k => $v) {
             $metadataInputTypes[] = array(
+                'value' => $k,
+                'text' => $v
+            );
+        }
+
+        $selectExternalEnumsList = $app->externalEnumComponent->getEnumsList();
+
+        $selectExternalEnums = [];
+        foreach($selectExternalEnumsList as $k => $v) {
+            $selectExternalEnums[] = array(
                 'value' => $k,
                 'text' => $v
             );
@@ -804,6 +844,9 @@ class Settings extends APresenter {
 
             ->addElement($fb->createLabel()->setFor('length')->setText('Length'))
             ->addElement($fb->createInput()->setType('text')->setName('length')->require()->setId('length')->setValue(''))
+
+            ->addElement($fb->createLabel()->setFor('select_external_enum')->setText('External select enumerator'))
+            ->addElement($fb->createSelect()->setName('select_external_enum')->addOptionsBasedOnArray($selectExternalEnums)->setId('select_external_enum'))
 
             ->addElement($fb->createSubmit('Create'))
         ;
@@ -985,6 +1028,7 @@ class Settings extends APresenter {
 
         $systemVersion = $app::SYSTEM_VERSION;
         $systemBuildDate = $app::SYSTEM_BUILD_DATE;
+        $systemIsDebugEnabled = $app::SYSTEM_DEBUG ? 'Enabled' : 'Disabled';
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -996,6 +1040,7 @@ class Settings extends APresenter {
                         <div class="col-md">
                             <p><b>System version: </b>' . $systemVersion . '</p>
                             <p><b>System build date: </b>' . $systemBuildDate . '</p>
+                            <p><b>System is debug enabled: </b>' . $systemIsDebugEnabled . '</p>
                         </div>
                     </div>
                  </div>';
@@ -1006,11 +1051,11 @@ class Settings extends APresenter {
     private function internalCreateCountWidget() {
         global $app;
 
-        $users = count($app->userModel->getAllUsers());
-        $groups = count($app->groupModel->getAllGroups());
-        $documents = count($app->documentModel->getAllDocuments());
-        $folders = count($app->folderModel->getAllFolders());
-        $emails = $app->mailModel->getMailQueue()->num_rows;
+        $users = $app->userModel->getUserCount();
+        $groups = $app->groupModel->getGroupCount();
+        $documents = $app->documentModel->getTotalDocumentCount();
+        $folders = $app->folderModel->getFolderCount();
+        $emails = $app->mailModel->getMailInQueueCount();
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -1065,7 +1110,7 @@ class Settings extends APresenter {
                     $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete');
                 }
 
-                if($m->getInputType() == 'select' && $app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId()) && $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
+                if(($m->getInputType() == 'select' || $m->getInputType() == 'select_external') && $app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId()) && $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
                     $actionLinks['values'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values');
                 }
 
@@ -1191,7 +1236,11 @@ class Settings extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $foldersDb = $app->folderModel->getAllFolders();
+        $foldersDb = [];
+
+        $app->logger->logFunction(function() use ($app, &$foldersDb) {
+            $foldersDb = $app->folderModel->getAllFolders();
+        }, __METHOD__);
 
         $foldersArr = array(array(
             'value' => '-1',
@@ -1244,10 +1293,19 @@ class Settings extends APresenter {
         $services = $app->serviceManager->services;
 
         foreach($services as $serviceName => $service) {
-            $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run'),
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->name), 'Edit')
-            );
+            $actionLinks = [];
+
+            if($app->actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE)) {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run');
+            } else {
+                $actionLinks[] = '-';
+            }
+
+            if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE)) {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->name), 'Edit');
+            } else {
+                $actionLinks[] = '-';
+            }
 
             if(is_null($headerRow)) {
                 $row = $tb->createRow();
@@ -1375,6 +1433,26 @@ class Settings extends APresenter {
 
                     break;
 
+                case ServiceMetadata::NOTIFICATION_KEEP_LENGTH:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="notification_keep_length_text_value">__VAL__</span>'))
+                    ->addElement($fb->createInput()->setType('range')->setMin('0')->setMax('30')->setName($key)->setValue($value))
+                    ;
+                    break;
+
+                case ServiceMetadata::NOTIFICATION_KEEP_UNSEEN_SERVICE_USER:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="notification_keep_unseen_service_user_text_value">__VAL__</span>'))
+                    ;
+
+                    $checkbox = $fb->createInput()->setType('checkbox')->setName($key);
+
+                    if($value == '1') {
+                        $checkbox->setSpecial('checked');
+                    }
+
+                    $fb->addElement($checkbox);
+
                     break;
             }
         }
@@ -1420,10 +1498,14 @@ class Settings extends APresenter {
             )
         );
 
-        $widget00loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00);
-        $widget01loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET01);
-        $widget10loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10);
-        $widget11loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11);
+        $widget00loc = $widget01loc = $widget10loc = $widget11loc = null;
+
+        $app->logger->logFunction(function() use ($app, &$widget00loc, &$widget01loc, &$widget10loc, &$widget11loc, $idUser) {
+            $widget00loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00);
+            $widget01loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET01);
+            $widget10loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET10);
+            $widget11loc = $app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET11);
+        }, __METHOD__);
 
         foreach($allWidgets as $name => $content) {
             $text = $content['text'];

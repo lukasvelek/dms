@@ -4,6 +4,16 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.5
+- added notification manager service
+- added support for external enums
+- added form and metadata support for external enums
+- added new services (Document archivator, Declined document remover)
+- updated core code
+- updated debug tools
+- fixed bugs and potential bugs
+- optimized application
+
 ### v1.4
 - added document filters
 - added new after shredding action

@@ -2,6 +2,8 @@ function sleep(ms) {
     return new Promise(r => setTimeout(r, ms));
 }
 
+const general_sleep_length = 250;
+
 $(window).on("load", function() {
     $("#cover").remove();
 
@@ -20,7 +22,7 @@ async function openNotifications() {
     async function(data) {
         let obj = JSON.parse(data);
 
-        await sleep(250);
+        await sleep(general_sleep_length);
 
         $("#notifications").html(obj.code);
         $("#notificationsController").html("Notifications (" + obj.count  + ")");
@@ -81,7 +83,7 @@ function drawDocumentBulkActions() {
             action: "getBulkActions"
         },
         async function(data) {
-            await sleep(250);
+            await sleep(general_sleep_length);
             $('#bulk_actions').html(data);
         });
     } else {
@@ -123,7 +125,7 @@ function showCommentsLoading() {
 
 async function loadDocumentComments(id_document, can_delete, can_sleep = true) {
     if(can_sleep) {
-        await sleep(500);
+        await sleep(general_sleep_length);
     }
     
     $.get("app/ajax/Documents.php", {
@@ -138,7 +140,7 @@ async function loadDocumentComments(id_document, can_delete, can_sleep = true) {
 }
 
 async function deleteDocumentComment(id_comment, id_document, can_delete) {
-    await sleep(500);
+    await sleep(general_sleep_length);
 
     $.ajax({
         url: 'app/ajax/Documents.php',
@@ -162,7 +164,7 @@ async function reloadDocumentComments(id_document, can_delete) {
 }
 
 async function loadDocumentsSearchFilter(query, id_folder, _filter) {
-    await sleep(500);
+    await sleep(general_sleep_length);
 
     $('#documents-loading').show();
 
@@ -183,7 +185,7 @@ async function loadDocumentsSearchFilter(query, id_folder, _filter) {
 }
 
 async function loadDocumentsFilter(id_folder, _filter) {
-    await sleep(250);
+    await sleep(general_sleep_length);
 
     $.ajax({
         url: 'app/ajax/Documents.php',
@@ -207,7 +209,7 @@ async function loadDocumentsSearch(query, id_folder) {
         await loadDocuments(id_folder);
     }
 
-    await sleep(500);
+    await sleep(general_sleep_length);
 
     $('#documents-loading').show();
 
@@ -227,7 +229,7 @@ async function loadDocumentsSearch(query, id_folder) {
 }
 
 async function loadDocuments(id_folder, _page) {
-    await sleep(250);
+    await sleep(general_sleep_length);
 
     $.ajax({
         url: 'app/ajax/Documents.php',
@@ -258,7 +260,7 @@ function selectAllDocumentEntries() {
 }
 
 async function loadDocumentsSharedWithMe(_page) {
-    await sleep(250);
+    await sleep(general_sleep_length);
 
     $.ajax({
         url: 'app/ajax/Documents.php',
@@ -275,7 +277,7 @@ async function loadDocumentsSharedWithMe(_page) {
 }
 
 async function loadProcesses(_page, _filter = 'waitingForMe') {
-    await sleep(250);
+    await sleep(general_sleep_length);
 
     $.ajax({
         url: 'app/ajax/Processes.php',
@@ -298,7 +300,7 @@ async function sendProcessComment(id_author, id_process, can_delete) {
     if(text != "") {
         $("#cover").show();
 
-        await sleep(500);
+        await sleep(general_sleep_length);
 
         $.ajax({
             url: 'app/ajax/Processes.php',
@@ -321,7 +323,7 @@ async function sendProcessComment(id_author, id_process, can_delete) {
 
 async function loadProcessComments(id_process, can_delete, can_sleep = true) {
     if(can_sleep) {
-        await sleep(500);
+        await sleep(general_sleep_length);
     }
     
     $.get("app/ajax/Processes.php", {
@@ -336,7 +338,7 @@ async function loadProcessComments(id_process, can_delete, can_sleep = true) {
 }
 
 async function deleteProcessComment(id_comment, id_process, can_delete) {
-    await sleep(500);
+    await sleep(general_sleep_length);
 
     $.ajax({
         url: 'app/ajax/Processes.php',
@@ -365,7 +367,7 @@ function hideFlashMessage() {
 }
 
 async function loadMailQueue() {
-    await sleep(250);
+    await sleep(general_sleep_length);
 
     $.ajax({
         url: 'app/ajax/Mails.php',

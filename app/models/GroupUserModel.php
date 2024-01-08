@@ -164,6 +164,10 @@ class GroupUserModel extends AModel {
     }
 
     private function createGroupUserObjectFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+        
         $id = $row['id'];
         $idGroup = $row['id_group'];
         $idUser = $row['id_user'];

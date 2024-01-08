@@ -4,36 +4,18 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Components\Process\HomeOffice;
 use DMS\Constants\ProcessTypes;
-use DMS\Core\TemplateManager;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 use DMS\Panels\Panels;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 class Processes extends APresenter {
-    private string $name;
-    private TemplateManager $templateManager;
-    private IModule $module;
-
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        $this->name = 'Processes';
-        
-        $this->templateManager = TemplateManager::getTemporaryObject();
-    }
+        parent::__construct('Processes');
 
-    public function setModule(IModule $module) {
-        $this->module = $module;
-    }
-
-    public function getModule() {
-        return $this->module;
-    }
-
-    public function getName() {
-        return $this->name;
+        $this->getActionNamesFromClass($this);
     }
 
     protected function showMenu() {
@@ -41,7 +23,7 @@ class Processes extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Process menu',
-            '$PROCESS_PANEL$' => /*Panels::createProcessesPanel()*/ ''
+            '$PROCESS_PANEL$' => ''
         );
 
         $this->drawSubpanel = true;
@@ -80,7 +62,7 @@ class Processes extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Processes',
-            '$PROCESS_PANEL$' => /*Panels::createProcessesPanel()*/ '',
+            '$PROCESS_PANEL$' => '',
             '$PROCESS_GRID$' => $processGrid,
             '$PROCESS_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $filter)
         );
@@ -94,6 +76,10 @@ class Processes extends APresenter {
     }
 
     protected function newProcess() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['type']);
+
         $type = htmlspecialchars($_GET['type']);
         $name = ProcessTypes::$texts[$type];
 
@@ -101,7 +87,7 @@ class Processes extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New process: <i>' . $name . '</i>',
-            '$PROCESS_PANEL$' => /*Panels::createProcessesPanel()*/ '',
+            '$PROCESS_PANEL$' => '',
             '$PROCESS_FORM$' => $this->internalCreateProcessForm($type)
         );
 
@@ -244,7 +230,7 @@ class Processes extends APresenter {
         $lastPageLink .= '>&gt;&gt;</a>';
 
         if($processCount > $app->getGridSize()) {
-            if(($page * $app->getGridSize()) > $processCount) {
+            if(($page * $app->getGridSize()) >= $processCount) {
                 $processPageControl = $processCount;
             } else {
                 $processPageControl = ($page * $app->getGridSize()) . '+';
