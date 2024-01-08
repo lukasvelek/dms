@@ -277,6 +277,31 @@ class DatabaseInstaller {
                 'in_progress_count' => 'INT(32) NOT NULL',
                 'finished_count' => 'INT(32) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'ribbons' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_parent_ribbon' => 'INT(32) NULL',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'title' => 'VARCHAR(256) NULL',
+                'image' => 'VARCHAR(256) NULL',
+                'is_visible' => 'INT(2) NOT NULL DEFAULT 1',
+                'page_url' => 'VARCHAR(256) NOT NULL'
+            ),
+            'ribbon_user_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_ribbon' => 'INT(32) NOT NULL',
+                'id_user' => 'INT(32) NOT NULL',
+                'can_see' => 'INT(2) NOT NULL DEFAULT 1',
+                'can_edit' => 'INT(2) NOT NULL DEFAULT 1',
+                'can_delete' => 'INT(2) NOT NULL DEFAULT 1'
+            ),
+            'ribbon_group_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_ribbon' => 'INT(32) NOT NULL',
+                'id_group' => 'INT(32) NOT NULL',
+                'can_see' => 'INT(2) NOT NULL DEFAULT 1',
+                'can_edit' => 'INT(2) NOT NULL DEFAULT 1',
+                'can_delete' => 'INT(2) NOT NULL DEFAULT 1'
             )
         );
 

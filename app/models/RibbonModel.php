@@ -11,6 +11,48 @@ class RibbonModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getRibbonsForIdParentRibbon(int $idParentRibbon) {
+        $qb = $this->composeStandardRibbonQuery(__METHOD__);
+
+        $rows = $qb ->where('id_parent_ribbon=:id_parent_ribbon')
+                    ->setParam(':id_parent_ribbon', $idParentRibbon)
+                    ->execute()
+                    ->fetch();
+
+        return $this->createRibbonObjectsFromDbRows($rows);
+    }
+
+    public function getToppanelRibbons() {
+        $qb = $this->composeStandardRibbonQuery(__METHOD__);
+
+        $rows = $qb ->whereNull('id_parent_ribbon')
+                    ->execute()
+                    ->fetch();
+
+        return $this->createRibbonObjectsFromDbRows($rows);
+    }
+
+    public function getAllRibbons(bool $includeInvisibleRibbons = false) {
+        $qb = $this->composeStandardRibbonQuery(__METHOD__);
+
+        if(!$includeInvisibleRibbons) {
+            $qb ->where('is_visible=:visible')
+                ->setParam(':visible', '1');
+        }
+
+        $rows = $qb->execute()->fetch();
+
+        return $this->createRibbonObjectsFromDbRows($rows);
+    }
+
+    private function composeStandardRibbonQuery(string $callingMethod = __METHOD__) {
+        $qb = $this->qb($callingMethod)
+            ->select('*')
+            ->from('ribbons');
+
+        return $qb;
+    }
+
     private function createRibbonObjectsFromDbRows($rows) {
         $objects = [];
         foreach($rows as $row) {
