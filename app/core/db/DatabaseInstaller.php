@@ -839,7 +839,6 @@ class DatabaseInstaller {
                     VALUES ('$name', '$text', '$tableName', '1', '$inputType', '$length')";
 
             $this->logger->sql($sql, __METHOD__);
-
             $this->db->query($sql);
 
             $sql = "SELECT `id` FROM `metadata` WHERE `name` = '$name' AND `table_name` = '$tableName'";
@@ -946,6 +945,8 @@ class DatabaseInstaller {
             $idMetadata[] = $row['id'];
         }
 
+        $this->db->beginTransaction();
+
         foreach($idUsers as $idUser) {
             foreach($idMetadata as $idMeta) {
                 $sql = "INSERT INTO `user_metadata_rights` (`id_metadata`, `id_user`, `view`, `edit`, `view_values`, `edit_values`)
@@ -956,6 +957,8 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        $this->db->commit();
     }
 
     public function insertDefaultGroupMetadataRights() {
@@ -981,6 +984,8 @@ class DatabaseInstaller {
             $idMetadata[] = $row['id'];
         }
 
+        $this->db->beginTransaction();
+
         foreach($idGroups as $idGroup) {
             foreach($idMetadata as $idMeta) {
                 $sql = "INSERT INTO `group_metadata_rights` (`id_metadata`, `id_group`, `view`, `edit`, `view_values`, `edit_values`)
@@ -991,6 +996,8 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        $this->db->commit();
     }
 
     public function insertDefaultServiceConfig() {
@@ -1008,6 +1015,8 @@ class DatabaseInstaller {
             )
         );
 
+        $this->db->beginTransaction();
+
         foreach($serviceCfg as $serviceName => $serviceData) {
             foreach($serviceData as $key => $value) {
                 $sql = "INSERT INTO `service_config` (`name`, `key`, `value`) VALUES ('$serviceName', '$key', '$value')";
@@ -1017,6 +1026,8 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        $this->db->commit();
     }
 
     public function insertDefaultRibbons() {
@@ -1058,6 +1069,8 @@ class DatabaseInstaller {
             )
         );
 
+        $this->db->beginTransaction();
+
         foreach($toppanelRibbons as $ribbon) {
             $keys = [];
             $values = [];
@@ -1098,6 +1111,8 @@ class DatabaseInstaller {
             $this->logger->sql($sql, __METHOD__);
             $this->db->query($sql);
         }
+
+        $this->db->commit();
 
         $subpanelRibbons = array(
             'documents' => array(
@@ -1207,6 +1222,8 @@ class DatabaseInstaller {
                 break;
             }
 
+            $this->db->beginTransaction();
+
             foreach($subpanelRibbons[$code] as $ribbon) {
                 $sql = "INSERT INTO `ribbons` (";
 
@@ -1247,7 +1264,88 @@ class DatabaseInstaller {
                 $this->logger->sql($sql, __METHOD__);
                 $this->db->query($sql);
             }
+
+            $this->db->commit();
         }
+    }
+
+    public function insertDefaultRibbonGroupRights() {
+        $sql = "SELECT `id` FROM `ribbons`";
+
+        $this->logger->sql($sql, __METHOD__);
+        $rows = $this->db->query($sql);
+
+        $idRibbons = [];
+        foreach($rows as $row) {
+            $idRibbons[] = $row['id'];
+        }
+
+        $sql = "SELECT `id` FROM `groups` WHERE `code` IN ('ADMINISTRATORS')";
+
+        $this->logger->sql($sql, __METHOD__);
+        $rows = $this->db->query($sql);
+
+        $idGroups = [];
+        foreach($rows as $row) {
+            $idGroups[] = $row['id'];
+        }
+
+        $this->db->beginTransaction();
+
+        foreach($idRibbons as $r) {
+            foreach($idGroups as $g) {
+                $sql = "INSERT INTO `ribbon_group_rights` (`id_ribbon`, `id_group`, `can_see`, `can_edit`, `can_delete`) VALUES ('$r', '$g', '1', '1', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+                $this->db->query($sql);
+            }
+        }
+
+        $this->db->commit();
+    }
+
+    public function insertDefaultRibbonUserRights() {
+        $sql = "SELECT `id` FROM `ribbons`";
+
+        $this->logger->sql($sql, __METHOD__);
+        $rows = $this->db->query($sql);
+
+        $idRibbons = [];
+        foreach($rows as $row) {
+            $idRibbons[] = $row['id'];
+        }
+
+        $sql = "SELECT `id` FROM `users`";
+
+        $this->logger->sql($sql, __METHOD__);
+        $rows = $this->db->query($sql);
+
+        $idUsers = [];
+        foreach($rows as $row) {
+            $idUsers[] = $row['id'];
+        }
+
+        $this->db->beginTransaction();
+
+        foreach($idRibbons as $r) {
+            foreach($idUsers as $u) {
+                $canSee = 1;
+                $canEdit = 1;
+                $canDelete = 1;
+
+                if($u != 2) { // not administrator
+                    $canEdit = 0;
+                    $canDelete = 0;
+                }
+
+                $sql = "INSERT INTO `ribbon_user_rights` (`id_ribbon`, `id_user`, `can_see`, `can_edit`, `can_delete`) VALUES ('$r', '$u', '$canSee', '$canEdit', '$canDelete')";
+
+                $this->logger->sql($sql, __METHOD__);
+                $this->db->query($sql);
+            }
+        }
+
+        $this->db->commit();
     }
 }
 
