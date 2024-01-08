@@ -1040,7 +1040,7 @@ class Settings extends APresenter {
                         <div class="col-md">
                             <p><b>System version: </b>' . $systemVersion . '</p>
                             <p><b>System build date: </b>' . $systemBuildDate . '</p>
-                            <p><b>System is debug enabled: </b>' . $systemIsDebugEnabled . '</p>
+                            <p><b>System debug: </b>' . $systemIsDebugEnabled . '</p>
                         </div>
                     </div>
                  </div>';
