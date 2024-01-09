@@ -2,7 +2,9 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\UserActionRights;
+use DMS\Core\CacheManager;
 use DMS\Entities\Ribbon;
 use DMS\Modules\APresenter;
 use DMS\UI\LinkBuilder;
@@ -15,6 +17,34 @@ class RibbonSettings extends APresenter {
         parent::__construct('RibbonSettings', 'Ribbon settings');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function clearCache() {
+        global $app;
+        
+        $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $rcm->invalidateCache();
+        
+        $rucm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_USER_RIGHTS);
+        $rucm->invalidateCache();
+        
+        $rgcm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_GROUP_RIGHTS);
+        $rgcm->invalidateCache();
+        
+        unset($rcm, $rucm, $rgcm);
+        
+        $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        
+        $ribbons = $app->ribbonModel->getAllRibbons();
+        
+        foreach($ribbons as $ribbon) {
+            $rcm->saveRibbon($ribbon);
+        }
+        
+        unset($rcm);
+        
+        $app->flashMessage('test');
+        $app->redirect('UserModule:RibbonSettings:showAll', array('id_ribbon' => $app->currentIdRibbon));
     }
 
     protected function showAll() {
@@ -30,9 +60,15 @@ class RibbonSettings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Ribbon settings',
-            '$LINKS$' => '',
+            '$LINKS$' => [],
             '$SETTINGS_GRID$' => $settingsGrid
         );
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
+            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm', 'id_ribbon' => $app->currentIdRibbon), 'New ribbon');
+        }
+
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:clearCache', 'id_ribbon' => $app->currentIdRibbon), 'Clear cache');
 
         $this->templateManager->fill($data, $template);
 
@@ -75,16 +111,16 @@ class RibbonSettings extends APresenter {
 
                 if($app->ribbonAuthorizator->checkRibbonEditable($app->user->getId(), $ribbon) &&
                    $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS)) {
-                    $actionLinks['edit'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
+                    $actionLinks['edit'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId(), 'id_ribbon' => $app->currentIdRibbon), 'Edit');
                 }
 
                 if($app->ribbonAuthorizator->checkRibbonDeletable($app->user->getId(), $ribbon) &&
                    $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS)) {
-                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
+                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId(), 'id_ribbon' => $app->currentIdRibbon), 'Delete');
                 }
 
                 if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS)) {
-                    $actionLinks['edit_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditRightsForm', 'id' => $ribbon->getId()), 'Edit rights');
+                    $actionLinks['edit_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditRightsForm', 'id' => $ribbon->getId(), 'id_ribbon' => $app->currentIdRibbon), 'Edit rights');
                 }
 
                 if(is_null($headerRow)) {

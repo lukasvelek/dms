@@ -250,6 +250,12 @@ class Application {
             $newParams[$k] = $v;
         }
 
+        if(!array_key_exists('id_ribbon', $newParams)) {
+            if($this->currentIdRibbon != null) {
+                $newParams['id_ribbon'] = $this->currentIdRibbon;
+            }
+        }
+
         $i = 0;
         foreach($newParams as $paramKey => $paramValue) {
             if(($i + 1) == count($newParams)) {
@@ -261,7 +267,7 @@ class Application {
             $i++;
         }
 
-        echo $page;
+        //echo $page;
 
         header('Location: ' . $page);
     }

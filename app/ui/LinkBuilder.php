@@ -163,6 +163,12 @@ class LinkBuilder {
             $i++;
         }
 
+        if(!array_key_exists('id_ribbon', $urlParams)) {
+            if(isset($_GET['id_ribbon'])) {
+                $url .= '&id_ribbon=' . $_GET['id_ribbon'];
+            }
+        }
+
         return $url;
     }
 }
