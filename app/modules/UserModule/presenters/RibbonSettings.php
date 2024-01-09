@@ -43,7 +43,6 @@ class RibbonSettings extends APresenter {
         
         unset($rcm);
         
-        $app->flashMessage('test');
         $app->redirect('UserModule:RibbonSettings:showAll', array('id_ribbon' => $app->currentIdRibbon));
     }
 
