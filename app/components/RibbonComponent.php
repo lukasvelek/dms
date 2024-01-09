@@ -7,6 +7,7 @@ use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\Ribbon;
 use DMS\Models\RibbonModel;
 
 class RibbonComponent extends AComponent {
@@ -49,6 +50,40 @@ class RibbonComponent extends AComponent {
         }
 
         return $visibleRibbons;*/
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+
+        $valFromCache = $cm->loadRibbons();
+
+        $visibleRibbon = null;
+
+        if(!is_null($valFromCache)) {
+            foreach($valFromCache as $ribbon) {
+                if($ribbon instanceof Ribbon) {
+                    if($ribbon->getId() == $idRibbon) {
+                        $visibleRibbon = $ribbon;
+                    }
+                } else if(is_array($ribbon)) {
+                    foreach($ribbon as $r) {
+                        if($r instanceof Ribbon) {
+                            if($r->getId() == $idRibbon) {
+                                $visibleRibbon = $ribbon;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if($visibleRibbon === NULL) {
+            $visibleRibbon = $this->ribbonModel->getRibbonById($idRibbon);
+
+            $cm->saveRibbon($visibleRibbon);
+        }
+
+        $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $visibleRibbon->getId());
+
+        return $result;
     }
 
     public function getToppanelRibbonsVisibleToUser(int $idUser) {

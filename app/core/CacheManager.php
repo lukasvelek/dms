@@ -30,6 +30,32 @@ class CacheManager {
         $this->category = $category;
     }
 
+    public function loadRibbonById(int $idRibbon) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        } else {
+            foreach($cacheData as $cd) {
+                if(is_array($cd)) {
+                    foreach($cd as $cdcd) {
+                        if($cdcd instanceof Ribbon) {
+                            if($cdcd->getId() == $idRibbon) {
+                                return $cdcd;
+                            }
+                        }
+                    }
+                } else if($cd instanceof Ribbon) {
+                    if($cd->getId() == $idRibbon) {
+                        return $cd;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function saveRibbon(Ribbon $ribbon) {
         $cacheData = $this->loadFromCache();
 

@@ -69,11 +69,18 @@ class Panels {
             return null;
         }
 
-        /*$currentRibbon = 
+        $currentRibbon = null;
 
-        $subRibbons = $app->ribbonComponent->getSiblingRibbonsVisibleToUser($app->user->getId(), $currentIdRibbon);*/
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $valFromCache = $cm->loadRibbonById($currentIdRibbon);
 
-        $currentRibbon = $app->ribbonModel->getRibbonById($currentIdRibbon);
+        if(!is_null($valFromCache)) {
+            $currentRibbon = $valFromCache;
+        } else {
+            $currentRibbon = $app->ribbonModel->getRibbonById($currentIdRibbon);
+
+            $cm->saveRibbon($currentRibbon);
+        }
         
         $idRibbon = $currentRibbon->getId();
         
