@@ -15,6 +15,7 @@ abstract class APresenter implements IPresenter {
     public bool $allowWhenLoginProcess;
     public string $subpanel = '';
     public bool $drawSubpanel = false;
+    public string $flashMessage = '';
 
     protected function __construct(string $name, string $title = '', bool $allowWhenLoginProcess = false) {
         $this->name = $name;
@@ -29,6 +30,14 @@ abstract class APresenter implements IPresenter {
         $this->templateManager = TemplateManager::getTemporaryObject();
 
         $this->actions = [];
+
+        if(isset($_SESSION['flash_message'])) {
+            $this->flashMessage = $_SESSION['flash_message'];
+        }
+    }
+
+    public function setFlashMessage(string $flashMessage) {
+        $_SESSION['flash_message'] = $flashMessage;
     }
 
     public function getActions() {

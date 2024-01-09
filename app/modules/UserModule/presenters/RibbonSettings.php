@@ -8,6 +8,7 @@ use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Entities\Ribbon;
 use DMS\Modules\APresenter;
+use DMS\UI\FlashMessageBuilder;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
@@ -53,7 +54,12 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonModel->updateRibbon($id, $data);
 
-        $app->flashMessage('Successfully edited ribbon #' . $id);
+        //$app->flashMessage('Successfully edited ribbon #' . $id);
+        $fmb = new FlashMessageBuilder();
+
+        $this->setFlashMessage($fmb->setText('Successfully edited ribbon #' . $id)->setType('info')->build());
+
+        die();
 
         $app->redirect('UserModule:RibbonSettings:showAll');
     }

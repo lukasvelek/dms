@@ -348,13 +348,17 @@ class Application {
             $this->pageContent .= $subpanel;
         }
 
-        if($this->flashMessage != null) {
+        /*if($this->flashMessage != null) {
             $this->pageContent .= $this->flashMessage;
         } else if(isset($_SESSION['flash_message'])) {
             $this->flashMessage = $_SESSION['flash_message'];
             $this->pageContent .= $this->flashMessage;
             
             $this->clearFlashMessage();
+        }*/
+
+        if($this->currentPresenter->flashMessage != '') {
+            $this->pageContent .= $this->currentPresenter->flashMessage;
         }
 
         $this->pageContent .= $pageBody;
