@@ -43,7 +43,7 @@ class RibbonSettings extends APresenter {
         
         unset($rcm);
         
-        $app->redirect('UserModule:RibbonSettings:showAll', array('id_ribbon' => $app->currentIdRibbon));
+        $app->redirect('UserModule:RibbonSettings:showAll');
     }
 
     protected function showAll() {
@@ -64,10 +64,10 @@ class RibbonSettings extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
-            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm', 'id_ribbon' => $app->currentIdRibbon), 'New ribbon');
+            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm'), 'New ribbon');
         }
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:clearCache', 'id_ribbon' => $app->currentIdRibbon), 'Clear cache');
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:clearCache'), 'Clear cache');
 
         $this->templateManager->fill($data, $template);
 
