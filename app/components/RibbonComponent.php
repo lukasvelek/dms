@@ -81,7 +81,7 @@ class RibbonComponent extends AComponent {
             $cm->saveRibbon($visibleRibbon);
         }
 
-        $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $visibleRibbon->getId());
+        $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $visibleRibbon);
 
         return $result;
     }
@@ -103,7 +103,7 @@ class RibbonComponent extends AComponent {
 
         $visibleRibbons = [];
         foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon->getId());
+            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
 
             if($result === TRUE) {
                 $visibleRibbons[] = $ribbon;
@@ -130,7 +130,7 @@ class RibbonComponent extends AComponent {
 
         $visibleRibbons = [];
         foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon->getId());
+            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
 
             if($result === TRUE) {
                 $visibleRibbons[] = $ribbon;
@@ -162,7 +162,7 @@ class RibbonComponent extends AComponent {
 
         $visibleRibbons = [];
         foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon->getId());
+            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
 
             if($result === TRUE) {
                 $visibleRibbons[] = $ribbon;

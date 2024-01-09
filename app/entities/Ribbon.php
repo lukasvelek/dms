@@ -10,8 +10,9 @@ class Ribbon extends AEntity {
     private bool $visible;
     private string $pageUrl;
     private string $code;
+    private bool $isSystem;
 
-    public function __construct(int $id, string $name, ?string $title, ?int $idParentRibbon, ?string $image, bool $visible, string $pageUrl, string $code) {
+    public function __construct(int $id, string $name, ?string $title, ?int $idParentRibbon, ?string $image, bool $visible, string $pageUrl, string $code, bool $isSystem) {
         parent::__construct($id, null);
 
         $this->name = $name;
@@ -25,6 +26,7 @@ class Ribbon extends AEntity {
         $this->visible = $visible;
         $this->pageUrl = $pageUrl;
         $this->code = $code;
+        $this->isSystem = $isSystem;
     }
 
     public function getName() {
@@ -61,6 +63,10 @@ class Ribbon extends AEntity {
 
     public function hasParent() {
         return is_null($this->idParentRibbon) ? false : true;
+    }
+
+    public function isSystem() {
+        return $this->isSystem;
     }
 }
 

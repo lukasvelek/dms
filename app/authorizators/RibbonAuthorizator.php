@@ -6,6 +6,7 @@ use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\Ribbon;
 use DMS\Entities\User;
 use DMS\Models\GroupUserModel;
 use DMS\Models\RibbonModel;
@@ -24,7 +25,7 @@ class RibbonAuthorizator extends AAuthorizator {
         $this->groupUserModel = $groupUserModel;
     }
 
-    public function checkRibbonVisible(?int $idUser, int $idRibbon) {
+    public function checkRibbonVisible(?int $idUser, Ribbon $ribbon) {
         if(is_null($idUser)) {
             if(empty($this->idUser)) {
                 return false;
@@ -33,10 +34,10 @@ class RibbonAuthorizator extends AAuthorizator {
             $idUser = $this->idUser;
         }
         
-        return $this->checkRight($idUser, $idRibbon, self::VIEW);
+        return $this->checkRight($idUser, $ribbon->getId(), self::VIEW);
     }
 
-    public function checkRibbonEditable(?int $idUser, int $idRibbon) {
+    public function checkRibbonEditable(?int $idUser, Ribbon $ribbon) {
         if(is_null($idUser)) {
             if(empty($this->idUser)) {
                 return false;
@@ -45,10 +46,10 @@ class RibbonAuthorizator extends AAuthorizator {
             $idUser = $this->idUser;
         }
 
-        return $this->checkRight($idUser, $idRibbon, self::EDIT);
+        return $this->checkRight($idUser, $ribbon->getId(), self::EDIT);
     }
 
-    public function checkRibbonDeletable(?int $idUser, int $idRibbon) {
+    public function checkRibbonDeletable(?int $idUser, Ribbon $ribbon) {
         if(is_null($idUser)) {
             if(empty($this->idUser)) {
                 return false;
@@ -57,7 +58,13 @@ class RibbonAuthorizator extends AAuthorizator {
             $idUser = $this->idUser;
         }
 
-        return $this->checkRight($idUser, $idRibbon, self::DELETE);
+        $right = $this->checkRight($idUser, $ribbon->getId(), self::DELETE);
+
+        if($ribbon->isSystem() || !$right) {
+            return false;
+        } else {
+            return false;
+        }
     }
 
     private function checkRight(int $idUser, int $idRibbon, string $action) {

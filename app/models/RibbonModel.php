@@ -93,6 +93,7 @@ class RibbonModel extends AModel {
         $image = null;
         $title = null;
         $code = $row['code'];
+        $system = $row['is_system'] ? true : false;
 
         if($row['is_visible'] == 1) {
             $visible = true;
@@ -110,7 +111,7 @@ class RibbonModel extends AModel {
             $title = $row['title'];
         }
 
-        return new Ribbon($id, $name, $title, $idParentRibbon, $image, $visible, $pageUrl, $code);
+        return new Ribbon($id, $name, $title, $idParentRibbon, $image, $visible, $pageUrl, $code, $system);
     }
 }
 

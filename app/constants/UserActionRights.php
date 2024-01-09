@@ -23,6 +23,10 @@ class UserActionRights {
     public const CREATE_DOCUMENT = 'create_document';
     public const UPDATE_DEFAULT_USER_RIGHTS = 'update_default_user_rights';
     public const USE_DOCUMENT_GENERATOR = 'use_document_generator';
+    public const EDIT_RIBBONS = 'edit_ribbons';
+    public const EDIT_RIBBON_RIGHTS = 'edit_ribbon_rights';
+    public const DELETE_RIBBONS = 'delete_ribbons';
+    public const CREATE_RIBBONS = 'create_ribbons';
 
     public static $all = array(
         self::CREATE_USER,
@@ -44,7 +48,11 @@ class UserActionRights {
         self::SHARE_DOCUMENT,
         self::UPDATE_DEFAULT_USER_RIGHTS,
         self::USE_DOCUMENT_GENERATOR,
-        self::CREATE_DOCUMENT
+        self::CREATE_DOCUMENT,
+        self::EDIT_RIBBONS,
+        self::EDIT_RIBBON_RIGHTS,
+        self::DELETE_RIBBONS,
+        self::CREATE_RIBBONS
     );
 }
 
