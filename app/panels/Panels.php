@@ -23,6 +23,10 @@ class Panels {
             )
         );
 
+        if(is_null($app->user)) {
+            return;
+        }
+
         $visibleRibbons = $app->ribbonComponent->getToppanelRibbonsVisibleToUser($app->user->getId());
 
         foreach($visibleRibbons as $ribbon) {
