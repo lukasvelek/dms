@@ -6,7 +6,7 @@ class Ribbon extends AEntity {
     private string $name;
     private ?int $idParentRibbon;
     private ?string $image;
-    private string $title;
+    private ?string $title;
     private bool $visible;
     private string $pageUrl;
     private string $code;
@@ -17,16 +17,13 @@ class Ribbon extends AEntity {
 
         $this->name = $name;
 
-        if($title == null) {
-            $this->title = $name;
-        }
-
         $this->idParentRibbon = $idParentRibbon;
         $this->image = $image;
         $this->visible = $visible;
         $this->pageUrl = $pageUrl;
         $this->code = $code;
         $this->isSystem = $isSystem;
+        $this->title = $title;
     }
 
     public function getName() {
@@ -41,8 +38,16 @@ class Ribbon extends AEntity {
         return $this->image;
     }
 
-    public function getTitle() {
-        return $this->title;
+    public function getTitle(bool $showReal = false) {
+        if(is_null($this->title)) {
+            if($showReal) {
+                return $this->title;
+            } else {
+                return $this->name;
+            }
+        } else {
+            return $this->title;
+        }
     }
 
     public function isVisible() {

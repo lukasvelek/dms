@@ -21,6 +21,64 @@ class RibbonSettings extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function processEditForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id', 'name', 'code', 'page_url', 'parent'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $data = [];
+        $data['name'] = htmlspecialchars($_POST['name']);
+        $data['code'] = htmlspecialchars($_POST['code']);
+        $data['page_url'] = htmlspecialchars($_POST['page_url']);
+
+        if($_POST['parent'] != '0') {
+            $data['id_parent_ribbon'] = htmlspecialchars($_POST['parent']);
+        }
+
+        if(isset($_POST['title']) && $_POST['title'] != '') {
+            $data['title'] = htmlspecialchars($_POST['title']);
+        }
+
+        if(isset($_POST['image'])) {
+            $data['image'] = htmlspecialchars($_POST['image']);
+        }
+
+        if(isset($_POST['is_visible'])) {
+            $data['is_visible'] = '1';
+        } else {
+            $data['is_visible'] = '0';
+        }
+
+        $app->ribbonModel->updateRibbon($id, $data);
+
+        $app->flashMessage('Successfully edited ribbon #' . $id);
+
+        $app->redirect('UserModule:RibbonSettings:showAll');
+    }
+
+    protected function showEditForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $ribbon = $app->ribbonModel->getRibbonById($id);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New ribbon form',
+            '$FORM$' => $this->internalCreateEditRibbonForm($ribbon)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function processNewForm() {
         global $app;
 
@@ -59,9 +117,9 @@ class RibbonSettings extends APresenter {
         $admGroup = $app->groupModel->getGroupByCode('ADMINISTRATORS');
         $app->ribbonRightsModel->insertAllGrantedRightsForGroup($idRibbon, $admGroup->getId());
 
+        // current user
         /*$admin = $app->userModel->getUserByUsername('admin');
         $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $admin->getId());*/
-
         $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $app->user->getId());
 
         $app->flashMessage('Created new ribbon');
@@ -173,16 +231,16 @@ class RibbonSettings extends APresenter {
 
                 if($app->ribbonAuthorizator->checkRibbonEditable($app->user->getId(), $ribbon) &&
                    $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS)) {
-                    $actionLinks['edit'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId(), 'id_ribbon' => $app->currentIdRibbon), 'Edit');
+                    $actionLinks['edit'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
                 }
 
                 if($app->ribbonAuthorizator->checkRibbonDeletable($app->user->getId(), $ribbon) &&
                    $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS)) {
-                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId(), 'id_ribbon' => $app->currentIdRibbon), 'Delete');
+                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
                 }
 
                 if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS)) {
-                    $actionLinks['edit_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditRightsForm', 'id' => $ribbon->getId(), 'id_ribbon' => $app->currentIdRibbon), 'Edit rights');
+                    $actionLinks['edit_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditRightsForm', 'id' => $ribbon->getId()), 'Edit rights');
                 }
 
                 if(is_null($headerRow)) {
@@ -273,6 +331,69 @@ class RibbonSettings extends APresenter {
 
             ->addElement($fb->createLabel()->setText('Is visible'))
             ->addElement($fb->createInput()->setType('checkbox')->setName('is_visible')->setSpecial('checked'))
+
+            ->addElement($fb->createSubmit('Create'))
+        ;
+
+        return $fb->build();
+    }
+
+    private function internalCreateEditRibbonForm(Ribbon $ribbon) {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $parentRibbons = null;
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $valFromCache = $cm->loadTopRibbons();
+
+        if(!is_null($valFromCache)) {
+            $parentRibbons = $valFromCache;
+        } else {
+            $parentRibbons = $app->ribbonModel->getToppanelRibbons();
+        }
+
+        $parentRibbonsArr = [['value' => '0', 'text' => '- (root)']];
+        foreach($parentRibbons as $parent) {
+            $parentRibbon = array(
+                'value' => $parent->getId(),
+                'text' => $parent->getName() . ' (' . $parent->getCode() . ')'
+            );
+
+            if($parent->getId() == $ribbon->getIdParentRibbon()) {
+                $parentRibbon['selected'] = 'selected';
+            }
+
+            $parentRibbonsArr[] = $parentRibbon;
+        }
+
+        $visible = $ribbon->isVisible() ? 'checked' : '';
+
+        $fb
+            ->setAction('?page=UserModule:RibbonSettings:processEditForm&id=' . $ribbon->getId())
+            ->setMethod('POST')
+
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require()->setValue($ribbon->getName()))
+
+            ->addElement($fb->createLabel()->setText('Title (display name, can be same as Name)'))
+            ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256')->setValue($ribbon->getTitle(true) ?? ''))
+
+            ->addElement($fb->createLabel()->setText('Code'))
+            ->addElement($fb->createInput()->setType('text')->setName('code')->setMaxLength('256')->require()->setValue($ribbon->getCode()))
+
+            ->addElement($fb->createLabel()->setText('Page URL'))
+            ->addElement($fb->createInput()->setType('text')->setName('page_url')->setMaxLength('256')->require()->setValue($ribbon->getPageUrl()))
+
+            ->addElement($fb->createLabel()->setText('Parent'))
+            ->addElement($fb->createSelect()->setName('parent')->addOptionsBasedOnArray($parentRibbonsArr))
+
+            ->addElement($fb->createLabel()->setText('Image'))
+            ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256')->setValue($ribbon->getImage() ?? ''))
+
+            ->addElement($fb->createLabel()->setText('Is visible'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('is_visible')->setSpecial($visible))
 
             ->addElement($fb->createSubmit('Create'))
         ;

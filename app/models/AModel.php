@@ -37,6 +37,28 @@ abstract class AModel {
         return $qb;
     }
 
+    protected function updateExisting(string $tableName, int $id, array $data) {
+        $qb = $this->qb(__METHOD__);
+
+        $values = [];
+        $params = [];
+
+        foreach($data as $k => $v) {
+            $values[$k] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $result = $qb->update($tableName)
+                     ->set($values)
+                     ->setParams($params)
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     protected function getLastInsertedRow(string $tableName, string $ordedCol = 'id', string $orded = 'DESC') {
         $qb = $this->qb(__METHOD__);
 

@@ -11,6 +11,10 @@ class RibbonModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateRibbon(int $idRibbon, array $data) {
+        return $this->updateExisting('ribbons', $idRibbon, $data);
+    }
+
     public function getLastInsertedRibbonId() {
         $row = $this->getLastInsertedRow('ribbons');
 
