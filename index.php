@@ -65,6 +65,10 @@ if(!is_null($app->user)) {
     }
 }
 
+if(isset($_GET['id_ribbon'])) {
+    $app->currentIdRibbon = htmlspecialchars($_GET['id_ribbon']);
+}
+
 $app->loadPages();
 $app->renderPage();
 

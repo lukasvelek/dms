@@ -278,8 +278,8 @@ class Documents extends APresenter {
             '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
         );
 
-        $this->subpanel = Panels::createDocumentsPanel();
-        $this->drawSubpanel = true;
+        //$this->subpanel = Panels::createDocumentsPanel();
+        //$this->drawSubpanel = true;
 
         $this->templateManager->fill($data, $template);
 
@@ -348,8 +348,8 @@ class Documents extends APresenter {
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
         }
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createDocumentsPanel();
+        //$this->drawSubpanel = true;
+        //$this->subpanel = Panels::createDocumentsPanel();
 
         $this->templateManager->fill($data, $template);
 

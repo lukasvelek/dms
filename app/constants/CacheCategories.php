@@ -11,6 +11,9 @@ class CacheCategories {
     public const SERVICE_CONFIG = 'service_config';
     public const USERS = 'users';
     public const PAGES = 'pages';
+    public const RIBBONS = 'ribbons';
+    public const RIBBON_USER_RIGHTS = 'ribbon_user_rights';
+    public const RIBBON_GROUP_RIGHTS = 'ribbon_group_rights';
 
     public static $all = array(
         self::BULK_ACTIONS,
@@ -20,7 +23,10 @@ class CacheCategories {
         self::METADATA,
         self::SERVICE_CONFIG,
         self::USERS,
-        self::PAGES
+        self::PAGES,
+        self::RIBBONS,
+        self::RIBBON_USER_RIGHTS,
+        self::RIBBON_GROUP_RIGHTS
     );
 }
 

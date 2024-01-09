@@ -103,8 +103,8 @@ class LinkBuilder {
      * @param string $class Link CSS class
      * @return string HTML code
      */
-    public static function createImgLink(string $url, string $name, string $imgPath, string $class = 'general-link') {
-        $obj = new self('?page=' . $url, $class, $name, '', $imgPath);
+    public static function createImgLink(string $url, string $name, string $imgPath, string $class = 'general-link', bool $pureUrl = false) {
+        $obj = new self(($pureUrl ? '' : '?page=') . $url, $class, $name, '', $imgPath);
         return $obj->render();
     }
 
@@ -130,8 +130,8 @@ class LinkBuilder {
      * @param string $class Link CSS class
      * @return string HTML code
      */
-    public static function createLink(string $url, string $name, string $class = 'general-link') {
-        $obj = new self('?page=' . $url, $class, $name);
+    public static function createLink(string $url, string $name, string $class = 'general-link', bool $pureUrl = false) {
+        $obj = new self(($pureUrl ? '' : '?page=') . $url, $class, $name);
         return $obj->render();
     }
 

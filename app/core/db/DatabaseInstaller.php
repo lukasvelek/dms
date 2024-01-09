@@ -50,6 +50,10 @@ class DatabaseInstaller {
         $this->insertDefaultGroupMetadataRights();
 
         $this->insertDefaultServiceConfig();
+
+        $this->insertDefaultRibbons();
+        $this->insertDefaultRibbonGroupRights();
+        $this->insertDefaultRibbonUserRights();
     }
 
     public function updateDefaultUserRights() {
@@ -277,6 +281,32 @@ class DatabaseInstaller {
                 'in_progress_count' => 'INT(32) NOT NULL',
                 'finished_count' => 'INT(32) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'ribbons' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_parent_ribbon' => 'INT(32) NULL',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'code' => 'VARCHAR(256) NOT NULL',
+                'title' => 'VARCHAR(256) NULL',
+                'image' => 'VARCHAR(256) NULL',
+                'is_visible' => 'INT(2) NOT NULL DEFAULT 1',
+                'page_url' => 'VARCHAR(256) NOT NULL'
+            ),
+            'ribbon_user_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_ribbon' => 'INT(32) NOT NULL',
+                'id_user' => 'INT(32) NOT NULL',
+                'can_see' => 'INT(2) NOT NULL DEFAULT 1',
+                'can_edit' => 'INT(2) NOT NULL DEFAULT 1',
+                'can_delete' => 'INT(2) NOT NULL DEFAULT 1'
+            ),
+            'ribbon_group_rights' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_ribbon' => 'INT(32) NOT NULL',
+                'id_group' => 'INT(32) NOT NULL',
+                'can_see' => 'INT(2) NOT NULL DEFAULT 1',
+                'can_edit' => 'INT(2) NOT NULL DEFAULT 1',
+                'can_delete' => 'INT(2) NOT NULL DEFAULT 1'
             )
         );
 
@@ -813,7 +843,6 @@ class DatabaseInstaller {
                     VALUES ('$name', '$text', '$tableName', '1', '$inputType', '$length')";
 
             $this->logger->sql($sql, __METHOD__);
-
             $this->db->query($sql);
 
             $sql = "SELECT `id` FROM `metadata` WHERE `name` = '$name' AND `table_name` = '$tableName'";
@@ -920,6 +949,8 @@ class DatabaseInstaller {
             $idMetadata[] = $row['id'];
         }
 
+        $this->db->beginTransaction();
+
         foreach($idUsers as $idUser) {
             foreach($idMetadata as $idMeta) {
                 $sql = "INSERT INTO `user_metadata_rights` (`id_metadata`, `id_user`, `view`, `edit`, `view_values`, `edit_values`)
@@ -930,6 +961,8 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        $this->db->commit();
     }
 
     public function insertDefaultGroupMetadataRights() {
@@ -955,6 +988,8 @@ class DatabaseInstaller {
             $idMetadata[] = $row['id'];
         }
 
+        $this->db->beginTransaction();
+
         foreach($idGroups as $idGroup) {
             foreach($idMetadata as $idMeta) {
                 $sql = "INSERT INTO `group_metadata_rights` (`id_metadata`, `id_group`, `view`, `edit`, `view_values`, `edit_values`)
@@ -965,6 +1000,8 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        $this->db->commit();
     }
 
     public function insertDefaultServiceConfig() {
@@ -982,6 +1019,8 @@ class DatabaseInstaller {
             )
         );
 
+        $this->db->beginTransaction();
+
         foreach($serviceCfg as $serviceName => $serviceData) {
             foreach($serviceData as $key => $value) {
                 $sql = "INSERT INTO `service_config` (`name`, `key`, `value`) VALUES ('$serviceName', '$key', '$value')";
@@ -991,6 +1030,341 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        $this->db->commit();
+    }
+
+    public function insertDefaultRibbons() {
+        $toppanelCodes = array(
+            'home',
+            'documents',
+            'processes',
+            'settings'
+        );
+
+        $toppanelRibbons = array(
+            array(
+                'name' => 'Home',
+                'code' => 'home',
+                'image' => 'img/home.svg',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:HomePage:showHomepage'
+            ),
+            array(
+                'name' => 'Documents',
+                'code' => 'documents',
+                'image' => 'img/documents.svg',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:Documents:showAll'
+            ),
+            array(
+                'name' => 'Processes',
+                'code' => 'processes',
+                'image' => 'img/processes.svg',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:Processes:showAll'
+            ),
+            array(
+                'name' => 'Settings',
+                'code' => 'settings',
+                'image' => 'img/settings.svg',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:Settings:showDashboard'
+            )
+        );
+
+        $this->db->beginTransaction();
+
+        foreach($toppanelRibbons as $ribbon) {
+            $keys = [];
+            $values = [];
+
+            foreach($ribbon as $k => $v) {
+                $keys[] = $k;
+                $values[] = $v;
+            }
+
+            $sql = "INSERT INTO `ribbons` (";
+
+            $i = 0;
+            foreach($keys as $k) {
+                if(($i + 1) == count($keys)) {
+                    $sql .= '`' . $k . '`';
+                } else {
+                    $sql .= '`' . $k . '`, ';
+                }
+
+                $i++;
+            }
+
+            $sql .= ") VALUES (";
+
+            $i = 0;
+            foreach($values as $v) {
+                if(($i + 1) == count($values)) {
+                    $sql .= "'" . $v . "'";
+                } else {
+                    $sql .= "'" . $v . "', ";
+                }
+
+                $i++;
+            }
+
+            $sql .= ")";
+
+            $this->logger->sql($sql, __METHOD__);
+            $this->db->query($sql);
+        }
+
+        $this->db->commit();
+
+        $subpanelRibbons = array(
+            'documents' => array(
+                array(
+                    'name' => 'All documents',
+                    'code' => 'documents.all_documents',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Documents:showAll'
+                ),
+                array(
+                    'name' => 'Waiting for archivation',
+                    'code' => 'documents.waiting_for_archivation',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Documents:showFiltered&filter=waitingForArchivation'
+                ),
+                array(
+                    'name' => 'New documents',
+                    'code' => 'documents.new_documents',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Documents:showFiltered&filter=new'
+                )
+            ),
+            'processes' => array(
+                array(
+                    'name' => 'Processes started by me',
+                    'code' => 'processes.started_by_me',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Processes:showAll&filter=startedByMe'
+                ),
+                array(
+                    'name' => 'Processes waiting for me',
+                    'code' => 'processes.waiting_for_me',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Processes:showAll&filter=waitingForMe'
+                ),
+                array(
+                    'name' => 'Finished processes',
+                    'code' => 'processes.finished',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Processes:showAll&filter=finished'
+                )
+            ),
+            'settings' => array(
+                array(
+                    'name' => 'Dashboard',
+                    'code' => 'settings.dashboard',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showDashboard',
+                    'image' => 'img/dashboard.svg'
+                ),
+                array(
+                    'name' => 'Document folders',
+                    'code' => 'settings.document_folders',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showFolders'
+                    ,
+                    'image' => 'img/folder.svg'
+                ),
+                array(
+                    'name' => 'Users',
+                    'code' => 'settings.users',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showUsers',
+                    'image' => 'img/users.svg'
+                ),
+                array(
+                    'name' => 'Groups',
+                    'code' => 'settings.groups',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showGroups'
+                    ,
+                    'image' => 'img/groups.svg'
+                ),
+                array(
+                    'name' => 'Metadata',
+                    'code' => 'settings.metadata',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showMetadata',
+                    'image' => 'img/metadata.svg'
+                ),
+                array(
+                    'name' => 'System',
+                    'code' => 'settings.system',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showSystem',
+                    'image' => 'img/system.svg'
+                ),
+                array(
+                    'name' => 'Services',
+                    'code' => 'settings.services',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showServices',
+                    'image' => 'img/services.svg'
+                ),
+                array(
+                    'name' => 'Dashboard widgets',
+                    'code' => 'settings.dashboard_widgets',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Settings:showDashboardWidgets',
+                    'image' => 'img/dashboard-widgets.svg'
+                )
+            )
+        );
+
+        foreach($toppanelCodes as $code) {
+            $sql = "SELECT `id` FROM `ribbons` WHERE `code` = '$code'";
+
+            $this->logger->sql($sql, __METHOD__);
+            $result = $this->db->query($sql);
+
+            $id = null;
+            foreach($result as $row) {
+                $id = $row['id'];
+            }
+
+            if($id == null) {
+                break;
+            }
+
+            if(array_key_exists($code, $subpanelRibbons)) {
+                $this->db->beginTransaction();
+
+                foreach($subpanelRibbons[$code] as $ribbon) {
+                    $keys = [];
+                    $values = [];
+
+                    $sql = "INSERT INTO `ribbons` (";
+    
+                    foreach($ribbon as $k => $v) {
+                        $keys[] = $k;
+                        $values[] = $v;
+                    }
+    
+                    $keys[] = 'id_parent_ribbon';
+                    $values[] = $id;
+        
+                    $i = 0;
+                    foreach($keys as $k) {
+                        if(($i + 1) == count($keys)) {
+                            $sql .= '`' . $k . '`';
+                        } else {
+                            $sql .= '`' . $k . '`, ';
+                        }
+        
+                        $i++;
+                    }
+        
+                    $sql .= ") VALUES (";
+        
+                    $i = 0;
+                    foreach($values as $v) {
+                        if(($i + 1) == count($values)) {
+                            $sql .= "'" . $v . "'";
+                        } else {
+                            $sql .= "'" . $v . "', ";
+                        }
+        
+                        $i++;
+                    }
+        
+                    $sql .= ")";
+    
+                    $this->logger->sql($sql, __METHOD__);
+                    $this->db->query($sql);
+                }
+    
+                $this->db->commit();
+            }
+        }
+    }
+
+    public function insertDefaultRibbonGroupRights() {
+        $sql = "SELECT `id` FROM `ribbons`";
+
+        $this->logger->sql($sql, __METHOD__);
+        $rows = $this->db->query($sql);
+
+        $idRibbons = [];
+        foreach($rows as $row) {
+            $idRibbons[] = $row['id'];
+        }
+
+        $sql = "SELECT `id` FROM `groups` WHERE `code` IN ('ADMINISTRATORS')";
+
+        $this->logger->sql($sql, __METHOD__);
+        $rows = $this->db->query($sql);
+
+        $idGroups = [];
+        foreach($rows as $row) {
+            $idGroups[] = $row['id'];
+        }
+
+        $this->db->beginTransaction();
+
+        foreach($idRibbons as $r) {
+            foreach($idGroups as $g) {
+                $sql = "INSERT INTO `ribbon_group_rights` (`id_ribbon`, `id_group`, `can_see`, `can_edit`, `can_delete`) VALUES ('$r', '$g', '1', '1', '1')";
+
+                $this->logger->sql($sql, __METHOD__);
+                $this->db->query($sql);
+            }
+        }
+
+        $this->db->commit();
+    }
+
+    public function insertDefaultRibbonUserRights() {
+        $sql = "SELECT `id` FROM `ribbons`";
+
+        $this->logger->sql($sql, __METHOD__);
+        $rows = $this->db->query($sql);
+
+        $idRibbons = [];
+        foreach($rows as $row) {
+            $idRibbons[] = $row['id'];
+        }
+
+        $sql = "SELECT `id` FROM `users`";
+
+        $this->logger->sql($sql, __METHOD__);
+        $rows = $this->db->query($sql);
+
+        $idUsers = [];
+        foreach($rows as $row) {
+            $idUsers[] = $row['id'];
+        }
+
+        $this->db->beginTransaction();
+
+        foreach($idRibbons as $r) {
+            foreach($idUsers as $u) {
+                $canSee = 1;
+                $canEdit = 1;
+                $canDelete = 1;
+
+                if($u != 2) { // not administrator
+                    $canEdit = 0;
+                    $canDelete = 0;
+                }
+
+                $sql = "INSERT INTO `ribbon_user_rights` (`id_ribbon`, `id_user`, `can_see`, `can_edit`, `can_delete`) VALUES ('$r', '$u', '$canSee', '$canEdit', '$canDelete')";
+
+                $this->logger->sql($sql, __METHOD__);
+                $this->db->query($sql);
+            }
+        }
+
+        $this->db->commit();
     }
 }
 
