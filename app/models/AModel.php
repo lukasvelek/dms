@@ -7,6 +7,10 @@ use DMS\Core\Logger\Logger;
 use QueryBuilder\QueryBuilder;
 
 abstract class AModel {
+    protected const VIEW = 'can_see';
+    protected const EDIT = 'can_edit';
+    protected const DELETE = 'can_delete';
+
     protected Database $db;
     private Logger $logger;
 
@@ -31,6 +35,19 @@ abstract class AModel {
         $qb = $this->db->createQueryBuilder();
         $qb->setMethod($methodName);
         return $qb;
+    }
+
+    protected function getLastInsertedRow(string $tableName, string $ordedCol = 'id', string $orded = 'DESC') {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from($tableName)
+                  ->orderBy($ordedCol, $orded)
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
     }
 
     /**

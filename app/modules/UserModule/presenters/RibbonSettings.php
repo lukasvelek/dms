@@ -3,10 +3,12 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\Groups;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Entities\Ribbon;
 use DMS\Modules\APresenter;
+use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -17,6 +19,67 @@ class RibbonSettings extends APresenter {
         parent::__construct('RibbonSettings', 'Ribbon settings');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function processNewForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('name', 'code', 'parent', 'page_url'), true, array('page' => 'UserModule:RibbonSettings:showNewForm'));
+
+        $data = [];
+        $data['name'] = htmlspecialchars($_POST['name']);
+        $data['code'] = htmlspecialchars($_POST['code']);
+        $data['page_url'] = htmlspecialchars($_POST['page_url']);
+
+        if($_POST['parent'] != '0') {
+            $data['id_parent_ribbon'] = htmlspecialchars($_POST['parent']);
+        }
+
+        if(isset($_POST['title'])) {
+            $data['title'] = htmlspecialchars($_POST['title']);
+        }
+
+        if(isset($_POST['image'])) {
+            $data['image'] = htmlspecialchars($_POST['image']);
+        }
+
+        if(isset($_POST['is_visible'])) {
+            $data['is_visible'] = '1';
+        } else {
+            $data['is_visible'] = '0';
+        }
+
+        $app->ribbonModel->insertNewRibbon($data);
+        $idRibbon = $app->ribbonModel->getLastInsertedRibbonId();
+
+        if($idRibbon === FALSE) {
+            die();
+        }
+
+        $admGroup = $app->groupModel->getGroupByCode('ADMINISTRATORS');
+        $app->ribbonRightsModel->insertAllGrantedRightsForGroup($idRibbon, $admGroup->getId());
+
+        /*$admin = $app->userModel->getUserByUsername('admin');
+        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $admin->getId());*/
+
+        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $app->user->getId());
+
+        $app->flashMessage('Created new ribbon');
+
+        $app->redirect('UserModule:RibbonSettings:showAll');
+    }
+
+    protected function showNewForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New ribbon form',
+            '$FORM$' => $this->internalCreateNewRibbonForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
     }
 
     protected function clearCache() {
@@ -160,6 +223,61 @@ class RibbonSettings extends APresenter {
         }
         
         return $tb->build();
+    }
+
+    private function internalCreateNewRibbonForm() {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $parentRibbons = null;
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $valFromCache = $cm->loadTopRibbons();
+
+        if(!is_null($valFromCache)) {
+            $parentRibbons = $valFromCache;
+        } else {
+            $parentRibbons = $app->ribbonModel->getToppanelRibbons();
+        }
+
+        $parentRibbonsArr = [['value' => '0', 'text' => '- (root)']];
+        foreach($parentRibbons as $ribbon) {
+            $parentRibbonsArr[] = array(
+                'value' => $ribbon->getId(),
+                'text' => $ribbon->getName() . ' (' . $ribbon->getCode() . ')'
+            );
+        }
+
+        $fb
+            ->setAction('?page=UserModule:RibbonSettings:processNewForm')
+            ->setMethod('POST')
+
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
+
+            ->addElement($fb->createLabel()->setText('Title (display name, can be same as Name)'))
+            ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256'))
+
+            ->addElement($fb->createLabel()->setText('Code'))
+            ->addElement($fb->createInput()->setType('text')->setName('code')->setMaxLength('256')->require())
+
+            ->addElement($fb->createLabel()->setText('Page URL'))
+            ->addElement($fb->createInput()->setType('text')->setName('page_url')->setMaxLength('256')->require())
+
+            ->addElement($fb->createLabel()->setText('Parent'))
+            ->addElement($fb->createSelect()->setName('parent')->addOptionsBasedOnArray($parentRibbonsArr))
+
+            ->addElement($fb->createLabel()->setText('Image'))
+            ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256'))
+
+            ->addElement($fb->createLabel()->setText('Is visible'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('is_visible')->setSpecial('checked'))
+
+            ->addElement($fb->createSubmit('Create'))
+        ;
+
+        return $fb->build();
     }
 }
 

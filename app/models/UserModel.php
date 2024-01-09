@@ -11,6 +11,20 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getUserByUsername(string $username) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('users')
+                  ->where('username=:username')
+                  ->setParam(':username', $username)
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->getUserObjectFromDbRow($row);
+    }
+
     public function getUserCount() {
         return $this->getRowCount('users');
     }
