@@ -340,24 +340,11 @@ class Application {
             $this->pageContent .= $toppanel;
         }
 
-        /*if($module->currentPresenter->drawSubpanel) {
-            $this->pageContent .= $module->currentPresenter->subpanel;
-        }*/
-
         if(!is_null($subpanel)) {
             $this->pageContent .= $subpanel;
         }
 
         $this->renderFlashMessage();
-
-        /*if($this->flashMessage != null) {
-            $this->pageContent .= $this->flashMessage;
-        } else if(isset($_SESSION['flash_message'])) {
-            $this->flashMessage = $_SESSION['flash_message'];
-            $this->pageContent .= $this->flashMessage;
-            
-            $this->clearFlashMessage();
-        }*/
 
         $this->pageContent .= $pageBody;
 
@@ -454,8 +441,6 @@ class Application {
      * @param string $type Message type (options defined in DMS\Constants\FlashMessageTypes)
      */
     public function flashMessage(string $message, string $type = FlashMessageTypes::INFO) {
-        //unset($_SESSION['flash_message']);
-
         $cm = CacheManager::getTemporaryObject(CacheCategories::FLASH_MESSAGES);
 
         $code = '<div id="flash-message" class="' . $type . '">';
@@ -471,8 +456,6 @@ class Application {
 
         $this->flashMessage = $code;
 
-        //$_SESSION['flash_message'] = $code;
-
         $cm->saveFlashMessage($code);
     }
 
@@ -487,10 +470,6 @@ class Application {
         $cm = CacheManager::getTemporaryObject(CacheCategories::FLASH_MESSAGES);
 
         $cm->invalidateCache();
-
-        /*if($clearFromSession) {
-            unset($_SESSION['flash_message']);
-        }*/
     }
 
     /**
