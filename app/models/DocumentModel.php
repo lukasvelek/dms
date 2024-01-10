@@ -125,11 +125,13 @@ class DocumentModel extends AModel {
             $qb ->update('documents')
                 ->set(array(
                     'is_deleted' => ':is_deleted',
-                    'status' => ':status'
+                    'status' => ':status',
+                    'date_updated' => ':date'
                 ))
                 ->setParams(array(
                     ':status' => DocumentStatus::DELETED,
-                    ':is_deleted' => '1'
+                    ':is_deleted' => '1',
+                    ':date' => date(Database::DB_DATE_FORMAT)
                 ));
         } else {
             $qb ->delete()
@@ -349,6 +351,7 @@ class DocumentModel extends AModel {
 
         $result = $qb->update('documents')
                      ->setNull(array('id_folder'))
+                     ->explicit(', `date_updated`=\'' . date(Database::DB_DATE_FORMAT) . '\'')
                      ->where('id=:id')
                      ->setParam(':id', $id)
                      ->execute()
@@ -362,6 +365,7 @@ class DocumentModel extends AModel {
 
         $result = $qb->update('documents')
                      ->setNull(array('id_officer'))
+                     ->explicit(', `date_updated`=\'' . date(Database::DB_DATE_FORMAT) . '\'')
                      ->where('id=:id')
                      ->setParam(':id', $id)
                      ->execute()
@@ -379,6 +383,11 @@ class DocumentModel extends AModel {
         foreach($values as $k => $v) {
             $keys[$k] = ':' . $k;
             $params[':' . $k] = $v;
+        }
+
+        if(!array_key_exists('date_updated', $keys)) {
+            $keys['date_updated'] = ':date_updated';
+            $params[':date_updated'] = date(Database::DB_DATE_FORMAT);
         }
 
         $result = $qb->update('documents')
@@ -429,9 +438,11 @@ class DocumentModel extends AModel {
 
         $result = $qb->update('documents')
                      ->set(array(
-                        'status' => ':status'
+                        'status' => ':status',
+                        'date_updated' => ':date'
                      ))
                      ->setParam(':status', $status)
+                     ->setParam(':date', date(Database::DB_DATE_FORMAT))
                      ->where('id=:id')
                      ->setParam(':id', $id)
                      ->execute()
@@ -459,10 +470,11 @@ class DocumentModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $result = $qb->update('documents')
-                     ->set(array('id_officer' => ':id_officer'))
+                     ->set(array('id_officer' => ':id_officer', 'date_updated' => ':date'))
                      ->where('id=:id')
                      ->setParam(':id_officer', $idOfficer)
                      ->setParam(':id', $id)
+                     ->setParam(':date', date(Database::DB_DATE_FORMAT))
                      ->execute()
                      ->fetch();
 
@@ -559,6 +571,7 @@ class DocumentModel extends AModel {
         $shredYear = $row['shred_year'];
         $afterShredAction = $row['after_shred_action'];
         $shreddingStatus = $row['shredding_status'];
+        $dateUpdated = $row['date_updated'];
 
         if(isset($row['id_folder'])) {
             $idFolder = $row['id_folder'];
@@ -568,9 +581,9 @@ class DocumentModel extends AModel {
             $file = $row['file'];
         }
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status'));
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'date_updated'));
 
-        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus);
+        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus, $dateUpdated);
         $document->setMetadata($row);
 
         return $document;

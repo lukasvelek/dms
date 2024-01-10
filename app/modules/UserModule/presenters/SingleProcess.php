@@ -10,11 +10,8 @@ use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
-use DMS\Core\TemplateManager;
 use DMS\Entities\Process;
-use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
-use DMS\Modules\IModule;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 

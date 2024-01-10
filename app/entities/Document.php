@@ -19,8 +19,8 @@ class Document extends AEntity {
 
     private array $metadata;
     
-    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted, string $rank, ?int $idFolder, ?string $file, string $shredYear, string $afterShredAction, int $shreddingStatus) {
-        parent::__construct($id, $dateCreated);
+    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted, string $rank, ?int $idFolder, ?string $file, string $shredYear, string $afterShredAction, int $shreddingStatus, string $dateUpdated) {
+        parent::__construct($id, $dateCreated, $dateUpdated);
 
         $this->idAuthor = $idAuthor;
         $this->idOfficer = $idOfficer;

@@ -12,7 +12,7 @@ class Metadata extends AEntity {
     private ?string $selectExternalEnumName;
 
     public function __construct(int $id, string $name, string $text, string $tableName, bool $isSystem, string $inputType, string $inputLength, ?string $selectExternalEnumName) {
-        parent::__construct($id, null);
+        parent::__construct($id, null, null);
 
         $this->name = $name;
         $this->text = $text;

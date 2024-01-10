@@ -9,7 +9,7 @@ class Folder extends AEntity {
     private int $nestLevel;
 
     public function __construct(int $id, string $dateCreated, ?int $idParentFolder, string $name, ?string $description, int $nestLevel) {
-        parent::__construct($id, $dateCreated);
+        parent::__construct($id, $dateCreated, null);
         
         $this->name = $name;
         $this->idParentFolder = $idParentFolder;
