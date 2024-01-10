@@ -63,7 +63,7 @@ class RibbonAuthorizator extends AAuthorizator {
         if($ribbon->isSystem() || !$right) {
             return false;
         } else {
-            return false;
+            return true;
         }
     }
 

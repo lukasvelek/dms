@@ -10,6 +10,32 @@ class RibbonRightsModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteAllGroupRibbonRights(int $idRibbon) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('ribbon_group_rights')
+                     ->where('id_ribbon=:id_ribbon')
+                     ->setParam(':id_ribbon', $idRibbon)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function deleteAllUserRibbonRights(int $idRibbon) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('ribbon_user_rights')
+                     ->where('id_ribbon=:id_ribbon')
+                     ->setParam(':id_ribbon', $idRibbon)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getRibbonRightsForIdGroup(int $idRibbon, int $idGroup) {
         $qb = $this->qb(__METHOD__);
 

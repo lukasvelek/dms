@@ -21,6 +21,21 @@ class RibbonSettings extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function deleteRibbon() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $app->ribbonRightsModel->deleteAllGroupRibbonRights($id);
+        $app->ribbonRightsModel->deleteAllUserRibbonRights($id);
+        $app->ribbonModel->deleteRibbon($id);
+
+        $app->flashMessage('Ribbon #' . $id . ' successfully deleted', 'success');
+        $app->redirect('UserModule:RibbonSettings:showAll');;
+    }
+
     protected function revokeRibbonRightToGroup() {
         global $app;
 
@@ -34,7 +49,7 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
 
-        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon);
+        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon, 'success');
         $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
     }
 
@@ -51,7 +66,7 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
 
-        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon);
+        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon, 'success');
         $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
     }
 
@@ -71,7 +86,7 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
 
-        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon);
+        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon, 'success');
         $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
     }
 
@@ -91,7 +106,7 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
 
-        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon);
+        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon, 'success');
         $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
     }
 
@@ -108,7 +123,7 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
 
-        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon);
+        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon, 'success');
         $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
     }
 
@@ -125,7 +140,7 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
 
-        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon);
+        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon, 'success');
         $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
     }
 
@@ -145,7 +160,7 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
 
-        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon);
+        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon, 'success');
         $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
     }
 
@@ -165,7 +180,7 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
 
-        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon);
+        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon, 'success');
         $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
     }
 
@@ -348,7 +363,7 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $admin->getId());*/
         $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $app->user->getId());
 
-        $app->flashMessage('Created new ribbon');
+        $app->flashMessage('Created new ribbon', 'success');
 
         $app->redirect('UserModule:RibbonSettings:showAll');
     }
