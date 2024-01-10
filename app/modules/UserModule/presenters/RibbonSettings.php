@@ -3,12 +3,11 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
-use DMS\Constants\Groups;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Entities\Ribbon;
+use DMS\Models\AModel;
 use DMS\Modules\APresenter;
-use DMS\UI\FlashMessageBuilder;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
@@ -20,6 +19,228 @@ class RibbonSettings extends APresenter {
         parent::__construct('RibbonSettings', 'Ribbon settings');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function revokeRibbonRightToGroup() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group', 'name'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        $idGroup = htmlspecialchars($_GET['id_group']);
+        $name = htmlspecialchars($_GET['name']);
+
+        $rights = array($name => '0');
+
+        $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
+
+        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon);
+        $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
+    }
+
+    protected function grantRibbonRightToGroup() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group', 'name'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        $idGroup = htmlspecialchars($_GET['id_group']);
+        $name = htmlspecialchars($_GET['name']);
+
+        $rights = array($name => '1');
+
+        $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
+
+        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon);
+        $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
+    }
+
+    protected function grantAllRibbonRightsToGroup() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        $idGroup = htmlspecialchars($_GET['id_group']);
+
+        $rights = array(
+            AModel::VIEW => '1',
+            AModel::EDIT => '1',
+            AModel::DELETE => '1'
+        );
+
+        $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
+
+        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon);
+        $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
+    }
+
+    protected function revokeAllRibbonRightsToGroup() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        $idGroup = htmlspecialchars($_GET['id_group']);
+
+        $rights = array(
+            AModel::VIEW => '0',
+            AModel::EDIT => '0',
+            AModel::DELETE => '0'
+        );
+
+        $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
+
+        $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon);
+        $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
+    }
+
+    protected function revokeRibbonRightToUser() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user', 'name'));
+
+        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        $idUser = htmlspecialchars($_GET['id_user']);
+        $name = htmlspecialchars($_GET['name']);
+
+        $rights = array($name => '0');
+
+        $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
+
+        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon);
+        $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
+    }
+
+    protected function grantRibbonRightToUser() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user', 'name'));
+
+        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        $idUser = htmlspecialchars($_GET['id_user']);
+        $name = htmlspecialchars($_GET['name']);
+
+        $rights = array($name => '1');
+
+        $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
+
+        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon);
+        $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
+    }
+
+    protected function grantAllRibbonRightsToUser() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        $idUser = htmlspecialchars($_GET['id_user']);
+
+        $rights = array(
+            AModel::VIEW => '1',
+            AModel::EDIT => '1',
+            AModel::DELETE => '1'
+        );
+
+        $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
+
+        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon);
+        $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
+    }
+
+    protected function revokeAllRibbonRightsToUser() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        $idUser = htmlspecialchars($_GET['id_user']);
+
+        $rights = array(
+            AModel::VIEW => '0',
+            AModel::EDIT => '0',
+            AModel::DELETE => '0'
+        );
+
+        $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
+
+        $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon);
+        $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
+    }
+
+    protected function showEditGroupRightsForm() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
+
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $id = htmlspecialchars($_GET['id']);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $valFromCache = $cm->loadRibbonById($id);
+        $ribbon = null;
+
+        if(!is_null($valFromCache)) {
+            $ribbon = $valFromCache;
+        } else {
+            $ribbon = $app->ribbonModel->getRibbonById($id);
+
+            $cm->saveRibbon($ribbon);
+        }
+
+        $rightsGrid = '';
+
+        $app->logger->logFunction(function() use (&$rightsGrid, $ribbon) {
+            $rightsGrid = $this->internalCreateGroupRightsGrid($ribbon);
+        }, __METHOD__);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Ribbon <i>' . $ribbon->getName() . ' (' . $ribbon->getCode() . ')</i> group rights',
+            '$LINKS$' => [],
+            '$SETTINGS_GRID$' => $rightsGrid
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showEditUserRightsForm() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
+
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $id = htmlspecialchars($_GET['id']);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $valFromCache = $cm->loadRibbonById($id);
+        $ribbon = null;
+
+        if(!is_null($valFromCache)) {
+            $ribbon = $valFromCache;
+        } else {
+            $ribbon = $app->ribbonModel->getRibbonById($id);
+
+            $cm->saveRibbon($ribbon);
+        }
+
+        $rightsGrid = '';
+
+        $app->logger->logFunction(function() use (&$rightsGrid, $ribbon) {
+            $rightsGrid = $this->internalCreateUserRightsGrid($ribbon);
+        }, __METHOD__);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Ribbon <i>' . $ribbon->getName() . ' (' . $ribbon->getCode() . ')</i> user rights',
+            '$LINKS$' => [],
+            '$SETTINGS_GRID$' => $rightsGrid
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
     }
 
     protected function processEditForm() {
@@ -55,11 +276,6 @@ class RibbonSettings extends APresenter {
         $app->ribbonModel->updateRibbon($id, $data);
 
         $app->flashMessage('Successfully edited ribbon #' . $id);
-        //$fmb = new FlashMessageBuilder();
-
-        //$this->setFlashMessage($fmb->setText('Successfully edited ribbon #' . $id)->setType('info')->build());
-
-        //die();
 
         $app->redirect('UserModule:RibbonSettings:showAll');
     }
@@ -231,7 +447,8 @@ class RibbonSettings extends APresenter {
 
                 $actionLinks = array(
                     'edit' => '-',
-                    'edit_rights' => '-',
+                    'edit_user_rights' => '-',
+                    'edit_group_rights' => '-',
                     'delete' => '-'
                 );
 
@@ -246,7 +463,8 @@ class RibbonSettings extends APresenter {
                 }
 
                 if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS)) {
-                    $actionLinks['edit_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditRightsForm', 'id' => $ribbon->getId()), 'Edit rights');
+                    $actionLinks['edit_user_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
+                    $actionLinks['edit_group_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
                 }
 
                 if(is_null($headerRow)) {
@@ -405,6 +623,196 @@ class RibbonSettings extends APresenter {
         ;
 
         return $fb->build();
+    }
+
+    private function internalCreateUserRightsGrid(Ribbon $ribbon) {
+        global $app;
+
+        $tb = TableBuilder::getTemporaryObject();
+
+        $headers = array(
+            'Actions',
+            'User',
+            'View',
+            'Edit',
+            'Delete'
+        );
+        
+        $headerRow = null;
+        
+        $users = $app->userModel->getAllUsers();
+
+        if(empty($users)) {
+            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+        } else {
+            foreach($users as $user) {
+                $userRights = $app->ribbonRightsModel->getRibbonRightsForIdUser($ribbon->getId(), $user->getId());
+
+                $actionLinks = array(
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:grantAllRibbonRightsToUser', 'id_ribbon' => $ribbon->getId(), 'id_user' => $user->getId()), 'Grant all'),
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:revokeAllRibbonRightsToUser', 'id_ribbon' => $ribbon->getId(), 'id_user' => $user->getId()), 'Revoke all')
+                );
+
+                if(is_null($headerRow)) {
+                    $row = $tb->createRow();
+    
+                    foreach($headers as $header) {
+                        $col = $tb->createCol()->setText($header)->setBold();
+    
+                        if($header == 'Actions') {
+                            $col->setColspan(count($actionLinks));
+                        }
+    
+                        $row->addCol($col);
+                    }
+    
+                    $headerRow = $row;
+                    $tb->addRow($row);
+                }
+
+                $rightRow = $tb->createRow();
+
+                foreach($actionLinks as $actionLink) {
+                    $rightRow->addCol($tb->createCol()->setText($actionLink));
+                }
+
+                $grant = function(string $name) use ($user, $ribbon) {
+                    return '<a class="general-link" style="color: red" href="?page=UserModule:RibbonSettings:grantRibbonRightToUser&id_ribbon=' . $ribbon->getId() . '&id_user=' . $user->getId() . '&name=' . $name . '">No</a>';
+                };
+
+                $revoke = function(string $name) use ($user, $ribbon) {
+                    return '<a class="general-link" style="color: green" href="?page=UserModule:RibbonSettings:revokeRibbonRightToUser&id_ribbon=' . $ribbon->getId() . '&id_user=' . $user->getId() . '&name=' . $name . '">Yes</a>';
+                };
+
+                $canSee = $grant('can_see');
+                $canEdit = $grant('can_edit');
+                $canDelete = $grant('can_delete');
+
+                if($userRights !== FALSE && $userRights !== NULL) {
+                    if($userRights['can_see'] == '1') {
+                        $canSee = $revoke('can_see');
+                    }
+
+                    if($userRights['can_edit'] == '1') {
+                        $canEdit = $revoke('can_edit');
+                    }
+
+                    if($userRights['can_delete'] == '1') {
+                        $canDelete = $revoke('can_delete');
+                    }
+                }
+
+                $data = array(
+                    $user->getFullname(),
+                    $canSee,
+                    $canEdit, 
+                    $canDelete
+                );
+
+                foreach($data as $d) {
+                    $rightRow->addCol($tb->createCol()->setText($d));
+                }
+
+                $tb->addRow($rightRow);
+            }
+        }
+
+        return $tb->build();
+    }
+
+    private function internalCreateGroupRightsGrid(Ribbon $ribbon) {
+        global $app;
+
+        $tb = TableBuilder::getTemporaryObject();
+
+        $headers = array(
+            'Actions',
+            'Group',
+            'View',
+            'Edit',
+            'Delete'
+        );
+
+        $headerRow = null;
+
+        $groups = $app->groupModel->getAllGroups();
+
+        if(empty($groups)) {
+            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+        } else {
+            foreach($groups as $group) {
+                $groupRights = $app->ribbonRightsModel->getRibbonRightsForIdGroup($ribbon->getId(), $group->getId());
+
+                $actionLinks = array(
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:grantAllRibbonRightsToGroup', 'id_ribbon' => $ribbon->getId(), 'id_group' => $group->getId()), 'Grant all'),
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:revokeAllRibbonRightsToGroup', 'id_ribbon' => $ribbon->getId(), 'id_group' => $group->getId()), 'Revoke all')
+                );
+
+                if(is_null($headerRow)) {
+                    $row = $tb->createRow();
+    
+                    foreach($headers as $header) {
+                        $col = $tb->createCol()->setText($header)->setBold();
+    
+                        if($header == 'Actions') {
+                            $col->setColspan(count($actionLinks));
+                        }
+    
+                        $row->addCol($col);
+                    }
+    
+                    $headerRow = $row;
+                    $tb->addRow($row);
+                }
+
+                $rightRow = $tb->createRow();
+
+                foreach($actionLinks as $actionLink) {
+                    $rightRow->addCol($tb->createCol()->setText($actionLink));
+                }
+
+                $grant = function(string $name) use ($group, $ribbon) {
+                    return '<a class="general-link" style="color: red" href="?page=UserModule:RibbonSettings:grantRibbonRightToGroup&id_ribbon=' . $ribbon->getId() . '&id_group=' . $group->getId() . '&name=' . $name . '">No</a>';
+                };
+
+                $revoke = function(string $name) use ($group, $ribbon) {
+                    return '<a class="general-link" style="color: green" href="?page=UserModule:RibbonSettings:revokeRibbonRightToGroup&id_ribbon=' . $ribbon->getId() . '&id_group=' . $group->getId() . '&name=' . $name . '">Yes</a>';
+                };
+
+                $canSee = $grant('can_see');
+                $canEdit = $grant('can_edit');
+                $canDelete = $grant('can_delete');
+
+                if($groupRights !== FALSE && $groupRights !== NULL) {
+                    if($groupRights['can_see'] == '1') {
+                        $canSee = $revoke('can_see');
+                    }
+
+                    if($groupRights['can_edit'] == '1') {
+                        $canEdit = $revoke('can_edit');
+                    }
+
+                    if($groupRights['can_delete'] == '1') {
+                        $canDelete = $revoke('can_delete');
+                    }
+                }
+
+                $data = array(
+                    $group->getName(),
+                    $canSee,
+                    $canEdit, 
+                    $canDelete
+                );
+
+                foreach($data as $d) {
+                    $rightRow->addCol($tb->createCol()->setText($d));
+                }
+
+                $tb->addRow($rightRow);
+            }
+        }
+
+        return $tb->build();
     }
 }
 

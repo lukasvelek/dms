@@ -296,17 +296,17 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_ribbon' => 'INT(32) NOT NULL',
                 'id_user' => 'INT(32) NOT NULL',
-                'can_see' => 'INT(2) NOT NULL DEFAULT 1',
-                'can_edit' => 'INT(2) NOT NULL DEFAULT 1',
-                'can_delete' => 'INT(2) NOT NULL DEFAULT 1'
+                'can_see' => 'INT(2) NOT NULL DEFAULT 0',
+                'can_edit' => 'INT(2) NOT NULL DEFAULT 0',
+                'can_delete' => 'INT(2) NOT NULL DEFAULT 0'
             ),
             'ribbon_group_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_ribbon' => 'INT(32) NOT NULL',
                 'id_group' => 'INT(32) NOT NULL',
-                'can_see' => 'INT(2) NOT NULL DEFAULT 1',
-                'can_edit' => 'INT(2) NOT NULL DEFAULT 1',
-                'can_delete' => 'INT(2) NOT NULL DEFAULT 1'
+                'can_see' => 'INT(2) NOT NULL DEFAULT 0',
+                'can_edit' => 'INT(2) NOT NULL DEFAULT 0',
+                'can_delete' => 'INT(2) NOT NULL DEFAULT 0'
             )
         );
 

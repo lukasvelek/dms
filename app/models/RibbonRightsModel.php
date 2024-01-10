@@ -10,6 +10,136 @@ class RibbonRightsModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getRibbonRightsForIdGroup(int $idRibbon, int $idGroup) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('ribbon_user_rights')
+                  ->where('id_ribbon=:id_ribbon')
+                  ->andWhere('id_group=:id_group')
+                  ->setParams(array(
+                    ':id_ribbon' => $idRibbon,
+                    ':id_group' => $idGroup
+                  ))
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
+    public function getRibbonRightsForIdUser(int $idRibbon, int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('ribbon_user_rights')
+                  ->where('id_ribbon=:id_ribbon')
+                  ->andWhere('id_user=:id_user')
+                  ->setParams(array(
+                    ':id_ribbon' => $idRibbon,
+                    ':id_user' => $idUser
+                  ))
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
+    public function updateGroupRights(int $idRibbon, int $idGroup, array $rights) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('ribbon_group_rights')
+                  ->where('id_ribbon=:id_ribbon')
+                  ->andWhere('id_group=:id_group')
+                  ->setParams(array(
+                    ':id_ribbon' => $idRibbon,
+                    ':id_group' => $idGroup
+                  ))
+                  ->execute()
+                  ->fetchSingle();
+
+        if($row === FALSE || $row === NULL) {
+            // insert new
+
+            return $this->insertNewGroupRibbonRight($idRibbon, $idGroup, $rights);
+        }
+
+        // update
+
+        $qb = $this->updateExistingQb('ribbon_group_rights', $rights);
+        $qb ->where('id_ribbon=:id_ribbon')
+            ->andWhere('id_group=:id_group')
+            ->setParams(array(
+                ':id_ribbon' => $idRibbon,
+                ':id_group' => $idGroup
+            ));
+
+        $result = $qb->execute()->fetch();
+
+        return $result;
+    }
+
+    public function updateUserRights(int $idRibbon, int $idUser, array $rights) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('ribbon_user_rights')
+                  ->where('id_ribbon=:id_ribbon')
+                  ->andWhere('id_user=:id_user')
+                  ->setParams(array(
+                    ':id_ribbon' => $idRibbon,
+                    ':id_user' => $idUser
+                  ))
+                  ->execute()
+                  ->fetchSingle();
+
+        if($row === FALSE || $row === NULL) {
+            // insert new
+
+            return $this->insertNewUserRibbonRight($idRibbon, $idUser, $rights);
+        }
+
+        // update
+
+        $qb = $this->updateExistingQb('ribbon_user_rights', $rights);
+        $qb ->where('id_ribbon=:id_ribbon')
+            ->andWhere('id_user=:id_user')
+            ->setParams(array(
+                ':id_ribbon' => $idRibbon,
+                ':id_user' => $idUser
+            ));
+
+        $result = $qb->execute()->fetch();
+
+        return $result;
+    }
+
+    public function getGroupRibbonRightsForIdRibbon(int $idRibbon) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('ribbon_group_rights')
+                   ->where('id_ribbon=:id_ribbon')
+                   ->setParam(':id_ribbon', $idRibbon)
+                   ->execute()
+                   ->fetch();
+
+        return $rows;
+    }
+
+    public function getUserRibbonRightsForIdRibbon(int $idRibbon) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('ribbon_user_rights')
+                   ->where('id_ribbon=:id_ribbon')
+                   ->setParam(':id_ribbon', $idRibbon)
+                   ->execute()
+                   ->fetch();
+
+        return $rows;
+    }
+
     public function insertAllGrantedRightsForUser(int $idRibbon, int $idUser) {
         return $this->insertNewUserRibbonRight($idRibbon, $idUser, array(self::VIEW => '1', self::EDIT => '1', self::DELETE => '1'));
     }
