@@ -267,8 +267,6 @@ class Application {
             $i++;
         }
 
-        //echo $page;
-
         header('Location: ' . $page);
     }
 
@@ -349,6 +347,10 @@ class Application {
         $this->pageContent .= $pageBody;
 
         // --- END OF PAGE CONTENT CREATION ---
+
+        if(str_contains($action, 'show')) {
+            $this->clearFlashMessage();
+        }
     }
 
     public function renderFlashMessage() {
@@ -361,12 +363,36 @@ class Application {
 
         $valFromCache = $cm->loadFlashMessage();
 
+        $createCode = function($message, $type, $index) {
+            $code = '<div id="flash-message-' . $index . '" class="' . $type . '">';
+            $code .= '<div class="row">';
+            $code .= '<div class="col-md">';
+            $code .= $message;
+            $code .= '</div>';
+            $code .= '<div class="col-md" id="right">';
+            $code .= '<a style="cursor: pointer" onclick="hideFlashMessage(\'' . $index . '\')">x</a>';
+            $code .= '</div>';
+            $code .= '</div>';
+            $code .= '</div>';
+
+            return $code;
+        };
+
         if(!is_null($valFromCache)) {
-            $this->flashMessage = $valFromCache;
+            $this->flashMessage = '';
+
+            $i = 0;
+            foreach($valFromCache as $msg) {
+                $message = $msg['message'];
+                $type = $msg['type'];
+
+                $this->flashMessage .= $createCode($message, $type, $i);
+
+                $i++;
+            }
+
             $this->pageContent .= $this->flashMessage;
         }
-
-        $this->clearFlashMessage();
 
         return;
     }
@@ -442,21 +468,7 @@ class Application {
      */
     public function flashMessage(string $message, string $type = FlashMessageTypes::INFO) {
         $cm = CacheManager::getTemporaryObject(CacheCategories::FLASH_MESSAGES);
-
-        $code = '<div id="flash-message" class="' . $type . '">';
-        $code .= '<div class="row">';
-        $code .= '<div class="col-md">';
-        $code .= $message;
-        $code .= '</div>';
-        $code .= '<div class="col-md" id="right">';
-        $code .= '<a style="cursor: pointer" onclick="hideFlashMessage()">x</a>';
-        $code .= '</div>';
-        $code .= '</div>';
-        $code .= '</div>';
-
-        $this->flashMessage = $code;
-
-        $cm->saveFlashMessage($code);
+        $cm->saveFlashMessage(array('message' => $message, 'type' => $type));
     }
 
     /**
@@ -468,7 +480,6 @@ class Application {
         $this->flashMessage = null;
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::FLASH_MESSAGES);
-
         $cm->invalidateCache();
     }
 

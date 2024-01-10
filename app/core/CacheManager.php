@@ -30,8 +30,14 @@ class CacheManager {
         $this->category = $category;
     }
 
-    public function saveFlashMessage(string $text) {
-        $cacheData = array($text);
+    public function saveFlashMessage(array $data) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            $cacheData = [];
+        }
+
+        $cacheData[] = $data;
 
         $this->saveToCache($cacheData);
     }
@@ -42,7 +48,7 @@ class CacheManager {
         if($cacheData === FALSE) {
             return null;
         } else {
-            return (string)$cacheData[0];
+            return $cacheData;
         }
 
         return null;

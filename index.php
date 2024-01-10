@@ -7,9 +7,6 @@ use DMS\Core\CacheManager;
 
 session_start();
 
-//var_dump($_SESSION);
-//var_dump($_SERVER);
-
 include('app/dms_loader.php');
 
 if(isset($_GET['page'])) {
@@ -95,8 +92,6 @@ $title = 'DMS | ' . $app->currentPresenter->getTitle();
         <?php
 
         $app->showPage();
-
-        if(isset($_SESSION['flash_message'])) unset($_SESSION['flash_message']);
 
         ?>
     </body>

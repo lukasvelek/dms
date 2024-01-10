@@ -25,15 +25,15 @@ class RibbonSettings extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
-
+        
         $id = htmlspecialchars($_GET['id']);
-
+        
         $app->ribbonRightsModel->deleteAllGroupRibbonRights($id);
         $app->ribbonRightsModel->deleteAllUserRibbonRights($id);
         $app->ribbonModel->deleteRibbon($id);
-
+        
         $app->flashMessage('Ribbon #' . $id . ' successfully deleted', 'success');
-        $app->redirect('UserModule:RibbonSettings:showAll');;
+        $app->redirect('UserModule:RibbonSettings:showAll');
     }
 
     protected function revokeRibbonRightToGroup() {

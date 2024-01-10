@@ -361,9 +361,9 @@ async function reloadProcessComments(id_process, can_delete) {
     await loadProcessComments(id_process, can_delete, false);
 }
 
-function hideFlashMessage() {
-    sessionStorage.removeItem('flash_message');
-    $('#flash-message').hide();
+function hideFlashMessage(index) {
+    //sessionStorage.removeItem('flash_message');
+    $('#flash-message-' + index).hide();
 }
 
 async function loadMailQueue() {
