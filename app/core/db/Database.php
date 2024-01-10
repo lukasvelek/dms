@@ -6,6 +6,8 @@ use DMS\Core\Logger\Logger;
 use QueryBuilder\IDbQueriable;
 
 class Database implements IDbQueriable {
+    public const DB_DATE_FORMAT = 'Y-m-d H:i:s';
+
     public DatabaseInstaller $installer;
 
     /**

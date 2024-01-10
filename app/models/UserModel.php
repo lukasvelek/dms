@@ -59,6 +59,7 @@ class UserModel extends AModel {
 
         $result = $qb->update('users')
                      ->setNull(array('password'))
+                     ->explicit(', `date_updated`=\'' . date(Database::DB_DATE_FORMAT) . '\'')
                      ->where('id=:id')
                      ->setParam(':id', $id)
                      ->execute()
@@ -78,6 +79,11 @@ class UserModel extends AModel {
             $params[':' . $k] = $v;
         }
 
+        if(!array_key_exists('date_updated', $values)) {
+            $values['date_updated'] = ':date_updated';
+            $params[':date_updated'] = date(Database::DB_DATE_FORMAT);
+        }
+
         $result = $qb->update('users')
                      ->set($values)
                      ->where('id=:id')
@@ -93,9 +99,9 @@ class UserModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $result = $qb->update('users')
-                     ->set(array('status' => ':status'))
+                     ->set(array('status' => ':status', 'date_updated' => ':date'))
                      ->where('id=:id')
-                     ->setParams(array(':status' => $status, ':id' => $id))
+                     ->setParams(array(':status' => $status, ':id' => $id, ':date' => date(Database::DB_DATE_FORMAT)))
                      ->execute()
                      ->fetch();
 
@@ -106,9 +112,9 @@ class UserModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $result = $qb->update('users')
-                     ->set(array('password' => ':password', 'date_password_changed' => ':date_password_changed'))
+                     ->set(array('password' => ':password', 'date_password_changed' => ':date_password_changed', 'date_updated' => ':date'))
                      ->where('id=:id')
-                     ->setParams(array(':password' => $hashedPassword, ':id' => $id, ':date_password_changed' => date('Y-m-d H:i:s')))
+                     ->setParams(array(':password' => $hashedPassword, ':id' => $id, ':date_password_changed' => date('Y-m-d H:i:s'), ':date' => date(Database::DB_DATE_FORMAT)))
                      ->execute()
                      ->fetch();
 

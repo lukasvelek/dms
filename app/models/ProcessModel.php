@@ -306,9 +306,11 @@ class ProcessModel extends AModel {
 
         $result = $qb->update('processes')
                      ->set(array(
-                        'status' => ':status'
+                        'status' => ':status',
+                        'date_updated' => ':date'
                      ))
                      ->setParam(':status', $status)
+                     ->setParam(':date', date(Database::DB_DATE_FORMAT))
                      ->where('id=:id')
                      ->setParam(':id', $idProcess)
                      ->execute()
@@ -322,9 +324,11 @@ class ProcessModel extends AModel {
 
         $result = $qb->update('processes')
                      ->set(array(
-                        'workflow_status' => ':status'
+                        'workflow_status' => ':status',
+                        'date_updated' => ':date'
                      ))
                      ->setParam(':status', $status)
+                     ->setParam(':date', date(Database::DB_DATE_FORMAT))
                      ->where('id=:id')
                      ->setParam(':id', $idProcess)
                      ->execute()
@@ -434,6 +438,11 @@ class ProcessModel extends AModel {
         foreach($data as $k => $v) {
             $sets[] = $k . '=:' . $k;
             $params[':' . $k] = $v;
+        }
+
+        if(!array_key_exists('date_updated', $sets)) {
+            $sets[] = 'date_updated=:date_updated';
+            $params[':date_updated'] = date(Database::DB_DATE_FORMAT);
         }
 
         $result = $qb->update('processes')
