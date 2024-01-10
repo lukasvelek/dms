@@ -33,6 +33,30 @@ class RibbonSettings extends APresenter {
         $app->ribbonModel->deleteRibbon($id);
         
         $app->flashMessage('Ribbon #' . $id . ' successfully deleted', 'success');
+
+        $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $rcm->invalidateCache();
+        
+        $rucm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_USER_RIGHTS);
+        $rucm->invalidateCache();
+        
+        $rgcm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_GROUP_RIGHTS);
+        $rgcm->invalidateCache();
+
+        unset($rcm, $rucm, $rgcm);
+
+        $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        
+        $ribbons = $app->ribbonModel->getAllRibbons();
+        
+        foreach($ribbons as $ribbon) {
+            $rcm->saveRibbon($ribbon);
+        }
+        
+        unset($rcm);
+
+        $app->flashMessage('Ribbon and ribbon rights cache cleared');
+
         $app->redirect('UserModule:RibbonSettings:showAll');
     }
 
