@@ -30,6 +30,24 @@ class CacheManager {
         $this->category = $category;
     }
 
+    public function saveFlashMessage(string $text) {
+        $cacheData = array($text);
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadFlashMessage() {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        } else {
+            return (string)$cacheData[0];
+        }
+
+        return null;
+    }
+
     public function loadRibbonById(int $idRibbon) {
         $cacheData = $this->loadFromCache();
 
@@ -496,7 +514,7 @@ class CacheManager {
     /**
      * Loads data from cache
      * 
-     * @return array $data Cache data
+     * @return array|false $data Cache data or false if no data exists
      */
     private function loadFromCache() {
         $filename = $this->createFilename();

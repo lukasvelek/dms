@@ -348,6 +348,8 @@ class Application {
             $this->pageContent .= $subpanel;
         }
 
+        $this->renderFlashMessage();
+
         /*if($this->flashMessage != null) {
             $this->pageContent .= $this->flashMessage;
         } else if(isset($_SESSION['flash_message'])) {
@@ -357,13 +359,29 @@ class Application {
             $this->clearFlashMessage();
         }*/
 
-        if($this->currentPresenter->flashMessage != '') {
-            $this->pageContent .= $this->currentPresenter->flashMessage;
-        }
-
         $this->pageContent .= $pageBody;
 
         // --- END OF PAGE CONTENT CREATION ---
+    }
+
+    public function renderFlashMessage() {
+        if($this->flashMessage != null) {
+            $this->pageContent .= $this->flashMessage;
+            return;
+        }
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::FLASH_MESSAGES);
+
+        $valFromCache = $cm->loadFlashMessage();
+
+        if(!is_null($valFromCache)) {
+            $this->flashMessage = $valFromCache;
+            $this->pageContent .= $this->flashMessage;
+        }
+
+        $this->clearFlashMessage();
+
+        return;
     }
 
     /**
@@ -436,7 +454,9 @@ class Application {
      * @param string $type Message type (options defined in DMS\Constants\FlashMessageTypes)
      */
     public function flashMessage(string $message, string $type = FlashMessageTypes::INFO) {
-        unset($_SESSION['flash_message']);
+        //unset($_SESSION['flash_message']);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::FLASH_MESSAGES);
 
         $code = '<div id="flash-message" class="' . $type . '">';
         $code .= '<div class="row">';
@@ -451,7 +471,9 @@ class Application {
 
         $this->flashMessage = $code;
 
-        $_SESSION['flash_message'] = $code;
+        //$_SESSION['flash_message'] = $code;
+
+        $cm->saveFlashMessage($code);
     }
 
     /**
@@ -462,9 +484,13 @@ class Application {
     public function clearFlashMessage(bool $clearFromSession = true) {
         $this->flashMessage = null;
 
-        if($clearFromSession) {
+        $cm = CacheManager::getTemporaryObject(CacheCategories::FLASH_MESSAGES);
+
+        $cm->invalidateCache();
+
+        /*if($clearFromSession) {
             unset($_SESSION['flash_message']);
-        }
+        }*/
     }
 
     /**

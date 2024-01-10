@@ -7,7 +7,7 @@ use DMS\Core\CacheManager;
 
 session_start();
 
-var_dump($_SESSION);
+//var_dump($_SESSION);
 //var_dump($_SERVER);
 
 include('app/dms_loader.php');

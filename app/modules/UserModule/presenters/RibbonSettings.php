@@ -54,12 +54,12 @@ class RibbonSettings extends APresenter {
 
         $app->ribbonModel->updateRibbon($id, $data);
 
-        //$app->flashMessage('Successfully edited ribbon #' . $id);
-        $fmb = new FlashMessageBuilder();
+        $app->flashMessage('Successfully edited ribbon #' . $id);
+        //$fmb = new FlashMessageBuilder();
 
-        $this->setFlashMessage($fmb->setText('Successfully edited ribbon #' . $id)->setType('info')->build());
+        //$this->setFlashMessage($fmb->setText('Successfully edited ribbon #' . $id)->setType('info')->build());
 
-        die();
+        //die();
 
         $app->redirect('UserModule:RibbonSettings:showAll');
     }
