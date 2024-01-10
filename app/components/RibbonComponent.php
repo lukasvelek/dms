@@ -22,35 +22,6 @@ class RibbonComponent extends AComponent {
     }
 
     public function getRibbonVisibleToUser(int $idUser, int $idRibbon) {
-        /*$cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
-
-        $valFromCache = $cm->loadRibbons();
-        
-        if(!is_null($valFromCache)) {
-            //$ribbons = $valFromCache;
-
-            foreach($valFromCache as $k1 => $v1) {
-                if($)
-            }
-        } else {
-            $ribbons = $this->ribbonModel->getRibbonsForIdParentRibbon($idParentRibbon);
-
-            foreach($ribbons as $ribbon) {
-                $cm->saveRibbon($ribbon);
-            }
-        }
-
-        $visibleRibbons = [];
-        foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon->getId());
-
-            if($result === TRUE) {
-                $visibleRibbons[] = $ribbon;
-            }
-        }
-
-        return $visibleRibbons;*/
-
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
 
         $valFromCache = $cm->loadRibbons();
@@ -81,7 +52,7 @@ class RibbonComponent extends AComponent {
             $cm->saveRibbon($visibleRibbon);
         }
 
-        $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $visibleRibbon->getId());
+        $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $visibleRibbon);
 
         return $result;
     }
@@ -103,7 +74,7 @@ class RibbonComponent extends AComponent {
 
         $visibleRibbons = [];
         foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon->getId());
+            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
 
             if($result === TRUE) {
                 $visibleRibbons[] = $ribbon;
@@ -130,7 +101,7 @@ class RibbonComponent extends AComponent {
 
         $visibleRibbons = [];
         foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon->getId());
+            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
 
             if($result === TRUE) {
                 $visibleRibbons[] = $ribbon;
@@ -162,7 +133,7 @@ class RibbonComponent extends AComponent {
 
         $visibleRibbons = [];
         foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon->getId());
+            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
 
             if($result === TRUE) {
                 $visibleRibbons[] = $ribbon;

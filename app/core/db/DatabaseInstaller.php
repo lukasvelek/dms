@@ -296,17 +296,17 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_ribbon' => 'INT(32) NOT NULL',
                 'id_user' => 'INT(32) NOT NULL',
-                'can_see' => 'INT(2) NOT NULL DEFAULT 1',
-                'can_edit' => 'INT(2) NOT NULL DEFAULT 1',
-                'can_delete' => 'INT(2) NOT NULL DEFAULT 1'
+                'can_see' => 'INT(2) NOT NULL DEFAULT 0',
+                'can_edit' => 'INT(2) NOT NULL DEFAULT 0',
+                'can_delete' => 'INT(2) NOT NULL DEFAULT 0'
             ),
             'ribbon_group_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_ribbon' => 'INT(32) NOT NULL',
                 'id_group' => 'INT(32) NOT NULL',
-                'can_see' => 'INT(2) NOT NULL DEFAULT 1',
-                'can_edit' => 'INT(2) NOT NULL DEFAULT 1',
-                'can_delete' => 'INT(2) NOT NULL DEFAULT 1'
+                'can_see' => 'INT(2) NOT NULL DEFAULT 0',
+                'can_edit' => 'INT(2) NOT NULL DEFAULT 0',
+                'can_delete' => 'INT(2) NOT NULL DEFAULT 0'
             )
         );
 
@@ -1048,28 +1048,32 @@ class DatabaseInstaller {
                 'code' => 'home',
                 'image' => 'img/home.svg',
                 'is_visible' => '1',
-                'page_url' => '?page=UserModule:HomePage:showHomepage'
+                'page_url' => '?page=UserModule:HomePage:showHomepage',
+                'is_system' => '1'
             ),
             array(
                 'name' => 'Documents',
                 'code' => 'documents',
                 'image' => 'img/documents.svg',
                 'is_visible' => '1',
-                'page_url' => '?page=UserModule:Documents:showAll'
+                'page_url' => '?page=UserModule:Documents:showAll',
+                'is_system' => '1'
             ),
             array(
                 'name' => 'Processes',
                 'code' => 'processes',
                 'image' => 'img/processes.svg',
                 'is_visible' => '1',
-                'page_url' => '?page=UserModule:Processes:showAll'
+                'page_url' => '?page=UserModule:Processes:showAll',
+                'is_system' => '1'
             ),
             array(
                 'name' => 'Settings',
                 'code' => 'settings',
                 'image' => 'img/settings.svg',
                 'is_visible' => '1',
-                'page_url' => '?page=UserModule:Settings:showDashboard'
+                'page_url' => '?page=UserModule:Settings:showDashboard',
+                'is_system' => '1'
             )
         );
 
@@ -1124,19 +1128,22 @@ class DatabaseInstaller {
                     'name' => 'All documents',
                     'code' => 'documents.all_documents',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Documents:showAll'
+                    'page_url' => '?page=UserModule:Documents:showAll',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'Waiting for archivation',
                     'code' => 'documents.waiting_for_archivation',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Documents:showFiltered&filter=waitingForArchivation'
+                    'page_url' => '?page=UserModule:Documents:showFiltered&filter=waitingForArchivation',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'New documents',
                     'code' => 'documents.new_documents',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Documents:showFiltered&filter=new'
+                    'page_url' => '?page=UserModule:Documents:showFiltered&filter=new',
+                    'is_system' => '1'
                 )
             ),
             'processes' => array(
@@ -1144,19 +1151,22 @@ class DatabaseInstaller {
                     'name' => 'Processes started by me',
                     'code' => 'processes.started_by_me',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Processes:showAll&filter=startedByMe'
+                    'page_url' => '?page=UserModule:Processes:showAll&filter=startedByMe',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'Processes waiting for me',
                     'code' => 'processes.waiting_for_me',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Processes:showAll&filter=waitingForMe'
+                    'page_url' => '?page=UserModule:Processes:showAll&filter=waitingForMe',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'Finished processes',
                     'code' => 'processes.finished',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Processes:showAll&filter=finished'
+                    'page_url' => '?page=UserModule:Processes:showAll&filter=finished',
+                    'is_system' => '1'
                 )
             ),
             'settings' => array(
@@ -1165,58 +1175,64 @@ class DatabaseInstaller {
                     'code' => 'settings.dashboard',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboard',
-                    'image' => 'img/dashboard.svg'
+                    'image' => 'img/dashboard.svg',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'Document folders',
                     'code' => 'settings.document_folders',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showFolders'
-                    ,
-                    'image' => 'img/folder.svg'
+                    'page_url' => '?page=UserModule:Settings:showFolders',
+                    'image' => 'img/folder.svg',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'Users',
                     'code' => 'settings.users',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showUsers',
-                    'image' => 'img/users.svg'
+                    'image' => 'img/users.svg',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'Groups',
                     'code' => 'settings.groups',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showGroups'
-                    ,
-                    'image' => 'img/groups.svg'
+                    'page_url' => '?page=UserModule:Settings:showGroups',
+                    'image' => 'img/groups.svg',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'Metadata',
                     'code' => 'settings.metadata',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showMetadata',
-                    'image' => 'img/metadata.svg'
+                    'image' => 'img/metadata.svg',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'System',
                     'code' => 'settings.system',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showSystem',
-                    'image' => 'img/system.svg'
+                    'image' => 'img/system.svg',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'Services',
                     'code' => 'settings.services',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showServices',
-                    'image' => 'img/services.svg'
+                    'image' => 'img/services.svg',
+                    'is_system' => '1'
                 ),
                 array(
                     'name' => 'Dashboard widgets',
                     'code' => 'settings.dashboard_widgets',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboardWidgets',
-                    'image' => 'img/dashboard-widgets.svg'
+                    'image' => 'img/dashboard-widgets.svg',
+                    'is_system' => '1'
                 )
             )
         );

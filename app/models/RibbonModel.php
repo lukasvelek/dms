@@ -11,6 +11,28 @@ class RibbonModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteRibbon(int $idRibbon) {
+        return $this->deleteById($idRibbon, 'ribbons');
+    }
+
+    public function updateRibbon(int $idRibbon, array $data) {
+        return $this->updateExisting('ribbons', $idRibbon, $data);
+    }
+
+    public function getLastInsertedRibbonId() {
+        $row = $this->getLastInsertedRow('ribbons');
+
+        if($row === FALSE || is_null($row)) {
+            return false;
+        }
+
+        return $row['id'];
+    }
+
+    public function insertNewRibbon(array $data) {
+        return $this->insertNew($data, 'ribbons');
+    }
+
     public function getRibbonById(int $id) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
@@ -93,6 +115,7 @@ class RibbonModel extends AModel {
         $image = null;
         $title = null;
         $code = $row['code'];
+        $system = $row['is_system'] ? true : false;
 
         if($row['is_visible'] == 1) {
             $visible = true;
@@ -110,7 +133,7 @@ class RibbonModel extends AModel {
             $title = $row['title'];
         }
 
-        return new Ribbon($id, $name, $title, $idParentRibbon, $image, $visible, $pageUrl, $code);
+        return new Ribbon($id, $name, $title, $idParentRibbon, $image, $visible, $pageUrl, $code, $system);
     }
 }
 
