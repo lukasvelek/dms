@@ -13,7 +13,7 @@ class Ribbon extends AEntity {
     private bool $isSystem;
 
     public function __construct(int $id, string $name, ?string $title, ?int $idParentRibbon, ?string $image, bool $visible, string $pageUrl, string $code, bool $isSystem) {
-        parent::__construct($id, null);
+        parent::__construct($id, null, null);
 
         $this->name = $name;
 

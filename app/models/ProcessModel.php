@@ -492,8 +492,9 @@ class ProcessModel extends AModel {
         $workflow4 = $row['workflow4'];
         $workflowStatus = $row['workflow_status'];
         $idAuthor = $row['id_author'];
+        $dateUpdated = $row['date_updated'];
 
-        return new Process($id, $dateCreated, $idDocument, $workflow1, $workflow2, $workflow3, $workflow4, $workflowStatus, $type, $status, $idAuthor);
+        return new Process($id, $dateCreated, $idDocument, $workflow1, $workflow2, $workflow3, $workflow4, $workflowStatus, $type, $status, $idAuthor, $dateUpdated);
     }
 }
 

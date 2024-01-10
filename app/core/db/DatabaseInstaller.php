@@ -80,7 +80,8 @@ class DatabaseInstaller {
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'date_password_changed' => 'DATETIME NOT NULL',
                 'password_change_status' => 'INT(2) NOT NULL DEFAULT 1',
-                'default_user_page_url' => 'VARCHAR(256) NULL'
+                'default_user_page_url' => 'VARCHAR(256) NULL',
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'user_panel_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -103,7 +104,8 @@ class DatabaseInstaller {
                 'file' => 'VARCHAR(256) NULL',
                 'shred_year' => 'VARCHAR(4) NOT NULL',
                 'after_shred_action' => 'VARCHAR(256) NOT NULL',
-                'shredding_status' => 'INT(32) NOT NULL'
+                'shredding_status' => 'INT(32) NOT NULL',
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -134,7 +136,8 @@ class DatabaseInstaller {
                 'type' => 'INT(2) NOT NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
-                'id_author' => 'INT(32) NOT NULL'
+                'id_author' => 'INT(32) NOT NULL',
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'user_action_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
