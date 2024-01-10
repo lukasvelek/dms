@@ -201,6 +201,8 @@ class RibbonSettings extends APresenter {
             '$SETTINGS_GRID$' => $rightsGrid
         );
 
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:RibbonSettings:showAll', '<-');
+
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -237,6 +239,8 @@ class RibbonSettings extends APresenter {
             '$LINKS$' => [],
             '$SETTINGS_GRID$' => $rightsGrid
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:RibbonSettings:showAll', '<-');
 
         $this->templateManager->fill($data, $template);
 
@@ -406,8 +410,10 @@ class RibbonSettings extends APresenter {
             '$SETTINGS_GRID$' => $settingsGrid
         );
 
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboard', '<-');
+
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
-            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm'), 'New ribbon');
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm'), 'New ribbon');
         }
 
         $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:clearCache'), 'Clear cache');

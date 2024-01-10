@@ -14,7 +14,7 @@ class RibbonRightsModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $row = $qb->select('*')
-                  ->from('ribbon_user_rights')
+                  ->from('ribbon_group_rights')
                   ->where('id_ribbon=:id_ribbon')
                   ->andWhere('id_group=:id_group')
                   ->setParams(array(

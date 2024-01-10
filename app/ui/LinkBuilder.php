@@ -131,7 +131,28 @@ class LinkBuilder {
      * @return string HTML code
      */
     public static function createLink(string $url, string $name, string $class = 'general-link', bool $pureUrl = false) {
-        $obj = new self(($pureUrl ? '' : '?page=') . $url, $class, $name);
+        if(!$pureUrl) {
+            $params = array(
+                'page' => $url
+            );
+
+            $obj = new self(self::createURL($params), $class, $name, '');
+        } else {
+            $link = ($pureUrl ? '' : '?page=') . $url;
+
+            if(!str_contains($link, 'id_ribbon')) {
+                if(isset($_GET['id_ribbon'])) {
+                    $link .= '&id_ribbon=' . $_GET['id_ribbon'];
+                }  
+            }
+
+            /*if(isset($_GET['id_ribbon'])) {
+                $link .= '&id_ribbon=' . $_GET['id_ribbon'];
+            }*/
+
+            $obj = new self($link, $class, $name);
+        }
+
         return $obj->render();
     }
 
