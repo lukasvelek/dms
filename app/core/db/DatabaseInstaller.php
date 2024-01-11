@@ -293,6 +293,7 @@ class DatabaseInstaller {
                 'title' => 'VARCHAR(256) NULL',
                 'image' => 'VARCHAR(256) NULL',
                 'is_visible' => 'INT(2) NOT NULL DEFAULT 1',
+                'is_system' => 'INT(2) NOT NULL DEFAULT 1',
                 'page_url' => 'VARCHAR(256) NOT NULL'
             ),
             'ribbon_user_rights' => array(
@@ -1235,6 +1236,13 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboardWidgets',
                     'image' => 'img/dashboard-widgets.svg',
+                    'is_system' => '1'
+                ),
+                array(
+                    'name' => 'Ribbons',
+                    'code' => 'settings.ribbons',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:RibbonSettings:showAll',
                     'is_system' => '1'
                 )
             )
