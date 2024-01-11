@@ -30,7 +30,7 @@ class DocumentArchivationService extends AService {
         $archived = 0;
         if(count($documents) > 0) {
             foreach($documents as $document) {
-                if($this->documentAuthorizator->canArchive($document->getId())) {
+                if($this->documentAuthorizator->canArchive($document)) {
                     $this->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVED);
                     $archived++;
                 }

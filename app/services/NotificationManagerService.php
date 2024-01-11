@@ -2,6 +2,7 @@
 
 namespace DMS\Services;
 
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\Logger\Logger;
 use DMS\Models\NotificationModel;
@@ -9,13 +10,11 @@ use DMS\Models\ServiceModel;
 
 class NotificationManagerService extends AService {
     private NotificationModel $notificationModel;
-    private array $cfg;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cacheManager, NotificationModel $notificationModel, array $cfg) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cacheManager, NotificationModel $notificationModel) {
         parent::__construct('NotificationManagerService', 'Service responsible for deleting old notifications', $logger, $serviceModel, $cacheManager);
 
         $this->notificationModel = $notificationModel;
-        $this->cfg = $cfg;
 
         $this->loadCfg();
     }
@@ -37,7 +36,7 @@ class NotificationManagerService extends AService {
         $this->log('Found ' . count($toDelete) . ' notifications to delete', __METHOD__);
 
         if($this->scfg['notification_keep_unseen_service_user'] == '1') {
-            $serviceUserNotifications = $this->notificationModel->getNotificationsForUser($this->cfg['id_service_user']);
+            $serviceUserNotifications = $this->notificationModel->getNotificationsForUser(AppConfiguration::getIdServiceUser());
         
             foreach($serviceUserNotifications as $notification) {
                 $toDelete[] = $notification->getId();

@@ -29,7 +29,7 @@ if($action == null) {
 echo($action());
 
 function getBulkActions() {
-    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user, $cfg;
+    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user;
 
     $bulkActions = [];
     $text = '';
@@ -46,7 +46,7 @@ function getBulkActions() {
             $inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
             $document = $documentModel->getDocumentById($idDocument);
 
-            if($documentBulkActionAuthorizator->canDelete($document, null, true, false, $cfg) && 
+            if($documentBulkActionAuthorizator->canDelete($document, null, true, false) && 
                 (is_null($canDelete) || $canDelete) &&
                 !$inProcess) {
                 $canDelete = true;
@@ -54,7 +54,7 @@ function getBulkActions() {
                 $canDelete = false;
             }
 
-            if($documentBulkActionAuthorizator->canApproveArchivation($document, null, true, false, $cfg) && 
+            if($documentBulkActionAuthorizator->canApproveArchivation($document, null, true, false) && 
                 (is_null($canApproveArchivation) || $canApproveArchivation) &&
                 !$inProcess) {
                 $canApproveArchivation = true;
@@ -62,7 +62,7 @@ function getBulkActions() {
                 $canApproveArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canDeclineArchivation($document, null, true, false, $cfg) &&
+            if($documentBulkActionAuthorizator->canDeclineArchivation($document, null, true, false) &&
                 (is_null($canDeclineArchivation) || $canDeclineArchivation) &&
                 !$inProcess) {
                 $canDeclineArchivation = true;
@@ -70,7 +70,7 @@ function getBulkActions() {
                 $canDeclineArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canArchive($document, null, true, false, $cfg) &&
+            if($documentBulkActionAuthorizator->canArchive($document, null, true, false) &&
                 (is_null($canArchive) || $canArchive) &&
                 !$inProcess) {
                 $canArchive = true;
@@ -78,7 +78,7 @@ function getBulkActions() {
                 $canArchive = false;
             }
 
-            if($documentBulkActionAuthorizator->canSuggestForShredding($document, null, true, false, $cfg) &&
+            if($documentBulkActionAuthorizator->canSuggestForShredding($document, null, true, false) &&
               (is_null($canSuggestShredding) || $canSuggestShredding) &&
               !$inProcess) {
                 $canSuggestShredding = true;

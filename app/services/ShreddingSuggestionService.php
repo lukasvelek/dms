@@ -6,6 +6,7 @@ use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Components\ProcessComponent;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentModel;
@@ -15,15 +16,13 @@ class ShreddingSuggestionService extends AService {
     private DocumentAuthorizator $documentAuthorizator;
     private DocumentModel $documentModel;
     private ProcessComponent $processComponent;
-    private array $cfg;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentAuthorizator $documentAuthorizator, DocumentModel $documentModel, ProcessComponent $processComponent, array $cfg) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentAuthorizator $documentAuthorizator, DocumentModel $documentModel, ProcessComponent $processComponent) {
         parent::__construct('ShreddingSuggestionService', 'Suggests documents for shredding', $logger, $serviceModel, $cm);
 
         $this->documentAuthorizator = $documentAuthorizator;
         $this->documentModel = $documentModel;
         $this->processComponent = $processComponent;
-        $this->cfg = $cfg;
     }
 
     public function run() {
@@ -33,7 +32,7 @@ class ShreddingSuggestionService extends AService {
 
         $toSuggest = [];
         foreach($documents as $document) {
-            if($this->documentAuthorizator->canSuggestForShredding($document->getId())) {
+            if($this->documentAuthorizator->canSuggestForShredding($document)) {
                 $toSuggest[] = $document->getId();
             }
         }
@@ -47,7 +46,7 @@ class ShreddingSuggestionService extends AService {
                 'shredding_status' => DocumentShreddingStatus::IN_APPROVAL
             ));
 
-            $this->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $this->cfg['id_service_user']);
+            $this->processComponent->startProcess(ProcessTypes::SHREDDING, $id, AppConfiguration::getIdServiceUser());
         }
 
         $this->documentModel->commitTran();

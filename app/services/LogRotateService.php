@@ -2,6 +2,7 @@
 
 namespace DMS\Services;
 
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
@@ -10,10 +11,8 @@ use DMS\Models\ServiceModel;
 class LogRotateService extends AService {
     private array $cfg;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg, CacheManager $cm) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm) {
         parent::__construct('LogRotateService', 'Deletes old log files', $logger, $serviceModel, $cm);
-
-        $this->cfg = $cfg;
         
         $this->loadCfg();
     }
@@ -24,7 +23,7 @@ class LogRotateService extends AService {
         $this->startService();
 
         $files = [];
-        $fm->readFilesInFolder($this->cfg['log_dir'], $files);
+        $fm->readFilesInFolder(AppConfiguration::getLogDir(), $files);
 
         $toDelete = [];
         foreach($files as $f) {

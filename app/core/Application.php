@@ -72,7 +72,7 @@ class Application {
     public const SYSTEM_VERSION = self::SYSTEM_VERSION_MAJOR . '.' . self::SYSTEM_VERSION_MINOR . (self::SYSTEM_VERSION_PATCH_DISPLAY ? ('.' . self::SYSTEM_VERSION_PATCH) : '') . (self::SYSTEM_IS_BETA ? '_beta' : '');
     public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2023/12/30';
 
-    public array $cfg;
+    //private array $cfg;
     public ?string $currentUrl;
     
     public IModule $currentModule;
@@ -143,8 +143,8 @@ class Application {
      * 
      * @param array $cfg The application configuration file contents
      */
-    public function __construct(array $cfg, string $baseDir = '', bool $install = true) {
-        $this->cfg = $cfg;
+    public function __construct(string $baseDir = '', bool $install = true) {
+        //$this->cfg = $cfg;
         $this->baseDir = $baseDir;
 
         $this->currentUrl = null;
@@ -156,9 +156,9 @@ class Application {
         $this->missingUrlValues = [];
         $this->currentIdRibbon = null;
 
-        $this->fileManager = new FileManager($this->baseDir . $this->cfg['log_dir'], $this->baseDir . $this->cfg['cache_dir']);
-        $this->logger = new Logger($this->fileManager, $this->cfg);
-        $this->conn = new Database($this->cfg['db_server'], $this->cfg['db_user'], $this->cfg['db_pass'], $this->cfg['db_name'], $this->logger);
+        $this->fileManager = new FileManager($this->baseDir . AppConfiguration::getLogDir(), $this->baseDir . AppConfiguration::getCacheDir());
+        $this->logger = new Logger($this->fileManager);
+        $this->conn = new Database(AppConfiguration::getDbServer(), AppConfiguration::getDbUser(), AppConfiguration::getDbPass(), AppConfiguration::getDbName(), $this->logger);
 
         $this->userAuthenticator = new UserAuthenticator($this->conn, $this->logger);
 
@@ -207,14 +207,15 @@ class Application {
         $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user, $this->userModel, $this->groupUserModel);
         $this->ribbonAuthorizator = new RibbonAuthorizator($this->conn, $this->logger, $this->user, $this->ribbonModel, $this->ribbonRightsModel, $this->groupUserModel);
         
+        $sessionDestroyed = false;
         if($install) {
-            $this->installDb();
+            $this->installDb($sessionDestroyed);
         }
         
-        $this->fsManager = new FileStorageManager($this->baseDir . $this->cfg['file_dir'], $this->fileManager, $this->logger);
-        $this->mailManager = new MailManager($this->cfg);
+        $this->fsManager = new FileStorageManager($this->baseDir . AppConfiguration::getFileDir(), $this->fileManager, $this->logger);
+        $this->mailManager = new MailManager();
         
-        $serviceManagerCacheManager = new CacheManager($this->cfg['serialize_cache'], CacheCategories::SERVICE_CONFIG);
+        $serviceManagerCacheManager = new CacheManager(AppConfiguration::getSerializeCache(), CacheCategories::SERVICE_CONFIG);
         
         $this->notificationComponent = new NotificationComponent($this->conn, $this->logger, $this->notificationModel);
         $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel, $this->notificationComponent, $this->processCommentModel);
@@ -225,12 +226,17 @@ class Application {
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->cfg, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel);
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel);
 
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
 
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
+
+        if($sessionDestroyed) {
+            CacheManager::invalidateAllCache();
+            $this->redirect(self::URL_LOGIN_PAGE);
+        }
     }
 
     /**
@@ -489,11 +495,11 @@ class Application {
      * @return int Grid size
      */
     public function getGridSize() {
-        return $this->cfg['grid_size'];
+        return AppConfiguration::getGridSize();
     }
 
     public function getGridUseAjax() {
-        return $this->cfg['grid_use_ajax'];
+        return AppConfiguration::getGridUseAjax();
     }
 
     /**
@@ -578,7 +584,7 @@ class Application {
      * Performs the initial database installation.
      * After installing, it creates a file that shows whether the database has been installed or not.
      */
-    private function installDb() {
+    private function installDb(bool &$sessionDestroyed) {
         if(!file_exists('app/core/install')) {
             $conn = $this->conn;
 
@@ -587,6 +593,8 @@ class Application {
             }, __METHOD__);
 
             file_put_contents('app/core/install', 'installed');
+
+            $sessionDestroyed = session_destroy();
         }
     }
 }

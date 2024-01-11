@@ -7,8 +7,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 class MailManager {
-    private array $cfg;
-
     private string $fromEmail;
     private string $fromName;
     private string $server;
@@ -16,15 +14,13 @@ class MailManager {
     private string $loginUsername;
     private string $loginPassword;
 
-    public function __construct(array $cfg) {
-        $this->cfg = $cfg;
-
-        $this->fromEmail = $cfg['mail_sender_email'];
-        $this->fromName = $cfg['mail_sender_name'];
-        $this->server = $cfg['mail_server'];
-        $this->serverPort = $cfg['mail_server_port'];
-        $this->loginUsername = $cfg['mail_login_username'];
-        $this->loginPassword = $cfg['mail_login_password'];
+    public function __construct() {
+        $this->fromEmail = AppConfiguration::getMailSenderEmail();
+        $this->fromName = AppConfiguration::getMailSenderName();
+        $this->server = AppConfiguration::getMailServer();
+        $this->serverPort = AppConfiguration::getMailServerPort();
+        $this->loginUsername = AppConfiguration::getMailLoginUsername();
+        $this->loginPassword = AppConfiguration::getMailLoginPassword();
     }
 
     public function sendEmail(string $recipient, string $title, string $body) {

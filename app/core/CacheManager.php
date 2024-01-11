@@ -559,17 +559,11 @@ class CacheManager {
      * @param string $category Cache category
      * @return CacheManager self
      */
-    public static function getTemporaryObject(string $category, bool $isAjax = false, array $cfg = []) {
+    public static function getTemporaryObject(string $category, bool $isAjax = false) {
         if($isAjax) {
-            if(empty($cfg)) {
-                die();
-            } else {
-                return new self($cfg['serialize_cache'], $category, '../../logs/', '../../cache/');
-            }
+            return new self(AppConfiguration::getSerializeCache(), $category, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
         } else {
-            global $app;
-
-            return new self($app->cfg['serialize_cache'], $category);
+            return new self(AppConfiguration::getSerializeCache(), $category);
         }
     }
 
@@ -577,10 +571,8 @@ class CacheManager {
      * Invalidates all types of cache
      */
     public static function invalidateAllCache() {
-        global $app;
-
         foreach(CacheCategories::$all as $cc) {
-            $cm = new self($app->cfg['serialize_cache'], $cc);
+            $cm = new self(AppConfiguration::getSerializeCache(), $cc);
 
             $cm->invalidateCache();
         }

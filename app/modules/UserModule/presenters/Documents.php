@@ -9,6 +9,7 @@ use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
@@ -509,7 +510,7 @@ class Documents extends APresenter {
 
             $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($app->metadataModel->getMetadataByName('status', 'documents')->getId());
 
-            if($app->cfg['grid_use_fast_load']) {
+            if(AppConfiguration::getGridUseFastLoad()) {
                 $page -= 1;
 
                 $firstIdDocumentOnPage = $app->documentModel->getFirstIdDocumentOnAGridPage(($page * $app->getGridSize()));
@@ -526,7 +527,7 @@ class Documents extends APresenter {
                 $maxSkip = ($page - 1) * $app->getGridSize();
 
                 foreach($documents as $document) {
-                    if(!$app->cfg['grid_use_fast_load']) {
+                    if(!AppConfiguration::getGridUseFastLoad()) {
                         if($skip < $maxSkip) {
                             $skip++;
                             continue;

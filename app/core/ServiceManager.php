@@ -27,7 +27,6 @@ class ServiceManager {
     private FileStorageManager $fsm;
     private DocumentModel $documentModel;
     private CacheManager $cm;
-    private array $cfg;
     private DocumentAuthorizator $documentAuthorizator;
     private ProcessComponent $processComponent;
     private UserModel $userModel;
@@ -38,9 +37,8 @@ class ServiceManager {
 
     public array $services;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm, DocumentAuthorizator $documentAuthorizator, ProcessComponent $processComponent, UserModel $userModel, GroupUserModel $groupUserModel, MailModel $mailModel, MailManager $mailManager, NotificationModel $notificationModel) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm, DocumentAuthorizator $documentAuthorizator, ProcessComponent $processComponent, UserModel $userModel, GroupUserModel $groupUserModel, MailModel $mailModel, MailManager $mailManager, NotificationModel $notificationModel) {
         $this->logger = $logger;
-        $this->cfg = $cfg;
         $this->serviceModel = $serviceModel;
         $this->fsm = $fsm;
         $this->documentModel = $documentModel;
@@ -67,13 +65,13 @@ class ServiceManager {
     }
 
     private function loadServices() {
-        $this->services['Log Rotate'] = new LogRotateService($this->logger, $this->serviceModel, $this->cfg, $this->cm);
-        $this->services['Cache Rotate'] = new CacheRotateService($this->logger, $this->serviceModel, $this->cfg, $this->cm);
-        $this->services['File Manager'] = new FileManagerService($this->logger, $this->serviceModel, $this->cfg, $this->fsm, $this->documentModel, $this->cm);
-        $this->services['Shredding Suggestion Service'] = new ShreddingSuggestionService($this->logger, $this->serviceModel, $this->cm, $this->documentAuthorizator, $this->documentModel, $this->processComponent, $this->cfg);
+        $this->services['Log Rotate'] = new LogRotateService($this->logger, $this->serviceModel, $this->cm);
+        $this->services['Cache Rotate'] = new CacheRotateService($this->logger, $this->serviceModel, $this->cm);
+        $this->services['File Manager'] = new FileManagerService($this->logger, $this->serviceModel, $this->fsm, $this->documentModel, $this->cm);
+        $this->services['Shredding Suggestion Service'] = new ShreddingSuggestionService($this->logger, $this->serviceModel, $this->cm, $this->documentAuthorizator, $this->documentModel, $this->processComponent);
         $this->services['Password Policy Service'] = new PasswordPolicyService($this->logger, $this->serviceModel, $this->cm, $this->userModel, $this->groupUserModel);
         $this->services['Mail Service'] = new MailService($this->logger, $this->serviceModel, $this->cm, $this->mailModel, $this->mailManager);
-        $this->services['Notification manager'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel, $this->cfg);
+        $this->services['Notification manager'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel);
         $this->services['Document archivator'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator);
         $this->services['Declined document remover'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator);
     }
