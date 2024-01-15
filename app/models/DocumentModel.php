@@ -14,6 +14,21 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentsBySQL(string $sql) {
+        $result = $this->db->query($sql);
+
+        if($result === FALSE) {
+            return [];
+        }
+
+        $documents = [];
+        foreach($result as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function getAllDocumentsByStatus(int $status) {
         $qb = $this->composeQueryStandardDocuments();
 

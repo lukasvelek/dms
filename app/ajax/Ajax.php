@@ -17,6 +17,7 @@ use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
+use DMS\Models\FilterModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
@@ -157,6 +158,7 @@ $processCommentModel = new ProcessCommentModel($db, $logger);
 $widgetModel = new WidgetModel($db, $logger);
 $notificationModel = new NotificationModel($db, $logger);
 $mailModel = new MailModel($db, $logger);
+$filterModel = new FilterModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);

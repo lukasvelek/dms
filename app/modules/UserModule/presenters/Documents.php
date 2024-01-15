@@ -2,7 +2,6 @@
 
 namespace DMS\Modules\UserModule;
 
-use DMS\Authorizators\ActionAuthorizator;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
@@ -16,7 +15,6 @@ use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
-use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
@@ -28,6 +26,33 @@ class Documents extends APresenter {
         parent::__construct('Documents');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function showDocumentsCustomFilter() {
+        global $app;
+        
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-grid.html');
+        
+        $app->flashMessageIfNotIsset(array('id_filter'));
+
+        $idFilter = htmlspecialchars($_GET['id_filter']);
+        
+        $data = array(
+            '$PAGE_TITLE$' => 'Documents',
+            '$LINKS$' => [],
+            '$FILTER_GRID$' => $this->internalCreateCustomFilterDocumentsGrid($idFilter),
+            '$BULK_ACTION_CONTROLLER$' => ''
+        );
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
+            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        }
+
+        $data['$LINKS$'][] = $newEntityLink;
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
     }
 
     protected function downloadReport() {
@@ -74,45 +99,61 @@ class Documents extends APresenter {
             $isCondition = true;
         }
 
-        switch($filter) {
-            case 'shredded':
-                if($isCondition) {
-                    $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
-                } else {
-                    $qb->where('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
-                    $isCondition = true;
+        if(!is_numeric($filter)) {
+            switch($filter) {
+                case 'shredded':
+                    if($isCondition) {
+                        $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
+                    } else {
+                        $qb->where('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
+                        $isCondition = true;
+                    }
+                    break;
+    
+                case 'waitingForArchivation':
+                    if($isCondition) {
+                        $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
+                    } else {
+                        $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
+                        $isCondition = true;
+                    }
+                    break;
+    
+                case 'archived':
+                    if($isCondition) {
+                        $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
+                    } else {
+                        $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
+                        $isCondition = true;
+                    }
+                    break;
+    
+                default:
+                case 'all':
+                    break;
+            }
+
+            if($limit < ($totalCount + 1)) {
+                $qb->limit($limit);
+            }
+    
+            if($order == 'desc') {
+                $qb->orderBy('id', $order);
+            }
+        } else {
+            $filterEntity = $app->filterModel->getDocumentFilterById($filter);
+
+            $qb->setSQL($filterEntity->getSql());
+    
+            if(!$filterEntity->hasOrdering()) {
+                if($limit < ($totalCount + 1)) {
+                    $qb->limit($limit);
                 }
-                break;
-
-            case 'waitingForArchivation':
-                if($isCondition) {
-                    $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
-                } else {
-                    $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
-                    $isCondition = true;
+                
+                if($order == 'desc') {
+                    $qb->orderBy('id', $order);
                 }
-                break;
-
-            case 'archived':
-                if($isCondition) {
-                    $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
-                } else {
-                    $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
-                    $isCondition = true;
-                }
-                break;
-
-            default:
-            case 'all':
-                break;
-        }
-
-        if($limit < ($totalCount + 1)) {
-            $qb->limit($limit);
-        }
-
-        if($order == 'desc') {
-            $qb->orderBy('id', $order);
+            }
         }
 
         $rows = null;
@@ -348,6 +389,8 @@ class Documents extends APresenter {
         if($app->actionAuthorizator->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT)) {
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
         }
+
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilters'), 'Filters');
 
         //$this->drawSubpanel = true;
         //$this->subpanel = Panels::createDocumentsPanel();
@@ -1211,6 +1254,15 @@ class Documents extends APresenter {
         ';
     }
 
+    private function internalCreateCustomFilterDocumentsGrid(int $idFilter) {
+        return '
+            <script type="text/javascript">
+            loadDocumentsCustomFilter("' . $idFilter . '");
+            </script> 
+            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+        ';
+    }
+
     private function internalCreateGridPageControl(int $page, ?string $idFolder, string $action = 'showAll') {
         global $app;
 
@@ -1316,6 +1368,24 @@ class Documents extends APresenter {
         $addFilter('waitingForArchivation', 'Waiting for archivation');
         $addFilter('shredded', 'Shredded');
         $addFilter('archived', 'Archived');
+
+        // ===== CUSTOM FILTERS =====
+
+        $seeSystemFilters = $app->actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTERS);
+        $seeOtherUsersFilters = $app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTERS);
+
+        $filters = [];
+        if(!$seeSystemFilters && !$seeOtherUsersFilters) {
+            $filters = $app->filterModel->getAllDocumentFiltersForIdUser($app->user->getId());
+        } else {
+            $filters = $app->filterModel->getAllDocumentFilters($seeSystemFilters, $seeOtherUsersFilters, $app->user->getId());
+        }
+
+        foreach($filters as $filter) {
+            $addFilter($filter->getId(), $filter->getName());
+        }
+
+        // ===== END OF CUSTOM FILTERS =====
 
         $orderArray = array(
             array('value' => 'asc', 'text' => 'Ascending'),

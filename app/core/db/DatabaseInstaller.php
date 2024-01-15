@@ -311,6 +311,14 @@ class DatabaseInstaller {
                 'can_see' => 'INT(2) NOT NULL DEFAULT 0',
                 'can_edit' => 'INT(2) NOT NULL DEFAULT 0',
                 'can_delete' => 'INT(2) NOT NULL DEFAULT 0'
+            ),
+            'document_filters' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_author' => 'INT(32) NULL',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'description' => 'VARCHAR(256) NULL',
+                'filter_sql' => 'VARCHAR(32768) NOT NULL',
+                'has_ordering' => 'INT(2) NOT NULL DEFAULT 0'
             )
         );
 
@@ -1147,6 +1155,13 @@ class DatabaseInstaller {
                     'code' => 'documents.new_documents',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Documents:showFiltered&filter=new',
+                    'is_system' => '1'
+                ),
+                array(
+                    'name' => 'SPLITTER',
+                    'code' => 'documents.splitter',
+                    'is_visible' => '1',
+                    'page_url' => '#',
                     'is_system' => '1'
                 )
             ),
