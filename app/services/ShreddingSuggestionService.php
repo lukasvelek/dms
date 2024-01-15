@@ -32,7 +32,7 @@ class ShreddingSuggestionService extends AService {
 
         $toSuggest = [];
         foreach($documents as $document) {
-            if($this->documentAuthorizator->canSuggestForShredding($document)) {
+            if($this->documentAuthorizator->canSuggestForShredding($document, true)) {
                 $toSuggest[] = $document->getId();
             }
         }
