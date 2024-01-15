@@ -507,7 +507,8 @@ class RibbonSettings extends APresenter {
                     $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
                 }
 
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS)) {
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
+                   $ribbon->getName() != 'SPLITTER') {
                     $actionLinks['edit_user_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
                     $actionLinks['edit_group_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
                 }

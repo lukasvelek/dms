@@ -236,8 +236,6 @@ class DocumentFilter extends APresenter {
     }
 
     private function internalCreateNewFilterForm() {
-        global $app;
-
         $fb = FormBuilder::getTemporaryObject();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:DocumentFilter:processNewFilterForm')
