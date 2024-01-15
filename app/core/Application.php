@@ -324,7 +324,13 @@ class Application {
         }
 
         // Get presenter
-        $this->currentPresenter = $presenter = $module->getPresenterByName($presenter);
+        $presenter = $module->getPresenterByName($presenter);
+
+        if($presenter === NULL) {
+            die('Presenter does not exist');
+        }
+
+        $this->currentPresenter = $presenter;
         if(!is_null($presenter)) {
             $module->setPresenter($presenter);
         } else {

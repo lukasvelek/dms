@@ -11,6 +11,25 @@ class FilterModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateFilter(array $data, int $id) {
+        return $this->updateExisting('document_filters', $id, $data);
+    }
+
+    public function getFilterById(int $id) {
+        $qb = $this->composeStandardDocumentFilterQuery();
+
+        $row = $qb->where('id=:id')
+                  ->setParam(':id', $id)
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createDocumentFilterFromDbRow($row);
+    }
+
+    public function insertNewFilter(array $data) {
+        return $this->insertNew($data, 'document_filters');
+    }
+
     public function getAllDocumentFiltersForIdUser(int $idUser) {
         $qb = $this->composeStandardDocumentFilterQuery();
 
