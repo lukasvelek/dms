@@ -311,6 +311,13 @@ class DatabaseInstaller {
                 'can_see' => 'INT(2) NOT NULL DEFAULT 0',
                 'can_edit' => 'INT(2) NOT NULL DEFAULT 0',
                 'can_delete' => 'INT(2) NOT NULL DEFAULT 0'
+            ),
+            'document_filters' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_author' => 'INT(32) NULL',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'description' => 'VARCHAR(256) NULL',
+                'filter_sql' => 'VARCHAR(32768) NOT NULL'
             )
         );
 

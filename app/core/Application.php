@@ -26,6 +26,7 @@ use DMS\Core\FileManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
+use DMS\Models\FilterModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
 use DMS\Models\GroupRightModel;
@@ -109,6 +110,7 @@ class Application {
     public MailModel $mailModel;
     public RibbonModel $ribbonModel;
     public RibbonRightsModel $ribbonRightsModel;
+    public FilterModel $filterModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -180,6 +182,7 @@ class Application {
         $this->mailModel = new MailModel($this->conn, $this->logger);
         $this->ribbonModel = new RibbonModel($this->conn, $this->logger);
         $this->ribbonRightsModel = new RibbonRightsModel($this->conn, $this->logger);
+        $this->filterModel = new FilterModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -198,7 +201,8 @@ class Application {
             'widgetModel' => $this->widgetModel,
             'notificationModel' => $this->notificationModel,
             'mailModel' => $this->mailModel,
-            'ribbonModel' => $this->ribbonModel
+            'ribbonModel' => $this->ribbonModel,
+            'filterModel' => $this->filterModel
         );
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);

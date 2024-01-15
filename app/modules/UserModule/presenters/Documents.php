@@ -349,6 +349,8 @@ class Documents extends APresenter {
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
         }
 
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilters'), 'Filters');
+
         //$this->drawSubpanel = true;
         //$this->subpanel = Panels::createDocumentsPanel();
 
