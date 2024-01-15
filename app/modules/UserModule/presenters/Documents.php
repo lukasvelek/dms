@@ -2,7 +2,6 @@
 
 namespace DMS\Modules\UserModule;
 
-use DMS\Authorizators\ActionAuthorizator;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
@@ -16,7 +15,6 @@ use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
-use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
@@ -28,6 +26,33 @@ class Documents extends APresenter {
         parent::__construct('Documents');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function showDocumentsCustomFilter() {
+        global $app;
+        
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-grid.html');
+        
+        $app->flashMessageIfNotIsset(array('id_filter'));
+
+        $idFilter = htmlspecialchars($_GET['id_filter']);
+        
+        $data = array(
+            '$PAGE_TITLE$' => 'Documents',
+            '$LINKS$' => [],
+            '$FILTER_GRID$' => $this->internalCreateCustomFilterDocumentsGrid($idFilter),
+            '$BULK_ACTION_CONTROLLER$' => ''
+        );
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
+            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+        }
+
+        $data['$LINKS$'][] = $newEntityLink;
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
     }
 
     protected function downloadReport() {
@@ -1208,6 +1233,15 @@ class Documents extends APresenter {
         return '
             <script type="text/javascript">
             loadDocumentsSharedWithMe("' . $page . '");
+            </script> 
+            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+        ';
+    }
+
+    private function internalCreateCustomFilterDocumentsGrid(int $idFilter) {
+        return '
+            <script type="text/javascript">
+            loadDocumentsCustomFilter("' . $idFilter . '");
             </script> 
             <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
         ';

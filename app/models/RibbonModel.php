@@ -11,6 +11,34 @@ class RibbonModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteRibbonForIdDocumentFilter(int $idFilter) {
+        $qb = $this->qb(__METHOD__);
+
+        $code = 'documents.custom_filter.' . $idFilter;
+
+        $result = $qb->delete()
+                     ->from('ribbons')
+                     ->where('code=:code')
+                     ->setParam(':code', $code)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function getRibbonForIdDocumentFilter(int $idFilter) {
+        $qb = $this->composeStandardRibbonQuery(__METHOD__);
+
+        $code = 'documents.custom_filter.' . $idFilter;
+
+        $row = $qb->where('code=:code')
+                  ->setParam(':code', $code)
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createRibbonObjectFromDbRow($row);
+    }
+
     public function deleteRibbon(int $idRibbon) {
         return $this->deleteById($idRibbon, 'ribbons');
     }
@@ -107,6 +135,10 @@ class RibbonModel extends AModel {
     }
 
     private function createRibbonObjectFromDbRow($row) {
+        if($row === FALSE || $row === NULL) {
+            return null;
+        }
+
         $id = $row['id'];
         $name = $row['name'];
         $visible = false;

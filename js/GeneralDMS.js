@@ -408,3 +408,20 @@ async function generateDocuments(_is_debug) {
         }
     });
 }
+
+async function loadDocumentsCustomFilter(_idFilter) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Documents.php',
+        type: 'GET',
+        data: {
+            action: "documentsCustomFilter",
+            id_filter: _idFilter
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}

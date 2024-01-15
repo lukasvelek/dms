@@ -21,6 +21,70 @@ class DocumentFilter extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function unpinFilter() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_filter'));
+
+        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $ribbon = $app->ribbonModel->getRibbonForIdDocumentFilter($idFilter);
+
+        $app->ribbonModel->deleteRibbonForIdDocumentFilter($idFilter);
+        $app->ribbonRightsModel->deleteAllUserRibbonRights($ribbon->getId());
+        $app->ribbonRightsModel->deleteAllGroupRibbonRights($ribbon->getId());
+
+        $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $rucm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_USER_RIGHTS);
+        $rgcm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_GROUP_RIGHTS);
+
+        $rcm->invalidateCache();
+        $rucm->invalidateCache();
+        $rgcm->invalidateCache();
+
+        unset($rcm, $rucm, $rgcm);
+
+        $app->flashMessage('Successfully unpinned selected filter', 'success');
+        $app->redirect('UserModule:DocumentFilter:showFilters');
+    }
+
+    protected function pinFilter() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_filter'));
+
+        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $filter = $app->filterModel->getDocumentFilterById($idFilter);
+
+        $parentRibbon = $app->ribbonModel->getRibbonByCode('documents');
+
+        $data = array(
+            'id_parent_ribbon' => $parentRibbon->getId(),
+            'name' => $filter->getName(),
+            'code' => 'documents.custom_filter.' . $filter->getId(),
+            'is_visible' => '1',
+            'is_system' => '0',
+            'page_url' => '?page=UserModule:Documents:showDocumentsCustomFilter&id_filter=' . $filter->getId()
+        );
+
+        $app->ribbonModel->insertNewRibbon($data);
+        $idRibbon = $app->ribbonModel->getLastInsertedRibbonId();
+
+        $app->ribbonRightsModel->insertNewUserRibbonRight($idRibbon, $app->user->getId(), array($app->ribbonModel::VIEW => '1', $app->ribbonModel::EDIT => '1', $app->ribbonModel::DELETE => '1'));
+
+        $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $rucm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_USER_RIGHTS);
+        $rgcm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_GROUP_RIGHTS);
+
+        $rcm->invalidateCache();
+        $rucm->invalidateCache();
+        $rgcm->invalidateCache();
+
+        unset($rcm, $rucm, $rgcm);
+
+        $app->flashMessage('Successfully pinned selected filter', 'success');
+        $app->redirect('UserModule:DocumentFilter:showFilters');
+    }
+
     protected function deleteFilter() {
         global $app;
 
@@ -49,7 +113,8 @@ class DocumentFilter extends APresenter {
             '$LINKS$' => array(
                 LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilters'), '<-')
             ),
-            '$FILTER_GRID$' => $this->internalCreateFilterResultsGrid($filter)
+            '$FILTER_GRID$' => $this->internalCreateFilterResultsGrid($filter),
+            '$BULK_ACTION_CONTROLLER$' => ''
         );
 
         $this->templateManager->fill($data, $template);
@@ -88,7 +153,8 @@ class DocumentFilter extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Document filters',
             '$LINKS$' => [],
-            '$FILTER_GRID$' => $this->internalCreateStandardFilterGrid()
+            '$FILTER_GRID$' => $this->internalCreateStandardFilterGrid(),
+            '$BULK_ACTION_CONTROLLER$' => ''
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_FILTER)) {
@@ -216,12 +282,21 @@ class DocumentFilter extends APresenter {
                 $showResultsLink = '-';
                 $editLink = '-';
                 $deleteLink = '-';
+                $pinLink = '-';
+
+                $ribbonFilterEntry = $app->ribbonModel->getRibbonForIdDocumentFilter($filter->getId());
 
                 if(!is_null($filter->getIdAuthor())) {
                     if($filter->getIdAuthor() == $app->user->getId()) {
                         $showResultsLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                         $editLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                         $deleteLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
+
+                        if($ribbonFilterEntry === NULL) {
+                            $pinLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:pinFilter', 'id_filter' => $filter->getId()), 'Pin');
+                        } else {
+                            $pinLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:unpinFilter', 'id_filter' => $filter->getId()), 'Unpin');
+                        }
                     } else if($filter->getIdAuthor() != $app->user->getId()) {
                         if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTER_RESULTS)) {
                             $showResultsLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
@@ -244,7 +319,8 @@ class DocumentFilter extends APresenter {
                 $actionLinks = array(
                     $showResultsLink,
                     $editLink,
-                    $deleteLink
+                    $deleteLink,
+                    $pinLink
                 );
 
                 if(is_null($headerRow)) {
