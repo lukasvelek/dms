@@ -483,6 +483,14 @@ class QueryBuilder {
     return $this->sql;
   }
 
+  public function setSQL(string $sql, bool $cleanVariables = true) {
+    $this->clean();
+
+    $this->sql = $sql;
+    
+    return $this;
+  }
+
   public function execute() {
     $this->createQuery();
 

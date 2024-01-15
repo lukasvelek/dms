@@ -183,6 +183,10 @@ class DocumentFilter extends APresenter {
             $data['filter_sql'] = htmlspecialchars($_POST['filter_sql']);
         }
 
+        if(isset($_POST['has_ordering'])) {
+            $data['has_ordering'] = '1';
+        }
+
         $app->filterModel->updateDocumentFilter($data, $idFilter);
 
         $app->flashMessage('Filter #' . $idFilter . ' updated successfully', FlashMessageTypes::SUCCESS);
@@ -203,6 +207,10 @@ class DocumentFilter extends APresenter {
 
         if(isset($_POST['filter_sql'])) {
             $data['filter_sql'] = htmlspecialchars($_POST['filter_sql']);
+        }
+
+        if(isset($_POST['has_ordering'])) {
+            $data['has_ordering'] = '1';
         }
 
         $data['id_author'] = $app->user->getId();
@@ -239,10 +247,12 @@ class DocumentFilter extends APresenter {
 
             ->addElement($fb->createLabel()->setText('Description')->setFor('description'))
             ->addElement($fb->createTextArea()->setName('description'))
-        ;
-
-        $fb ->addElement($fb->createLabel()->setText('SQL query ')->setFor('filter_sql'))
+            
+            ->addElement($fb->createLabel()->setText('SQL query ')->setFor('filter_sql'))
             ->addElement($fb->createTextArea()->setName('filter_sql'))
+
+            ->addElement($fb->createLabel()->setText('SQL query has ordering?')->setFor('has_ordering'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('has_ordering'))
             
             ->addElement($fb->createSubmit('Create filter'));
 
@@ -382,6 +392,12 @@ class DocumentFilter extends APresenter {
     private function internalCreateEditFilterForm(EntitiesDocumentFilter $filter) {
         $fb = FormBuilder::getTemporaryObject();
 
+        if($filter->hasOrdering()) {
+            $hasOrderingTrue = ' checked';
+        } else {
+            $hasOrderingTrue = '';
+        }
+
         $fb ->setMethod('POST')->setAction('?page=UserModule:DocumentFilter:processEditFilterForm&id_filter=' . $filter->getId())
             
             ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
@@ -392,6 +408,9 @@ class DocumentFilter extends APresenter {
         
             ->addElement($fb->createLabel()->setText('SQL query ')->setFor('filter_sql'))
             ->addElement($fb->createTextArea()->setName('filter_sql')->setText($filter->getSql()))
+
+            ->addElement($fb->createLabel()->setText('SQL query has ordering?')->setFor('has_ordering'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('has_ordering')->setSpecial($hasOrderingTrue))
             
             ->addElement($fb->createSubmit('Save'));
 

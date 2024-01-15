@@ -82,6 +82,11 @@ class FilterModel extends AModel {
         $id = $row['id'];
         $name = $row['name'];
         $sql = $row['filter_sql'];
+        $hasOrdering = false;
+
+        if($row['has_ordering'] == '1') {
+            $hasOrdering = true;
+        }
 
         $description = null;
         $idAuthor = null;
@@ -94,7 +99,7 @@ class FilterModel extends AModel {
             $description = $row['description'];
         }
 
-        return new DocumentFilter($id, $idAuthor, $name, $description, $sql);
+        return new DocumentFilter($id, $idAuthor, $name, $description, $sql, $hasOrdering);
     }
 }
 

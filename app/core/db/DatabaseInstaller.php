@@ -317,7 +317,8 @@ class DatabaseInstaller {
                 'id_author' => 'INT(32) NULL',
                 'name' => 'VARCHAR(256) NOT NULL',
                 'description' => 'VARCHAR(256) NULL',
-                'filter_sql' => 'VARCHAR(32768) NOT NULL'
+                'filter_sql' => 'VARCHAR(32768) NOT NULL',
+                'has_ordering' => 'INT(2) NOT NULL DEFAULT 0'
             )
         );
 
