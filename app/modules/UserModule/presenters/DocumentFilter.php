@@ -81,15 +81,19 @@ class DocumentFilter extends APresenter {
     }
 
     protected function showFilters() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-grid.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'Document filters',
-            '$LINKS$' => array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showNewFilterForm'), 'New filter')
-            ),
+            '$LINKS$' => [],
             '$FILTER_GRID$' => $this->internalCreateStandardFilterGrid()
         );
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_FILTER)) {
+            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showNewFilterForm'), 'New filter');
+        }
 
         $this->templateManager->fill($data, $template);
 
