@@ -21,6 +21,19 @@ class DocumentFilter extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function deleteFilter() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
+
+        $idFilter = htmlspecialchars($_GET['id_filter']);
+
+        $app->filterModel->deleteDocumentFilter($idFilter);
+        
+        $app->flashMessage('Document filter #' . $idFilter . ' deleted', 'success');
+        $app->redirect('UserModule:DocumentFilter:showFilters');
+    }
+
     protected function showFilterResults() {
         global $app;
 
@@ -29,7 +42,7 @@ class DocumentFilter extends APresenter {
         $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
 
         $idFilter = htmlspecialchars($_GET['id_filter']);
-        $filter = $app->filterModel->getFilterById($idFilter);
+        $filter = $app->filterModel->getDocumentFilterById($idFilter);
 
         $data = array(
             '$PAGE_TITLE$' => 'Document filter #' . $idFilter . ' results',
@@ -52,7 +65,7 @@ class DocumentFilter extends APresenter {
         $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
 
         $idFilter = htmlspecialchars($_GET['id_filter']);
-        $filter = $app->filterModel->getFilterById($idFilter);
+        $filter = $app->filterModel->getDocumentFilterById($idFilter);
 
         $data = array(
             '$PAGE_TITLE$' => 'Filter <i>' . $filter->getName() . '</i>',
@@ -100,7 +113,7 @@ class DocumentFilter extends APresenter {
             $data['filter_sql'] = htmlspecialchars($_POST['filter_sql']);
         }
 
-        $app->filterModel->updateFilter($data, $idFilter);
+        $app->filterModel->updateDocumentFilter($data, $idFilter);
 
         $app->flashMessage('Filter #' . $idFilter . ' updated successfully', FlashMessageTypes::SUCCESS);
         $app->redirect('UserModule:DocumentFilter:showFilters');
@@ -154,7 +167,7 @@ class DocumentFilter extends APresenter {
             }
         }*/
 
-        $app->filterModel->insertNewFilter($data);
+        $app->filterModel->insertNewDocumentFilter($data);
 
         $app->flashMessage('Filter created successfully', FlashMessageTypes::SUCCESS);
         $app->redirect('UserModule:DocumentFilter:showFilters');
@@ -320,7 +333,8 @@ class DocumentFilter extends APresenter {
             foreach($filters as $filter) {
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit')
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit'),
+                    LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete')
                 );
 
                 if(is_null($headerRow)) {

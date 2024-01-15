@@ -11,11 +11,15 @@ class FilterModel extends AModel {
         parent::__construct($db, $logger);
     }
 
-    public function updateFilter(array $data, int $id) {
+    public function deleteDocumentFilter(int $id) {
+        return $this->deleteById($id, 'document_filters');
+    }
+
+    public function updateDocumentFilter(array $data, int $id) {
         return $this->updateExisting('document_filters', $id, $data);
     }
 
-    public function getFilterById(int $id) {
+    public function getDocumentFilterById(int $id) {
         $qb = $this->composeStandardDocumentFilterQuery();
 
         $row = $qb->where('id=:id')
@@ -26,7 +30,7 @@ class FilterModel extends AModel {
         return $this->createDocumentFilterFromDbRow($row);
     }
 
-    public function insertNewFilter(array $data) {
+    public function insertNewDocumentFilter(array $data) {
         return $this->insertNew($data, 'document_filters');
     }
 

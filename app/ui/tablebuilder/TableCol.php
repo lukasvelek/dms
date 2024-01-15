@@ -15,6 +15,7 @@ class TableCol implements IBuildable {
   private string $textColor;
   private string $width;
   private string $id;
+  private string $noData;
 
   public string $script;
 
@@ -31,8 +32,13 @@ class TableCol implements IBuildable {
     $this->bold = 'td';
     $this->width = '';
     $this->id = '';
+    $this->noData = '';
 
-    $this->script = '';
+    return $this;
+  }
+
+  public function setNoData() {
+    $this->noData = ' class="info" ';
 
     return $this;
   }
@@ -63,6 +69,10 @@ class TableCol implements IBuildable {
    */
   public function setText(string $text) {
     $this->text = $text;
+
+    if($this->text == 'No data found') {
+      $this->noData = ' class="info" ';
+    }
 
     return $this;
   }
@@ -108,7 +118,7 @@ class TableCol implements IBuildable {
    * @return self
    */
   public function build() {
-    $this->script = '<' . $this->bold . ' style="color: ' . $this->textColor . '; ' . $this->width . '" ' . $this->colspan . ' ' . $this->id . '>' . $this->text . '</' . $this->bold . '>';
+    $this->script = '<' . $this->bold . ' ' . $this->noData . ' ' .  'style="color: ' . $this->textColor . '; ' . $this->width . '" ' . $this->colspan . ' ' . $this->id . '>' . $this->text . '</' . $this->bold . '>';
 
     return $this;
   }
