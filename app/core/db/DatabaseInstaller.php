@@ -1155,6 +1155,13 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Documents:showFiltered&filter=new',
                     'is_system' => '1'
+                ),
+                array(
+                    'name' => 'SPLITTER',
+                    'code' => 'documents.splitter',
+                    'is_visible' => '1',
+                    'page_url' => '#',
+                    'is_system' => '1'
                 )
             ),
             'processes' => array(

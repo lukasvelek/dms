@@ -99,10 +99,14 @@ class Panels {
         }
 
         foreach($subRibbons as $ribbon) {
-            if($ribbon->hasImage()) {
-                $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
+            if($ribbon->getName() == 'SPLITTER') {
+                $data['$LINKS$'][] = '&nbsp;|';
             } else {
-                $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'general-link', true);
+                if($ribbon->hasImage()) {
+                    $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
+                } else {
+                    $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'general-link', true);
+                }
             }
         }
 
