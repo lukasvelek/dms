@@ -479,6 +479,10 @@ class QueryBuilder {
     return $this;
   }
 
+  public function getSQL() {
+    return $this->sql;
+  }
+
   public function execute() {
     $this->createQuery();
 

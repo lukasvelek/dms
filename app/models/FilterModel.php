@@ -45,9 +45,15 @@ class FilterModel extends AModel {
         return $this->createDocumentsFiltersFromDbRows($rows);
     }
 
-    public function getAllDocumentFilters() {
+    public function getAllDocumentFilters(bool $appendSystemFilters = true, bool $appendOtherUsersResults = true, ?int $idUser = null) {
         $qb = $this->composeStandardDocumentFilterQuery();
-
+        
+        if($appendSystemFilters && (!$appendOtherUsersResults && !is_null($idUser))) {
+            $qb->explicit(' WHERE `id_author` IS NULL OR `id_author` = ' . $idUser);
+        } else if(!$appendSystemFilters && (!$appendOtherUsersResults && !is_null($idUser))) {
+            $qb->explicit(' WHERE `id_author` = ' . $idUser);
+        }
+        
         $rows = $qb->execute()->fetch();
 
         return $this->createDocumentsFiltersFromDbRows($rows);

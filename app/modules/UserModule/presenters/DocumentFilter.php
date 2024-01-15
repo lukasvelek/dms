@@ -137,36 +137,6 @@ class DocumentFilter extends APresenter {
 
         $data['id_author'] = $app->user->getId();
 
-        /*if(!isset($data['filter_sql'])) {
-            // generate sql from settings defined below
-            $customMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
-            $metadata = [];
-            $sql = 'SELECT * FROM `documents` WHERE ';
-
-            if(count($customMetadata) > 0) {
-                foreach($customMetadata as $cm) {
-                    if(isset($_POST[$cm->getName()]) && $_POST[$cm->getName()] != '') {
-                        $metadata[] = $cm->getName();
-                    }
-                }
-            } else {
-                $app->flashMessage('No filter parameters defined', 'error');
-                $app->redirect('UserModule:DocumentFilter:showFilters');
-                exit;
-            }
-
-            $i = 0;
-            foreach($metadata as $m) {
-                $val = htmlspecialchars($_POST[$m]);
-
-                if(($i + 1) == count($metadata)) {
-                    $sql .= ' (`' . $m . '` = ' . $val . ') ';
-                } else {
-                    $sql .= ' (`' . $m . '` = ' . $val . ') AND';
-                }
-            }
-        }*/
-
         $app->filterModel->insertNewDocumentFilter($data);
 
         $app->flashMessage('Filter created successfully', FlashMessageTypes::SUCCESS);
@@ -201,106 +171,6 @@ class DocumentFilter extends APresenter {
             ->addElement($fb->createTextArea()->setName('description'))
         ;
 
-        /*$customMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
-        $metadata = [];
-
-        if(count($customMetadata) > 0) {
-            foreach($customMetadata as $cm) {
-                if($cm->getInputType() == 'select_external') {
-                    $name = $cm->getName();
-                    $text = $cm->getText();
-                    $values = $app->externalEnumComponent->getEnumByName($cm->getSelectExternalEnumName())->getValues();
-
-                    $options = array(
-                        array(
-                            'value' => '-',
-                            'text' => '-'
-                        ),
-                        array(
-                            'value' => 'null',
-                            'text' => 'Empty'
-                        )
-                    );
-                    foreach($values as $value => $vtext) {
-                        $options[] = array(
-                            'value' => $value,
-                            'text' => $vtext
-                        );
-                    }
-
-                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());
-                } else {
-                    $name = $cm->getName();
-                    $text = $cm->getText();
-                    $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
-    
-                    $options = array(
-                        array(
-                            'value' => '-',
-                            'text' => '-'
-                        ),
-                        array(
-                            'value' => 'null',
-                            'text' => 'Empty'
-                        )
-                    );
-                    foreach($values as $v) {
-                        $options[] = array(
-                            'value' => $v->getValue(),
-                            'text' => $v->getName()
-                        );
-                    }
-    
-                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
-                }
-            }
-        }
-
-        foreach($metadata as $name => $d) {
-            $text = $d['text'];
-            $options = $d['options'];
-            $inputType = $d['type'];
-            $inputLength = $d['length'];
-
-            $fb->addElement($fb->createLabel()->setText($text)->setFor($name));
-
-            switch($inputType) {
-                case 'select':
-                    $fb ->addElement($fb->createSelect()->setName($name)->addOptionsBasedOnArray($options));
-                    
-                    break;
-
-                case 'text':
-                    if($inputLength > 256) {
-                        $fb->addElement($fb->createTextArea()->setName($name));
-                    } else {
-                        $fb->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength)->setName($name));
-                    }
-
-                    break;
-
-                case 'number':
-                    $fb ->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength)->setName($name));
-
-                    break;
-
-                case 'boolean':
-                    $fb ->addElement($fb->createInput()->setType('checkbox')->setName($name));
-
-                    break;
-
-                case 'date':
-                    $fb ->addElement($fb->createInput()->setType('date')->setName($name));
-
-                    break;
-
-                case 'datetime':
-                    $fb ->addElement($fb->createInput()->setType('datetime')->setName($name));
-
-                    break;
-            }
-        }*/
-
         $fb ->addElement($fb->createLabel()->setText('SQL query ')->setFor('filter_sql'))
             ->addElement($fb->createTextArea()->setName('filter_sql'))
             
@@ -325,16 +195,52 @@ class DocumentFilter extends APresenter {
 
         $headerRow = null;
 
-        $filters = $app->filterModel->getAllDocumentFilters();
+        $seeSystemFilters = $app->actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTERS);
+        $seeOtherUsersFilters = $app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTERS);
+
+        $filters = [];
+        if(!$seeSystemFilters && !$seeOtherUsersFilters) {
+            $filters = $app->filterModel->getAllDocumentFiltersForIdUser($app->user->getId());
+        } else {
+            $filters = $app->filterModel->getAllDocumentFilters($seeSystemFilters, $seeOtherUsersFilters, $app->user->getId());
+        }
 
         if(empty($filters)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($filters as $filter) {
+                $showResultsLink = '-';
+                $editLink = '-';
+                $deleteLink = '-';
+
+                if(!is_null($filter->getIdAuthor())) {
+                    if($filter->getIdAuthor() == $app->user->getId()) {
+                        $showResultsLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                        $editLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                        $deleteLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
+                    } else if($filter->getIdAuthor() != $app->user->getId()) {
+                        if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTER_RESULTS)) {
+                            $showResultsLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                        }
+
+                        if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_OTHER_USERS_FILTER)) {
+                            $editLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                        }
+
+                        if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_OTHER_USERS_FILTER)) {
+                            $deleteLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
+                        }
+                    }
+                } else {
+                    if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTER_RESULTS)) {
+                        $showResultsLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                    }
+                }
+
                 $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete')
+                    $showResultsLink,
+                    $editLink,
+                    $deleteLink
                 );
 
                 if(is_null($headerRow)) {
