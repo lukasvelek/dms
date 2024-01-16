@@ -27,7 +27,6 @@ class UserActionRights {
     public const EDIT_RIBBON_RIGHTS = 'edit_ribbon_rights';
     public const DELETE_RIBBONS = 'delete_ribbons';
     public const CREATE_RIBBONS = 'create_ribbons';
-    
     public const EDIT_SYSTEM_FILTER = 'edit_system_filter';
     public const EDIT_OTHER_USERS_FILTER = 'edit_other_users_filter';
     public const DELETE_OTHER_USERS_FILTER = 'delete_other_users_filter';
@@ -36,6 +35,10 @@ class UserActionRights {
     public const SEE_OTHER_USERS_FILTER_RESULTS = 'see_other_users_filter_results';
     public const SEE_SYSTEM_FILTERS = 'see_system_filters';
     public const SEE_OTHER_USERS_FILTERS = 'see_other_users_filters';
+
+    public const CREATE_USER_CONNECTIONS = 'create_user_connections';
+    public const REMOVE_USER_CONNECTIONS = 'remove_user_connections';
+    public const ALLOW_RELOGIN = 'allow_relogin';
 
     public static $all = array(
         self::CREATE_USER,
@@ -69,7 +72,10 @@ class UserActionRights {
         self::SEE_SYSTEM_FILTER_RESULTS,
         self::SEE_OTHER_USERS_FILTER_RESULTS,
         self::SEE_SYSTEM_FILTERS,
-        self::SEE_OTHER_USERS_FILTERS
+        self::SEE_OTHER_USERS_FILTERS,
+        self::CREATE_USER_CONNECTIONS,
+        self::REMOVE_USER_CONNECTIONS,
+        self::ALLOW_RELOGIN
     );
 }
 

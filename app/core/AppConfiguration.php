@@ -118,6 +118,10 @@ class AppConfiguration {
         return self::loadParam('default_datetime_format');
     }
 
+    public static function getEnableRelogin() {
+        return self::loadParam('enable_relogin');
+    }
+
     /**
      * ----- PRIVATE METHODS -----
      */

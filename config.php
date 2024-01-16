@@ -30,4 +30,6 @@ $cfg['grid_use_ajax'] = true;
 
 $cfg['default_datetime_format'] = 'Y-m-d H:i:s';
 
+$cfg['enable_relogin'] = true;
+
 ?>
