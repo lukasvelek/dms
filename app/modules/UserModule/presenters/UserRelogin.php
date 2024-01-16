@@ -2,6 +2,8 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -18,12 +20,22 @@ class UserRelogin extends APresenter {
     }
 
     protected function showConnectedUsers() {
+        global $app;
+
+        $this->checkEnabled();
+
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/users/user-profile-grid.html');
+
+        $newConnectionLink = '';
+        
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_USER_CONNECTIONS)) {
+            $newConnectionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showNewConnectionForm'), 'New connection');
+        }
 
         $data = array(
             '$PAGE_TITLE$' => 'Connected users',
             '$LINKS$' => array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showNewConnectionForm'), 'New connection')
+                $newConnectionLink
             ),
             '$USER_PROFILE_GRID$' => $this->internalCreateConnectedUsersGrid()
         );
@@ -34,6 +46,8 @@ class UserRelogin extends APresenter {
     }
 
     protected function showNewConnectionForm() {
+        $this->checkEnabled();
+
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/users/user-new-entity-form.html');
 
         $data = array(
@@ -48,6 +62,8 @@ class UserRelogin extends APresenter {
 
     protected function createNewConnection() {
         global $app;
+
+        $this->checkEnabled();
 
         $app->flashMessageIfNotIsset(array('user'), true, array('page' => 'UserModule:UserRelogin:showNewConnectionForm'));
 
@@ -67,6 +83,8 @@ class UserRelogin extends APresenter {
     protected function removeConnectedUser() {
         global $app;
 
+        $this->checkEnabled();
+
         $app->flashMessageIfNotIsset(array('id_user'), true, array('page' => 'UserModule:UserRelogin:showConnectedUsers'));
 
         $idUser = htmlspecialchars($_GET['id_user']);
@@ -80,6 +98,8 @@ class UserRelogin extends APresenter {
     protected function reloginAsUser() {
         global $app;
 
+        $this->checkEnabled();
+
         $app->flashMessageIfNotIsset(array('id_user'), true, array('page' => 'UserModule:UserRelogin:showConnectedUsers'));
 
         $idUser = htmlspecialchars($_GET['id_user']);
@@ -92,11 +112,12 @@ class UserRelogin extends APresenter {
 
         $app->flashMessage('Logged in as <i>' . $user->getFullname() . '</i>');
 
-        if(!is_null($user->getDefaultUserPageUrl())) {
+        $app->redirect('UserModule:HomePage:showHomepage');
+        /*if(!is_null($user->getDefaultUserPageUrl())) {
             $app->redirect($user->getDefaultUserPageUrl());
         } else {
             $app->redirect('UserModule:HomePage:showHomepage');
-        }
+        }*/
     }
 
     private function internalCreateNewConnectionForm() {
@@ -162,14 +183,26 @@ class UserRelogin extends APresenter {
 
         $headerRow = null;
 
+        $allowRelogin = $app->actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN);
+        $removeUserConnections = $app->actionAuthorizator->checkActionRight(UserActionRights::REMOVE_USER_CONNECTIONS);
+
         if(empty($connectedUsers)) {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($connectedUsers as $user) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:reloginAsUser', 'id_user' => $user->getId()), 'Login'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:removeConnectedUser', 'id_user' => $user->getId()), 'Remove connection')
-                );
+                $actionLinks = [];
+
+                if($allowRelogin) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:reloginAsUser', 'id_user' => $user->getId()), 'Login');
+                } else {
+                    $actionLinks[] = '-';
+                }
+
+                if($removeUserConnections) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:removeConnectedUser', 'id_user' => $user->getId()), 'Remove connection');
+                } else {
+                    $actionLinks[] = '-';
+                }
 
                 if(is_null($headerRow)) {
                     $row = $tb->createRow();
@@ -201,6 +234,15 @@ class UserRelogin extends APresenter {
         }
 
         return $tb->build();
+    }
+
+    private function checkEnabled() {
+        global $app;
+
+        if(!AppConfiguration::getEnableRelogin()) {
+            $app->flashMessage('User relogin is disabled!', 'error');
+            $app->redirect('UserModule:HomePage:showHomepage');
+        }
     }
 }
 

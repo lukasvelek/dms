@@ -3,10 +3,10 @@
 namespace DMS\Panels;
 
 use DMS\Constants\CacheCategories;
-use DMS\Constants\PanelRights;
+use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\TemplateManager;
-use DMS\Entities\Ribbon;
 use DMS\UI\LinkBuilder;
 
 class Panels {
@@ -41,13 +41,18 @@ class Panels {
             $data['$USER_NOTIFICATIONS_LINK$'] = '<img src="img/notifications.svg" width="32" height="32" loading="lazy"><span class="general-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications (0)</span>';
             $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user.svg');
             $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', 'Logout', 'img/logout.svg');
-            $data['$USER_RELOGIN_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showConnectedUsers'), 'Relogin');
+            
+            if(AppConfiguration::getEnableRelogin() && $app->actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN)) {
+                $data['$USER_RELOGIN_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showConnectedUsers'), 'Relogin');
+            } else {
+                $data['$USER_RELOGIN_LINK$'] = '';
+            }
         } else {
             $data['$LINKS$'] = '';
             $data['$USER_PROFILE_LINK$'] = '';
             $data['$USER_LOGOUT_LINK$'] = '';
             $data['$USER_NOTIFICATIONS_LINK$'] = '';
-            $data['$USER_RELOGIN_LINK$'] = '-';
+            $data['$USER_RELOGIN_LINK$'] = '';
         }
 
         $templateManager->fill($data, $template);
@@ -57,6 +62,10 @@ class Panels {
 
     public static function createSubpanel() {
         global $app;
+
+        if($app->user === NULL) {
+            return null;
+        }
 
         $templateManager = self::tm();
 

@@ -62,8 +62,11 @@ class RibbonComponent extends AComponent {
 
         $valFromCache = $cm->loadRibbons();
 
+        $ribbons = null;
         if(!is_null($valFromCache)) {
-            $ribbons = $valFromCache['null'];
+            if(array_key_exists('null', $valFromCache)) {
+                $ribbons = $valFromCache['null'];
+            }
         } else {
             $ribbons = $this->ribbonModel->getToppanelRibbons();
 
@@ -73,11 +76,13 @@ class RibbonComponent extends AComponent {
         }
 
         $visibleRibbons = [];
-        foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
-
-            if($result === TRUE) {
-                $visibleRibbons[] = $ribbon;
+        if(!is_null($ribbons)) {
+            foreach($ribbons as $ribbon) {
+                $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
+    
+                if($result === TRUE) {
+                    $visibleRibbons[] = $ribbon;
+                }
             }
         }
 
@@ -100,11 +105,13 @@ class RibbonComponent extends AComponent {
         }
 
         $visibleRibbons = [];
-        foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
-
-            if($result === TRUE) {
-                $visibleRibbons[] = $ribbon;
+        if(!is_null($ribbons)) {
+            foreach($ribbons as $ribbon) {
+                $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
+    
+                if($result === TRUE) {
+                    $visibleRibbons[] = $ribbon;
+                }
             }
         }
 
@@ -132,11 +139,13 @@ class RibbonComponent extends AComponent {
         var_dump($valFromCache);
 
         $visibleRibbons = [];
-        foreach($ribbons as $ribbon) {
-            $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
-
-            if($result === TRUE) {
-                $visibleRibbons[] = $ribbon;
+        if(!is_null($ribbons)) {
+            foreach($ribbons as $ribbon) {
+                $result = $this->ribbonAuthorizator->checkRibbonVisible($idUser, $ribbon);
+    
+                if($result === TRUE) {
+                    $visibleRibbons[] = $ribbon;
+                }
             }
         }
 

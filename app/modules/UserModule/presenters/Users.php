@@ -45,7 +45,7 @@ class Users extends APresenter {
 
         $app->userModel->updateUser($id, $data);
 
-        $app->flashMessage('Successfully changed default page for user #' . $id, 'success');
+        $app->flashMessage('Successfully updated settings for user #' . $id, 'success');
         $app->redirect('UserModule:Users:showProfile', array('id' => $id));
     }
 
