@@ -35,11 +35,9 @@ class UserActionRights {
     public const SEE_OTHER_USERS_FILTER_RESULTS = 'see_other_users_filter_results';
     public const SEE_SYSTEM_FILTERS = 'see_system_filters';
     public const SEE_OTHER_USERS_FILTERS = 'see_other_users_filters';
-
     public const CREATE_USER_CONNECTIONS = 'create_user_connections';
     public const REMOVE_USER_CONNECTIONS = 'remove_user_connections';
     public const ALLOW_RELOGIN = 'allow_relogin';
-
     public const DELETE_RIBBON_CACHE = 'delete_ribbon_cache';
     public const VIEW_USER_PROFILE = 'view_user_profile';
     public const VIEW_GROUP_USERS = 'view_group_users';
