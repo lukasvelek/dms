@@ -479,7 +479,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function denyActionRight() {
@@ -501,7 +501,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function allowPanelRight() {
@@ -523,7 +523,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function denyPanelRight() {
@@ -545,7 +545,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -567,7 +567,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function denyBulkActionRight() {
@@ -589,7 +589,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     private function internalCreateUserRightsGrid(int $idUser) {
@@ -674,7 +674,7 @@ class Users extends APresenter {
             $name = $right['name'];
             $value = $right['value'];
 
-            $row = $tb->createRow();
+            $row = $tb->createRow()->setId($name);
 
             $allowLink = '';
             $denyLink = '';

@@ -249,7 +249,7 @@ class Application {
      * @param string $url The default page URL
      * @param array $params All other parameters that should be passed to the presenter
      */
-    public function redirect(string $url, array $params = array()) {
+    public function redirect(string $url, array $params = array(), string $hashtag = '') {
         $page = '?';
 
         $newParams = array('page' => $url);
@@ -284,6 +284,14 @@ class Application {
 
             $i++;
         }
+
+        if($hashtag != '') {
+            if(!str_contains($hashtag, '#')) {
+                $hashtag = '#' . $hashtag;
+            }
+        }
+
+        $page .= $hashtag;
 
         header('Location: ' . $page);
     }
