@@ -11,6 +11,7 @@ use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Document;
+use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
@@ -501,6 +502,11 @@ class SingleDocument extends APresenter {
             $folder = $this->createFolderLink($document->getIdFolder());
         }
 
+        $dateCreated = $document->getDateCreated();
+        $dateCreated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateCreated, $app->user);
+        $dateUpdated = $document->getDateUpdated();
+        $dateUpdated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateUpdated, $app->user);
+
         $data = array(
             'Name' => $document->getName(),
             'Author' => $this->createUserLink($document->getIdAuthor()),
@@ -510,9 +516,8 @@ class SingleDocument extends APresenter {
             'Group' => $this->createGroupLink($document->getIdGroup()),
             'Deleted?' => $document->getIsDeleted() ? 'Yes' : 'No',
             'Folder' => $folder,
-            'Shred year' => $document->getShredYear(),
-            'Action after shredding' => DocumentAfterShredActions::$texts[$document->getAfterShredAction()],
-            'Shredding status' => DocumentShreddingStatus::$texts[$document->getShreddingStatus()]
+            'Date created' => $dateCreated,
+            'Date updated' => $dateUpdated
         );
 
         foreach($document->getMetadata() as $k => $v) {
@@ -550,6 +555,27 @@ class SingleDocument extends APresenter {
         }
 
         foreach($data as $k => $v) {
+            if(is_null($v)) {
+                $v = '-';
+            }
+
+            $row = $tb->createRow();
+
+            $row->addCol($tb->createCol()->setText($k)->setBold())
+                ->addCol($tb->createCol()->setText($v));
+
+            $tb->addRow($row);
+        }
+
+        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setColspan('2')->setText('Shredding info')->setBold()));
+
+        $shreddingData = array(
+            'Shred year' => $document->getShredYear(),
+            'Action after shredding' => DocumentAfterShredActions::$texts[$document->getAfterShredAction()],
+            'Shredding status' => DocumentShreddingStatus::$texts[$document->getShreddingStatus()]
+        );
+
+        foreach($shreddingData as $k => $v) {
             if(is_null($v)) {
                 $v = '-';
             }

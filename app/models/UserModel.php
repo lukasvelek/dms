@@ -217,6 +217,9 @@ class UserModel extends AModel {
         if(isset($row['default_user_page_url'])) {
             $values['DefaultUserPageUrl'] = $row['default_user_page_url'];
         }
+        if(isset($row['default_user_datetime_format'])) {
+            $values['DefaultUserDateTimeFormat'] = $row['default_user_datetime_format'];
+        }
 
         $user = User::createUserObjectFromArrayValues($values);
 

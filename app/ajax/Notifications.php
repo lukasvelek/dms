@@ -1,5 +1,8 @@
 <?php
 
+use DMS\Core\AppConfiguration;
+use DMS\Helpers\DatetimeFormatHelper;
+
 require_once('Ajax.php');
 
 $action = null;
@@ -84,12 +87,19 @@ function getNotifications() {
         foreach($notifications as $notification) {
             $actionLink = '<a class="general-link" onclick="useNotification(\'' . $notification->getId() . '\', \'' . $notification->getAction() . '\')" style="cursor: pointer">Open</a>';
 
+            $dateCreated = $notification->getDateCreated();
+            if(!is_null($user)) {
+                $dateCreated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateCreated, $user);
+            } else {
+                $dateCreated = DatetimeFormatHelper::formatDateByFormat($dateCreated, AppConfiguration::getDefaultDatetimeFormat());
+            }
+
             $code .= '<span>';
             $code .= $notification->getText();
             $code .= '<br>';
             $code .= $actionLink;
             $code .= '<br>';
-            $code .= $notification->getDateCreated();
+            $code .= $dateCreated;
             $code .= '</span>';
 
             if(($i + 1) != count($notifications)) {

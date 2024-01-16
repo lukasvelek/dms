@@ -81,7 +81,8 @@ class DatabaseInstaller {
                 'date_password_changed' => 'DATETIME NOT NULL',
                 'password_change_status' => 'INT(2) NOT NULL DEFAULT 1',
                 'default_user_page_url' => 'VARCHAR(256) NULL',
-                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'default_user_datetime_format' => 'VARCHAR(256) NULL'
             ),
             'user_panel_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
