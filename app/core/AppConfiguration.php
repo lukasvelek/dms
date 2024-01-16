@@ -114,6 +114,10 @@ class AppConfiguration {
         return self::loadParam('grid_use_ajax');
     }
 
+    public static function getDefaultDatetimeFormat() {
+        return self::loadParam('default_datetime_format');
+    }
+
     /**
      * ----- PRIVATE METHODS -----
      */

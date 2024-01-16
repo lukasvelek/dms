@@ -1,5 +1,7 @@
 <?php
 
+use DMS\Core\AppConfiguration;
+use DMS\Helpers\DatetimeFormatHelper;
 use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
@@ -19,7 +21,7 @@ if($action == null) {
 echo($action());
 
 function getQueue() {
-    global $mailModel;
+    global $mailModel, $user;
 
     $tb = TableBuilder::getTemporaryObject();
     $tb->showRowBorder();
@@ -56,10 +58,17 @@ function getQueue() {
 
             $mailRow = $tb->createRow();
 
+            $dateCreated = $row['date_created'];
+            if(!is_null($user)) {
+                $dateCreated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateCreated, $user);
+            } else {
+                $dateCreated = DatetimeFormatHelper::formatDateByFormat($dateCreated, AppConfiguration::getDefaultDatetimeFormat());
+            }
+
             $mailRow->addCol($tb->createCol()->setText($row['recipient']))
                     ->addCol($tb->createCol()->setText($row['title']))
                     ->addCol($tb->createCol()->setText($row['body']))
-                    ->addCol($tb->createCol()->setText($row['date_created']))
+                    ->addCol($tb->createCol()->setText($dateCreated))
             ;
 
             $tb->addRow($mailRow);

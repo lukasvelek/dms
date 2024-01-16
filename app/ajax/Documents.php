@@ -3,9 +3,11 @@
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Helpers\DatetimeFormatHelper;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -226,7 +228,7 @@ function deleteComment() {
 }
 
 function getComments() {
-    global $documentCommentModel, $userModel, $ucm;
+    global $documentCommentModel, $userModel, $ucm, $user;
 
     $idDocument = htmlspecialchars($_GET['idDocument']);
     $canDelete = htmlspecialchars($_GET['canDelete']);
@@ -258,12 +260,19 @@ function getComments() {
             $codeArr[] = '<hr>';
             $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
 
+            $datePosted = $comment->getDateCreated();
+            if(!is_null($user)) {
+                $datePosted = DatetimeFormatHelper::formatDateByUserDefaultFormat($datePosted, $user);
+            } else {
+                $datePosted = DatetimeFormatHelper::formatDateByFormat($datePosted, AppConfiguration::getDefaultDatetimeFormat());
+            }
+
             if($canDelete == '1') {
                 $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteDocumentComment(\'' . $comment->getId() . '\', \'' . $idDocument . '\', \'' . $canDelete . '\');">Delete</a>';
 
-                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
+                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $datePosted . ' | ' . $deleteLink . '</p>';
             } else {
-                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
+                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $datePosted . '</p>';
             }
 
             $codeArr[] = '</article>';
@@ -274,7 +283,7 @@ function getComments() {
 }
 
 function sendComment() {
-    global $documentCommentModel, $userModel, $documentCommentRepository;
+    global $documentCommentModel, $userModel, $documentCommentRepository, $user;
 
     $text = htmlspecialchars($_POST['commentText']);
     $idAuthor = htmlspecialchars($_POST['idAuthor']);
@@ -292,12 +301,19 @@ function sendComment() {
     $codeArr[] = '<article id="comment' . $comment->getId() . '">';
     $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
 
+    $datePosted = $comment->getDateCreated();
+    if(!is_null($user)) {
+        $datePosted = DatetimeFormatHelper::formatDateByUserDefaultFormat($datePosted, $user);
+    } else {
+        $datePosted = DatetimeFormatHelper::formatDateByFormat($datePosted, AppConfiguration::getDefaultDatetimeFormat());
+    }
+
     if($canDelete == '1') {
         $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteComment(\'' . $comment->getId() . '\', \'' . $idDocument . '\', \'' . $canDelete . '\');">Delete</a>';
 
-        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
+        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $datePosted . ' | ' . $deleteLink . '</p>';
     } else {
-        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
+        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $datePosted . '</p>';
     }
 
     $codeArr[] = '</article>';
