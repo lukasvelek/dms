@@ -320,6 +320,11 @@ class DatabaseInstaller {
                 'description' => 'VARCHAR(256) NULL',
                 'filter_sql' => 'VARCHAR(32768) NOT NULL',
                 'has_ordering' => 'INT(2) NOT NULL DEFAULT 0'
+            ),
+            'user_connections' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user1' => 'INT(32) NOT NULL',
+                'id_user2' => 'INT(32) NOT NULL'
             )
         );
 

@@ -65,7 +65,7 @@ if(!is_null($app->user)) {
     }
 }
 
-if(isset($_GET['id_ribbon'])) {
+if(isset($_GET['id_ribbon']) && $_GET['id_ribbon'] != '') {
     $app->currentIdRibbon = htmlspecialchars($_GET['id_ribbon']);
     $_SESSION['id_current_ribbon'] = $app->currentIdRibbon;
 } else if(isset($_SESSION['id_current_ribbon'])) {
