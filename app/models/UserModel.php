@@ -10,6 +10,83 @@ class UserModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
     }
+    
+    public function removeConnectionForTwoUsers(int $idUser1, int $idUser2) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->delete()
+                     ->from('user_connections')
+                     ->explicit(' WHERE ')
+                     ->leftBracket()
+                     ->where('id_user1=:id_user1', false, false)
+                     ->andWhere('id_user2=:id_user2')
+                     ->rightBracket()
+                     ->explicit(' OR ')
+                     ->leftBracket()
+                     ->where('id_user1=:id_user2', false, false)
+                     ->andWhere('id_user2=:id_user1')
+                     ->rightBracket()
+                     ->setParams(array(
+                        ':id_user1' => $idUser1,
+                        ':id_user2' => $idUser2
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function insertNewUserConnect(array $data) {
+        return $this->insertNew($data, 'user_connections');
+    }
+
+    public function getConnectedUsersForIdUser(int $idUser) {
+        $ids = $this->getIdConnectedUsersForIdUser($idUser);
+
+        if($ids === NULL) {
+            return [];
+        }
+
+        $users = [];
+        foreach($ids as $id) {
+            $users[] = $this->getUserById($id);
+        }
+
+        return $users;
+    }
+
+    public function getIdConnectedUsersForIdUser(int $idUser) {
+        $rows = $this->getUserConnectionsByIdUser($idUser);
+
+        if($rows === NULL || $rows === FALSE) {
+            return [];
+        }
+
+        $idConnectedUsers = [];
+        foreach($rows as $row) {
+            if($row['id_user1'] == $idUser) {
+                $idConnectedUsers[] = $row['id_user2'];
+            } else if($row['id_user2'] == $idUser) {
+                $idConnectedUsers[] = $row['id_user1'];
+            }
+        }
+
+        return $idConnectedUsers;
+    }
+
+    public function getUserConnectionsByIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('user_connections')
+                   ->where('id_user1=:id_user')
+                   ->orWhere('id_user2=:id_user')
+                   ->setParam(':id_user', $idUser)
+                   ->execute()
+                   ->fetch();
+
+        return $rows;
+    }
 
     public function getUserByUsername(string $username) {
         $qb = $this->qb(__METHOD__);

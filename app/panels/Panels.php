@@ -41,11 +41,13 @@ class Panels {
             $data['$USER_NOTIFICATIONS_LINK$'] = '<img src="img/notifications.svg" width="32" height="32" loading="lazy"><span class="general-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications (0)</span>';
             $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user.svg');
             $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', 'Logout', 'img/logout.svg');
+            $data['$USER_RELOGIN_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showConnectedUsers'), 'Relogin');
         } else {
             $data['$LINKS$'] = '';
             $data['$USER_PROFILE_LINK$'] = '';
             $data['$USER_LOGOUT_LINK$'] = '';
             $data['$USER_NOTIFICATIONS_LINK$'] = '';
+            $data['$USER_RELOGIN_LINK$'] = '-';
         }
 
         $templateManager->fill($data, $template);
