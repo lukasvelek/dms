@@ -40,6 +40,11 @@ class UserActionRights {
     public const REMOVE_USER_CONNECTIONS = 'remove_user_connections';
     public const ALLOW_RELOGIN = 'allow_relogin';
 
+    public const DELETE_RIBBON_CACHE = 'delete_ribbon_cache';
+    public const VIEW_USER_PROFILE = 'view_user_profile';
+    public const VIEW_GROUP_USERS = 'view_group_users';
+    public const CREATE_DOCUMENT_FOLDER = 'create_document_folder';
+
     public static $all = array(
         self::CREATE_USER,
         self::CREATE_GROUP,
@@ -75,7 +80,11 @@ class UserActionRights {
         self::SEE_OTHER_USERS_FILTERS,
         self::CREATE_USER_CONNECTIONS,
         self::REMOVE_USER_CONNECTIONS,
-        self::ALLOW_RELOGIN
+        self::ALLOW_RELOGIN,
+        self::DELETE_RIBBON_CACHE,
+        self::VIEW_USER_PROFILE,
+        self::VIEW_GROUP_USERS,
+        self::CREATE_DOCUMENT_FOLDER
     );
 }
 

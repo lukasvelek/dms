@@ -455,7 +455,9 @@ class RibbonSettings extends APresenter {
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm'), 'New ribbon');
         }
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:clearCache'), 'Clear cache');
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBON_CACHE)) {
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:clearCache'), 'Clear cache');
+        }
 
         $this->templateManager->fill($data, $template);
 

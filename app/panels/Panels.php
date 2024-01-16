@@ -3,11 +3,10 @@
 namespace DMS\Panels;
 
 use DMS\Constants\CacheCategories;
-use DMS\Constants\PanelRights;
+use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\TemplateManager;
-use DMS\Entities\Ribbon;
 use DMS\UI\LinkBuilder;
 
 class Panels {
@@ -43,7 +42,7 @@ class Panels {
             $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user.svg');
             $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', 'Logout', 'img/logout.svg');
             
-            if(AppConfiguration::getEnableRelogin()) {
+            if(AppConfiguration::getEnableRelogin() && $app->actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN)) {
                 $data['$USER_RELOGIN_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showConnectedUsers'), 'Relogin');
             } else {
                 $data['$USER_RELOGIN_LINK$'] = '';
@@ -63,6 +62,10 @@ class Panels {
 
     public static function createSubpanel() {
         global $app;
+
+        if($app->user === NULL) {
+            return null;
+        }
 
         $templateManager = self::tm();
 

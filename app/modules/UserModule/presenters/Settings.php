@@ -225,7 +225,12 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-folders.html');
 
-        $newEntityLink = LinkBuilder::createLink('UserModule:Settings:showNewFolderForm', 'New folder');
+        $newEntityLink = '';
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER)) {
+            $newEntityLink = LinkBuilder::createLink('UserModule:Settings:showNewFolderForm', 'New folder');
+        }
+
         $backLink = '';
         $pageTitle = 'Document folders';
 
@@ -234,7 +239,7 @@ class Settings extends APresenter {
             $idFolder = htmlspecialchars($_GET['id_folder']);
             $folder = $app->folderModel->getFolderById($idFolder);
 
-            if(($folder->getNestLevel() + 1) < 6) {
+            if((($folder->getNestLevel() + 1) < 6) && ($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER))) {
                 $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showNewFolderForm', 'id_parent_folder' => $idFolder), 'New folder');
             } else {
                 $newEntityLink = '';
@@ -370,7 +375,8 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Users',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $usersGrid
+            '$SETTINGS_GRID$' => $usersGrid,
+            '$LINKS$' => []
         );
 
         if($app->actionAuthorizator->checkActionRight('create_user')) {
@@ -396,7 +402,8 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $groupsGrid
+            '$SETTINGS_GRID$' => $groupsGrid,
+            '$LINKS$' => []
         );
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
@@ -839,12 +846,18 @@ class Settings extends APresenter {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($groups as $group) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users')
-                );
+                $actionLinks = [];
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_GROUP_USERS)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users');
+                } else {
+                    $actionLinks[] = '-';
+                }
 
                 if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS)) {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId()), 'Group rights');
+                } else {
+                    $actionLinks[] = '-';
                 }
 
                 if(is_null($headerRow)) {
@@ -910,12 +923,18 @@ class Settings extends APresenter {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($users as $user) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile')
-                );
+                $actionLinks = [];
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_USER_PROFILE)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile');
+                } else {
+                    $actionLinks[] = '-';
+                }
 
                 if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS)) {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId()), 'User rights');
+                } else {
+                    $actionLinks[] = '-';
                 }
 
                 if(is_null($headerRow)) {

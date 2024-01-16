@@ -260,11 +260,17 @@ class Application {
             $newParams[$k] = $v;
         }
 
-        if(!array_key_exists('id_ribbon', $newParams)) {
+        if(!array_key_exists('id_ribbon', $newParams) && $url != self::URL_LOGIN_PAGE) {
             if($this->currentIdRibbon != null) {
-                $newParams['id_ribbon'] = $this->currentIdRibbon;
+                //$newParams['id_ribbon'] = $this->currentIdRibbon;
             } else if(isset($_SESSION['id_current_ribbon'])) {
                 $newParams['id_ribbon'] = $this->currentIdRibbon;
+            }
+        }
+
+        if($url != self::URL_LOGIN_PAGE) {
+            if(array_key_exists('id_current_ribbon', $_SESSION)) {
+                unset($_SESSION['id_current_ribbon']);
             }
         }
 

@@ -390,10 +390,11 @@ class Documents extends APresenter {
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
         }
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilters'), 'Filters');
-
-        //$this->drawSubpanel = true;
-        //$this->subpanel = Panels::createDocumentsPanel();
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTERS) ||
+           $app->actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTERS) ||
+           $app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_FILTER)) {
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilters'), 'Filters');
+        }
 
         $this->templateManager->fill($data, $template);
 
