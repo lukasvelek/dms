@@ -10,6 +10,7 @@ It also enables users to manage metadata and their values.
 - added support for custom filters
 - added support for several datetime formats
     - users are now able to select their default
+- updated user authorization
 - fixed a bug with missing or not showing flash messages
 
 ### v1.5
