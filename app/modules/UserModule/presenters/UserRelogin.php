@@ -112,11 +112,12 @@ class UserRelogin extends APresenter {
 
         $app->flashMessage('Logged in as <i>' . $user->getFullname() . '</i>');
 
-        if(!is_null($user->getDefaultUserPageUrl())) {
+        $app->redirect('UserModule:HomePage:showHomepage');
+        /*if(!is_null($user->getDefaultUserPageUrl())) {
             $app->redirect($user->getDefaultUserPageUrl());
         } else {
             $app->redirect('UserModule:HomePage:showHomepage');
-        }
+        }*/
     }
 
     private function internalCreateNewConnectionForm() {

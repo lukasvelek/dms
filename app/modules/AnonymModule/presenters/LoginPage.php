@@ -121,7 +121,8 @@ class LoginPage extends APresenter {
 
             unset($_SESSION['login_in_process']);
 
-            if(!is_null($user)) {
+            $app->redirect('UserModule:HomePage:showHomepage');
+            /*if(!is_null($user)) {
                 if(!is_null($user->getDefaultUserPageUrl())) {
                     $app->redirect($user->getDefaultUserPageUrl());
                 } else {
@@ -129,7 +130,7 @@ class LoginPage extends APresenter {
                 }
             } else {
                 $app->redirect('UserModule:HomePage:showHomepage');
-            }
+            }*/
         }
     }
 
