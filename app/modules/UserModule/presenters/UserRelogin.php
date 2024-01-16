@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Core\CacheManager;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
@@ -87,7 +88,10 @@ class UserRelogin extends APresenter {
         $_SESSION['id_current_user'] = $idUser;
         $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60)));
 
+        CacheManager::invalidateAllCache();
+
         $app->flashMessage('Logged in as <i>' . $user->getFullname() . '</i>');
+
         if(!is_null($user->getDefaultUserPageUrl())) {
             $app->redirect($user->getDefaultUserPageUrl());
         } else {
