@@ -263,6 +263,8 @@ class Application {
         if(!array_key_exists('id_ribbon', $newParams)) {
             if($this->currentIdRibbon != null) {
                 $newParams['id_ribbon'] = $this->currentIdRibbon;
+            } else if(isset($_SESSION['id_current_ribbon'])) {
+                $newParams['id_ribbon'] = $this->currentIdRibbon;
             }
         }
 

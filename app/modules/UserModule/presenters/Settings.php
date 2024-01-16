@@ -1251,7 +1251,8 @@ class Settings extends APresenter {
             'Actions',
             'System name',
             'Name',
-            'Description'
+            'Description',
+            'Last run date'
         );
 
         $headerRow = null;
@@ -1295,12 +1296,21 @@ class Settings extends APresenter {
             $serviceRow = $tb->createRow();
 
             foreach($actionLinks as $actionLink) {
-                $serviceRow->addCoL($tb->createCol()->setText($actionLink));
+                $serviceRow->addCol($tb->createCol()->setText($actionLink));
+            }
+
+            $serviceLogEntry = $app->serviceModel->getServiceLogLastEntryForServiceName($service->name);
+            $serviceLastRunDate = '-';
+            
+            if($serviceLogEntry !== NULL) {
+                $serviceLastRunDate = $serviceLogEntry['date_created'];
+                $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $app->user);
             }
 
             $serviceRow ->addCol($tb->createCol()->setText($service->name))
                         ->addCol($tb->createCol()->setText($serviceName))
                         ->addCol($tb->createCol()->setText($service->description))
+                        ->addCol($tb->createCol()->setText($serviceLastRunDate))
             ;
 
             $tb->addRow($serviceRow);
