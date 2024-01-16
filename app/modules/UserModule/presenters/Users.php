@@ -9,6 +9,7 @@ use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
+use DMS\Constnats\DatetimeFormats;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
 use DMS\Entities\User;
@@ -836,7 +837,7 @@ class Users extends APresenter {
             $pages[] = $page;
         }
 
-        $formats = array('Y-m-d H:i:s', 'd.m.Y H:i:s', 'm/d/Y H:i:s');
+        $formats = DatetimeFormats::$formats;
 
         $datetimeFormats = [];
         foreach($formats as $format) {

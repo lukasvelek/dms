@@ -15,6 +15,7 @@ use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Modules\APresenter;
 use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -988,8 +989,12 @@ class Settings extends APresenter {
         global $app;
 
         $systemVersion = $app::SYSTEM_VERSION;
-        $systemBuildDate = $app::SYSTEM_BUILD_DATE;
         $systemIsDebugEnabled = $app::SYSTEM_DEBUG ? 'Enabled' : 'Disabled';
+        $systemBuildDate = $app::SYSTEM_BUILD_DATE;
+
+        if(!$app::SYSTEM_IS_BETA) {
+            $systemBuildDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($systemBuildDate, $app->user);
+        }
 
         $code = '<div class="col-md">
                     <div class="row">
