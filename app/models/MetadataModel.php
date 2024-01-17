@@ -177,6 +177,7 @@ class MetadataModel extends AModel {
         $inputType = $row['input_type'];
         $inputLength = $row['length'];
         $selectExternalEnumName = null;
+        $isReadonly = $row['is_readonly'];
 
         if(isset($row['select_external_enum_name']) && $row['select_external_enum_name'] != NULL) {
             $selectExternalEnumName = $row['select_external_enum_name'];
@@ -188,7 +189,13 @@ class MetadataModel extends AModel {
             $isSystem = false;
         }
 
-        return new Metadata($id, $name, $text, $tableName, $isSystem, $inputType, $inputLength, $selectExternalEnumName);
+        if($isReadonly == '1') {
+            $isReadonly = true;
+        } else {
+            $isReadonly = false;
+        }
+
+        return new Metadata($id, $name, $text, $tableName, $isSystem, $inputType, $inputLength, $selectExternalEnumName, $isReadonly);
     }
 
     private function createMetadataValueObjectFromDbRow($row) {

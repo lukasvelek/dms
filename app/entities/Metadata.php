@@ -10,8 +10,9 @@ class Metadata extends AEntity {
     private string $inputType;
     private string $inputLength;
     private ?string $selectExternalEnumName;
+    private bool $isReadonly;
 
-    public function __construct(int $id, string $name, string $text, string $tableName, bool $isSystem, string $inputType, string $inputLength, ?string $selectExternalEnumName) {
+    public function __construct(int $id, string $name, string $text, string $tableName, bool $isSystem, string $inputType, string $inputLength, ?string $selectExternalEnumName, bool $isReadonly = false) {
         parent::__construct($id, null, null);
 
         $this->name = $name;
@@ -21,6 +22,7 @@ class Metadata extends AEntity {
         $this->inputType = $inputType;
         $this->inputLength = $inputLength;
         $this->selectExternalEnumName = $selectExternalEnumName;
+        $this->isReadonly = $isReadonly;
     }
 
     public function getName() {
@@ -49,6 +51,10 @@ class Metadata extends AEntity {
 
     public function getSelectExternalEnumName() {
         return $this->selectExternalEnumName;
+    }
+
+    public function getIsReadonly() {
+        return $this->isReadonly;
     }
 }
 
