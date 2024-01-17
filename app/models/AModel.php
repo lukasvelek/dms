@@ -7,6 +7,10 @@ use DMS\Core\Logger\Logger;
 use QueryBuilder\QueryBuilder;
 
 abstract class AModel {
+    public const VIEW = 'can_see';
+    public const EDIT = 'can_edit';
+    public const DELETE = 'can_delete';
+
     protected Database $db;
     private Logger $logger;
 
@@ -31,6 +35,59 @@ abstract class AModel {
         $qb = $this->db->createQueryBuilder();
         $qb->setMethod($methodName);
         return $qb;
+    }
+
+    protected function updateExisting(string $tableName, int $id, array $data) {
+        $qb = $this->qb(__METHOD__);
+
+        $values = [];
+        $params = [];
+
+        foreach($data as $k => $v) {
+            $values[$k] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $result = $qb->update($tableName)
+                     ->set($values)
+                     ->setParams($params)
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    protected function updateExistingQb(string $tableName, array $data) {
+        $qb = $this->qb(__METHOD__);
+
+        $values = [];
+        $params = [];
+
+        foreach($data as $k => $v) {
+            $values[$k] = ':' . $k;
+            $params[':' . $k] = $v;
+        }
+
+        $qb->update($tableName)
+           ->set($values)
+           ->setParams($params);
+
+        return $qb;    
+    }
+
+    protected function getLastInsertedRow(string $tableName, string $ordedCol = 'id', string $orded = 'DESC') {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from($tableName)
+                  ->orderBy($ordedCol, $orded)
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
     }
 
     /**

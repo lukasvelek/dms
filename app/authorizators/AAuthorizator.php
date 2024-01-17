@@ -12,6 +12,10 @@ use DMS\Entities\User;
  * @author Lukas Velek
  */
 abstract class AAuthorizator {
+    protected const VIEW = 'can_see';
+    protected const EDIT = 'can_edit';
+    protected const DELETE = 'can_delete';
+
     private Database $db;
     protected Logger $logger;
     protected int $idUser;

@@ -30,7 +30,7 @@ class DeclinedDocumentRemoverService extends AService {
         $deleted = 0;
         if(count($documents) > 0) {
             foreach($documents as $document) {
-                if($this->documentAuthorizator->canDeleteDocument($document->getId(), false)) {
+                if($this->documentAuthorizator->canDeleteDocument($document, false, true)) {
                     $this->documentModel->deleteDocument($document->getId(), true);
                     $deleted++;
                 }

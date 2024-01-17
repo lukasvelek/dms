@@ -111,10 +111,10 @@ if(!DMS\Core\FileManager::fileExists('config.local.php')) {
     die('Config file does not exist!');
 }
 
-include('config.local.php');
+//include('config.local.php');
 include('modules/modules.php');
 
-$app = new DMS\Core\Application($cfg);
+$app = new DMS\Core\Application();
 
 foreach($modules as $moduleName => $modulePresenters) {
     $moduleUrl = 'DMS\\Modules\\' . $moduleName . '\\' . $moduleName;

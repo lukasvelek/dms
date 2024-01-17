@@ -8,7 +8,7 @@ class MetadataValue extends AEntity {
     private string $value;
 
     public function __construct(int $id, int $idMetadata, string $name, string $value) {
-        parent::__construct($id, null);
+        parent::__construct($id, null, null);
 
         $this->idMetadata = $idMetadata;
         $this->name = $name;

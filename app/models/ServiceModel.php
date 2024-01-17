@@ -10,6 +10,21 @@ class ServiceModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getServiceLogLastEntryForServiceName(string $serviceName) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('service_log')
+                  ->where('name=:name')
+                  ->setParam(':name', $serviceName)
+                  ->orderBy('id', 'DESC')
+                  ->limit('1')
+                  ->execute()
+                  ->fetchSingle();
+
+        return $row;
+    }
+
     public function insertServiceLog(array $data) {
         return $this->insertNew($data, 'service_log');
     }

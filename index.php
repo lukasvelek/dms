@@ -65,6 +65,13 @@ if(!is_null($app->user)) {
     }
 }
 
+if(isset($_GET['id_ribbon']) && $_GET['id_ribbon'] != '') {
+    $app->currentIdRibbon = htmlspecialchars($_GET['id_ribbon']);
+    $_SESSION['id_current_ribbon'] = $app->currentIdRibbon;
+} else if(isset($_SESSION['id_current_ribbon'])) {
+    $app->currentIdRibbon = $_SESSION['id_current_ribbon'];
+}
+
 $app->loadPages();
 $app->renderPage();
 
@@ -88,8 +95,6 @@ $title = 'DMS | ' . $app->currentPresenter->getTitle();
         <?php
 
         $app->showPage();
-
-        if(isset($_SESSION['flash_message'])) unset($_SESSION['flash_message']);
 
         ?>
     </body>

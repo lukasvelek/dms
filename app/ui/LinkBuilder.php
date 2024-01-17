@@ -103,8 +103,8 @@ class LinkBuilder {
      * @param string $class Link CSS class
      * @return string HTML code
      */
-    public static function createImgLink(string $url, string $name, string $imgPath, string $class = 'general-link') {
-        $obj = new self('?page=' . $url, $class, $name, '', $imgPath);
+    public static function createImgLink(string $url, string $name, string $imgPath, string $class = 'general-link', bool $pureUrl = false) {
+        $obj = new self(($pureUrl ? '' : '?page=') . $url, $class, $name, '', $imgPath);
         return $obj->render();
     }
 
@@ -130,8 +130,29 @@ class LinkBuilder {
      * @param string $class Link CSS class
      * @return string HTML code
      */
-    public static function createLink(string $url, string $name, string $class = 'general-link') {
-        $obj = new self('?page=' . $url, $class, $name);
+    public static function createLink(string $url, string $name, string $class = 'general-link', bool $pureUrl = false) {
+        if(!$pureUrl) {
+            $params = array(
+                'page' => $url
+            );
+
+            $obj = new self(self::createURL($params), $class, $name, '');
+        } else {
+            $link = ($pureUrl ? '' : '?page=') . $url;
+
+            if(!str_contains($link, 'id_ribbon')) {
+                if(isset($_GET['id_ribbon'])) {
+                    $link .= '&id_ribbon=' . $_GET['id_ribbon'];
+                }  
+            }
+
+            /*if(isset($_GET['id_ribbon'])) {
+                $link .= '&id_ribbon=' . $_GET['id_ribbon'];
+            }*/
+
+            $obj = new self($link, $class, $name);
+        }
+
         return $obj->render();
     }
 
@@ -161,6 +182,12 @@ class LinkBuilder {
             }
             
             $i++;
+        }
+
+        if(!array_key_exists('id_ribbon', $urlParams)) {
+            if(isset($_GET['id_ribbon'])) {
+                $url .= '&id_ribbon=' . $_GET['id_ribbon'];
+            }
         }
 
         return $url;

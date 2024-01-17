@@ -8,7 +8,7 @@ class Notification extends AEntity {
     private string $action;
 
     public function __construct(int $id, string $dateCreated, int $idUser, string $text, string $action) {
-        parent::__construct($id, $dateCreated);
+        parent::__construct($id, $dateCreated, null);
 
         $this->idUser = $idUser;
         $this->text = $text;

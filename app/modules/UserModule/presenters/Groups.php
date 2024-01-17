@@ -104,7 +104,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup));
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
     }
 
     protected function denyActionRight() {
@@ -126,7 +126,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup));
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
     }
 
     protected function allowPanelRight() {
@@ -148,7 +148,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup));
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
     }
 
     protected function denyPanelRight() {
@@ -170,7 +170,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup));
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -192,7 +192,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup));
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
     }
 
     protected function denyBulkActionRight() {
@@ -214,7 +214,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup));
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
     }
 
     protected function addUserToGroup() {
@@ -414,7 +414,7 @@ class Groups extends APresenter {
             $name = $right['name'];
             $value = $right['value'];
 
-            $row = $tb->createRow();
+            $row = $tb->createRow()->setId($name);
 
             $allowLink = '';
             $denyLink = '';

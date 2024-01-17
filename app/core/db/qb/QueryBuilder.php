@@ -479,6 +479,18 @@ class QueryBuilder {
     return $this;
   }
 
+  public function getSQL() {
+    return $this->sql;
+  }
+
+  public function setSQL(string $sql, bool $cleanVariables = true) {
+    $this->clean();
+
+    $this->sql = $sql;
+    
+    return $this;
+  }
+
   public function execute() {
     $this->createQuery();
 

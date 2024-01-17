@@ -23,6 +23,25 @@ class UserActionRights {
     public const CREATE_DOCUMENT = 'create_document';
     public const UPDATE_DEFAULT_USER_RIGHTS = 'update_default_user_rights';
     public const USE_DOCUMENT_GENERATOR = 'use_document_generator';
+    public const EDIT_RIBBONS = 'edit_ribbons';
+    public const EDIT_RIBBON_RIGHTS = 'edit_ribbon_rights';
+    public const DELETE_RIBBONS = 'delete_ribbons';
+    public const CREATE_RIBBONS = 'create_ribbons';
+    public const EDIT_SYSTEM_FILTER = 'edit_system_filter';
+    public const EDIT_OTHER_USERS_FILTER = 'edit_other_users_filter';
+    public const DELETE_OTHER_USERS_FILTER = 'delete_other_users_filter';
+    public const CREATE_FILTER = 'create_filter';
+    public const SEE_SYSTEM_FILTER_RESULTS = 'see_system_filter_results';
+    public const SEE_OTHER_USERS_FILTER_RESULTS = 'see_other_users_filter_results';
+    public const SEE_SYSTEM_FILTERS = 'see_system_filters';
+    public const SEE_OTHER_USERS_FILTERS = 'see_other_users_filters';
+    public const CREATE_USER_CONNECTIONS = 'create_user_connections';
+    public const REMOVE_USER_CONNECTIONS = 'remove_user_connections';
+    public const ALLOW_RELOGIN = 'allow_relogin';
+    public const DELETE_RIBBON_CACHE = 'delete_ribbon_cache';
+    public const VIEW_USER_PROFILE = 'view_user_profile';
+    public const VIEW_GROUP_USERS = 'view_group_users';
+    public const CREATE_DOCUMENT_FOLDER = 'create_document_folder';
 
     public static $all = array(
         self::CREATE_USER,
@@ -44,7 +63,26 @@ class UserActionRights {
         self::SHARE_DOCUMENT,
         self::UPDATE_DEFAULT_USER_RIGHTS,
         self::USE_DOCUMENT_GENERATOR,
-        self::CREATE_DOCUMENT
+        self::CREATE_DOCUMENT,
+        self::EDIT_RIBBONS,
+        self::EDIT_RIBBON_RIGHTS,
+        self::DELETE_RIBBONS,
+        self::CREATE_RIBBONS,
+        self::EDIT_SYSTEM_FILTER,
+        self::EDIT_OTHER_USERS_FILTER,
+        self::DELETE_OTHER_USERS_FILTER,
+        self::CREATE_FILTER,
+        self::SEE_SYSTEM_FILTER_RESULTS,
+        self::SEE_OTHER_USERS_FILTER_RESULTS,
+        self::SEE_SYSTEM_FILTERS,
+        self::SEE_OTHER_USERS_FILTERS,
+        self::CREATE_USER_CONNECTIONS,
+        self::REMOVE_USER_CONNECTIONS,
+        self::ALLOW_RELOGIN,
+        self::DELETE_RIBBON_CACHE,
+        self::VIEW_USER_PROFILE,
+        self::VIEW_GROUP_USERS,
+        self::CREATE_DOCUMENT_FOLDER
     );
 }
 

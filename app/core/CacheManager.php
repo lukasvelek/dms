@@ -4,6 +4,7 @@ namespace DMS\Core;
 
 use DMS\Constants\CacheCategories;
 use DMS\Entities\Folder;
+use DMS\Entities\Ribbon;
 use DMS\Entities\User;
 
 /**
@@ -27,6 +28,182 @@ class CacheManager {
 
         $this->serialize = $serialize;
         $this->category = $category;
+    }
+
+    public function saveFlashMessage(array $data) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            $cacheData = [];
+        }
+
+        $cacheData[] = $data;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadFlashMessage() {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        } else {
+            return $cacheData;
+        }
+
+        return null;
+    }
+
+    public function loadRibbonById(int $idRibbon) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        } else {
+            foreach($cacheData as $cd) {
+                if(is_array($cd)) {
+                    foreach($cd as $cdcd) {
+                        if($cdcd instanceof Ribbon) {
+                            if($cdcd->getId() == $idRibbon) {
+                                return $cdcd;
+                            }
+                        }
+                    }
+                } else if($cd instanceof Ribbon) {
+                    if($cd->getId() == $idRibbon) {
+                        return $cd;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function saveRibbon(Ribbon $ribbon) {
+        $cacheData = $this->loadFromCache();
+
+        if($ribbon->hasParent()) {
+            $cacheData[$ribbon->getIdParentRibbon()][] = $ribbon;
+        } else {
+            $cacheData['null'][] = $ribbon;
+        }
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadRibbons() {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        return $cacheData;
+    }
+
+    public function loadTopRibbons() {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists('null', $cacheData)) {
+            return $cacheData['null'];
+        } else {
+            return null;
+        }
+    }
+
+    public function loadChildrenRibbons(int $idParentRibbon) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($idParentRibbon, $cacheData)) {
+            return $cacheData[$idParentRibbon];
+        } else {
+            return null;
+        }
+    }
+
+    public function loadSiblingRibbons(int $idRibbon) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        foreach($cacheData as $k => $cd) {
+            if($k == $idRibbon) {
+                echo('1');
+                return $cd;
+            } else {
+                foreach($cacheData[$k] as $cdk => $cdcd) {
+                    if($cdk == $idRibbon) {
+                        echo('2');
+                        return $cdcd;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function saveUserRibbonRight(int $idRibbon, int $idUser, string $category, bool $result) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[$idRibbon][$idUser][$category] = $result;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadUserRibbonRight(int $idRibbon, int $idUser, string $category) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($idRibbon, $cacheData)) {
+            if(array_key_exists($idUser, $cacheData[$idRibbon])) {
+                if(array_key_exists($category, $cacheData[$idRibbon][$idUser])) {
+                    return $cacheData[$idRibbon][$idUser][$category];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function saveGroupRibbonRight(int $idRibbon, int $idGroup, string $category, bool $result) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[$idRibbon][$idGroup][$category] = $result;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadGroupRibbonRight(int $idRibbon, int $idGroup, string $category) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($idRibbon, $cacheData)) {
+            if(array_key_exists($idGroup, $cacheData[$idRibbon])) {
+                if(array_key_exists($category, $cacheData[$idRibbon][$idGroup])) {
+                    return $cacheData[$idRibbon][$idGroup][$category];
+                }
+            }
+        }
+
+        return null;
     }
 
     public function saveArrayToCache(array $array) {
@@ -343,7 +520,7 @@ class CacheManager {
     /**
      * Loads data from cache
      * 
-     * @return array $data Cache data
+     * @return array|false $data Cache data or false if no data exists
      */
     private function loadFromCache() {
         $filename = $this->createFilename();
@@ -382,17 +559,11 @@ class CacheManager {
      * @param string $category Cache category
      * @return CacheManager self
      */
-    public static function getTemporaryObject(string $category, bool $isAjax = false, array $cfg = []) {
+    public static function getTemporaryObject(string $category, bool $isAjax = false) {
         if($isAjax) {
-            if(empty($cfg)) {
-                die();
-            } else {
-                return new self($cfg['serialize_cache'], $category, '../../logs/', '../../cache/');
-            }
+            return new self(AppConfiguration::getSerializeCache(), $category, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
         } else {
-            global $app;
-
-            return new self($app->cfg['serialize_cache'], $category);
+            return new self(AppConfiguration::getSerializeCache(), $category);
         }
     }
 
@@ -400,10 +571,8 @@ class CacheManager {
      * Invalidates all types of cache
      */
     public static function invalidateAllCache() {
-        global $app;
-
         foreach(CacheCategories::$all as $cc) {
-            $cm = new self($app->cfg['serialize_cache'], $cc);
+            $cm = new self(AppConfiguration::getSerializeCache(), $cc);
 
             $cm->invalidateCache();
         }

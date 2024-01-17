@@ -3,9 +3,11 @@
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Helpers\DatetimeFormatHelper;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -29,7 +31,7 @@ if($action == null) {
 echo($action());
 
 function getBulkActions() {
-    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user, $cfg;
+    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user;
 
     $bulkActions = [];
     $text = '';
@@ -46,7 +48,7 @@ function getBulkActions() {
             $inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
             $document = $documentModel->getDocumentById($idDocument);
 
-            if($documentBulkActionAuthorizator->canDelete($document, null, true, false, $cfg) && 
+            if($documentBulkActionAuthorizator->canDelete($document, null, true, false) && 
                 (is_null($canDelete) || $canDelete) &&
                 !$inProcess) {
                 $canDelete = true;
@@ -54,7 +56,7 @@ function getBulkActions() {
                 $canDelete = false;
             }
 
-            if($documentBulkActionAuthorizator->canApproveArchivation($document, null, true, false, $cfg) && 
+            if($documentBulkActionAuthorizator->canApproveArchivation($document, null, true, false) && 
                 (is_null($canApproveArchivation) || $canApproveArchivation) &&
                 !$inProcess) {
                 $canApproveArchivation = true;
@@ -62,7 +64,7 @@ function getBulkActions() {
                 $canApproveArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canDeclineArchivation($document, null, true, false, $cfg) &&
+            if($documentBulkActionAuthorizator->canDeclineArchivation($document, null, true, false) &&
                 (is_null($canDeclineArchivation) || $canDeclineArchivation) &&
                 !$inProcess) {
                 $canDeclineArchivation = true;
@@ -70,7 +72,7 @@ function getBulkActions() {
                 $canDeclineArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canArchive($document, null, true, false, $cfg) &&
+            if($documentBulkActionAuthorizator->canArchive($document, null, true, false) &&
                 (is_null($canArchive) || $canArchive) &&
                 !$inProcess) {
                 $canArchive = true;
@@ -78,7 +80,7 @@ function getBulkActions() {
                 $canArchive = false;
             }
 
-            if($documentBulkActionAuthorizator->canSuggestForShredding($document, null, true, false, $cfg) &&
+            if($documentBulkActionAuthorizator->canSuggestForShredding($document, null, true, false) &&
               (is_null($canSuggestShredding) || $canSuggestShredding) &&
               !$inProcess) {
                 $canSuggestShredding = true;
@@ -226,7 +228,7 @@ function deleteComment() {
 }
 
 function getComments() {
-    global $documentCommentModel, $userModel, $ucm;
+    global $documentCommentModel, $userModel, $ucm, $user;
 
     $idDocument = htmlspecialchars($_GET['idDocument']);
     $canDelete = htmlspecialchars($_GET['canDelete']);
@@ -258,12 +260,19 @@ function getComments() {
             $codeArr[] = '<hr>';
             $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
 
+            $datePosted = $comment->getDateCreated();
+            if(!is_null($user)) {
+                $datePosted = DatetimeFormatHelper::formatDateByUserDefaultFormat($datePosted, $user);
+            } else {
+                $datePosted = DatetimeFormatHelper::formatDateByFormat($datePosted, AppConfiguration::getDefaultDatetimeFormat());
+            }
+
             if($canDelete == '1') {
                 $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteDocumentComment(\'' . $comment->getId() . '\', \'' . $idDocument . '\', \'' . $canDelete . '\');">Delete</a>';
 
-                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
+                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $datePosted . ' | ' . $deleteLink . '</p>';
             } else {
-                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
+                $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $datePosted . '</p>';
             }
 
             $codeArr[] = '</article>';
@@ -274,7 +283,7 @@ function getComments() {
 }
 
 function sendComment() {
-    global $documentCommentModel, $userModel, $documentCommentRepository;
+    global $documentCommentModel, $userModel, $documentCommentRepository, $user;
 
     $text = htmlspecialchars($_POST['commentText']);
     $idAuthor = htmlspecialchars($_POST['idAuthor']);
@@ -292,12 +301,19 @@ function sendComment() {
     $codeArr[] = '<article id="comment' . $comment->getId() . '">';
     $codeArr[] = '<p class="comment-text">' . $comment->getText() . '</p>';
 
+    $datePosted = $comment->getDateCreated();
+    if(!is_null($user)) {
+        $datePosted = DatetimeFormatHelper::formatDateByUserDefaultFormat($datePosted, $user);
+    } else {
+        $datePosted = DatetimeFormatHelper::formatDateByFormat($datePosted, AppConfiguration::getDefaultDatetimeFormat());
+    }
+
     if($canDelete == '1') {
         $deleteLink = '<a class="general-link" style="cursor: pointer" onclick="deleteComment(\'' . $comment->getId() . '\', \'' . $idDocument . '\', \'' . $canDelete . '\');">Delete</a>';
 
-        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . ' | ' . $deleteLink . '</p>';
+        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $datePosted . ' | ' . $deleteLink . '</p>';
     } else {
-        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $comment->getDateCreated() . '</p>';
+        $codeArr[] = '<p class="comment-info">Author: ' . $authorLink . ' | Date posted: ' . $datePosted . '</p>';
     }
 
     $codeArr[] = '</article>';
@@ -753,6 +769,90 @@ function generateDocuments() {
     $documentModel->insertDocumentStatsEntry($data);
 
     $documentModel->commitTran();
+}
+
+function documentsCustomFilter() {
+    global $documentModel, $filterModel, $userModel, $metadataModel, $folderModel;
+
+    $idFilter = $_GET['id_filter'];
+    $filter = $filterModel->getDocumentFilterById($idFilter);
+
+    $documents = $documentModel->getDocumentsBySQL($filter->getSql());
+
+    $tb = TableBuilder::getTemporaryObject();
+
+    $headers = array(
+        '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
+        'Actions',
+        'Name',
+        'Author',
+        'Status',
+        'Folder'
+    );
+
+    $headerRow = null;
+
+    if(empty($documents)) {
+        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+    } else {
+        foreach($documents as $document) {
+            $actionLinks = array(
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
+                LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
+            );
+
+            if(is_null($headerRow)) {
+                $row = $tb->createRow();
+
+                foreach($headers as $header) {
+                    $col = $tb->createCol()->setText($header)
+                                           ->setBold();
+
+                    if($header == 'Actions') {
+                        $col->setColspan(count($actionLinks));
+                    }
+
+                    $row->addCol($col);
+                }
+
+                $headerRow = $row;
+
+                $tb->addRow($row);
+            }
+
+            $docuRow = $tb->createRow();
+            $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawDocumentBulkActions()">'));
+
+            foreach($actionLinks as $actionLink) {
+                $docuRow->addCol($tb->createCol()->setText($actionLink));
+            }
+
+            $docuRow->addCol($tb->createCol()->setText($document->getName()))
+                    ->addCol($tb->createCol()->setText($userModel->getUserById($document->getIdAuthor())->getFullname()))
+            ;
+
+            $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
+
+            foreach($dbStatuses as $dbs) {
+                if($dbs->getValue() == $document->getStatus()) {
+                    $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
+                }
+            }
+
+            $folderName = '-';
+
+            if($document->getIdFolder() !== NULL) {
+                $folder = $folderModel->getFolderById($document->getIdFolder());
+                $folderName = $folder->getName();
+            }
+
+            $docuRow->addCol($tb->createCol()->setText($folderName));
+                
+            $tb->addRow($docuRow);
+        }
+    }
+
+    echo $tb->build();
 }
 
 // PRIVATE METHODS

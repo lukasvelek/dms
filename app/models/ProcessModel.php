@@ -306,9 +306,11 @@ class ProcessModel extends AModel {
 
         $result = $qb->update('processes')
                      ->set(array(
-                        'status' => ':status'
+                        'status' => ':status',
+                        'date_updated' => ':date'
                      ))
                      ->setParam(':status', $status)
+                     ->setParam(':date', date(Database::DB_DATE_FORMAT))
                      ->where('id=:id')
                      ->setParam(':id', $idProcess)
                      ->execute()
@@ -322,9 +324,11 @@ class ProcessModel extends AModel {
 
         $result = $qb->update('processes')
                      ->set(array(
-                        'workflow_status' => ':status'
+                        'workflow_status' => ':status',
+                        'date_updated' => ':date'
                      ))
                      ->setParam(':status', $status)
+                     ->setParam(':date', date(Database::DB_DATE_FORMAT))
                      ->where('id=:id')
                      ->setParam(':id', $idProcess)
                      ->execute()
@@ -436,6 +440,11 @@ class ProcessModel extends AModel {
             $params[':' . $k] = $v;
         }
 
+        if(!array_key_exists('date_updated', $sets)) {
+            $sets[] = 'date_updated=:date_updated';
+            $params[':date_updated'] = date(Database::DB_DATE_FORMAT);
+        }
+
         $result = $qb->update('processes')
                      ->set($sets)
                      ->setParams($params)
@@ -492,8 +501,9 @@ class ProcessModel extends AModel {
         $workflow4 = $row['workflow4'];
         $workflowStatus = $row['workflow_status'];
         $idAuthor = $row['id_author'];
+        $dateUpdated = $row['date_updated'];
 
-        return new Process($id, $dateCreated, $idDocument, $workflow1, $workflow2, $workflow3, $workflow4, $workflowStatus, $type, $status, $idAuthor);
+        return new Process($id, $dateCreated, $idDocument, $workflow1, $workflow2, $workflow3, $workflow4, $workflowStatus, $type, $status, $idAuthor, $dateUpdated);
     }
 }
 

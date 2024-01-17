@@ -9,6 +9,7 @@ use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
+use DMS\Constnats\DatetimeFormats;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
 use DMS\Entities\User;
@@ -34,10 +35,17 @@ class Users extends APresenter {
 
         $id = htmlspecialchars($_GET['id']);
         $defaultUserPageUrl = htmlspecialchars($_POST['default_user_page_url']);
+        $defaultUserDatetimeFormat = htmlspecialchars($_POST['default_user_datetime_format']);
 
-        $app->userModel->updateUser($id, array('default_user_page_url' => $defaultUserPageUrl));
+        $data = array('default_user_page_url' => $defaultUserPageUrl);
 
-        $app->flashMessage('Successfully changed default page for user #' . $id, 'success');
+        if($defaultUserDatetimeFormat != 'Y-m-d H:i:s') {
+            $data['default_user_datetime_format'] = $defaultUserDatetimeFormat;
+        }
+
+        $app->userModel->updateUser($id, $data);
+
+        $app->flashMessage('Successfully updated settings for user #' . $id, 'success');
         $app->redirect('UserModule:Users:showProfile', array('id' => $id));
     }
 
@@ -471,7 +479,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function denyActionRight() {
@@ -493,7 +501,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function allowPanelRight() {
@@ -515,7 +523,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function denyPanelRight() {
@@ -537,7 +545,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -559,7 +567,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     protected function denyBulkActionRight() {
@@ -581,7 +589,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
     private function internalCreateUserRightsGrid(int $idUser) {
@@ -666,7 +674,7 @@ class Users extends APresenter {
             $name = $right['name'];
             $value = $right['value'];
 
-            $row = $tb->createRow();
+            $row = $tb->createRow()->setId($name);
 
             $allowLink = '';
             $denyLink = '';
@@ -829,12 +837,31 @@ class Users extends APresenter {
             $pages[] = $page;
         }
 
+        $formats = DatetimeFormats::$formats;
+
+        $datetimeFormats = [];
+        foreach($formats as $format) {
+            $datetimeFormat = array(
+                'value' => $format,
+                'text' => $format
+            );
+
+            if(($user->getDefaultUserDateTimeFormat() !== NULL) && ($format == $user->getDefaultUserDateTimeFormat()))  {
+                $datetimeFormat['selected'] = 'selected';
+            }
+
+            $datetimeFormats[] = $datetimeFormat;
+        }
+
         $fb
         ->setMethod('POST')
         ->setAction('?page=UserModule:Users:saveSettings&id=' . $user->getId())
 
         ->addElement($fb->createLabel()->setFor('default_user_page_url')->setText('Default page'))
         ->addElement($fb->createSelect()->setName('default_user_page_url')->addOptionsBasedOnArray($pages))
+
+        ->addElement($fb->createLabel()->setFor('default_user_datetime_format')->setText('Datetime format'))
+        ->addElement($fb->createSelect()->setName('default_user_datetime_format')->addOptionsBasedOnArray($datetimeFormats))
 
         ->addElement($fb->createSubmit('Save'))
         ;

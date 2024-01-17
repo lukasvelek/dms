@@ -2,16 +2,15 @@
 
 namespace DMS\Core\Logger;
 
+use DMS\Core\AppConfiguration;
 use DMS\Core\FileManager;
 use QueryBuilder\ILoggerCallable;
 
 class Logger implements ILoggerCallable {
     private FileManager $fileManager;
-    private array $cfg;
 
-    public function __construct(FileManager $fm, array $cfg) {
+    public function __construct(FileManager $fm) {
         $this->fileManager = $fm;
-        $this->cfg = $cfg;
     }
 
     public function logFunction(callable $func, ?string $originMethod = null) {
@@ -55,35 +54,35 @@ class Logger implements ILoggerCallable {
 
         switch($category) {
             case LogCategoryEnum::INFO:
-                if($this->cfg['log_level'] == 3) {
+                if(AppConfiguration::getLogLevel() == 3) {
                     $result = $this->saveLogEntry($filename, $text);
                 }
 
                 break;
 
             case LogCategoryEnum::WARN:
-                if($this->cfg['log_level'] >= 2) {
+                if(AppConfiguration::getLogLevel() >= 2) {
                     $result = $this->saveLogEntry($filename, $text);
                 }
 
                 break;
 
             case LogCategoryEnum::ERROR:
-                if($this->cfg['log_level'] >= 1) {
+                if(AppConfiguration::getLogLevel() >= 1) {
                     $result = $this->saveLogEntry($filename, $text);
                 }
 
                 break;
 
             case LogCategoryEnum::SQL:
-                if($this->cfg['sql_log_level'] == 1) {
+                if(AppConfiguration::getSqlLogLevel() == 1) {
                     $result = $this->saveLogEntry($filename, $text);
                 }
 
                 break;
 
             case LogCategoryEnum::STOPWATCH:
-                if($this->cfg['log_stopwatch'] == 1) {
+                if(AppConfiguration::getLogStopwatch() == 1) {
                     $result = $this->saveLogEntry($filename, $text);
                 }
 

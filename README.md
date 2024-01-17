@@ -4,6 +4,15 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.6
+- added customizable ribbons (toppanel and subpanel links)
+- added `date updated` to selected entities (currently: users, documents and processes)
+- added support for custom filters
+- added support for several datetime formats
+    - users are now able to select their default
+- updated user authorization
+- fixed a bug with missing or not showing flash messages
+
 ### v1.5
 - added notification manager service
 - added support for external enums

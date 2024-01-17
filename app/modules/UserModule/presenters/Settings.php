@@ -15,6 +15,7 @@ use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Modules\APresenter;
 use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -86,9 +87,6 @@ class Settings extends APresenter {
             '$SETTINGS_FORM$' => $this->internalCreateDashboardWidgetsForm()
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -152,9 +150,6 @@ class Settings extends APresenter {
             '$FORM$' => $this->internalCreateEditServiceForm($name)
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -176,9 +171,6 @@ class Settings extends APresenter {
             '$SETTINGS_GRID$' => $servicesGrid,
             '$LINKS$' => ''
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -233,7 +225,12 @@ class Settings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-folders.html');
 
-        $newEntityLink = LinkBuilder::createLink('UserModule:Settings:showNewFolderForm', 'New folder');
+        $newEntityLink = '';
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER)) {
+            $newEntityLink = LinkBuilder::createLink('UserModule:Settings:showNewFolderForm', 'New folder');
+        }
+
         $backLink = '';
         $pageTitle = 'Document folders';
 
@@ -242,7 +239,7 @@ class Settings extends APresenter {
             $idFolder = htmlspecialchars($_GET['id_folder']);
             $folder = $app->folderModel->getFolderById($idFolder);
 
-            if(($folder->getNestLevel() + 1) < 6) {
+            if((($folder->getNestLevel() + 1) < 6) && ($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER))) {
                 $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showNewFolderForm', 'id_parent_folder' => $idFolder), 'New folder');
             } else {
                 $newEntityLink = '';
@@ -269,9 +266,6 @@ class Settings extends APresenter {
             '$FOLDERS_GRID$' => $foldersGrid
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -290,9 +284,6 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'New document folder form',
             '$FORM$' => $this->internalCreateNewFolderForm($idParentFolder)
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -357,9 +348,6 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'Settings'
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $widgets = '';
 
         $app->logger->logFunction(function() use (&$widgets) {
@@ -387,11 +375,9 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Users',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $usersGrid
+            '$SETTINGS_GRID$' => $usersGrid,
+            '$LINKS$' => []
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_user')) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user');
@@ -416,11 +402,9 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
-            '$SETTINGS_GRID$' => $groupsGrid
+            '$SETTINGS_GRID$' => $groupsGrid,
+            '$LINKS$' => []
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
             $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group');
@@ -446,9 +430,6 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'Metadata manager',
             '$SETTINGS_GRID$' => $metadataGrid
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:ExternalEnumViewer:showList', 'External enums') . '&nbsp;&nbsp;';
 
@@ -481,9 +462,6 @@ class Settings extends APresenter {
             '$WIDGETS$' => $widgets
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -507,9 +485,6 @@ class Settings extends APresenter {
             '$FORM$' => $this->internalCreateNewMetadataForm()
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -523,9 +498,6 @@ class Settings extends APresenter {
             '$FORM$' => $this->internalCreateNewUserForm()
         );
 
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -538,9 +510,6 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'New group form',
             '$FORM$' => $this->internalCreateNewGroupForm()
         );
-
-        $this->drawSubpanel = true;
-        $this->subpanel = Panels::createSettingsPanel();
 
         $this->templateManager->fill($data, $template);
 
@@ -825,7 +794,7 @@ class Settings extends APresenter {
         foreach($selectExternalEnumsList as $k => $v) {
             $selectExternalEnums[] = array(
                 'value' => $k,
-                'text' => $v
+                'text' => $k
             );
         }
 
@@ -877,12 +846,18 @@ class Settings extends APresenter {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($groups as $group) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users')
-                );
+                $actionLinks = [];
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_GROUP_USERS)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users');
+                } else {
+                    $actionLinks[] = '-';
+                }
 
                 if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS)) {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId()), 'Group rights');
+                } else {
+                    $actionLinks[] = '-';
                 }
 
                 if(is_null($headerRow)) {
@@ -948,12 +923,18 @@ class Settings extends APresenter {
             $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
         } else {
             foreach($users as $user) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile')
-                );
+                $actionLinks = [];
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_USER_PROFILE)) {
+                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile');
+                } else {
+                    $actionLinks[] = '-';
+                }
 
                 if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS)) {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId()), 'User rights');
+                } else {
+                    $actionLinks[] = '-';
                 }
 
                 if(is_null($headerRow)) {
@@ -1027,8 +1008,12 @@ class Settings extends APresenter {
         global $app;
 
         $systemVersion = $app::SYSTEM_VERSION;
-        $systemBuildDate = $app::SYSTEM_BUILD_DATE;
         $systemIsDebugEnabled = $app::SYSTEM_DEBUG ? 'Enabled' : 'Disabled';
+        $systemBuildDate = $app::SYSTEM_BUILD_DATE;
+
+        if(!$app::SYSTEM_IS_BETA) {
+            $systemBuildDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($systemBuildDate, $app->user);
+        }
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -1040,7 +1025,7 @@ class Settings extends APresenter {
                         <div class="col-md">
                             <p><b>System version: </b>' . $systemVersion . '</p>
                             <p><b>System build date: </b>' . $systemBuildDate . '</p>
-                            <p><b>System is debug enabled: </b>' . $systemIsDebugEnabled . '</p>
+                            <p><b>System debug: </b>' . $systemIsDebugEnabled . '</p>
                         </div>
                     </div>
                  </div>';
@@ -1285,7 +1270,8 @@ class Settings extends APresenter {
             'Actions',
             'System name',
             'Name',
-            'Description'
+            'Description',
+            'Last run date'
         );
 
         $headerRow = null;
@@ -1329,12 +1315,21 @@ class Settings extends APresenter {
             $serviceRow = $tb->createRow();
 
             foreach($actionLinks as $actionLink) {
-                $serviceRow->addCoL($tb->createCol()->setText($actionLink));
+                $serviceRow->addCol($tb->createCol()->setText($actionLink));
+            }
+
+            $serviceLogEntry = $app->serviceModel->getServiceLogLastEntryForServiceName($service->name);
+            $serviceLastRunDate = '-';
+            
+            if($serviceLogEntry !== NULL) {
+                $serviceLastRunDate = $serviceLogEntry['date_created'];
+                $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $app->user);
             }
 
             $serviceRow ->addCol($tb->createCol()->setText($service->name))
                         ->addCol($tb->createCol()->setText($serviceName))
                         ->addCol($tb->createCol()->setText($service->description))
+                        ->addCol($tb->createCol()->setText($serviceLastRunDate))
             ;
 
             $tb->addRow($serviceRow);

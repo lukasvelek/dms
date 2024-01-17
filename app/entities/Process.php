@@ -10,8 +10,8 @@ class Process extends AEntity {
     private int $status;
     private int $idAuthor;
 
-    public function __construct(int $id, string $dateCreated, ?int $idDocument, ?int $workflow1, ?int $workflow2, ?int $workflow3, ?int $workflow4, ?int $workflowStatus, int $type, int $status, int $idAuthor) {
-        parent::__construct($id, $dateCreated);
+    public function __construct(int $id, string $dateCreated, ?int $idDocument, ?int $workflow1, ?int $workflow2, ?int $workflow3, ?int $workflow4, ?int $workflowStatus, int $type, int $status, int $idAuthor, string $dateUpdated) {
+        parent::__construct($id, $dateCreated, $dateUpdated);
         
         $this->idDocument = $idDocument;
         $this->type = $type;

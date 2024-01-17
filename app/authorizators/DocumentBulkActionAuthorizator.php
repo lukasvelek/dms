@@ -36,12 +36,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canApproveArchivation(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
+    public function canApproveArchivation(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('approve_archivation', $idUser, $checkCache, $cfg)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('approve_archivation', $idUser, $checkCache)) {
             return false;
         }
 
@@ -59,12 +59,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canDeclineArchivation(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
+    public function canDeclineArchivation(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('decline_archivation', $idUser, $checkCache, $cfg)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('decline_archivation', $idUser, $checkCache)) {
             return false;
         }
 
@@ -82,12 +82,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canArchive(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
+    public function canArchive(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('archive', $idUser, $checkCache, $cfg)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('archive', $idUser, $checkCache)) {
             return false;
         }
 
@@ -105,12 +105,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canDelete(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
+    public function canDelete(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('delete_documents', $idUser, $checkCache, $cfg)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('delete_documents', $idUser, $checkCache)) {
             return false;
         }
 
@@ -128,12 +128,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canApproveShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
+    public function canApproveShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('approve_shredding', $idUser, $checkCache, $cfg)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('approve_shredding', $idUser, $checkCache)) {
             return false;
         }
 
@@ -151,12 +151,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canDeclineShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
+    public function canDeclineShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('decline_shredding', $idUser, $checkCache, $cfg)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('decline_shredding', $idUser, $checkCache)) {
             return false;
         }
 
@@ -174,12 +174,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canSuggestForShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
+    public function canSuggestForShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('suggest_shredding', $idUser, $checkCache, $cfg)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('suggest_shredding', $idUser, $checkCache)) {
             return false;
         }
 
@@ -197,12 +197,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
      */
-    public function canShred(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false, array $cfg = []) {
+    public function canShred(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight('shred', $idUser, $checkCache, $cfg)) {
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('shred', $idUser, $checkCache)) {
             return false;
         }
 

@@ -2,18 +2,15 @@
 
 namespace DMS\Services;
 
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
 use DMS\Models\ServiceModel;
 
 class CacheRotateService extends AService {
-    private array $cfg;
-
-    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg, CacheManager $cm) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm) {
         parent::__construct('CacheRotateService', 'Deletes old cache files', $logger, $serviceModel, $cm);
-
-        $this->cfg = $cfg;
 
         $this->loadCfg();
     }
@@ -24,7 +21,7 @@ class CacheRotateService extends AService {
         $this->startService();
 
         $files = [];
-        $fm->readFilesInFolder($this->cfg['cache_dir'], $files);
+        $fm->readFilesInFolder(AppConfiguration::getCacheDir(), $files);
 
         $this->log('Found ' . count($files) . ' cache files to delete', __METHOD__);
 

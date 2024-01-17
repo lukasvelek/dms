@@ -7,7 +7,7 @@ class Comment extends AEntity {
     private string $text;
 
     public function __construct(int $id, string $dateCreated, int $idAuthor, string $text) {
-        parent::__construct($id, $dateCreated);
+        parent::__construct($id, $dateCreated, null);
 
         $this->idAuthor = $idAuthor;
         $this->text = $text;

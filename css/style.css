@@ -179,7 +179,7 @@ body {
     color: darkblue;
 }
 
-#flash-message {
+div[id^="flash-message-"] {
     padding: 10px;
 
     margin: 10px;

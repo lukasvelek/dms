@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Core\CacheManager;
 use DMS\Modules\APresenter;
 
 class UserLogout extends APresenter {
@@ -16,6 +17,7 @@ class UserLogout extends APresenter {
     protected function logoutUser() {
         global $app;
         if($app->userAuthenticator->logoutCurrentUser()) {
+            CacheManager::invalidateAllCache();
             $app->clearFlashMessage();
             $app->redirect($app::URL_LOGIN_PAGE);
         }

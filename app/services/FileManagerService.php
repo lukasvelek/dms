@@ -10,14 +10,12 @@ use DMS\Models\DocumentModel;
 use DMS\Models\ServiceModel;
 
 class FileManagerService extends AService {
-    private array $cfg;
     private FileStorageManager $fsm;
     private DocumentModel $documentModel;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, array $cfg, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm) {
         parent::__construct('FileManagerService', 'Deletes old unused files', $logger, $serviceModel, $cm);
 
-        $this->cfg = $cfg;
         $this->fsm = $fsm;
         $this->documentModel = $documentModel;
 

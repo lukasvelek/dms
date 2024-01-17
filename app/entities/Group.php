@@ -7,7 +7,7 @@ class Group extends AEntity {
     private ?string $code;
 
     public function __construct(int $id, string $dateCreated, string $name, ?string $code) {
-        parent::__construct($id, $dateCreated);
+        parent::__construct($id, $dateCreated, null);
 
         $this->name = $name;
         $this->code = $code;

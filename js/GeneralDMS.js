@@ -361,9 +361,9 @@ async function reloadProcessComments(id_process, can_delete) {
     await loadProcessComments(id_process, can_delete, false);
 }
 
-function hideFlashMessage() {
-    sessionStorage.removeItem('flash_message');
-    $('#flash-message').hide();
+function hideFlashMessage(index) {
+    //sessionStorage.removeItem('flash_message');
+    $('#flash-message-' + index).hide();
 }
 
 async function loadMailQueue() {
@@ -406,5 +406,22 @@ async function generateDocuments(_is_debug) {
             //location.replace("?page=UserModule:Documents:showAll");
             location.replace('?page=UserModule:AjaxHelper:flashMessage&message=Documents%20have%20been%20generated&type=info&redirect=UserModule:Documents:showAll');
         }
+    });
+}
+
+async function loadDocumentsCustomFilter(_idFilter) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Documents.php',
+        type: 'GET',
+        data: {
+            action: "documentsCustomFilter",
+            id_filter: _idFilter
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
     });
 }

@@ -17,7 +17,7 @@ class AjaxHelper extends APresenter {
     protected function flashMessage() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('message'. 'type', 'redirect'), false);
+        $app->flashMessageIfNotIsset(array('message', 'type', 'redirect'), false);
 
         $message = htmlspecialchars($_GET['message']);
         $type = htmlspecialchars($_GET['type']);
