@@ -14,6 +14,29 @@ class UserRightModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function removeAllActionRightsForIdUser(int $idUser) {
+        return $this->deleteByCol('id_user', $idUser, 'user_action_rights');
+    }
+
+    public function removeAllBulkActionRightsForIdUser(int $idUser) {
+        return $this->deleteByCol('id_user', $idUser, 'user_bulk_rights');
+    }
+
+    public function removeAllPanelRightsForIdUser(int $idUser) {
+        return $this->deleteByCol('id_user', $idUser, 'user_panel_rights');
+    }
+
+    public function removeAllMetadataRightsForIdUser(int $idUser) {
+        return $this->deleteByCol('id_user', $idUser, 'user_metadata_rights');
+    }
+
+    public function removeAllUserRightsForIdUser(int $idUser) {
+        return ($this->removeAllActionRightsForIdUser($idUser) &&
+                $this->removeAllBulkActionRightsForIdUser($idUser) &&
+                $this->removeAllPanelRightsForIdUser($idUser) &&
+                $this->removeAllMetadataRightsForIdUser($idUser));
+    }
+
     public function checkActionRightExists(int $idUser, string $actionName) {
         return $this->checkRightExists('action', $idUser, $actionName);
     }

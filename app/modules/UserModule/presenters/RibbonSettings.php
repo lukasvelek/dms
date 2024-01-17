@@ -353,6 +353,7 @@ class RibbonSettings extends APresenter {
         $data['name'] = htmlspecialchars($_POST['name']);
         $data['code'] = htmlspecialchars($_POST['code']);
         $data['page_url'] = htmlspecialchars($_POST['page_url']);
+        $data['is_system'] = '0';
 
         if($_POST['parent'] != '0') {
             $data['id_parent_ribbon'] = htmlspecialchars($_POST['parent']);
@@ -383,12 +384,47 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->insertAllGrantedRightsForGroup($idRibbon, $admGroup->getId());
 
         // current user
-        /*$admin = $app->userModel->getUserByUsername('admin');
-        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $admin->getId());*/
+        $admin = $app->userModel->getUserByUsername('admin');
+        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $admin->getId());
         $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $app->user->getId());
 
         $app->flashMessage('Created new ribbon', 'success');
 
+        $app->redirect('UserModule:RibbonSettings:showAll');
+    }
+
+    protected function processNewSplitterForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['parent']);
+
+        $idParent = htmlspecialchars($_POST['parent']);
+        $parent = $app->ribbonModel->getRibbonById($idParent);
+
+        $splitterCount = $app->ribbonModel->getSplitterCountForIdParent($idParent);
+
+        $data = [];
+        $data['id_parent_ribbon'] = $idParent;
+        $data['name'] = 'SPLITTER';
+        $data['code'] = $parent->getCode() . '.splitter' . $splitterCount;
+        $data['is_system'] = '0';
+        $data['page_url'] = '#';
+
+        $app->ribbonModel->insertNewRibbon($data);
+        $idRibbon = $app->ribbonModel->getLastInsertedRibbonId();
+
+        if($idRibbon === FALSE) {
+            die();
+        }
+
+        $admGroup = $app->groupModel->getGroupByCode('ADMINISTRATORS');
+        $app->ribbonRightsModel->insertAllGrantedRightsForGroup($idRibbon, $admGroup->getId());
+
+        $admin = $app->userModel->getUserByUsername('admin');
+        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $admin->getId());
+        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $app->user->getId());
+
+        $app->flashMessage('Successfully created a new splitter', 'success');
         $app->redirect('UserModule:RibbonSettings:showAll');
     }
 
@@ -398,6 +434,19 @@ class RibbonSettings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'New ribbon form',
             '$FORM$' => $this->internalCreateNewRibbonForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showNewSplitterForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New splitter form',
+            '$FORM$' => $this->internalCreateNewSplitterForm()
         );
 
         $this->templateManager->fill($data, $template);
@@ -453,6 +502,7 @@ class RibbonSettings extends APresenter {
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm'), 'New ribbon');
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewSplitterForm'), 'New splitter');
         }
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBON_CACHE)) {
@@ -500,7 +550,8 @@ class RibbonSettings extends APresenter {
                 );
 
                 if($app->ribbonAuthorizator->checkRibbonEditable($app->user->getId(), $ribbon) &&
-                   $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS)) {
+                   $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
+                   $ribbon->getName() != 'SPLITTER') {
                     $actionLinks['edit'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
                 }
 
@@ -553,6 +604,40 @@ class RibbonSettings extends APresenter {
         }
         
         return $tb->build();
+    }
+
+    private function internalCreateNewSplitterForm() {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $parentRibbons = null;
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        $valFromCache = $cm->loadTopRibbons();
+
+        if(!is_null($valFromCache)) {
+            $parentRibbons = $valFromCache;
+        } else {
+            $parentRibbons = $app->ribbonModel->getToppanelRibbons();
+        }
+
+        $parentRibbonsArr = [['value' => '0', 'text' => '- (root)']];
+        foreach($parentRibbons as $ribbon) {
+            $parentRibbonsArr[] = array(
+                'value' => $ribbon->getId(),
+                'text' => $ribbon->getName() . ' (' . $ribbon->getCode() . ')'
+            );
+        }
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:RibbonSettings:processNewSplitterForm')
+            
+            ->addElement($fb->createLabel()->setText('Parent')->setFor('parent'))
+            ->addElement($fb->createSelect()->setName('parent')->addOptionsBasedOnArray($parentRibbonsArr))
+
+            ->addElement($fb->createSubmit('Create'));
+
+        return $fb->build();
     }
 
     private function internalCreateNewRibbonForm() {

@@ -11,6 +11,7 @@ use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Constants\WidgetLocations;
+use DMS\Core\AppConfiguration;
 use DMS\Core\Application;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
@@ -30,6 +31,52 @@ class Settings extends APresenter {
         parent::__construct('Settings');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function deleteGroup() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $notDeletableIdGroups = array(1, 2);
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_GROUP) &&
+           !in_array($id, $notDeletableIdGroups)) {
+            $app->groupModel->deleteGroupById($id);
+            $app->groupRightModel->removeAllGroupRightsForIdGroup($id);
+            $app->groupUserModel->removeAllGroupUsersForIdGroup($id);
+            $app->ribbonRightsModel->deleteAllRibbonRightsForIdGroup($id);
+        }
+    }
+
+    protected function deleteUser() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $id = htmlspecialchars($_GET['id']);
+        $user = $app->userModel->getUserById($id);
+
+        $notDeletableIdUsers = array($app->user->getId(), AppConfiguration::getIdServiceUser());
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_USER) &&
+           !in_array($id, $notDeletableIdUsers) &&
+           $user->getUsername() != 'admin') {
+            $app->userModel->deleteUserById($id);
+            $app->userModel->deleteConnectionsForIdUser($id);
+            $app->userRightModel->removeAllUserRightsForIdUser($id);
+            $app->groupUserModel->removeUserFromAllGroups($id);
+            $app->ribbonRightsModel->deleteAllRibonRightsForIdUser($id);
+            $app->widgetModel->removeAllWidgetsForIdUser($id);
+
+            $app->flashMessage('Successfully removed user #' . $id, 'success');
+        } else {
+            $app->flashMessage('Could not remove user #' . $id, 'error');
+        }
+
+        $app->redirect('UserModule:Settings:showUsers');
     }
 
     protected function updateDashboardWidgets() {
@@ -365,19 +412,30 @@ class Settings extends APresenter {
     protected function showUsers() {
         global $app;
 
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid-bottom-links.html');
+
+        $page = 1;
+
+        if(isset($_GET['grid_page'])) {
+            $page = (int)(htmlspecialchars($_GET['grid_page']));
+        }
 
         $usersGrid = '';
 
-        $app->logger->logFunction(function() use (&$usersGrid) {
-            $usersGrid = $this->internalCreateUsersGrid();
+        $app->logger->logFunction(function() use (&$usersGrid, $app, $page) {
+            if($app->getGridUseAjax()) {
+                $usersGrid = $this->internalCreateUsersGridAjax($page);
+            } else {
+                $usersGrid = $this->internalCreateUsersGrid();
+            }
         }, __METHOD__);
 
         $data = array(
             '$PAGE_TITLE$' => 'Users',
             '$NEW_ENTITY_LINK$' => '',
             '$SETTINGS_GRID$' => $usersGrid,
-            '$LINKS$' => []
+            '$LINKS$' => [],
+            '$PAGE_CONTROL$' => $this->internalCreateUserGridPageControl($page)
         );
 
         if($app->actionAuthorizator->checkActionRight('create_user')) {
@@ -392,19 +450,30 @@ class Settings extends APresenter {
     protected function showGroups() {
         global $app;
 
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid-bottom-links.html');
 
         $groupsGrid = '';
 
-        $app->logger->logFunction(function() use (&$groupsGrid) {
-            $groupsGrid = $this->internalCreateGroupGrid();
+        $page = 1;
+
+        if(isset($_GET['grid_page'])) {
+            $page = (int)(htmlspecialchars($_GET['grid_page']));
+        }
+
+        $app->logger->logFunction(function() use (&$groupsGrid, $app, $page) {
+            if($app->getGridUseAjax()) {
+                $groupsGrid = $this->internalCreateGroupGridAjax($page);
+            } else {
+                $groupsGrid = $this->internalCreateGroupGrid();
+            }
         }, __METHOD__);
 
         $data = array(
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
             '$SETTINGS_GRID$' => $groupsGrid,
-            '$LINKS$' => []
+            '$LINKS$' => [],
+            '$PAGE_CONTROL$' => $this->internalCreateGroupGridPageControl($page)
         );
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
@@ -845,6 +914,13 @@ class Settings extends APresenter {
         return $fb->build();
     }
 
+    private function internalCreateGroupGridAjax(int $page = 1) {
+        $code = '<script type="text/javascript">loadGroups("' . $page . '");</script>';
+        $code .= '<table border="1"><img id="groups-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+
+        return $code;
+    }
+
     private function internalCreateGroupGrid() {
         global $app;
 
@@ -917,6 +993,13 @@ class Settings extends APresenter {
         }
 
         return $tb->build();
+    }
+
+    private function internalCreateUsersGridAjax(int $page = 1) {
+        $code = '<script type="text/javascript">loadUsers("' . $page . '");</script>';
+        $code .= '<table border="1"><img id="users-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+
+        return $code;
     }
 
     private function internalCreateUsersGrid() {
@@ -1600,6 +1683,136 @@ class Settings extends APresenter {
         ;
 
         return $fb->build();
+    }
+
+    private function internalCreateUserGridPageControl(int $page) {
+        global $app;
+
+        $userCount = $app->userModel->getUserCount();
+
+        $userPageControl = '';
+        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Settings:showUsers';
+        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Settings:showUsers';
+        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Settings:showUsers';
+        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Settings:showUsers';
+
+        $pageCheck = $page - 1;
+
+        $firstPageLink .= '"';
+        if($page == 1) {
+            $firstPageLink .= ' hidden';
+        }
+
+        $firstPageLink .= '>&lt;&lt;</a>';
+
+        if($page > 2) {
+            $previousPageLink .= '&grid_page=' . ($page - 1);
+        }
+        
+        $previousPageLink .= '"';
+
+        if($page == 1) {
+            $previousPageLink .= ' hidden';
+        }
+
+        $previousPageLink .= '>&lt;</a>';
+
+        $nextPageLink .= '&grid_page=' . ($page + 1);
+        $nextPageLink .= '"';
+
+        if($userCount <= ($page * $app->getGridSize())) {
+            $nextPageLink .= ' hidden';
+        }
+
+        $nextPageLink .= '>&gt;</a>';
+
+        $lastPageLink .= '&grid_page=' . (ceil($userCount / $app->getGridSize()));
+        $lastPageLink .= '"';
+        
+        if($userCount <= ($page * $app->getGridSize())) {
+            $lastPageLink .= ' hidden';
+        }
+
+        $lastPageLink .= '>&gt;&gt;</a>';
+
+        if($userCount > $app->getGridSize()) {
+            if($pageCheck * $app->getGridSize() >= $userCount) {
+                $userPageControl = (1 + ($page * $app->getGridSize()));
+            } else {
+                $userPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
+            }
+        } else {
+            $userPageControl = $userCount;
+        }
+
+        $userPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
+
+        return $userPageControl;
+    }
+
+    private function internalCreateGroupGridPageControl(int $page) {
+        global $app;
+
+        $groupCount = $app->groupModel->getGroupCount();
+
+        $groupPageControl = '';
+        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Settings:showGroups';
+        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Settings:showGroups';
+        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Settings:showGroups';
+        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Settings:showGroups';
+
+        $pageCheck = $page - 1;
+
+        $firstPageLink .= '"';
+        if($page == 1) {
+            $firstPageLink .= ' hidden';
+        }
+
+        $firstPageLink .= '>&lt;&lt;</a>';
+
+        if($page > 2) {
+            $previousPageLink .= '&grid_page=' . ($page - 1);
+        }
+        
+        $previousPageLink .= '"';
+
+        if($page == 1) {
+            $previousPageLink .= ' hidden';
+        }
+
+        $previousPageLink .= '>&lt;</a>';
+
+        $nextPageLink .= '&grid_page=' . ($page + 1);
+        $nextPageLink .= '"';
+
+        if($groupCount <= ($page * $app->getGridSize())) {
+            $nextPageLink .= ' hidden';
+        }
+
+        $nextPageLink .= '>&gt;</a>';
+
+        $lastPageLink .= '&grid_page=' . (ceil($groupCount / $app->getGridSize()));
+        $lastPageLink .= '"';
+        
+        if($groupCount <= ($page * $app->getGridSize())) {
+            $lastPageLink .= ' hidden';
+        }
+
+        $lastPageLink .= '>&gt;&gt;</a>';
+
+        if($groupCount > $app->getGridSize()) {
+            if($pageCheck * $app->getGridSize() >= $groupCount) {
+                $groupPageControl = (1 + ($page * $app->getGridSize()));
+            } else {
+                $groupPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
+            }
+        } else {
+            $groupPageControl = $groupCount;
+        }
+
+        $groupPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
+
+        return $groupPageControl;
     }
 }
 

@@ -425,3 +425,37 @@ async function loadDocumentsCustomFilter(_idFilter) {
         $('#documents-loading').hide();
     });
 }
+
+async function loadUsers(_page) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Users.php',
+        type: 'GET',
+        data: {
+            action: "search",
+            page: _page
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#users-loading').hide();
+    });
+}
+
+async function loadGroups(_page) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Groups.php',
+        type: 'GET',
+        data: {
+            action: "search",
+            page: _page
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#groups-loading').hide();
+    });
+}
