@@ -4,6 +4,8 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.7
+
 ### v1.6
 - added customizable ribbons (toppanel and subpanel links)
 - added `date updated` to selected entities (currently: users, documents and processes)
