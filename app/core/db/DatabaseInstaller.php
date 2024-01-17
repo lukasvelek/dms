@@ -172,7 +172,8 @@ class DatabaseInstaller {
                 'is_system' => 'INT(2) NOT NULL DEFAULT 0',
                 'input_type' => 'VARCHAR(256) NOT NULL',
                 'length' => 'VARCHAR(256) NOT NULL',
-                'select_external_enum_name' => 'VARCHAR(256) NULL'
+                'select_external_enum_name' => 'VARCHAR(256) NULL',
+                'is_readonly' => 'INT(2) NOT NULL DEFAULT 0'
             ),
             'metadata_values' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
