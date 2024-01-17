@@ -510,7 +510,7 @@ class CacheManager {
     public function createFilename() {
         $name = date('Y-m-d') . $this->category;
 
-        $dirname = 'dmsCache/';
+        $dirname = 'dmsCache';
 
         if(!is_dir(AppConfiguration::getCacheDir() . $dirname)) {
             mkdir(AppConfiguration::getCacheDir() . $dirname);
