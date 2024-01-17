@@ -2,7 +2,6 @@
 
 namespace DMS\Modules\UserModule;
 
-use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
@@ -15,6 +14,26 @@ class Metadata extends APresenter {
         parent::__construct('Metadata');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function setAsDefault() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_metadata', 'id_metadata_value']);
+
+        $idMetadata = htmlspecialchars($_GET['id_metadata']);
+        $idMetadataValue = htmlspecialchars($_GET['id_metadata_value']);
+
+        $hasDefault = $app->metadataModel->hasMetadataDefaultValue($idMetadata);
+
+        $app->metadataModel->setDefaultMetadataValue($idMetadata, $idMetadataValue);
+
+        if(!is_null($hasDefault)) {
+            $app->metadataModel->unsetDefaultMetadataValue($idMetadata, $hasDefault);
+        }
+
+        $app->flashMessage('Successfully set default metadata value', 'success');
+        $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
     }
 
     protected function deleteValue() {
@@ -301,10 +320,14 @@ class Metadata extends APresenter {
                 $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
             } else {
                 foreach($values as $v) {
-                    $actionLinks = array('new' => '-');
+                    $actionLinks = array('new' => '-', 'set_as_default' => '-');
                     
                     if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $id) && !$isSystem) {
                         $actionLinks['new'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
+
+                        if(!$v->getIsDefault()) {
+                            $actionLinks['set_as_default'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:setAsDefault', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Set as default');
+                        }
                     }
 
                     if(is_null($headerRow)) {
@@ -314,7 +337,7 @@ class Metadata extends APresenter {
                             $col = $tb->createCol()->setText($header)
                                                    ->setBold();
 
-                            if($headers == 'Actions') {
+                            if($header == 'Actions') {
                                 $col->setColspan(count($actionLinks));
                             }
 
