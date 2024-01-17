@@ -871,10 +871,16 @@ class Documents extends APresenter {
     
                     $options = [];
                     foreach($values as $v) {
-                        $options[] = array(
+                        $option = array(
                             'value' => $v->getValue(),
                             'text' => $v->getName()
                         );
+
+                        if($v->getIsDefault()) {
+                            $option['selected'] = 'selected';
+                        }
+                        
+                        $options[] = $option;
                     }
     
                     $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength(), 'readonly' => $cm->getIsReadonly());
