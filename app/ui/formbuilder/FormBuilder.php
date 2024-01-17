@@ -105,6 +105,21 @@ class FormBuilder {
     return $this->createInput()->setType('submit')->setValue($text);
   }
 
+  public function createTextInput(string $name, string $value = '', string $placeholder = '') {
+    $input = new Input();
+    $input->setName($name);
+
+    if($value != '') {
+      $input->setValue($value);
+    }
+
+    if($placeholder != '') {
+      $input->setPlaceHolder($placeholder);
+    }
+
+    return $input;
+  }
+
   /**
    * Creates a input element
    * 

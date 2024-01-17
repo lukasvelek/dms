@@ -99,6 +99,17 @@ class TableRow implements IBuildable {
     return new TableCol();
   }
 
+  public function createHeaderCol(string $text, int $colspan = 1) {
+    $col = new TableCol();
+    $col->setText($text)->setBold();
+
+    if($colspan > 1) {
+      $col->setColspan((string)$colspan);
+    }
+
+    return $col;
+  }
+
   public function build() {
     $code[] = '<tr ' . $this->colspan . ' ' . $this->class . ' ' . $this->id . '>';
 
