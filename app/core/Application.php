@@ -64,12 +64,12 @@ class Application {
     public const URL_LOGOUT_PAGE = 'UserModule:UserLogout:logoutUser';
 
     public const SYSTEM_VERSION_MAJOR = 1;
-    public const SYSTEM_VERSION_MINOR = 6;
+    public const SYSTEM_VERSION_MINOR = 7;
     public const SYSTEM_VERSION_PATCH = 0;
     public const SYSTEM_VERSION_PATCH_DISPLAY = false;
 
-    public const SYSTEM_IS_BETA = false;
-    public const SYSTEM_DEBUG = false && self::SYSTEM_IS_BETA;
+    public const SYSTEM_IS_BETA = true;
+    public const SYSTEM_DEBUG = true && self::SYSTEM_IS_BETA;
     public const SYSTEM_VERSION = self::SYSTEM_VERSION_MAJOR . '.' . self::SYSTEM_VERSION_MINOR . (self::SYSTEM_VERSION_PATCH_DISPLAY ? ('.' . self::SYSTEM_VERSION_PATCH) : '') . (self::SYSTEM_IS_BETA ? '_beta' : '');
     public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2023/01/17';
 
