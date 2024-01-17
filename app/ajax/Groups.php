@@ -1,13 +1,10 @@
 <?php
 
 use DMS\Constants\UserActionRights;
-use DMS\Constants\UserStatus;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
-
-//$ucm = new CacheManager(true, CacheCategories::USERS, '../../logs/', '../../cache/');
 
 $action = null;
 
