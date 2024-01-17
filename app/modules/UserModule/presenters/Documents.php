@@ -863,7 +863,7 @@ class Documents extends APresenter {
                         );
                     }
 
-                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());
+                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength(), 'readonly' => $cm->getIsReadonly());
                 } else {
                     $name = $cm->getName();
                     $text = $cm->getText();
@@ -877,7 +877,7 @@ class Documents extends APresenter {
                         );
                     }
     
-                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
+                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength(), 'readonly' => $cm->getIsReadonly());
                 }
             }
         }
@@ -937,43 +937,53 @@ class Documents extends APresenter {
             $options = $d['options'];
             $inputType = $d['type'];
             $inputLength = $d['length'];
+            $readonly = $d['readonly'];
 
             $fb->addElement($fb->createLabel()->setText($text)->setFor($name));
+            $elem = null;
 
             switch($inputType) {
                 case 'select':
-                    $fb ->addElement($fb->createSelect()->setName($name)->addOptionsBasedOnArray($options));
+                    $elem = $fb->createSelect()->setName($name)->addOptionsBasedOnArray($options);
                     
                     break;
 
                 case 'text':
                     if($inputLength > 256) {
-                        $fb->addElement($fb->createTextArea()->setName($name));
+                        $elem = $fb->createTextArea()->setName($name);
                     } else {
-                        $fb->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength)->setName($name));
+                        $elem = $fb->createInput()->setType($inputType)->setMaxLength($inputLength)->setName($name);
                     }
 
                     break;
 
                 case 'number':
-                    $fb ->addElement($fb->createInput()->setType($inputType)->setMaxLength($inputLength)->setName($name));
+                    $elem = $fb->createInput()->setType($inputType)->setMaxLength($inputLength)->setName($name);
 
                     break;
 
                 case 'boolean':
-                    $fb ->addElement($fb->createInput()->setType('checkbox')->setName($name));
+                    $elem = $fb->createInput()->setType('checkbox')->setName($name);
 
                     break;
 
                 case 'date':
-                    $fb ->addElement($fb->createInput()->setType('date')->setName($name));
+                    $elem = $fb->createInput()->setType('date')->setName($name);
 
                     break;
 
                 case 'datetime':
-                    $fb ->addElement($fb->createInput()->setType('datetime')->setName($name));
+                    $elem = $fb->createInput()->setType('datetime')->setName($name);
 
                     break;
+            }
+
+            if(!is_null($elem)) {
+                if($readonly) {
+                    $elem->readonly();
+                }
+        
+                $fb->addElement($elem);
             }
         }
 

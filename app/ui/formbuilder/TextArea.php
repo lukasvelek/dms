@@ -13,6 +13,7 @@ class TextArea implements IBuildable {
   private string $text;
   private string $required;
   private string $disabled;
+  private string $readonly;
 
   public string $script;
 
@@ -27,6 +28,7 @@ class TextArea implements IBuildable {
     $this->required = '';
     $this->script = '';
     $this->disabled = '';
+    $this->readonly = '';
 
     return $this;
   }
@@ -77,13 +79,19 @@ class TextArea implements IBuildable {
     return $this;
   }
 
+  public function readonly() {
+    $this->readonly = 'readonly';
+
+    return $this;
+  }
+
   /**
    * Converts the text area class to HTML code
    * 
    * @return self
    */
   public function build() {
-    $this->script = '<textarea name="' . $this->name . '" ' . $this->required . ' ' . $this->disabled . '>' . $this->text . '</textarea>';
+    $this->script = '<textarea name="' . $this->name . '" ' . $this->required . ' ' . $this->disabled . ' ' . $this->readonly . '>' . $this->text . '</textarea>';
 
     return $this;
   }

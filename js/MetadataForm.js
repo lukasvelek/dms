@@ -23,7 +23,8 @@ if(type.value == "select") {
     lengthElem.setAttribute('value', '256');
     selectExternalEnum.removeAttribute('disabled');
 } else {
-    lengthElem.setAttribute('readonly', false);
+    //lengthElem.setAttribute('readonly', false);
+    lengthElem.removeAttribute('readonly');
     lengthElem.setAttribute('value', '');
     selectExternalEnum.setAttribute('disabled', true);
 }
@@ -52,7 +53,8 @@ type.onchange = function() {
         lengthElem.setAttribute('value', '256');
         selectExternalEnum.removeAttribute('disabled');
     } else {
-        lengthElem.setAttribute('readonly', false);
+        //lengthElem.setAttribute('readonly', false);
+        lengthElem.removeAttribute('readonly');
         lengthElem.setAttribute('value', '');
         selectExternalEnum.setAttribute('disabled', true);
     }

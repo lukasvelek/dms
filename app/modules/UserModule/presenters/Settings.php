@@ -532,6 +532,10 @@ class Settings extends APresenter {
             $data['select_external_enum_name'] = htmlspecialchars($_POST['select_external_enum']);
         }
 
+        if(isset($_POST['readonly'])) {
+            $data['is_readonly'] = '1';
+        }
+
         $data['name'] = htmlspecialchars($_POST['name']);
         $data['text'] = htmlspecialchars($_POST['text']);
         $data['table_name'] = htmlspecialchars($_POST['table_name']);
@@ -816,6 +820,9 @@ class Settings extends APresenter {
 
             ->addElement($fb->createLabel()->setFor('select_external_enum')->setText('External select enumerator'))
             ->addElement($fb->createSelect()->setName('select_external_enum')->addOptionsBasedOnArray($selectExternalEnums)->setId('select_external_enum'))
+
+            ->addElement($fb->createLabel()->setFor('readonly')->setText('Readonly'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('readonly'))
 
             ->addElement($fb->createSubmit('Create'))
         ;
