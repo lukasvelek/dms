@@ -5,6 +5,7 @@ It also enables users to manage metadata and their values.
 
 ## Changelog
 ### v1.7
+- added support for readonly custom metadata
 
 ### v1.6
 - added customizable ribbons (toppanel and subpanel links)
