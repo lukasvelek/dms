@@ -794,7 +794,7 @@ class Settings extends APresenter {
         foreach($selectExternalEnumsList as $k => $v) {
             $selectExternalEnums[] = array(
                 'value' => $k,
-                'text' => $v
+                'text' => $k
             );
         }
 
