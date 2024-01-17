@@ -2,7 +2,6 @@
 
 namespace DMS\Modules\UserModule;
 
-use DMS\Components\ExternalEnumComponent;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\MetadataAllowedTables;
 use DMS\Constants\MetadataInputType;
@@ -19,7 +18,6 @@ use DMS\Entities\Folder;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Modules\APresenter;
-use DMS\Panels\Panels;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;

@@ -326,9 +326,10 @@ class Users extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-rights-grid.html');
 
-        $app->flashMessageIfNotIsset(['id']);
+        $app->flashMessageIfNotIsset(['id', 'filter']);
 
         $id = htmlspecialchars($_GET['id']);
+        $filter = htmlspecialchars($_GET['filter']);
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -338,8 +339,8 @@ class Users extends APresenter {
 
         $userRights = '';
 
-        $app->logger->logFunction(function() use (&$userRights, $id) {
-            $userRights = $this->internalCreateUserRightsGrid($id);
+        $app->logger->logFunction(function() use (&$userRights, $id, $filter) {
+            $userRights = $this->internalCreateUserRightsGrid($id, $filter);
         }, __METHOD__);
 
         $links = array(
@@ -592,7 +593,7 @@ class Users extends APresenter {
         $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
     }
 
-    private function internalCreateUserRightsGrid(int $idUser) {
+    private function internalCreateUserRightsGrid(int $idUser, string $filter) {
         global $app;
 
         $tb = TableBuilder::getTemporaryObject();
@@ -607,66 +608,76 @@ class Users extends APresenter {
 
         $rights = [];
 
-        $defaultActionRights = UserActionRights::$all;
-        $defaultPanelRights = PanelRights::$all;
-        $defaultBulkActionRights = BulkActionRights::$all;
+        switch($filter) {
+            case 'actions':
+                $defaultActionRights = UserActionRights::$all;
+                $actionRights = $app->userRightModel->getActionRightsForIdUser($idUser);
 
-        $actionRights = $app->userRightModel->getActionRightsForIdUser($idUser);
-        $panelRights = $app->userRightModel->getPanelRightsForIdUser($idUser);
-        $bulkActionRights = $app->userRightModel->getBulkActionRightsForIdUser($idUser);
+                foreach($defaultActionRights as $dar)  {
+                    $rights[$dar] = array(
+                        'type' => 'action',
+                        'name' => $dar,
+                        'value' => 0
+                    );
+                }
 
-        foreach($defaultActionRights as $dar)  {
-            $rights[$dar] = array(
-                'type' => 'action',
-                'name' => $dar,
-                'value' => 0
-            );
-        }
+                foreach($actionRights as $name => $value) {
+                    if(array_key_exists($name, $rights)) {
+                        $rights[$name] = array(
+                            'type' => 'action',
+                            'name' => $name,
+                            'value' => $value
+                        );
+                    }
+                }
 
-        foreach($defaultPanelRights as $dpr) {
-            $rights[$dpr] = array(
-                'type' => 'panel',
-                'name' => $dpr,
-                'value' => 0
-            );
-        }
+                break;
+            case 'bulk_actions':
+                $defaultBulkActionRights = BulkActionRights::$all;
+                $bulkActionRights = $app->userRightModel->getBulkActionRightsForIdUser($idUser);
 
-        foreach($defaultBulkActionRights as $dbar) {
-            $rights[$dbar] = array(
-                'type' => 'bulk',
-                'name' => $dbar,
-                'value' => 0
-            );
-        }
+                foreach($defaultBulkActionRights as $dbar) {
+                    $rights[$dbar] = array(
+                        'type' => 'bulk',
+                        'name' => $dbar,
+                        'value' => 0
+                    );
+                }
 
-        foreach($actionRights as $name => $value) {
-            if(array_key_exists($name, $rights)) {
-                $rights[$name] = array(
-                    'type' => 'action',
-                    'name' => $name,
-                    'value' => $value
-                );
-            }
-        }
+                foreach($bulkActionRights as $name => $value) {
+                    if(array_key_exists($name, $rights)) {
+                        $rights[$name] = array(
+                            'type' => 'bulk',
+                            'name' => $name,
+                            'value' => $value
+                        );
+                    }
+                }
 
-        foreach($bulkActionRights as $name => $value) {
-            if(array_key_exists($name, $rights)) {
-                $rights[$name] = array(
-                    'type' => 'bulk',
-                    'name' => $name,
-                    'value' => $value
-                );
-            }
-        }
+                break;
+            case 'panels':
+                $defaultPanelRights = PanelRights::$all;
+                $panelRights = $app->userRightModel->getPanelRightsForIdUser($idUser);
 
-        foreach($panelRights as $name => $value) {
-            if(array_key_exists($name, $rights)) {
-                $rights[$name] = array(
-                    'type' => 'panel',
-                    'name' => $name,
-                    'value' => $value
-                );
-            }
+                foreach($defaultPanelRights as $dpr) {
+                    $rights[$dpr] = array(
+                        'type' => 'panel',
+                        'name' => $dpr,
+                        'value' => 0
+                    );
+                }
+
+                foreach($panelRights as $name => $value) {
+                    if(array_key_exists($name, $rights)) {
+                        $rights[$name] = array(
+                            'type' => 'panel',
+                            'name' => $name,
+                            'value' => $value
+                        );
+                    }
+                }
+
+                break;
         }
 
         foreach($rights as $rightname => $right) {

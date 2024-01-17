@@ -90,8 +90,26 @@ function search() {
                 $actionLinks[] = '-';
             }
 
-            if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false)) {
+            /*if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false)) {
                 $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId()), 'User rights');
+            } else {
+                $actionLinks[] = '-';
+            }*/
+
+            if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false)) {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId(), 'filter' => 'actions'), 'Action rights');
+            } else {
+                $actionLinks[] = '-';
+            }
+
+            if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false)) {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId(), 'filter' => 'bulk_actions'), 'Bulk action rights');
+            } else {
+                $actionLinks[] = '-';
+            }
+
+            if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false)) {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId(), 'filter' => 'panels'), 'Panel rights');
             } else {
                 $actionLinks[] = '-';
             }
