@@ -65,7 +65,19 @@ function search() {
             }
 
             if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId()), 'Group rights');
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'actions'), 'Action rights');
+            } else {
+                $actionLinks[] = '-';
+            }
+
+            if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false)) {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'bulk_actions'), 'Bulk action rights');
+            } else {
+                $actionLinks[] = '-';
+            }
+
+            if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false)) {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'panels'), 'Panel rights');
             } else {
                 $actionLinks[] = '-';
             }
