@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Components\ExternalEnumComponent;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\MetadataAllowedTables;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
 use DMS\Constants\UserActionRights;
@@ -802,6 +803,16 @@ class Settings extends APresenter {
             );
         }
 
+        $tables = MetadataAllowedTables::$tables;
+
+        $tablesArr = [];
+        foreach($tables as $table) {
+            $tablesArr[] = array(
+                'value' => $table,
+                'text' => $table
+            );
+        }
+
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewMetadata')->setId('new_metadata_form')
             ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
             ->addElement($fb->createInput()->setType('text')->setName('name')->require())
@@ -809,8 +820,8 @@ class Settings extends APresenter {
             ->addElement($fb->createLabel()->setFor('text')->setText('Text'))
             ->addElement($fb->createInput()->setType('text')->setName('text')->require())
 
-            ->addElement($fb->createLabel()->setFor('table_name')->setText('Database table name'))
-            ->addElement($fb->createInput()->setType('text')->setName('table_name')->require())
+            ->addElement($fb->createLabel()->setFor('table_name')->setText('Database table'))
+            ->addElement($fb->createSelect()->setname('table_name')->addOptionsBasedOnArray($tablesArr))
 
             ->addElement($fb->createLabel()->setFor('input_type')->setText('Metadata input type'))
             ->addElement($fb->createSelect()->setName('input_type')->addOptionsBasedOnArray($metadataInputTypes)->setId('input_type'))
