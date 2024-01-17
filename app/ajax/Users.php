@@ -3,6 +3,7 @@
 use DMS\Constants\CacheCategories;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
@@ -26,7 +27,14 @@ if($action === NULL) {
 echo($action());
 
 function search() {
-    global $userModel, $gridSize, $gridUseFastLoad, $actionAuthorizator;
+    global $userModel, $gridSize, $gridUseFastLoad, $actionAuthorizator, $user;
+
+    if($user === NULL) {
+        exit;
+    }
+    
+    $currentUser = $user;
+    unset($user);
 
     $page = 1;
 
@@ -58,6 +66,8 @@ function search() {
         $users = $userModel->getAllUsers($gridSize);
     }
 
+    $notDeletableIdUsers = array($currentUser->getId(), AppConfiguration::getIdServiceUser());
+
     if(empty($users)) {
         $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
     } else {
@@ -82,6 +92,14 @@ function search() {
 
             if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false)) {
                 $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId()), 'User rights');
+            } else {
+                $actionLinks[] = '-';
+            }
+
+            if($actionAuthorizator->checkActionRight(UserActionRights::DELETE_USER, null, false) &&
+               !in_array($user->getId(), $notDeletableIdUsers) &&
+               $user->getUsername() != 'admin') {
+                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteUser', 'id' => $user->getId()), 'Delete');
             } else {
                 $actionLinks[] = '-';
             }

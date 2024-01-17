@@ -42,6 +42,8 @@ class UserActionRights {
     public const VIEW_USER_PROFILE = 'view_user_profile';
     public const VIEW_GROUP_USERS = 'view_group_users';
     public const CREATE_DOCUMENT_FOLDER = 'create_document_folder';
+    public const DELETE_USER = 'delete_user';
+    public const DELETE_GROUP = 'delete_group';
 
     public static $all = array(
         self::CREATE_USER,
@@ -82,7 +84,9 @@ class UserActionRights {
         self::DELETE_RIBBON_CACHE,
         self::VIEW_USER_PROFILE,
         self::VIEW_GROUP_USERS,
-        self::CREATE_DOCUMENT_FOLDER
+        self::CREATE_DOCUMENT_FOLDER,
+        self::DELETE_USER,
+        self::DELETE_GROUP
     );
 }
 

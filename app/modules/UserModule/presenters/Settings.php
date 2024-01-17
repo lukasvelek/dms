@@ -11,6 +11,7 @@ use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Constants\WidgetLocations;
+use DMS\Core\AppConfiguration;
 use DMS\Core\Application;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
@@ -30,6 +31,34 @@ class Settings extends APresenter {
         parent::__construct('Settings');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function deleteUser() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $id = htmlspecialchars($_GET['id']);
+        $user = $app->userModel->getUserById($id);
+
+        $notDeletableIdUsers = array($app->user->getId(), AppConfiguration::getIdServiceUser());
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_USER) &&
+           !in_array($id, $notDeletableIdUsers) &&
+           $user->getUsername() != 'admin') {
+            $app->userModel->deleteUserById($id);
+            $app->userModel->deleteConnectionsForIdUser($id);
+            $app->userRightModel->removeAllActionRightsForIdUser($id);
+            $app->userRightModel->removeAllBulkActionRightsForIdUser($id);
+            $app->userRightModel->removeAllPanelRightsForIdUser($id);
+            $app->groupUserModel->removeUserFromAllGroups($id);
+
+            $app->flashMessage('Successfully removed user #' . $id, 'success');
+        } else {
+            $app->flashMessage('Could not remove user #' . $id, 'error');
+        }
+
+        $app->redirect('UserModule:Settings:showUsers');
     }
 
     protected function updateDashboardWidgets() {

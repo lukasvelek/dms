@@ -10,6 +10,14 @@ class UserModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
     }
+
+    public function deleteConnectionsForIdUser(int $id) {
+        return $this->deleteByCol('id_user1', $id, 'user_connections') && $this->deleteByCol('id_user2', $id, 'user_connections');
+    }
+
+    public function deleteUserById(int $id) {
+        $this->deleteById($id, 'users');
+    }
     
     public function getAllUsersFromId(?int $idFrom, int $limit) {
         if(is_null($idFrom)) {
