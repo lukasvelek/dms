@@ -11,6 +11,21 @@ class RibbonModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getSplitterCountForIdParent(int $idParent) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->selectCount('id', 'cnt')
+                  ->from('ribbons')
+                  ->where('id_parent_ribbon=:id_ribbon')
+                  ->andWhere('name=:name')
+                  ->setParam(':id_ribbon', $idParent)
+                  ->setParam(':name', 'SPLITTER')
+                  ->execute()
+                  ->fetchSingle('cnt');
+
+        return $row;
+    }
+
     public function deleteRibbonForIdDocumentFilter(int $idFilter) {
         $qb = $this->qb(__METHOD__);
 
