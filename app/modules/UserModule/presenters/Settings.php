@@ -821,7 +821,6 @@ class Settings extends APresenter {
             ->addElement($fb->createInput()->setType('text')->setName('text')->require())
 
             ->addElement($fb->createLabel()->setFor('table_name')->setText('Database table'))
-            //->addElement($fb->createInput()->setType('text')->setName('table_name')->require())
             ->addElement($fb->createSelect()->setname('table_name')->addOptionsBasedOnArray($tablesArr))
 
             ->addElement($fb->createLabel()->setFor('input_type')->setText('Metadata input type'))
