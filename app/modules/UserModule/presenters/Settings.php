@@ -33,6 +33,24 @@ class Settings extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function deleteGroup() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $id = htmlspecialchars($_GET['id']);
+
+        $notDeletableIdGroups = array(1, 2);
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_GROUP) &&
+           !in_array($id, $notDeletableIdGroups)) {
+            $app->groupModel->deleteGroupById($id);
+            $app->groupRightModel->removeAllGroupRightsForIdGroup($id);
+            $app->groupUserModel->removeAllGroupUsersForIdGroup($id);
+            $app->ribbonRightsModel->deleteAllRibbonRightsForIdGroup($id);
+        }
+    }
+
     protected function deleteUser() {
         global $app;
 
@@ -48,10 +66,10 @@ class Settings extends APresenter {
            $user->getUsername() != 'admin') {
             $app->userModel->deleteUserById($id);
             $app->userModel->deleteConnectionsForIdUser($id);
-            $app->userRightModel->removeAllActionRightsForIdUser($id);
-            $app->userRightModel->removeAllBulkActionRightsForIdUser($id);
-            $app->userRightModel->removeAllPanelRightsForIdUser($id);
+            $app->userRightModel->removeAllUserRightsForIdUser($id);
             $app->groupUserModel->removeUserFromAllGroups($id);
+            $app->ribbonRightsModel->deleteAllRibonRightsForIdUser($id);
+            $app->widgetModel->removeAllWidgetsForIdUser($id);
 
             $app->flashMessage('Successfully removed user #' . $id, 'success');
         } else {

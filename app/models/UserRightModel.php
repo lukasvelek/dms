@@ -26,6 +26,17 @@ class UserRightModel extends AModel {
         return $this->deleteByCol('id_user', $idUser, 'user_panel_rights');
     }
 
+    public function removeAllMetadataRightsForIdUser(int $idUser) {
+        return $this->deleteByCol('id_user', $idUser, 'user_metadata_rights');
+    }
+
+    public function removeAllUserRightsForIdUser(int $idUser) {
+        return ($this->removeAllActionRightsForIdUser($idUser) &&
+                $this->removeAllBulkActionRightsForIdUser($idUser) &&
+                $this->removeAllPanelRightsForIdUser($idUser) &&
+                $this->removeAllMetadataRightsForIdUser($idUser));
+    }
+
     public function checkActionRightExists(int $idUser, string $actionName) {
         return $this->checkRightExists('action', $idUser, $actionName);
     }

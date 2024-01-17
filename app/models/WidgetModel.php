@@ -10,6 +10,10 @@ class WidgetModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function removeAllWidgetsForIdUser(int $idUser) {
+        return $this->deleteByCol('id_user', $idUser, 'user_widgets');
+    }
+
     public function insertWidgetForIdUser(int $idUser, string $location, string $name) {
         $qb = $this->qb(__METHOD__);
 

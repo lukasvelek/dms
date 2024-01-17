@@ -10,6 +10,14 @@ class RibbonRightsModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteAllRibonRightsForIdUser(int $idUser) {
+        return $this->deleteByCol('id_user', $idUser, 'ribbon_user_rights');
+    }
+
+    public function deleteAllRibbonRightsForIdGroup(int $idGroup) {
+        return $this->deleteByCol('id_group', $idGroup, 'ribbon_group_rights');
+    }
+
     public function deleteAllGroupRibbonRights(int $idRibbon) {
         $qb = $this->qb(__METHOD__);
 

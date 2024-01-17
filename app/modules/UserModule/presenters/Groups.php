@@ -8,6 +8,7 @@ use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
+use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -477,6 +478,10 @@ class Groups extends APresenter {
         } else {
             foreach($groupUsers as $groupUser) {
                 $user = $app->userModel->getUserById($groupUser->getIdUser());
+
+                if($user === NULL) {
+                    $user = new User(0, date('Y-m-d H:i:s'), 'Deleted user', '', '', '', 1, null, null, null, null, null, null, 1, null, null, null);
+                }
 
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile')

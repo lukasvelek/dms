@@ -15,6 +15,10 @@ class GroupUserModel extends AModel {
         $this->groupModel = $groupModel;
     }
 
+    public function removeAllGroupUsersForIdGroup(int $idGroup) {
+        return $this->deleteByCol('id_group', $idGroup, 'group_users');
+    }
+
     public function removeUserFromAllGroups(int $idUser) {
         return $this->deleteByCol('id_user', $idUser, 'group_users');
     }

@@ -11,6 +11,10 @@ class GroupModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteGroupById(int $id) {
+        return $this->deleteById($id, 'groups');
+    }
+
     public function getAllGroupsFromId(?int $idFrom, int $limit) {
         if(is_null($idFrom)) {
             return [];
