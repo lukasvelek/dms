@@ -1350,7 +1350,6 @@ class Documents extends APresenter {
 
         if($documentCount > $app->getGridSize()) {
             if($pageCheck * $app->getGridSize() >= $documentCount) {
-                
                 $documentPageControl = (1 + ($page * $app->getGridSize()));
             } else {
                 $documentPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
