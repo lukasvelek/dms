@@ -27,6 +27,7 @@ use DMS\Models\MetadataModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
+use DMS\Models\RibbonModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\TableModel;
 use DMS\Models\UserModel;
@@ -159,6 +160,7 @@ $widgetModel = new WidgetModel($db, $logger);
 $notificationModel = new NotificationModel($db, $logger);
 $mailModel = new MailModel($db, $logger);
 $filterModel = new FilterModel($db, $logger);
+$ribbonModel = new RibbonModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);

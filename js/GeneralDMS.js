@@ -459,3 +459,39 @@ async function loadGroups(_page) {
         $('#groups-loading').hide();
     });
 }
+
+async function showDropdownMenu(_parentRibbonId, _ribbonId) {
+    var _pos = $('#dropdown-ribbon-' + _ribbonId).first().offset();
+    var _posX = _pos.left;
+    var _posY = _pos.top;
+
+    var _dropdownMenuName = "dropdownmenu-ribbon-" + _ribbonId;
+    var _style = "left: " + _posX + "; top: " + _posY + "; background-color:";
+    var _code = "<div id=\"" + _dropdownMenuName + "\" style=\"" + _style + "\"></div>";
+
+    if($(_dropdownMenuName).length) {
+        $('#dropdownmenu-ribbon-' + _ribbonId).show();
+    } else {
+        $('#subpanel').append(_code);
+    }
+
+    $('#dropdown-ribbon-' + _ribbonId).attr('onclick', 'hideDropdownMenu("' + _parentRibbonId + '", "' + _ribbonId + '");');
+
+    // load data
+    $.ajax({
+        url: 'app/ajax/Ribbons.php',
+        type: 'GET',
+        data: {
+            id_ribbon: _ribbonId,
+            action: "getDropdownRibbonContent"
+        }
+    })
+    .done(function(data) {
+        $("#" + _dropdownMenuName).html(data);
+    });
+}
+
+async function hideDropdownMenu(_parentRibbonId, _ribbonId) {
+    $('#dropdownmenu-ribbon-' + _ribbonId).remove();
+    $('#dropdown-ribbon-' + _ribbonId).attr('onclick', 'showDropdownMenu("' + _parentRibbonId + '", "' + _ribbonId + '");');
+}
