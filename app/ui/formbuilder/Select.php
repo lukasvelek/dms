@@ -13,6 +13,7 @@ class Select implements IBuildable {
   private array $options;
   private string $disable;
   private string $id;
+  private string $readonly;
 
   public string $script;
 
@@ -27,6 +28,7 @@ class Select implements IBuildable {
     $this->script = '';
     $this->disable = '';
     $this->id = '';
+    $this->readonly = '';
 
     $this->script = '';
 
@@ -128,13 +130,20 @@ class Select implements IBuildable {
     return $this;
   }
 
+  public function readonly() {
+    //$this->readonly = 'readonly';
+    $this->disable();
+
+    return $this;
+  }
+
   /**
    * Converts the select class to HTML code
    * 
    * @return self
    */
   public function build() {
-    $script = '<select name="' . $this->name . '" ' . $this->disable . ' id="' . $this->id . '">';
+    $script = '<select name="' . $this->name . '" ' . $this->disable . ' id="' . $this->id . '" ' . $this->readonly . '>';
 
     foreach($this->options as $o) {
       $script .= $o->build()->script;

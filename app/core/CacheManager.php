@@ -508,11 +508,19 @@ class CacheManager {
      * @return string Filename
      */
     public function createFilename() {
-        global $app;
-
         $name = date('Y-m-d') . $this->category;
 
-        $file = md5($name) . '.tmp';
+        $dirname = 'dmsCache';
+
+        if(!is_dir(AppConfiguration::getCacheDir() . $dirname)) {
+            mkdir(AppConfiguration::getCacheDir() . $dirname);
+        }
+
+        if(!is_dir(AppConfiguration::getCacheDir() . $dirname . '/' . $this->category . '/')) {
+            mkdir(AppConfiguration::getCacheDir() . $dirname . '/' . $this->category . '/');
+        }
+
+        $file = $dirname . '/' . $this->category . '/' . md5($name) . '.tmp';
 
         return $file;
     }

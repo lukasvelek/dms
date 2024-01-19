@@ -22,6 +22,7 @@ class Input implements IBuildable {
   private string $placeHolder;
   private string $id;
   private string $step;
+  private string $readonly;
   
   public string $script;
 
@@ -44,6 +45,7 @@ class Input implements IBuildable {
     $this->placeHolder = '';
     $this->id = '';
     $this->step = '';
+    $this->readonly = '';
 
     $this->script = '';
 
@@ -214,6 +216,12 @@ class Input implements IBuildable {
     return $this;
   }
 
+  public function readonly() {
+    $this->readonly = 'readonly';
+    
+    return $this;
+  }
+
   /**
    * Converts the input class to HTML code
    * 
@@ -222,7 +230,7 @@ class Input implements IBuildable {
   public function build() {
     $script = '<input '. $this->type . ' ' . $this->id . ' ' . $this->name . ' ' . $this->value . ' ' . $this->min . ' ' . $this->max . ' '
               . $this->maxLength . ' ' . $this->special . ' ' . $this->hidden . ' ' . $this->required . ' ' . $this->disabled . ' '
-              . $this->placeHolder . ' ' . $this->step . ' >';
+              . $this->placeHolder . ' ' . $this->step . ' ' . $this->readonly . ' >';
 
     $this->script = $script;
 

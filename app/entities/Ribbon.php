@@ -11,6 +11,8 @@ class Ribbon extends AEntity {
     private string $pageUrl;
     private string $code;
     private bool $isSystem;
+    private bool $isJS;
+    private string $jsMethodName;
 
     public function __construct(int $id, string $name, ?string $title, ?int $idParentRibbon, ?string $image, bool $visible, string $pageUrl, string $code, bool $isSystem) {
         parent::__construct($id, null, null);
@@ -24,6 +26,21 @@ class Ribbon extends AEntity {
         $this->code = $code;
         $this->isSystem = $isSystem;
         $this->title = $title;
+        $this->isJS = false;
+        $this->jsMethodName = '';
+        
+        if(str_starts_with($this->pageUrl, 'js.')) {
+            $this->isJS = true;
+            $this->jsMethodName = substr($this->pageUrl, 3);
+
+            if(str_contains($this->jsMethodName, '$ID_PARENT_RIBBON$')) {
+                $this->jsMethodName = str_replace('$ID_PARENT_RIBBON$', $this->idParentRibbon ?? '0', $this->jsMethodName);
+            }
+
+            if(str_contains($this->jsMethodName, '$ID_RIBBON$')) {
+                $this->jsMethodName = str_replace('$ID_RIBBON$', $this->id, $this->jsMethodName);
+            }
+        }
     }
 
     public function getName() {
@@ -72,6 +89,14 @@ class Ribbon extends AEntity {
 
     public function isSystem() {
         return $this->isSystem;
+    }
+
+    public function isJS() {
+        return $this->isJS ?? false;
+    }
+
+    public function getJSMethodName() {
+        return $this->jsMethodName;
     }
 }
 

@@ -4,6 +4,17 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.7
+- added support for readonly custom metadata
+- added support for default custom metadata value
+- added support for fixed set of allowed database tables for which custom metadata can be created
+- added user removing
+- added group removing
+- updated user/group to ajax
+- updated caching system
+- separated user rights
+- separated gropu rights
+
 ### v1.6
 - added customizable ribbons (toppanel and subpanel links)
 - added `date updated` to selected entities (currently: users, documents and processes)

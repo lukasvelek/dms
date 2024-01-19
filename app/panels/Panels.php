@@ -113,10 +113,14 @@ class Panels {
             if($ribbon->getName() == 'SPLITTER') {
                 $data['$LINKS$'][] = '&nbsp;|';
             } else {
-                if($ribbon->hasImage()) {
-                    $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
+                if($ribbon->isJS()) {
+                    $data['$LINKS$'][] = '<a class="general-link" href="#" id="dropdown-ribbon-' . $ribbon->getId() . '" onclick="' . $ribbon->getJSMethodName() . '">' . $ribbon->getName() . '</a>';
                 } else {
-                    $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'general-link', true);
+                    if($ribbon->hasImage()) {
+                        $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
+                    } else {
+                        $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'general-link', true);
+                    }
                 }
             }
         }

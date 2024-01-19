@@ -326,9 +326,10 @@ class Users extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-rights-grid.html');
 
-        $app->flashMessageIfNotIsset(['id']);
+        $app->flashMessageIfNotIsset(['id', 'filter']);
 
         $id = htmlspecialchars($_GET['id']);
+        $filter = htmlspecialchars($_GET['filter']);
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -338,14 +339,14 @@ class Users extends APresenter {
 
         $userRights = '';
 
-        $app->logger->logFunction(function() use (&$userRights, $id) {
-            $userRights = $this->internalCreateUserRightsGrid($id);
+        $app->logger->logFunction(function() use (&$userRights, $id, $filter) {
+            $userRights = $this->internalCreateUserRightsGrid($id, $filter);
         }, __METHOD__);
 
         $links = array(
-            '<a class="general-link" href="?page=UserModule:Users:allowAllRights&id_user=' . $id . '">Allow all</a>',
+            '<a class="general-link" href="?page=UserModule:Users:allowAllRights&id_user=' . $id . '&filter=' . $filter . '">Allow all</a>',
             '&nbsp;&nbsp;',
-            '<a class="general-link" href="?page=UserModule:Users:denyAllRights&id_user=' . $id . '">Deny all</a>'
+            '<a class="general-link" href="?page=UserModule:Users:denyAllRights&id_user=' . $id . '&filter=' . $filter . '">Deny all</a>'
         );
 
         $data = array(
@@ -363,101 +364,123 @@ class Users extends APresenter {
     protected function allowAllRights() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['id_user']);
+        $app->flashMessageIfNotIsset(['id_user', 'filter']);
 
         $idUser = htmlspecialchars($_GET['id_user']);
+        $filter = htmlspecialchars($_GET['filter']);
 
         $allow = true;
 
         $app->getConn()->beginTransaction();
 
-        foreach(UserActionRights::$all as $ar) {
-            if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
-                $app->userRightModel->updateActionRight($idUser, $ar, $allow);
-            } else {
-                $app->userRightModel->insertActionRightForIdUser($idUser, $ar, $allow);
-            }
-        }
+        switch($filter) {
+            case 'actions':
+                foreach(UserActionRights::$all as $ar) {
+                    if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
+                        $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+                    } else {
+                        $app->userRightModel->insertActionRightForIdUser($idUser, $ar, $allow);
+                    }
+                }
 
-        foreach(PanelRights::$all as $pr) {
-            if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
-                $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
-            } else {
-                $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
-            }
-        }
+                $acm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
+                $acm->invalidateCache();
 
-        foreach(BulkActionRights::$all as $bar) {
-            if($app->userRightModel->checkBulkActionRightExists($idUser, $bar)) {
-                $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
-            } else {
-                $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
-            }
+                break;
+
+            case 'bulk_actions':
+                foreach(BulkActionRights::$all as $bar) {
+                    if($app->userRightModel->checkBulkActionRightExists($idUser, $bar)) {
+                        $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+                    } else {
+                        $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
+                    }
+                }
+
+                $bacm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
+                $bacm->invalidateCache();
+
+                break;
+
+            case 'panels':
+                foreach(PanelRights::$all as $pr) {
+                    if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
+                        $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+                    } else {
+                        $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
+                    }
+                }
+
+                $pcm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
+                $pcm->invalidateCache();
+
+                break;
         }
 
         $app->getConn()->commit();
 
-        $cms = array(
-            CacheManager::getTemporaryObject(CacheCategories::ACTIONS),
-            CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS),
-            CacheManager::getTemporaryObject(CacheCategories::PANELS)
-        );
-
-        foreach($cms as $cm) {
-            $cm->invalidateCache();
-        }
-
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => $filter));
     }
 
     protected function denyAllRights() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['id_user']);
+        $app->flashMessageIfNotIsset(['id_user', 'filter']);
 
         $idUser = htmlspecialchars($_GET['id_user']);
+        $filter = htmlspecialchars($_GET['filter']);
 
         $allow = false;
 
         $app->getConn()->beginTransaction();
 
-        foreach(UserActionRights::$all as $ar) {
-            if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
-                $app->userRightModel->updateActionRight($idUser, $ar, $allow);
-            } else {
-                $app->userRightModel->insertActionRightForIdUser($idUser, $ar, $allow);
-            }
-        }
+        switch($filter) {
+            case 'actions':
+                foreach(UserActionRights::$all as $ar) {
+                    if($app->userRightModel->checkActionRightExists($idUser, $ar)) {
+                        $app->userRightModel->updateActionRight($idUser, $ar, $allow);
+                    } else {
+                        $app->userRightModel->insertActionRightForIdUser($idUser, $ar, $allow);
+                    }
+                }
 
-        foreach(PanelRights::$all as $pr) {
-            if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
-                $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
-            } else {
-                $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
-            }
-        }
+                $acm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
+                $acm->invalidateCache();
 
-        foreach(BulkActionRights::$all as $bar) {
-            if($app->userRightModel->checkBulkActionRightExists($idUser, $bar)) {
-                $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
-            } else {
-                $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
-            }
+                break;
+
+            case 'bulk_actions':
+                foreach(BulkActionRights::$all as $bar) {
+                    if($app->userRightModel->checkBulkActionRightExists($idUser, $bar)) {
+                        $app->userRightModel->updateBulkActionRight($idUser, $bar, $allow);
+                    } else {
+                        $app->userRightModel->insertBulkActionRightForIdUser($idUser, $bar, $allow);
+                    }
+                }
+
+                $bacm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
+                $bacm->invalidateCache();
+
+                break;
+
+            case 'panels':
+                foreach(PanelRights::$all as $pr) {
+                    if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
+                        $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
+                    } else {
+                        $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
+                    }
+                }
+
+                $pcm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
+                $pcm->invalidateCache();
+
+                break;
         }
 
         $app->getConn()->commit();
 
-        $cms = array(
-            CacheManager::getTemporaryObject(CacheCategories::ACTIONS),
-            CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS),
-            CacheManager::getTemporaryObject(CacheCategories::PANELS)
-        );
-
-        foreach($cms as $cm) {
-            $cm->invalidateCache();
-        }
-
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser));
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => $filter));
     }
 
     protected function allowActionRight() {
@@ -479,7 +502,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'actions'), $name);
     }
 
     protected function denyActionRight() {
@@ -501,7 +524,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'actions'), $name);
     }
 
     protected function allowPanelRight() {
@@ -523,7 +546,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
     }
 
     protected function denyPanelRight() {
@@ -545,7 +568,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -567,7 +590,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'bulk_actions'), $name);
     }
 
     protected function denyBulkActionRight() {
@@ -589,10 +612,10 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser), $name);
+        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'bulk_actions'), $name);
     }
 
-    private function internalCreateUserRightsGrid(int $idUser) {
+    private function internalCreateUserRightsGrid(int $idUser, string $filter) {
         global $app;
 
         $tb = TableBuilder::getTemporaryObject();
@@ -607,66 +630,76 @@ class Users extends APresenter {
 
         $rights = [];
 
-        $defaultActionRights = UserActionRights::$all;
-        $defaultPanelRights = PanelRights::$all;
-        $defaultBulkActionRights = BulkActionRights::$all;
+        switch($filter) {
+            case 'actions':
+                $defaultActionRights = UserActionRights::$all;
+                $actionRights = $app->userRightModel->getActionRightsForIdUser($idUser);
 
-        $actionRights = $app->userRightModel->getActionRightsForIdUser($idUser);
-        $panelRights = $app->userRightModel->getPanelRightsForIdUser($idUser);
-        $bulkActionRights = $app->userRightModel->getBulkActionRightsForIdUser($idUser);
+                foreach($defaultActionRights as $dar)  {
+                    $rights[$dar] = array(
+                        'type' => 'action',
+                        'name' => $dar,
+                        'value' => 0
+                    );
+                }
 
-        foreach($defaultActionRights as $dar)  {
-            $rights[$dar] = array(
-                'type' => 'action',
-                'name' => $dar,
-                'value' => 0
-            );
-        }
+                foreach($actionRights as $name => $value) {
+                    if(array_key_exists($name, $rights)) {
+                        $rights[$name] = array(
+                            'type' => 'action',
+                            'name' => $name,
+                            'value' => $value
+                        );
+                    }
+                }
 
-        foreach($defaultPanelRights as $dpr) {
-            $rights[$dpr] = array(
-                'type' => 'panel',
-                'name' => $dpr,
-                'value' => 0
-            );
-        }
+                break;
+            case 'bulk_actions':
+                $defaultBulkActionRights = BulkActionRights::$all;
+                $bulkActionRights = $app->userRightModel->getBulkActionRightsForIdUser($idUser);
 
-        foreach($defaultBulkActionRights as $dbar) {
-            $rights[$dbar] = array(
-                'type' => 'bulk',
-                'name' => $dbar,
-                'value' => 0
-            );
-        }
+                foreach($defaultBulkActionRights as $dbar) {
+                    $rights[$dbar] = array(
+                        'type' => 'bulk',
+                        'name' => $dbar,
+                        'value' => 0
+                    );
+                }
 
-        foreach($actionRights as $name => $value) {
-            if(array_key_exists($name, $rights)) {
-                $rights[$name] = array(
-                    'type' => 'action',
-                    'name' => $name,
-                    'value' => $value
-                );
-            }
-        }
+                foreach($bulkActionRights as $name => $value) {
+                    if(array_key_exists($name, $rights)) {
+                        $rights[$name] = array(
+                            'type' => 'bulk',
+                            'name' => $name,
+                            'value' => $value
+                        );
+                    }
+                }
 
-        foreach($bulkActionRights as $name => $value) {
-            if(array_key_exists($name, $rights)) {
-                $rights[$name] = array(
-                    'type' => 'bulk',
-                    'name' => $name,
-                    'value' => $value
-                );
-            }
-        }
+                break;
+            case 'panels':
+                $defaultPanelRights = PanelRights::$all;
+                $panelRights = $app->userRightModel->getPanelRightsForIdUser($idUser);
 
-        foreach($panelRights as $name => $value) {
-            if(array_key_exists($name, $rights)) {
-                $rights[$name] = array(
-                    'type' => 'panel',
-                    'name' => $name,
-                    'value' => $value
-                );
-            }
+                foreach($defaultPanelRights as $dpr) {
+                    $rights[$dpr] = array(
+                        'type' => 'panel',
+                        'name' => $dpr,
+                        'value' => 0
+                    );
+                }
+
+                foreach($panelRights as $name => $value) {
+                    if(array_key_exists($name, $rights)) {
+                        $rights[$name] = array(
+                            'type' => 'panel',
+                            'name' => $name,
+                            'value' => $value
+                        );
+                    }
+                }
+
+                break;
         }
 
         foreach($rights as $rightname => $right) {

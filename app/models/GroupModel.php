@@ -11,6 +11,43 @@ class GroupModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteGroupById(int $id) {
+        return $this->deleteById($id, 'groups');
+    }
+
+    public function getAllGroupsFromId(?int $idFrom, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select('*')
+            ->from('groups');
+
+        if($idFrom == 1) {
+            $qb->explicit(' WHERE `id` >= ' . $idFrom . ' ');
+        } else {
+            $qb->explicit(' WHERE `id` > ' . $idFrom . ' ');
+        }
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
+
+        $groups = [];
+        foreach($rows as $row) {
+            $groups[] = $this->createGroupObjectFromDbRow($row);
+        }
+
+        return $groups;
+    }
+
+    public function getFirstIdGroupOnAGridPage(int $gridPage) {
+        if($gridPage == 0) $gridPage = 1;
+        return $this->getFirstRowWithCount($gridPage, 'groups', ['id']);
+    }
+
     public function getGroupCount() {
         return $this->getRowCount('groups');
     }

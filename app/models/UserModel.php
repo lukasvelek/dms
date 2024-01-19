@@ -10,7 +10,48 @@ class UserModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
     }
+
+    public function deleteConnectionsForIdUser(int $id) {
+        return $this->deleteByCol('id_user1', $id, 'user_connections') && $this->deleteByCol('id_user2', $id, 'user_connections');
+    }
+
+    public function deleteUserById(int $id) {
+        $this->deleteById($id, 'users');
+    }
     
+    public function getAllUsersFromId(?int $idFrom, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select('*')
+            ->from('users');
+
+        if($idFrom == 1) {
+            $qb->explicit(' WHERE `id` >= ' . $idFrom . ' ');
+        } else {
+            $qb->explicit(' WHERE `id` > ' . $idFrom . ' ');
+        }
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
+
+        $users = [];
+        foreach($rows as $row) {
+            $users[] = $this->getUserObjectFromDbRow($row);
+        }
+
+        return $users;
+    }
+
+    public function getFirstIdUserOnAGridPage(int $gridPage) {
+        if($gridPage == 0) $gridPage = 1;
+        return $this->getFirstRowWithCount($gridPage, 'users', ['id']);
+    }
+
     public function removeConnectionForTwoUsers(int $idUser1, int $idUser2) {
         $qb = $this->qb(__METHOD__);
 
@@ -241,13 +282,17 @@ class UserModel extends AModel {
         return $this->getUserObjectFromDbRow($row);
     }
 
-    public function getAllUsers() {
+    public function getAllUsers(int $limit = 0) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('users')
-                   ->execute()
-                   ->fetch();
+        $qb->select('*')
+           ->from('users');
+
+        if($limit > 0) {
+            $qb->limit((string)$limit);
+        }
+
+        $rows = $qb->execute()->fetch();
         
         $users = [];
         foreach($rows as $row) {

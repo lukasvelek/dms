@@ -13,6 +13,29 @@ class GroupRightModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function removeAllActionRightsForIdGroup(int $idGroup) {
+        return $this->deleteByCol('id_group', $idGroup, 'group_action_rights');
+    }
+
+    public function removeAllBulkActionRightsForIdGroup(int $idGroup) {
+        return $this->deleteByCol('id_group', $idGroup, 'group_bulk_rights');
+    }
+
+    public function removeAllPanelRightsForIdGroup(int $idGroup) {
+        return $this->deleteByCol('id_group', $idGroup, 'group_panel_rights');
+    }
+
+    public function removeAllMetadataRightsForIdGroup(int $idGroup) {
+        return $this->deleteByCol('id_group', $idGroup, 'group_metadata_rights');
+    }
+
+    public function removeAllGroupRightsForIdGroup(int $idGroup) {
+        return ($this->removeAllActionRightsForIdGroup($idGroup) &&
+                $this->removeAllBulkActionRightsForIdGroup($idGroup) &&
+                $this->removeAllPanelRightsForIdGroup($idGroup) &&
+                $this->removeAllMetadataRightsForIdGroup($idGroup));
+    }
+
     public function checkActionRightExists(int $idGroup, string $actionName) {
         return $this->checkRightExists('action', $idGroup, $actionName);
     }

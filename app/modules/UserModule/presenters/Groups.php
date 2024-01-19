@@ -8,6 +8,7 @@ use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
+use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -69,14 +70,15 @@ class Groups extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/groups/group-rights-grid.html');
 
-        $app->flashMessageIfNotIsset(['id']);
+        $app->flashMessageIfNotIsset(['id', 'filter']);
 
         $id = htmlspecialchars($_GET['id']);
+        $filter = htmlspecialchars($_GET['filter']);
         $group = $app->groupModel->getGroupById($id);
 
         $data = array(
             '$PAGE_TITLE$' => '<i>' . $group->getName() . '</i> rights',
-            '$GROUP_RIGHTS_GRID$' => $this->internalCreateGroupRightsGrid($id),
+            '$GROUP_RIGHTS_GRID$' => $this->internalCreateGroupRightsGrid($id, $filter),
             '$BACK_LINK$' => LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showGroups'), '<-')
         );
 
@@ -104,7 +106,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'actions'), $name);
     }
 
     protected function denyActionRight() {
@@ -126,7 +128,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'actions'), $name);
     }
 
     protected function allowPanelRight() {
@@ -148,7 +150,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
     }
 
     protected function denyPanelRight() {
@@ -170,7 +172,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -192,7 +194,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'bulk_actions'), $name);
     }
 
     protected function denyBulkActionRight() {
@@ -214,7 +216,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup), $name);
+        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'bulk_actions'), $name);
     }
 
     protected function addUserToGroup() {
@@ -332,7 +334,7 @@ class Groups extends APresenter {
         return $form;
     }
 
-    private function internalCreateGroupRightsGrid(int $idGroup) {
+    private function internalCreateGroupRightsGrid(int $idGroup, string $filter) {
         global $app;
 
         $tb = TableBuilder::getTemporaryObject();
@@ -347,66 +349,78 @@ class Groups extends APresenter {
 
         $rights = [];
 
-        $defaultActionRights = UserActionRights::$all;
-        $defaultPanelRights = PanelRights::$all;
-        $defaultBulkActionRights = BulkActionRights::$all;
+        switch($filter) {
+            case 'actions':
+                $defaultActionRights = UserActionRights::$all;
+                $actionRights = $app->groupRightModel->getActionRightsForIdGroup($idGroup);
 
-        $actionRights = $app->groupRightModel->getActionRightsForIdGroup($idGroup);
-        $panelRights = $app->groupRightModel->getPanelRightsForIdGroup($idGroup);
-        $bulkActionRights = $app->groupRightModel->getBulkActionRightsForIdGroup($idGroup);
+                foreach($defaultActionRights as $dar)  {
+                    $rights[$dar] = array(
+                        'type' => 'action',
+                        'name' => $dar,
+                        'value' => 0
+                    );
+                }
 
-        foreach($defaultActionRights as $dar)  {
-            $rights[$dar] = array(
-                'type' => 'action',
-                'name' => $dar,
-                'value' => 0
-            );
-        }
+                foreach($actionRights as $name => $value) {
+                    if(array_key_exists($name, $rights)) {
+                        $rights[$name] = array(
+                            'type' => 'action',
+                            'name' => $name,
+                            'value' => $value
+                        );
+                    }
+                }
 
-        foreach($defaultPanelRights as $dpr) {
-            $rights[$dpr] = array(
-                'type' => 'panel',
-                'name' => $dpr,
-                'value' => 0
-            );
-        }
+                break;
+            
+            case 'bulk_actions':
+                $defaultBulkActionRights = BulkActionRights::$all;
+                $bulkActionRights = $app->groupRightModel->getBulkActionRightsForIdGroup($idGroup);
 
-        foreach($defaultBulkActionRights as $dbar) {
-            $rights[$dbar] = array(
-                'type' => 'bulk',
-                'name' => $dbar,
-                'value' => 0
-            );
-        }
+                foreach($defaultBulkActionRights as $dbar) {
+                    $rights[$dbar] = array(
+                        'type' => 'bulk',
+                        'name' => $dbar,
+                        'value' => 0
+                    );
+                }
+        
+                foreach($bulkActionRights as $name => $value) {
+                    if(array_key_exists($name, $rights)) {
+                        $rights[$name] = array(
+                            'type' => 'bulk',
+                            'name' => $name,
+                            'value' => $value
+                        );
+                    }
+                }
 
-        foreach($actionRights as $name => $value) {
-            if(array_key_exists($name, $rights)) {
-                $rights[$name] = array(
-                    'type' => 'action',
-                    'name' => $name,
-                    'value' => $value
-                );
-            }
-        }
+                break;
 
-        foreach($bulkActionRights as $name => $value) {
-            if(array_key_exists($name, $rights)) {
-                $rights[$name] = array(
-                    'type' => 'bulk',
-                    'name' => $name,
-                    'value' => $value
-                );
-            }
-        }
+            case 'panels':
+                $defaultPanelRights = PanelRights::$all;
+                $panelRights = $app->groupRightModel->getPanelRightsForIdGroup($idGroup);
 
-        foreach($panelRights as $name => $value) {
-            if(array_key_exists($name, $rights)) {
-                $rights[$name] = array(
-                    'type' => 'panel',
-                    'name' => $name,
-                    'value' => $value
-                );
-            }
+                foreach($defaultPanelRights as $dpr) {
+                    $rights[$dpr] = array(
+                        'type' => 'panel',
+                        'name' => $dpr,
+                        'value' => 0
+                    );
+                }
+
+                foreach($panelRights as $name => $value) {
+                    if(array_key_exists($name, $rights)) {
+                        $rights[$name] = array(
+                            'type' => 'panel',
+                            'name' => $name,
+                            'value' => $value
+                        );
+                    }
+                }
+
+                break;
         }
 
         foreach($rights as $rightname => $right) {
@@ -477,6 +491,10 @@ class Groups extends APresenter {
         } else {
             foreach($groupUsers as $groupUser) {
                 $user = $app->userModel->getUserById($groupUser->getIdUser());
+
+                if($user === NULL) {
+                    $user = new User(0, date('Y-m-d H:i:s'), 'Deleted user', '', '', '', 1, null, null, null, null, null, null, 1, null, null, null);
+                }
 
                 $actionLinks = array(
                     LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile')

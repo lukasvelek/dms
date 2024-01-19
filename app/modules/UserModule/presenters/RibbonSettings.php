@@ -21,6 +21,31 @@ class RibbonSettings extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function showDropdownItems() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+
+        $id = htmlspecialchars($_GET['id']);
+        $ribbon = $app->ribbonModel->getRibbonById($id);
+
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/settings/settings-grid.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Ribbon #' . $id . ' dropdown items',
+            '$SETTINGS_GRID$' => $this->internalCreateRibbonDropdownItemsGrid($ribbon),
+            '$LINKS$' => []
+        );
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm', 'is_dropdown' => '1', 'id_parent_ribbon' => $ribbon->getId()), 'New ribbon item');
+        }
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function deleteRibbon() {
         global $app;
 
@@ -335,7 +360,7 @@ class RibbonSettings extends APresenter {
         $ribbon = $app->ribbonModel->getRibbonById($id);
 
         $data = array(
-            '$PAGE_TITLE$' => 'New ribbon form',
+            '$PAGE_TITLE$' => 'Ribbon #' . $id . ' edit form',
             '$FORM$' => $this->internalCreateEditRibbonForm($ribbon)
         );
 
@@ -353,9 +378,16 @@ class RibbonSettings extends APresenter {
         $data['name'] = htmlspecialchars($_POST['name']);
         $data['code'] = htmlspecialchars($_POST['code']);
         $data['page_url'] = htmlspecialchars($_POST['page_url']);
+        $data['is_system'] = '0';
 
-        if($_POST['parent'] != '0') {
-            $data['id_parent_ribbon'] = htmlspecialchars($_POST['parent']);
+        if(isset($_POST['parent'])) {
+            if($_POST['parent'] != '0') {
+                $data['id_parent_ribbon'] = htmlspecialchars($_POST['parent']);
+            }
+        } else if(isset($_GET['parent'])) {
+            if($_GET['parent'] != '0') {
+                $data['id_parent_ribbon'] = htmlspecialchars($_GET['parent']);
+            }
         }
 
         if(isset($_POST['title'])) {
@@ -372,6 +404,10 @@ class RibbonSettings extends APresenter {
             $data['is_visible'] = '0';
         }
 
+        if(isset($_POST['is_dropdown'])) {
+            $data['page_url'] = 'js.showDropdownMenu(&apos;$ID_PARENT_RIBBON$&apos;, &apos;$ID_RIBBON$&apos;);';
+        }
+
         $app->ribbonModel->insertNewRibbon($data);
         $idRibbon = $app->ribbonModel->getLastInsertedRibbonId();
 
@@ -383,8 +419,8 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->insertAllGrantedRightsForGroup($idRibbon, $admGroup->getId());
 
         // current user
-        /*$admin = $app->userModel->getUserByUsername('admin');
-        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $admin->getId());*/
+        $admin = $app->userModel->getUserByUsername('admin');
+        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $admin->getId());
         $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $app->user->getId());
 
         $app->flashMessage('Created new ribbon', 'success');
@@ -392,12 +428,72 @@ class RibbonSettings extends APresenter {
         $app->redirect('UserModule:RibbonSettings:showAll');
     }
 
+    protected function processNewSplitterForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['parent']);
+
+        $idParent = htmlspecialchars($_POST['parent']);
+        $parent = $app->ribbonModel->getRibbonById($idParent);
+
+        $splitterCount = $app->ribbonModel->getSplitterCountForIdParent($idParent);
+
+        $data = [];
+        $data['id_parent_ribbon'] = $idParent;
+        $data['name'] = 'SPLITTER';
+        $data['code'] = $parent->getCode() . '.splitter' . $splitterCount;
+        $data['is_system'] = '0';
+        $data['page_url'] = '#';
+
+        $app->ribbonModel->insertNewRibbon($data);
+        $idRibbon = $app->ribbonModel->getLastInsertedRibbonId();
+
+        if($idRibbon === FALSE) {
+            die();
+        }
+
+        $admGroup = $app->groupModel->getGroupByCode('ADMINISTRATORS');
+        $app->ribbonRightsModel->insertAllGrantedRightsForGroup($idRibbon, $admGroup->getId());
+
+        $admin = $app->userModel->getUserByUsername('admin');
+        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $admin->getId());
+        $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $app->user->getId());
+
+        $app->flashMessage('Successfully created a new splitter', 'success');
+        $app->redirect('UserModule:RibbonSettings:showAll');
+    }
+
     protected function showNewForm() {
+        global $app;
+
+        $isDropdown = false;
+        $idParentRibbon = null;
+
+        if(isset($_GET['is_dropdown'])) {
+            $app->flashMessageIfNotIsset(['id_parent_ribbon']);
+            $idParentRibbon = htmlspecialchars($_GET['id_parent_ribbon']);
+
+            $isDropdown = true;
+        }
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
         $data = array(
-            '$PAGE_TITLE$' => 'New ribbon form',
-            '$FORM$' => $this->internalCreateNewRibbonForm()
+            '$PAGE_TITLE$' => 'New ' . ($isDropdown ? 'dropdown ' : '') . 'ribbon form',
+            '$FORM$' => $this->internalCreateNewRibbonForm($isDropdown, $idParentRibbon)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showNewSplitterForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New splitter form',
+            '$FORM$' => $this->internalCreateNewSplitterForm()
         );
 
         $this->templateManager->fill($data, $template);
@@ -453,6 +549,7 @@ class RibbonSettings extends APresenter {
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm'), 'New ribbon');
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewSplitterForm'), 'New splitter');
         }
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBON_CACHE)) {
@@ -494,14 +591,20 @@ class RibbonSettings extends APresenter {
 
                 $actionLinks = array(
                     'edit' => '-',
+                    'edit_dropdown_content' => '-',
                     'edit_user_rights' => '-',
                     'edit_group_rights' => '-',
                     'delete' => '-'
                 );
 
                 if($app->ribbonAuthorizator->checkRibbonEditable($app->user->getId(), $ribbon) &&
-                   $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS)) {
+                   $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
+                   $ribbon->getName() != 'SPLITTER') {
                     $actionLinks['edit'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
+
+                    if($ribbon->isJS()) {{
+                        $actionLinks['edit_dropdown_content'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showDropdownItems', 'id' => $ribbon->getId()), 'Edit dropdown items');
+                    }}
                 }
 
                 if($app->ribbonAuthorizator->checkRibbonDeletable($app->user->getId(), $ribbon) &&
@@ -555,7 +658,7 @@ class RibbonSettings extends APresenter {
         return $tb->build();
     }
 
-    private function internalCreateNewRibbonForm() {
+    private function internalCreateNewSplitterForm() {
         global $app;
 
         $fb = FormBuilder::getTemporaryObject();
@@ -579,8 +682,54 @@ class RibbonSettings extends APresenter {
             );
         }
 
+        $fb ->setMethod('POST')->setAction('?page=UserModule:RibbonSettings:processNewSplitterForm')
+            
+            ->addElement($fb->createLabel()->setText('Parent')->setFor('parent'))
+            ->addElement($fb->createSelect()->setName('parent')->addOptionsBasedOnArray($parentRibbonsArr))
+
+            ->addElement($fb->createSubmit('Create'));
+
+        return $fb->build();
+    }
+
+    private function internalCreateNewRibbonForm(bool $isDropdown, ?int $idParentRibbon) {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $parentRibbons = null;
+        $parentRibbonsArr = [];
+
+        if(!$isDropdown) {
+            $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+            $valFromCache = $cm->loadTopRibbons();
+
+            if(!is_null($valFromCache)) {
+                $parentRibbons = $valFromCache;
+            } else {
+                $parentRibbons = $app->ribbonModel->getToppanelRibbons();
+            }
+
+            $parentRibbonsArr = [['value' => '0', 'text' => '- (root)']];
+            foreach($parentRibbons as $ribbon) {
+                $parentRibbonsArr[] = array(
+                    'value' => $ribbon->getId(),
+                    'text' => $ribbon->getName() . ' (' . $ribbon->getCode() . ')'
+                );
+            }
+        } else {
+            if($idParentRibbon != null) {
+                $parentRibbons = $app->ribbonModel->getRibbonById($idParentRibbon);
+
+                $parentRibbonsArr[] = array(
+                    'value' => $parentRibbons->getId(),
+                    'text' => $parentRibbons->getName() . ' (' . $parentRibbons->getCode() . ')'
+                );
+            }
+        }
+
         $fb
-            ->setAction('?page=UserModule:RibbonSettings:processNewForm')
+            ->setAction('?page=UserModule:RibbonSettings:processNewForm' . ($isDropdown ? '&parent=' . $idParentRibbon : ''))
             ->setMethod('POST')
 
             ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
@@ -589,23 +738,34 @@ class RibbonSettings extends APresenter {
             ->addElement($fb->createLabel()->setText('Title (display name, can be same as Name)'))
             ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256'))
 
-            ->addElement($fb->createLabel()->setText('Code'))
+            ->addElement($fb->createLabel()->setText('Code')->setFor('code'))
             ->addElement($fb->createInput()->setType('text')->setName('code')->setMaxLength('256')->require())
 
-            ->addElement($fb->createLabel()->setText('Page URL'))
-            ->addElement($fb->createInput()->setType('text')->setName('page_url')->setMaxLength('256')->require())
+            ->addElement($fb->createLabel()->setText('Page URL')->setFor('page_url'))
+            ->addElement($fb->createInput()->setType('text')->setName('page_url')->setMaxLength('256')->require());
 
-            ->addElement($fb->createLabel()->setText('Parent'))
-            ->addElement($fb->createSelect()->setName('parent')->addOptionsBasedOnArray($parentRibbonsArr))
+        if(!$isDropdown) {
+            $fb ->addElement($fb->createLabel()->setText('Parent')->setFor('parent'))
+                ->addElement($fb->createSelect()->setName('parent')->addOptionsBasedOnArray($parentRibbonsArr))
 
-            ->addElement($fb->createLabel()->setText('Image'))
-            ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256'))
+                ->addElement($fb->createLabel()->setText('Image')->setFor('image'))
+                ->addElement($fb->createInput()->setType('text')->setName('image')->setMaxLength('256'))
+            ;
+        } else {
+            $fb ->addElement($fb->createLabel()->setText('Parent')->setFor('parent'))
+                ->addElement($fb->createSelect()->setName('parent')->addOptionsBasedOnArray($parentRibbonsArr)->readonly());
+        }
 
-            ->addElement($fb->createLabel()->setText('Is visible'))
-            ->addElement($fb->createInput()->setType('checkbox')->setName('is_visible')->setSpecial('checked'))
+        $fb ->addElement($fb->createLabel()->setText('Is visible')->setFor('is_visible'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('is_visible')->setSpecial('checked'));
 
-            ->addElement($fb->createSubmit('Create'))
-        ;
+        if(!$isDropdown) {
+            $fb ->addElement($fb->createLabel()->setText('Is dropdown (will override <i>Page URL</i>)')->setFor('is_dropdown'))
+                ->addElement($fb->createInput()->setType('checkbox')->setName('is_dropdown'))
+            ;
+        }
+
+        $fb->addElement($fb->createSubmit('Create'));
 
         return $fb->build();
     }
@@ -667,7 +827,7 @@ class RibbonSettings extends APresenter {
             ->addElement($fb->createLabel()->setText('Is visible'))
             ->addElement($fb->createInput()->setType('checkbox')->setName('is_visible')->setSpecial($visible))
 
-            ->addElement($fb->createSubmit('Create'))
+            ->addElement($fb->createSubmit('Save'));
         ;
 
         return $fb->build();
@@ -860,6 +1020,98 @@ class RibbonSettings extends APresenter {
             }
         }
 
+        return $tb->build();
+    }
+
+    private function internalCreateRibbonDropdownItemsGrid(Ribbon $ribbon) {
+        global $app;
+
+        $tb = TableBuilder::getTemporaryObject();
+
+        $headers = array(
+            'Actions',
+            'Name',
+            'Code',
+            'Visible',
+            'URL'
+        );
+
+        $headerRow = null;
+        $ribbons = [];
+
+        $app->logger->logFunction(function() use ($app, &$ribbons, $ribbon) {
+            $ribbons = $app->ribbonModel->getRibbonsForIdParentRibbon($ribbon->getId());
+        }, __METHOD__);
+
+        if(empty($ribbons)) {
+            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+        } else {
+            foreach($ribbons as $ribbon) {
+                if(!($ribbon instanceof Ribbon)) {
+                    continue;
+                }
+
+                $actionLinks = array(
+                    'edit' => '-',
+                    'edit_user_rights' => '-',
+                    'edit_group_rights' => '-',
+                    'delete' => '-'
+                );
+
+                if($app->ribbonAuthorizator->checkRibbonEditable($app->user->getId(), $ribbon) &&
+                   $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
+                   $ribbon->getName() != 'SPLITTER') {
+                    $actionLinks['edit'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
+                }
+
+                if($app->ribbonAuthorizator->checkRibbonDeletable($app->user->getId(), $ribbon) &&
+                   $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS)) {
+                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
+                }
+
+                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
+                   $ribbon->getName() != 'SPLITTER') {
+                    $actionLinks['edit_user_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
+                    $actionLinks['edit_group_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
+                }
+
+                if(is_null($headerRow)) {
+                    $row = $tb->createRow();
+
+                    foreach($headers as $header) {
+                        $col = $tb->createCol()->setText($header)
+                                               ->setBold();
+
+                        if($header == 'Actions') {
+                            $col->setColspan(count($actionLinks));
+                        }
+
+                        $row->addCol($col);
+                    }
+
+                    $headerRow = $row;
+
+                    $tb->addRow($row);
+                }
+
+                $ribbonRow = $tb->createRow();
+
+                foreach($actionLinks as $actionLink) {
+                    $ribbonRow->addCol($tb->createCol()->setText($actionLink));
+                }
+
+                $visible = $ribbon->isVisible() ? '<span style="color: green">Yes</span>' : '<span style="color: red">No</span>';
+
+                $ribbonRow  ->addCol($tb->createCol()->setText($ribbon->getName()))
+                            ->addCol($tb->createCol()->setText($ribbon->getCode()))
+                            ->addCol($tb->createCol()->setText($visible))
+                            ->addCol($tb->createCol()->setText($ribbon->getPageUrl()))
+                ;
+
+                $tb->addRow($ribbonRow);
+            }
+        }
+        
         return $tb->build();
     }
 }

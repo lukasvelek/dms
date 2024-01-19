@@ -12,6 +12,50 @@ class MetadataModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function setDefaultMetadataValue(int $idMetadata, int $idMetadataValue) {
+        return $this->updateDefaultMetadataValue($idMetadata, $idMetadataValue, true);
+    }
+
+    public function unsetDefaultMetadataValue(int $idMetadata, int $idMetadataValue) {
+        return $this->updateDefaultMetadataValue($idMetadata, $idMetadataValue, false);
+    }
+
+    public function updateDefaultMetadataValue(int $idMetadata, int $idMetadataValue, bool $isDefault) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('metadata_values')
+                     ->set(array('is_default' => ':is_default'))
+                     ->where('id_metadata=:id_metadata')
+                     ->andWhere('id=:id_value')
+                     ->setParams(array(
+                        ':id_metadata' => $idMetadata,
+                        ':id_value' => $idMetadataValue,
+                        ':is_default' => ($isDefault ? '1' : '0')
+                     ))
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function hasMetadataDefaultValue(int $idMetadata) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->select('id')
+                     ->from('metadata_values')
+                     ->where('id_metadata=:id_metadata')
+                     ->andWhere('is_default=:is_default')
+                     ->setParams(array(
+                        ':id_metadata' => $idMetadata,
+                        ':is_default' => '1'
+                     ))
+                     ->limit('1')
+                     ->execute()
+                     ->fetchSingle('id');
+
+        return $result;
+    }
+
     public function deleteMetadataValueByIdMetadataValue(int $idMetadataValue) {
         $qb = $this->qb(__METHOD__);
 
@@ -177,6 +221,7 @@ class MetadataModel extends AModel {
         $inputType = $row['input_type'];
         $inputLength = $row['length'];
         $selectExternalEnumName = null;
+        $isReadonly = $row['is_readonly'];
 
         if(isset($row['select_external_enum_name']) && $row['select_external_enum_name'] != NULL) {
             $selectExternalEnumName = $row['select_external_enum_name'];
@@ -188,7 +233,13 @@ class MetadataModel extends AModel {
             $isSystem = false;
         }
 
-        return new Metadata($id, $name, $text, $tableName, $isSystem, $inputType, $inputLength, $selectExternalEnumName);
+        if($isReadonly == '1') {
+            $isReadonly = true;
+        } else {
+            $isReadonly = false;
+        }
+
+        return new Metadata($id, $name, $text, $tableName, $isSystem, $inputType, $inputLength, $selectExternalEnumName, $isReadonly);
     }
 
     private function createMetadataValueObjectFromDbRow($row) {
@@ -200,8 +251,15 @@ class MetadataModel extends AModel {
         $idMetadata = $row['id_metadata'];
         $name = $row['name'];
         $value = $row['value'];
+        $isDefault = $row['is_default'];
 
-        return new MetadataValue($id, $idMetadata, $name, $value);
+        if($isDefault == '1') {
+            $isDefault = true;
+        } else {
+            $isDefault = false;
+        }
+
+        return new MetadataValue($id, $idMetadata, $name, $value, $isDefault);
     }
 }
 
