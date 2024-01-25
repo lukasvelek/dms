@@ -219,7 +219,7 @@ class Application {
         $this->fsManager = new FileStorageManager($this->baseDir . AppConfiguration::getFileDir(), $this->fileManager, $this->logger);
         $this->mailManager = new MailManager();
         
-        $serviceManagerCacheManager = new CacheManager(AppConfiguration::getSerializeCache(), CacheCategories::SERVICE_CONFIG);
+        $serviceManagerCacheManager = new CacheManager(AppConfiguration::getSerializeCache(), CacheCategories::SERVICE_CONFIG, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
         
         $this->notificationComponent = new NotificationComponent($this->conn, $this->logger, $this->notificationModel);
         $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel, $this->notificationComponent, $this->processCommentModel);

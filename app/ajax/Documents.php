@@ -13,8 +13,8 @@ use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
 
-$ucm = new CacheManager(true, CacheCategories::USERS, '../../logs/', '../../cache/');
-$fcm = new CacheManager(true, CacheCategories::FOLDERS, '../../logs/', '../../cache/');
+$ucm = new CacheManager(true, CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
+$fcm = new CacheManager(true, CacheCategories::FOLDERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
 
 $action = null;
 

@@ -10,7 +10,7 @@ use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
 
-$ucm = new CacheManager(true, CacheCategories::USERS, '../../logs/', '../../cache/');
+$ucm = new CacheManager(true, CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
 
 $action = null;
 

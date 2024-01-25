@@ -3,6 +3,7 @@
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\UserPasswordChangeStatus;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 
 session_start();
@@ -28,7 +29,7 @@ if(isset($_SESSION['id_current_user'])) {
             $app->redirect($app::URL_LOGIN_PAGE);
         }
     } else {
-        $ucm = new CacheManager(true, CacheCategories::USERS);
+        $ucm = new CacheManager(true, CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 
         $user = null;
 
