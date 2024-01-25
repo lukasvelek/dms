@@ -5,73 +5,72 @@ namespace DMS\UI\GridBuilder;
 use DMS\UI\IBuildable;
 
 class Grid implements IBuildable {
-    private array $rows;
-    private array $headers;
+    private array $trs;
+    private ?string $currentTr;
 
     public function __construct() {
-        $this->rows = [];
-        $this->headers = [];
+        $this->trs = [];
+        $this->currentTr = null;
 
         return $this;
     }
 
-    public function addHeader(string $code) {
-        $this->headers[] = $code;
+    public function tr(array $onRender = []) {
+        if($this->currentTr == null) {
+            $this->currentTr = '<tr';
+
+            if(!empty($onRender) && array_key_exists('style', $onRender)) {
+                $this->currentTr .= ' style="' . $onRender['style']() . '"';
+            }
+
+            $this->currentTr .= '>';
+        } else {
+            $this->currentTr .= '</tr>';
+            $this->trs[] = $this->currentTr;
+            $this->currentTr = '<tr>';
+        }
+
+        return $this;
+    }
+    
+    public function endTr() {
+        $this->currentTr .= '</tr>';
+        $this->trs[] = $this->currentTr;
+        $this->currentTr = null;
 
         return $this;
     }
 
-    public function addRow(Row $row) {
-        $this->rows[] = $row;
+    public function th(string $text, int $colspan = 1) {
+        $this->currentTr .= '<th';
+
+        if($colspan > 1) {
+            $this->currentTr .= ' colspan="' . $colspan . '"';
+        }
+
+        $this->currentTr .=  '>' . $text . '</th>';
 
         return $this;
     }
 
-    public function createRow(string $title, string $code = '') {
-        return new Row($title, $code);
+    public function td(string $text, int $colspan = 1) {
+        $this->currentTr .= '<td';
+
+        if($colspan > 1) {
+            $this->currentTr .= ' colspan="' . $colspan . '"';
+        }
+
+        $this->currentTr .= '>' . $text . '</td>';
+
+        return $this;
     }
 
     public function build() {
-        $code = '';
-
-        if(empty($this->headers)) {
-            $code = $this->buildWithoutHeaders();
-        } else {
-            $code = $this->buildWithHeaders();
-        }
-
-        return $code;
-    }
-
-    private function buildWithHeaders() {
-
-    }
-
-    private function buildWithoutHeaders() {
         $code = '<table>';
-
-        $code .= '<tr>';
-        foreach($this->rows as $row) {
-            $code .= '<th colspan="' . $row->colspan . '">' . $row->title . '</th>';
+        foreach($this->trs as $tr) {
+            $code .= $tr;
         }
-        $code .= '</tr>';
-
-        for($i = 0; $i < count($this->rows[0]->cols); $i++) {
-            $code .= '<tr>';
-
-            for($j = 0; $j < count($this->rows); $j++) {
-                $col = $this->rows[$j]->cols[$i];
-                $row = $this->rows[$j];
-                $row->onRender;
-
-                $code .= '<td>' . $col . '</td>';
-            }
-
-            $code .= '</tr>';
-        }
-
         $code .= '</table>';
-
         return $code;
     }
 }
