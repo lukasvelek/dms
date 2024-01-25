@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\WidgetLocations;
 use DMS\Modules\APresenter;
+use DMS\UI\GridBuilder\Grid;
 
 class HomePage extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -12,6 +13,20 @@ class HomePage extends APresenter {
         parent::__construct('HomePage', 'Home page');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function showTest() {
+        global $app;
+
+        $grid = new Grid();
+
+        $grid->addRow($grid->createRow('Test')
+                           ->addColArray(['a', 'b', 'c', 'd']));
+        $grid->addRow($grid->createRow('Second')
+                           ->addColArray(['a', 'b', 'c', 'd'])
+                           ->addOnRender(function() { return 'yes'; }));
+
+        return $grid->build();
     }
 
     protected function showHomePage() {
