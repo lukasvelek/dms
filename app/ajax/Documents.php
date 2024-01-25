@@ -8,6 +8,7 @@ use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\UI\GridBuilder\Grid;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -326,6 +327,10 @@ function search() {
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
+    if($idFolder == 'null') {
+        $idFolder = null;
+    }
+
     $filter = null;
     $page = 1;
 
@@ -371,13 +376,13 @@ function search() {
             foreach($documents as $document) {
                 $actionLinks = [];
 
-                if($actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION)) {
+                if($actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION, null, false)) {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
                 } else {
                     $actionLinks[] = '-';
                 }
 
-                if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT)) {
+                if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT, null, false)) {
                     $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
                 } else {
                     $actionLinks[] = '-';
@@ -465,6 +470,38 @@ function search() {
 
         echo $tb->build();
     } else {
+        /*$grid = new Grid();
+        $grid->setTableId('tablebuilder-table');
+
+        $grid   ->tr()
+                    ->th('<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">')
+                    ->th('Actions')
+                    ->th('Name')
+                    ->th('Author')
+                    ->th('Status')
+                    ->th('Folder')
+                ->endTr();
+
+        $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
+
+        if($gridUseFastLoad) {
+            $page -= 1;
+        
+            $firstIdDocumentOnPage = $documentModel->getFirstIdDocumentOnAGridPage(($page * $gridSize));
+        
+            $documents = $documentModel->getStandardDocumentsFromId($firstIdDocumentOnPage, $idFolder, $filter, $gridSize);
+        } else {
+            $documents = $documentModel->getStandardDocuments($idFolder, $filter, ($page * $gridSize));
+        }
+
+        if(!empty($documents)) {
+            $grid->tr()
+                    ->td('No data found', 6)
+                 ->endTr();
+        }
+
+        echo $grid->build();*/
+
         $tb = TableBuilder::getTemporaryObject();
 
         $tb->showRowBorder();

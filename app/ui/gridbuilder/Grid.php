@@ -7,10 +7,18 @@ use DMS\UI\IBuildable;
 class Grid implements IBuildable {
     private array $trs;
     private ?string $currentTr;
+    private ?string $tableId;
 
     public function __construct() {
         $this->trs = [];
         $this->currentTr = null;
+        $this->tableId = null;
+
+        return $this;
+    }
+
+    public function setTableId(string $tableId) {
+        $this->tableId = $tableId;
 
         return $this;
     }
@@ -53,11 +61,11 @@ class Grid implements IBuildable {
         return $this;
     }
 
-    public function td(string $text, int $colspan = 1) {
+    public function td(string $text, int $colspan = 1, string $color = 'black') {
         $this->currentTr .= '<td';
 
         if($colspan > 1) {
-            $this->currentTr .= ' colspan="' . $colspan . '"';
+            $this->currentTr .= 'style="color: ' . $color . '" colspan="' . $colspan . '"';
         }
 
         $this->currentTr .= '>' . $text . '</td>';
@@ -66,7 +74,13 @@ class Grid implements IBuildable {
     }
 
     public function build() {
-        $code = '<table>';
+        $code = '<table';
+
+        if($this->tableId !== NULL) {
+            $code .= ' id="' . $this->tableId . '"';
+        }
+
+        $code .= '>';
         foreach($this->trs as $tr) {
             $code .= $tr;
         }
