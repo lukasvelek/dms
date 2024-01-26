@@ -358,7 +358,7 @@ class Documents extends APresenter {
         
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $page, $app) {
             if($app->getGridUseAjax()) {
-                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $page);
+                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, '', $page);
             } else{
                 $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $page);
             }
