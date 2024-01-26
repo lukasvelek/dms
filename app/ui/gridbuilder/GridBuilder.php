@@ -120,8 +120,10 @@ class GridBuilder {
 
             foreach($this->dataSourceArray as $entity) {
                 $entityRow = '<tr>';
-    
-                $entityRow .= '<td>' . call_user_func($this->renderRowCheckbox, $entity) . '</td>';
+
+                if(!is_null($this->renderRowCheckbox)) {
+                    $entityRow .= '<td>' . call_user_func($this->renderRowCheckbox, $entity) . '</td>';
+                }
     
                 foreach($this->actions as $action) {
                     $entityRow .= '<td>' . $action($entity) . '</td>';

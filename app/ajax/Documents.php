@@ -10,7 +10,6 @@ use DMS\Entities\Document;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\UI\GridBuilder;
-use DMS\UI\GridBuilder\Grid;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
