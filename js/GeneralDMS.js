@@ -385,6 +385,9 @@ async function loadMailQueue() {
 async function generateDocuments(_is_debug) {
     var _id_folder = $("#id_folder").val();
     var _count = $("#count").val();
+    var btn = document.getElementById('submitBtn')
+
+    btn.setAttribute('disabled', true);
 
     $.ajax({
         url: 'app/ajax/Documents.php',
