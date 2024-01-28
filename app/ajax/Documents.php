@@ -443,10 +443,14 @@ function search() {
             return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()], 'Info');
         });
         $gb->addAction(function(Document $document) {
-            return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
+            if($document->getStatus() == DocumentStatus::ARCHIVED) {
+                return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
+            } else {
+                return '-';
+            }
         });
         $gb->addAction(function(Document $document) use ($actionAuthorizator) {
-            if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
+            if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false) && ($document->getStatus() == DocumentStatus::ARCHIVED)) {
                 return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
             } else {
                 return '-';
