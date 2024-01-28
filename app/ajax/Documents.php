@@ -572,10 +572,8 @@ function generateDocuments() {
         exit;
     }
 
-    //$documentModel->beginTran();
-
     $inserted = 0;
-    for($i = 0; $i < $count; $i++) {
+    while($inserted < $count) {
         $data = array(
             'name' => 'DG_' . CypherManager::createCypher(8),
             'id_author' => $user->getId(),
@@ -594,9 +592,11 @@ function generateDocuments() {
             $data['id_folder'] = $id_folder;
         }
 
-        $documentModel->insertNewDocument($data);
+        $result = $documentModel->insertNewDocument($data);
 
-        $inserted++;
+        if($result) {
+            $inserted++;
+        }
     }
 
     if($inserted < $count) {
@@ -622,8 +622,6 @@ function generateDocuments() {
             $documentModel->insertNewDocument($data);
         }
     }
-
-    //$documentModel->commitTran();
 
     $data = array(
         'total_count' => $documentModel->getTotalDocumentCount(),
