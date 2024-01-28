@@ -4,8 +4,10 @@ use DMS\Constants\CacheCategories;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
+use DMS\Entities\Process;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -164,23 +166,7 @@ function search() {
         $page = (int)(htmlspecialchars($_POST['page']));
     }
 
-    $tb = TableBuilder::getTemporaryObject();
-
-    $headers = array(
-        'Actions',
-        'Name',
-        'Workflow 1',
-        'Workflow 2',
-        'Workflow 3',
-        'Workflow 4',
-        'Workflow status',
-        'Current officer',
-        'Type'
-    );
-
-    $headerRow = null;
-
-    $processes = [];
+    $dataSourceCallback = null;
 
     switch($filter) {
         case 'startedByMe':
@@ -189,9 +175,13 @@ function search() {
 
                 $firstIdProcessOnPage = $processModel->getFirstIdProcessOnAGridPage(($page * $gridSize));
 
-                $processes = $processModel->getProcessesWhereIdUserIsAuthorFromId($firstIdProcessOnPage, $idUser, $gridSize);
+                $dataSourceCallback = function() use ($processModel, $idUser, $firstIdProcessOnPage, $gridSize) {
+                    return $processModel->getProcessesWhereIdUserIsAuthorFromId($firstIdProcessOnPage, $idUser, $gridSize);
+                };
             } else {
-                $processes = $processModel->getProcessesWhereIdUserIsAuthor($idUser, ($page * $gridSize));
+                $dataSourceCallback = function() use ($processModel, $idUser, $page, $gridSize) {
+                    return $processModel->getProcessesWhereIdUserIsAuthor($idUser, ($page * $gridSize));
+                };
             }
 
             break;
@@ -202,9 +192,13 @@ function search() {
 
                 $firstIdProcessOnPage = $processModel->getFirstIdProcessOnAGridPage(($page * $gridSize));
 
-                $processes = $processModel->getProcessesWithIdUserFromId($firstIdProcessOnPage, $idUser, $gridSize);
+                $dataSourceCallback = function() use ($processModel, $idUser, $gridSize, $firstIdProcessOnPage) {
+                    return $processModel->getProcessesWithIdUserFromId($firstIdProcessOnPage, $idUser, $gridSize);
+                };
             } else {
-                $processes = $processModel->getProcessesWithIdUser($idUser, ($page * $gridSize));
+                $dataSourceCallback = function() use ($processModel, $idUser, $page, $gridSize) {
+                    return $processModel->getProcessesWithIdUser($idUser, ($page * $gridSize));
+                };
             }
 
             break;
@@ -215,142 +209,103 @@ function search() {
 
                 $firstIdProcessOnPage = $processModel->getFirstIdProcessOnAGridPage(($page * $gridSize));
 
-                $processes = $processModel->getProcessesWithIdUserFromId($firstIdProcessOnPage, $idUser, $gridSize);
+                $dataSourceCallback = function() use ($processModel, $idUser, $firstIdProcessOnPage, $gridSize) {
+                    return $processModel->getFinishedProcessesWithIdUserFromId($firstIdProcessOnPage, $idUser, $gridSize);
+                };
             } else {
-                $processes = $processModel->getFinishedProcessesWithIdUser($idUser, ($page * $gridSize));
+                $dataSourceCallback = function() use ($processModel, $idUser, $page, $gridSize) {
+                    return $processModel->getFinishedProcessesWithIdUser($idUser, ($page * $gridSize));
+                };
             }
 
             break;
     }
 
-    $skip = 0;
-    $maxSkip = ($page - 1) * $gridSize;
+    $gb = new GridBuilder();
 
-    if(empty($processes)) {
-        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-    } else {
-        foreach($processes as $process) {
-            if($skip < $maxSkip) {
-                $skip++;
-                continue;
+    $gb->addColumns(['type' => 'Name', 'workflow1' => 'Workflow 1', 'workflow2' => 'Workflow 2', 'workflow3' => 'Workflow 3', 'workflow4' => 'Workflow 4', 'workflowStatus' => 'Workflow status', 'currentOfficer' => 'Current officer']);
+    $gb->addOnColumnRender('type', function(Process $process) {
+        return ProcessTypes::$texts[$process->getType()];
+    });
+    $gb->addOnColumnRender('workflow1', function(Process $process) use ($userModel, $ucm) {
+        if($process->getWorkflowStep(0) !== NULL) {
+            $user = $ucm->loadUserByIdFromCache($process->getWorkflowStep(0));
+
+            if(is_null($user)) {
+                $user = $userModel->getUserById($process->getWorkflowStep(0));
+
+                $ucm->saveUserToCache($user);
             }
 
-            $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()), 'Open')
-            );
-
-            if(is_null($headerRow)) {
-                $row = $tb->createRow();
-
-                foreach($headers as $header) {
-                    $col = $tb->createCol()->setText($header)
-                                           ->setBold();
-
-                    if($header == 'Actions') {
-                        $col->setColspan(count($actionLinks));
-                    }
-
-                    $row->addCol($col);
-                }
-
-                $headerRow = $row;
-
-                $tb->addRow($row);
-            }
-
-            $procRow = $tb->createRow();
-
-            foreach($actionLinks as $actionLink) {
-                $procRow->addCol($tb->createCol()->setText($actionLink));
-            }
-
-            if($process->getWorkflowStep(0) != null) {
-                $user = null;
-
-                $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(0));
-
-                if(is_null($cacheUser)) {
-                    $user = $userModel->getUserById($process->getWorkflowStep(0));
-
-                    $ucm->saveUserToCache($user);
-                } else {
-                    $user = $cacheUser;
-                }
-
-                $workflow1User = $user->getFullname();
-            } else {
-                $workflow1User = '-';
-            }
-
-            if($process->getWorkflowStep(1) != null) {
-                $user = null;
-
-                $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(1));
-
-                if(is_null($cacheUser)) {
-                    $user = $userModel->getUserById($process->getWorkflowStep(1));
-
-                    $ucm->saveUserToCache($user);
-                } else {
-                    $user = $cacheUser;
-                }
-
-                $workflow2User = $user->getFullname();
-            } else {
-                $workflow2User = '-';
-            }
-
-            if($process->getWorkflowStep(2) != null) {
-                $user = null;
-
-                $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(2));
-
-                if(is_null($cacheUser)) {
-                    $user = $userModel->getUserById($process->getWorkflowStep(2));
-
-                    $ucm->saveUserToCache($user);
-                } else {
-                    $user = $cacheUser;
-                }
-
-                $workflow3User = $user->getFullname();
-            } else {
-                $workflow3User = '-';
-            }
-
-            if($process->getWorkflowStep(3) != null) {
-                $user = null;
-
-                $cacheUser = $ucm->loadUserByIdFromCache($process->getWorkflowStep(3));
-
-                if(is_null($cacheUser)) {
-                    $user = $userModel->getUserById($process->getWorkflowStep(3));
-
-                    $ucm->saveUserToCache($user);
-                } else {
-                    $user = $cacheUser;
-                }
-
-                $workflow4User = $user->getFullname();
-            } else {
-                $workflow4User = '-';
-            }
-
-            $procRow->addCol($tb->createCol()->setText(ProcessTypes::$texts[$process->getType()]))
-                    ->addCol($tb->createCol()->setText($workflow1User))
-                    ->addCol($tb->createCol()->setText($workflow2User))
-                    ->addCol($tb->createCol()->setText($workflow3User))
-                    ->addCol($tb->createCol()->setText($workflow4User))
-                    ->addCol($tb->createCol()->setText($process->getWorkflowStatus() ?? '-'))
-                    ->addCol($tb->createCol()->setText(${'workflow' . $process->getWorkflowStatus() . 'User'}))
-                    ->addCol($tb->createCol()->setText(ProcessTypes::$texts[$process->getType()]))
-            ;
-
-            $tb->addRow($procRow);
+            return $user->getFullname();
+        } else {
+            return '-';
         }
-    }
+    });
+    $gb->addOnColumnRender('workflow2', function(Process $process) use ($userModel, $ucm){
+        if($process->getWorkflowStatus(1) !== NULL) {
+            $user = $ucm->loadUserByIdFromCache($process->getWorkflowStep(1));
 
-    echo $tb->build();
+            if(is_null($user)) {
+                $user = $userModel->getUserById($process->getWorkflowStep(1));
+
+                $ucm->saveUserToCache($user);
+            }
+
+            return $user->getFullname();
+        } else {
+            return '-';
+        }
+    });
+    $gb->addOnColumnRender('workflow3', function(Process $process) use ($userModel, $ucm) {
+        if($process->getWorkflowStep(2) !== NULL) {
+            $user = $ucm->loadUserByIdFromCache($process->getWorkflowStep(2));
+
+            if(is_null($user)) {
+                $user = $userModel->getUserById($process->getWorkflowStep(2));
+
+                $ucm->saveUserToCache($user);
+            }
+
+            return $user->getFullname();
+        } else {
+            return '-';
+        }
+    });
+    $gb->addOnColumnRender('workflow4', function(Process $process) use ($userModel, $ucm) {
+        if($process->getWorkflowStep(3) !== NULL) {
+            $user = $ucm->loadUserByIdFromCache($process->getWorkflowStep(3));
+
+            if(is_null($user)) {
+                $user = $userModel->getUserById($process->getWorkflowStep(3));
+
+                $ucm->saveUserToCache($user);
+            }
+
+            return $user->getFullname();
+        } else {
+            return '-';
+        }
+    });
+    $gb->addOnColumnRender('currentOfficer', function(Process $process) use ($userModel, $ucm) {
+        $idUser = $process->getWorkflowStep(($process->getWorkflowStatus() - 1));
+
+        $user = $ucm->loadUserByIdFromCache($idUser);
+
+        if(is_null($user)) {
+            $user = $userModel->getUserById($idUser);
+            
+            $ucm->saveUserToCache($user);
+        }
+
+        return $user->getFullname();
+    });
+    $gb->addAction(function(Process $process) {
+        return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()], 'Open');
+    });
+    $gb->addDataSourceCallback($dataSourceCallback);
+
+    echo $gb->build();
 }
 
 exit;

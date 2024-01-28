@@ -90,8 +90,10 @@ class GridBuilder {
             $headerRow .= '<th';
 
             if(count($this->actions) > 1) {
-                $headerRow .= ' colspan="' . count($this->actions) . '">';
+                $headerRow .= ' colspan="' . count($this->actions) . '"';
             }
+
+            $headerRow .= '>';
 
             $headerRow .= 'Actions</th>';
         }
@@ -118,33 +120,50 @@ class GridBuilder {
                 $this->dataSourceArray = call_user_func($this->dataSourceCallback);
             }
 
-            foreach($this->dataSourceArray as $entity) {
-                $entityRow = '<tr>';
+            if(empty($this->dataSourceArray) || is_null($this->dataSourceArray)) {
+                $entityRow = '<tr><td';
 
-                if(!is_null($this->renderRowCheckbox)) {
-                    $entityRow .= '<td>' . call_user_func($this->renderRowCheckbox, $entity) . '</td>';
+                $colspan = count($this->actions) + count($this->columns);
+
+                if(!is_null($this->headerCheckbox)) {
+                    $colspan += 1;
                 }
-    
-                foreach($this->actions as $action) {
-                    $entityRow .= '<td>' . $action($entity) . '</td>';
-                }
-    
-                foreach($this->columns as $varName => $title) {
-                    $objectVarName = ucfirst($varName);
-    
-                    if(method_exists($entity, 'get' . $objectVarName)) {
-                        if(array_key_exists($varName, $this->callbacks)) {
-                            $entityRow .= '<td>' . $this->callbacks[$varName]($entity) . '</td>';
-                        } else {
-                            $entityRow .= '<td>' . ($entity->{'get' . $objectVarName}() ?? '-') . '</td>';
-                        }
-                    } else {
-                        $entityRow .= '<td style="background-color: red">' . $varName . '</td>';
-                    }
-                }
-    
-                $entityRow .= '</tr>';
+
+                $entityRow .= ' colspan="' . $colspan . '">' . $this->emptyDataSourceMessage . '</td></tr>';
                 $code .= $entityRow;
+            } else {
+                foreach($this->dataSourceArray as $entity) {
+                    $entityRow = '<tr>';
+    
+                    if(!is_null($this->renderRowCheckbox)) {
+                        $entityRow .= '<td>' . call_user_func($this->renderRowCheckbox, $entity) . '</td>';
+                    }
+        
+                    foreach($this->actions as $action) {
+                        $entityRow .= '<td>' . $action($entity) . '</td>';
+                    }
+        
+                    foreach($this->columns as $varName => $title) {
+                        $objectVarName = ucfirst($varName);
+        
+                        if(method_exists($entity, 'get' . $objectVarName)) {
+                            if(array_key_exists($varName, $this->callbacks)) {
+                                $entityRow .= '<td>' . $this->callbacks[$varName]($entity) . '</td>';
+                            } else {
+                                $entityRow .= '<td>' . ($entity->{'get' . $objectVarName}() ?? '-') . '</td>';
+                            }
+                        } else {
+                            if(array_key_exists($varName, $this->callbacks)) {
+                                $entityRow .= '<td>' . $this->callbacks[$varName]($entity) . '</td>';
+                            } else {
+                                $entityRow .= '<td style="background-color: red">' . $varName . '</td>';
+                            }
+                        }
+                    }
+        
+                    $entityRow .= '</tr>';
+                    $code .= $entityRow;
+                }
             }
         }
         // end of data
