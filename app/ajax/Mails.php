@@ -2,6 +2,7 @@
 
 use DMS\Core\AppConfiguration;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\UI\GridBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
@@ -23,59 +24,57 @@ echo($action());
 function getQueue() {
     global $mailModel, $user;
 
-    $tb = TableBuilder::getTemporaryObject();
-    $tb->showRowBorder();
-
-    $headers = array(
-        'Recipient',
-        'Title',
-        'Body',
-        'Date created'
-    );
-
-    $headerRow = null;
-
-    $mails = $mailModel->getMailQueue();
-
-    if($mails->num_rows == 0) {
-        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-    } else {
-        foreach($mails as $row) {
-            if(is_null($headerRow)) {
-                $hr = $tb->createRow();
-
-                foreach($headers as $header) {
-                    $hc = $tb->createCol()->setText($header)
-                                          ->setBold();
-
-                    $hr->addCol($hc);
+    $dataSourceCallback = function() use ($mailModel) {
+        $mails = $mailModel->getMailQueue();
+        $mailObjs = [];
+        foreach($mails as $mail) {
+            $mailObjs[] = new class($mail) {
+                private string $recipient;
+                private string $title;
+                private string $body;
+                private string $dateCreated;
+    
+                public function __construct(mixed $mailRow) {
+                    $this->recipient = $mailRow['recipient'];
+                    $this->title = $mailRow['title'];
+                    $this->body = $mailRow['body'];
+                    $this->dateCreated = $mailRow['date_created'];
                 }
-
-                $headerRow = $hr;
-
-                $tb->addRow($hr);
-            }
-
-            $mailRow = $tb->createRow();
-
-            $dateCreated = $row['date_created'];
-            if(!is_null($user)) {
-                $dateCreated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateCreated, $user);
-            } else {
-                $dateCreated = DatetimeFormatHelper::formatDateByFormat($dateCreated, AppConfiguration::getDefaultDatetimeFormat());
-            }
-
-            $mailRow->addCol($tb->createCol()->setText($row['recipient']))
-                    ->addCol($tb->createCol()->setText($row['title']))
-                    ->addCol($tb->createCol()->setText($row['body']))
-                    ->addCol($tb->createCol()->setText($dateCreated))
-            ;
-
-            $tb->addRow($mailRow);
+    
+                public function getRecipient() {
+                    return $this->recipient;
+                }
+    
+                public function getTitle() {
+                    return $this->title;
+                }
+    
+                public function getBody() {
+                    return $this->body;
+                }
+    
+                public function getDateCreated() {
+                    return $this->dateCreated;
+                }
+            };
         }
-    }
 
-    echo $tb->build();
+        return $mailObjs;
+    };
+
+    $gb = new GridBuilder();
+
+    $gb->addColumns(['recipient' => 'Recipient', 'title' => 'Title', 'body' => 'Body', 'dateCreated' => 'Date created']);
+    $gb->addDataSourceCallback($dataSourceCallback);
+    $gb->addOnColumnRender('dateCreated', function(object $obj) use ($user) {
+        if(!is_null($user)) {
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($obj->getDateCreated(), $user);
+        } else {
+            return DatetimeFormatHelper::formatDateByFormat($obj->getDateCreated(), AppConfiguration::getDefaultDatetimeFormat());
+        }
+    });
+
+    echo $gb->build();
 }
 
 ?>

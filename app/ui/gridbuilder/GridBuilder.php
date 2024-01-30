@@ -73,13 +73,7 @@ class GridBuilder {
     }
 
     public function build() {
-        $code = '<table';
-
-        if($this->tableBorder > 1) {
-            $code .= ' border="' . $this->tableBorder . '"';
-        }
-
-        $code .= '>';
+        $code = '<table border="' . $this->tableBorder . '" id="tablebuilder-table">';
 
         // title
         $headerRow = '<tr>';
@@ -100,6 +94,7 @@ class GridBuilder {
         foreach($this->columns as $varName => $title) {
             $headerRow .= '<th>' . $title . '</th>';
         }
+        $headerRow .= '</tr>';
         $code .= $headerRow;
         // end of title
 
