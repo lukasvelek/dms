@@ -5,8 +5,10 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
+use DMS\Entities\User;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -172,68 +174,37 @@ class UserRelogin extends APresenter {
     private function internalCreateConnectedUsersGrid() {
         global $app;
 
-        $connectedUsers = $app->userModel->getConnectedUsersForIdUser($app->user->getId());
+        $userModel = $app->userModel;
+        $idUser = $app->user->getId();
+        $actionAuthorizator = $app->actionAuthorizator;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $dataSourceCallback = function() use ($userModel, $idUser) {
+            return $userModel->getConnectedUsersForIdUser($idUser);
+        };
 
-        $headers = array(
-            'Actions',
-            'User'
-        );
+        $gb = new GridBuilder();
 
-        $headerRow = null;
-
-        $allowRelogin = $app->actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN);
-        $removeUserConnections = $app->actionAuthorizator->checkActionRight(UserActionRights::REMOVE_USER_CONNECTIONS);
-
-        if(empty($connectedUsers)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($connectedUsers as $user) {
-                $actionLinks = [];
-
-                if($allowRelogin) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:reloginAsUser', 'id_user' => $user->getId()), 'Login');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if($removeUserConnections) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:removeConnectedUser', 'id_user' => $user->getId()), 'Remove connection');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-                    $tb->addRow($row);
-                }
-
-                $userRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $userRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $userRow->addCol($tb->createCol()->setText($user->getFullname()));
-
-                $tb->addRow($userRow);
+        $gb->addColumns(['user' => 'User']);
+        $gb->addOnColumnRender('user', function(User $user) {
+            return $user->getFullname();
+        });
+        $gb->addAction(function(User $user) use ($actionAuthorizator) {
+            if($actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN)) {
+                return LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:reloginAsUser', 'id_user' => $user->getId()), 'Login');
+            } else {
+                return '-';
             }
-        }
+        });
+        $gb->addAction(function(User $user) use ($actionAuthorizator) {
+            if($actionAuthorizator->checkActionRight(UserActionRights::REMOVE_USER_CONNECTIONS)) {
+                return LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:removeConnectedUser', 'id_user' => $user->getId()), 'Remove connection');
+            } else {
+                return '-';
+            }
+        });
+        $gb->addDataSourceCallback($dataSourceCallback);
 
-        return $tb->build();
+        return $gb->build();
     }
 
     private function checkEnabled() {
