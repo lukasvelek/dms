@@ -12,10 +12,12 @@ use DMS\Constants\UserStatus;
 use DMS\Constnats\DatetimeFormats;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
+use DMS\Entities\EntityRight;
 use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -618,133 +620,112 @@ class Users extends APresenter {
     private function internalCreateUserRightsGrid(int $idUser, string $filter) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $userRightModel = $app->userRightModel;
 
-        $tb->showRowBorder();
-
-        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('Actions')->setBold()->setColspan('2'))
-                                    ->addCol($tb->createCol()->setText('Status')->setBold())
-                                    ->addCol($tb->createCol()->setText('Right name')->setBold())
-                                    ->addCol($tb->createCol()->setText('Type')->setBold()))
-        ;
-
-        $rights = [];
-
-        switch($filter) {
-            case 'actions':
-                $defaultActionRights = UserActionRights::$all;
-                $actionRights = $app->userRightModel->getActionRightsForIdUser($idUser);
-
-                foreach($defaultActionRights as $dar)  {
-                    $rights[$dar] = array(
-                        'type' => 'action',
-                        'name' => $dar,
-                        'value' => 0
-                    );
-                }
-
-                foreach($actionRights as $name => $value) {
-                    if(array_key_exists($name, $rights)) {
-                        $rights[$name] = array(
-                            'type' => 'action',
-                            'name' => $name,
-                            'value' => $value
-                        );
+        $dataSourceCallback = function() use ($userRightModel, $filter, $idUser) {
+            $rights = [];
+            switch($filter) {
+                case 'actions':
+                    $defaultActionRights = UserActionRights::$all;
+                    $actionRights = $userRightModel->getActionRightsForIdUser($idUser);
+    
+                    foreach($defaultActionRights as $dar)  {
+                        $rights[$dar] = new EntityRight('action', $dar, false);
                     }
-                }
-
-                break;
-            case 'bulk_actions':
-                $defaultBulkActionRights = BulkActionRights::$all;
-                $bulkActionRights = $app->userRightModel->getBulkActionRightsForIdUser($idUser);
-
-                foreach($defaultBulkActionRights as $dbar) {
-                    $rights[$dbar] = array(
-                        'type' => 'bulk',
-                        'name' => $dbar,
-                        'value' => 0
-                    );
-                }
-
-                foreach($bulkActionRights as $name => $value) {
-                    if(array_key_exists($name, $rights)) {
-                        $rights[$name] = array(
-                            'type' => 'bulk',
-                            'name' => $name,
-                            'value' => $value
-                        );
+    
+                    foreach($actionRights as $name => $value) {
+                        if(array_key_exists($name, $rights)) {
+                            $rights[$name]->setValue(($value == '1'));
+                        }
                     }
-                }
-
-                break;
-            case 'panels':
-                $defaultPanelRights = PanelRights::$all;
-                $panelRights = $app->userRightModel->getPanelRightsForIdUser($idUser);
-
-                foreach($defaultPanelRights as $dpr) {
-                    $rights[$dpr] = array(
-                        'type' => 'panel',
-                        'name' => $dpr,
-                        'value' => 0
-                    );
-                }
-
-                foreach($panelRights as $name => $value) {
-                    if(array_key_exists($name, $rights)) {
-                        $rights[$name] = array(
-                            'type' => 'panel',
-                            'name' => $name,
-                            'value' => $value
-                        );
-                    }
-                }
-
-                break;
-        }
-
-        foreach($rights as $rightname => $right) {
-            $type = $right['type'];
-            $name = $right['name'];
-            $value = $right['value'];
-
-            $row = $tb->createRow()->setId($name);
-
-            $allowLink = '';
-            $denyLink = '';
-
-            switch($type) {
-                case 'action':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowActionRight', 'name' => $name, 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyActionRight', 'name' => $name, 'id' => $idUser), 'Deny');
+    
                     break;
-
-                case 'panel':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowPanelRight', 'name' => $name, 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyPanelRight', 'name' => $name, 'id' => $idUser), 'Deny');
+                
+                case 'bulk_actions':
+                    $defaultBulkActionRights = BulkActionRights::$all;
+                    $bulkActionRights = $userRightModel->getBulkActionRightsForIdUser($idUser);
+    
+                    foreach($defaultBulkActionRights as $dbar) {
+                        $rights[$dbar] = new EntityRight('bulk', $dbar, false);
+                    }
+            
+                    foreach($bulkActionRights as $name => $value) {
+                        if(array_key_exists($name, $rights)) {
+                            $rights[$name]->setValue(($value == '1'));
+                        }
+                    }
+    
                     break;
-
-                case 'bulk':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowBulkActionRight', 'name' => $name, 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyBulkActionRight', 'name' => $name, 'id' => $idUser), 'Deny');
+    
+                case 'panels':
+                    $defaultPanelRights = PanelRights::$all;
+                    $panelRights = $userRightModel->getPanelRightsForIdUser($idUser);
+    
+                    foreach($defaultPanelRights as $dpr) {
+                        $rights[$dpr] = new EntityRight('panel', $dpr, false);
+                    }
+    
+                    foreach($panelRights as $name => $value) {
+                        if(array_key_exists($name, $rights)) {
+                            $rights[$name]->setValue(($value == '1'));
+                        }
+                    }
+    
                     break;
             }
 
+            return $rights;
+        };
+
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['status' => 'Status', 'rightName' => 'Right name', 'type' => 'Type']);
+        $gb->addOnColumnRender('status', function(EntityRight $right) use ($idUser) {
             $allowedText = '<span style="color: green">Allowed</span>';
             $deniedText = '<span style="color: red">Denied</span>';
 
-            $row->addCol($tb->createCol()->setText($allowLink))
-                ->addCol($tb->createCol()->setText($denyLink))
-                ->addCol($tb->createCol()->setText($value ? $allowedText : $deniedText))
-                ->addCol($tb->createCol()->setText($name))
-                ->addCol($tb->createCol()->setText($type))
-            ;
+            if($right->getValue()) {
+                return $allowedText;
+            } else {
+                return $deniedText;
+            }
+        });
+        $gb->addOnColumnRender('rightName', function(EntityRight $right) {
+            return $right->getName();
+        });
+        $gb->addOnColumnRender('type', function(EntityRight $right) {
+            return $right->getType();
+        });
+        $gb->addAction(function(EntityRight $right) use ($idUser) {
+            $allowLink = '-';
+            $denyLink = '-';
 
-            $tb->addRow($row);
-        }
+            switch($right->getType()) {
+                case 'action':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
+                    break;
 
-        $table = $tb->build();
+                case 'panel':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
+                    break;
+    
+                case 'bulk':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowBulkActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyBulkActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
+                    break;
+            }
 
-        return $table;
+            if($right->getValue()) {
+                return $denyLink;
+            } else {
+                return $allowLink;
+            }
+        });
+        $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
     }
 
     private function internalCreateUserProfileGrid(int $idUser) {

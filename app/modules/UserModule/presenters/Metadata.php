@@ -2,8 +2,10 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Entities\User;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -174,79 +176,72 @@ class Metadata extends APresenter {
     private function internalCreateRightsGrid(int $idMetadata) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $userModel = $app->userModel;
+        $userRightModel = $app->userRightModel;
 
-        $headers = array(
-            'User',
-            'View',
-            'Edit',
-            'View values',
-            'Edit values'
-        );
+        $dataSourceCallback = function() use ($userModel) {
+            return $userModel->getAllUsers();
+        };
 
-        $headerRow = null;
+        $enableLink = function (string $name, int $idUser) use ($idMetadata) {
+            $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'enable'), 'No', 'general-link', 'color: red');
+            return $link;
+        };
 
-        $users = $app->userModel->getAllUsers();
+        $disableLink = function (string $name, int $idUser) use ($idMetadata) {
+            $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'disable'), 'Yes', 'general-link', 'color: green');
+            return $link;
+        };
 
-        if(empty($users)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($users as $user) {
-                $idUser = $user->getId();
+        $gb = new GridBuilder();
 
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
+        $gb->addColumns(['user' => 'User', 'view' => 'View', 'edit' => 'Edit', 'viewValues' => 'View values', 'editValues' => 'Edit values']);
+        $gb->addOnColumnRender('user', function(User $user) {
+            return $user->getFullname();
+        });
+        $gb->addOnColumnRender('view', function(User $user) use ($idMetadata, $enableLink, $disableLink, $userRightModel) {
+            $userRights = $userRightModel->getMetadataRights($user->getId(), $idMetadata);
 
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $userRow = $tb->createRow();
-
-                $rights = $app->userRightModel->getMetadataRights($idUser, $idMetadata);
-
-                if(is_null($rights)) {
-                    $rights['view'] = '0';
-                    $rights['edit'] = '0';
-                    $rights['view_values'] = '0';
-                    $rights['edit_values'] = '0';
-                }
-
-                $enableLink = function (string $name) use ($idMetadata, $idUser) {
-                    $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'enable'), 'No', 'general-link', 'color: red');
-                    return $link;
-                };
-
-                $disableLink = function (string $name) use ($idMetadata, $idUser) {
-                    $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'disable'), 'Yes', 'general-link', 'color: green');
-                    return $link;
-                };
-
-                $data = array(
-                    $user->getFullname(),
-                    $rights['view'] ? $disableLink('view') : $enableLink('view'),
-                    $rights['edit'] ? $disableLink('edit') : $enableLink('edit'),
-                    $rights['view_values'] ? $disableLink('view_values') : $enableLink('view_values'),
-                    $rights['edit_values'] ? $disableLink('edit_values') : $enableLink('edit_values')
-                );
-
-                foreach($data as $d) {
-                    $userRow->addCol($tb->createCol()->setText($d));
-                }
-
-                $tb->addRow($userRow);
+            $right = 0;
+            if(!is_null($userRights)) {
+                $right = $userRights['view'];
             }
-        }
 
-        return $tb->build();
+            return $right ? $disableLink('view', $user->getId()) : $enableLink('view', $user->getId());
+        });
+        $gb->addOnColumnRender('edit', function(User $user) use ($idMetadata, $enableLink, $disableLink, $userRightModel) {
+            $userRights = $userRightModel->getMetadataRights($user->getId(), $idMetadata);
+
+            $right = 0;
+            if(!is_null($userRights)) {
+                $right = $userRights['edit'];
+            }
+
+            return $right ? $disableLink('edit', $user->getId()) : $enableLink('edit', $user->getId());
+        });
+        $gb->addOnColumnRender('viewValues', function(User $user) use ($idMetadata, $enableLink, $disableLink, $userRightModel) {
+            $userRights = $userRightModel->getMetadataRights($user->getId(), $idMetadata);
+
+            $right = 0;
+            if(!is_null($userRights)) {
+                $right = $userRights['view_values'];
+            }
+
+            return $right ? $disableLink('view_values', $user->getId()) : $enableLink('view_values', $user->getId());
+        });
+        $gb->addOnColumnRender('editValues', function(User $user) use ($idMetadata, $enableLink, $disableLink, $userRightModel) {
+            $userRights = $userRightModel->getMetadataRights($user->getId(), $idMetadata);
+
+            $right = 0;
+            if(!is_null($userRights)) {
+                $right = $userRights['edit_values'];
+            }
+
+            return $right ? $disableLink('edit_values', $user->getId()) : $enableLink('edit_values', $user->getId());
+        });
+        $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
     }
 
     private function internalCreateNewValueForm(int $idMetadata) {
