@@ -386,6 +386,13 @@ function search() {
         $gb->addAction(function(Document $document) {
             return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
         });
+        $gb->addAction(function(Document $document) use ($actionAuthorizator) {
+            if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false) && ($document->getStatus() == DocumentStatus::ARCHIVED)) {
+                return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
+            } else {
+                return '-';
+            }
+        });
         $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries()');
         $gb->addRowCheckbox(function(Document $document) {
             return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">';
@@ -643,87 +650,67 @@ function generateDocuments() {
 }
 
 function documentsCustomFilter() {
-    global $documentModel, $filterModel, $userModel, $metadataModel, $folderModel;
+    global $documentModel, $filterModel, $userModel, $folderModel, $ucm, $fcm, $actionAuthorizator;
 
     $idFilter = $_GET['id_filter'];
     $filter = $filterModel->getDocumentFilterById($idFilter);
 
-    $documents = $documentModel->getDocumentsBySQL($filter->getSql());
+    $dataSourceCallback = function() use ($filter, $documentModel) {
+        return $documentModel->getDocumentsBySQL($filter->getSQL());
+    };
 
-    $tb = TableBuilder::getTemporaryObject();
+    $gb = new GridBuilder();
 
-    $headers = array(
-        '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
-        'Actions',
-        'Name',
-        'Author',
-        'Status',
-        'Folder'
-    );
+    $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder']);
+    $gb->addOnColumnRender('idAuthor', function(Document $document) use ($userModel, $ucm) {
+        $user = $ucm->loadUserByIdFromCache($document->getIdAuthor());
 
-    $headerRow = null;
-
-    if(empty($documents)) {
-        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-    } else {
-        foreach($documents as $document) {
-            $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information'),
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit')
-            );
-
-            if(is_null($headerRow)) {
-                $row = $tb->createRow();
-
-                foreach($headers as $header) {
-                    $col = $tb->createCol()->setText($header)
-                                           ->setBold();
-
-                    if($header == 'Actions') {
-                        $col->setColspan(count($actionLinks));
-                    }
-
-                    $row->addCol($col);
-                }
-
-                $headerRow = $row;
-
-                $tb->addRow($row);
-            }
-
-            $docuRow = $tb->createRow();
-            $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawDocumentBulkActions()">'));
-
-            foreach($actionLinks as $actionLink) {
-                $docuRow->addCol($tb->createCol()->setText($actionLink));
-            }
-
-            $docuRow->addCol($tb->createCol()->setText($document->getName()))
-                    ->addCol($tb->createCol()->setText($userModel->getUserById($document->getIdAuthor())->getFullname()))
-            ;
-
-            $dbStatuses = $metadataModel->getAllValuesForIdMetadata($metadataModel->getMetadataByName('status', 'documents')->getId());
-
-            foreach($dbStatuses as $dbs) {
-                if($dbs->getValue() == $document->getStatus()) {
-                    $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
-                }
-            }
-
-            $folderName = '-';
-
-            if($document->getIdFolder() !== NULL) {
-                $folder = $folderModel->getFolderById($document->getIdFolder());
-                $folderName = $folder->getName();
-            }
-
-            $docuRow->addCol($tb->createCol()->setText($folderName));
-                
-            $tb->addRow($docuRow);
+        if(is_null($user)) {
+            $user = $userModel->getUserById($document->getIdAuthor());
         }
-    }
+        
+        return $user->getFullname();
+    });
+    $gb->addOnColumnRender('idFolder', function(Document $document) use ($folderModel, $fcm) {
+        if($document->getIdFolder() !== NULL) {
+            $folder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
 
-    echo $tb->build();
+            if(is_null($folder)) {
+                $folder = $folderModel->getFolderById($document->getIdFolder());
+            }
+
+            return $folder->getName();
+        } else {
+            return '-';
+        }
+    });
+    $gb->addOnColumnRender('status', function(Document $document) {
+        return DocumentStatus::$texts[$document->getStatus()];
+    });
+    $gb->addAction(function(Document $document) {
+        return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()], 'Info');
+    });
+    $gb->addAction(function(Document $document) {
+        if($document->getStatus() == DocumentStatus::ARCHIVED) {
+            return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
+        } else {
+            return '-';
+        }
+    });
+    $gb->addAction(function(Document $document) use ($actionAuthorizator) {
+        if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false) && ($document->getStatus() == DocumentStatus::ARCHIVED)) {
+            return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
+        } else {
+            return '-';
+        }
+    });
+    $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries()');
+    $gb->addRowCheckbox(function(Document $document) {
+        return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">';
+    });
+    $gb->addDataSourceCallback($dataSourceCallback);
+
+    echo $gb->build();
 }
 
 // PRIVATE METHODS

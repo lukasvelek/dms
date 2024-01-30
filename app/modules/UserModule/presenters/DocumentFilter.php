@@ -416,7 +416,13 @@ class DocumentFilter extends APresenter {
     }
 
     private function internalCreateFilterResultsGrid(EntitiesDocumentFilter $filter) {
-        global $app;
+        return '
+            <script type="text/javascript">
+                loadDocumentsCustomFilter("' . $filter->getId() . '");
+            </script>
+            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+        ';
+        /*global $app;
 
         $tb = TableBuilder::getTemporaryObject();
 
@@ -515,7 +521,7 @@ class DocumentFilter extends APresenter {
             }
         }
     
-        return $tb->build();
+        return $tb->build();*/
     }
 }
 
