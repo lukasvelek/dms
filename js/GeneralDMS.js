@@ -498,3 +498,20 @@ async function hideDropdownMenu(_parentRibbonId, _ribbonId) {
     $('#dropdownmenu-ribbon-' + _ribbonId).remove();
     $('#dropdown-ribbon-' + _ribbonId).attr('onclick', 'showDropdownMenu("' + _parentRibbonId + '", "' + _ribbonId + '");');
 }
+
+async function loadArchiveDocuments(_page) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Archive.php',
+        type: 'GET',
+        data: {
+            action: "getDocuments",
+            page: _page
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}

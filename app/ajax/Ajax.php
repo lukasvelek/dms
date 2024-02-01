@@ -15,6 +15,7 @@ use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
+use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FilterModel;
@@ -161,6 +162,7 @@ $notificationModel = new NotificationModel($db, $logger);
 $mailModel = new MailModel($db, $logger);
 $filterModel = new FilterModel($db, $logger);
 $ribbonModel = new RibbonModel($db, $logger);
+$archiveModel = new ArchiveModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);

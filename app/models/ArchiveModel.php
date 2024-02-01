@@ -12,6 +12,101 @@ class ArchiveModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllArchivesFromId(?int $idFrom, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->qb(__METHOD__);
+
+        $qb->select('*')
+           ->from('archive_entities')
+           ->where('type=:type')
+           ->setParam(':type', ArchiveType::ARCHIVE);
+
+        if($idFrom == 1) {
+            $qb->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $qb->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
+
+        $entities = [];
+        foreach($rows as $row) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row);
+        }
+
+        return $entities;
+    }
+
+    public function getAllBoxesFromId(?int $idFrom, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->qb(__METHOD__);
+
+        $qb->select('*')
+           ->from('archive_entities')
+           ->where('type=:type')
+           ->setParam(':type', ArchiveType::BOX);
+
+        if($idFrom == 1) {
+            $qb->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $qb->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
+
+        $entities = [];
+        foreach($rows as $row) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row);
+        }
+
+        return $entities;
+    }
+
+    public function getAllDocumentsFromId(?int $idFrom, int $limit) {
+        if(is_null($idFrom)) {
+            return [];
+        }
+
+        $qb = $this->qb(__METHOD__);
+
+        $qb->select('*')
+           ->from('archive_entities')
+           ->where('type=:type')
+           ->setParam(':type', ArchiveType::DOCUMENT);
+
+        if($idFrom == 1) {
+            $qb->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $qb->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
+
+        $entities = [];
+        foreach($rows as $row) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row);
+        }
+
+        return $entities;
+    }
+
+    public function getFirstIdEntityOnAGridPage(int $gridPage, int $type) {
+        if($gridPage == 0) $gridPage = 1;
+        return $this->getFirstRowWithCountWithCond($gridPage, 'archive_entities', ['id'], 'id', "WHERE `type` = $type");
+    }
+
     public function getAllArchiveEntitiesForIdParent(int $idParentArchiveEntity) {
         $qb = $this->qb(__METHOD__);
 

@@ -1069,7 +1069,8 @@ class DatabaseInstaller {
             'home',
             'documents',
             'processes',
-            'settings'
+            'settings',
+            'archive'
         );
 
         $toppanelRibbons = array(

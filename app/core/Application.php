@@ -24,6 +24,7 @@ use DMS\Constants\FlashMessageTypes;
 use DMS\Core\Logger\Logger;
 use DMS\Core\FileManager;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FilterModel;
@@ -111,6 +112,7 @@ class Application {
     public RibbonModel $ribbonModel;
     public RibbonRightsModel $ribbonRightsModel;
     public FilterModel $filterModel;
+    public ArchiveModel $archiveModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -183,6 +185,7 @@ class Application {
         $this->ribbonModel = new RibbonModel($this->conn, $this->logger);
         $this->ribbonRightsModel = new RibbonRightsModel($this->conn, $this->logger);
         $this->filterModel = new FilterModel($this->conn, $this->logger);
+        $this->archiveModel = new ArchiveModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -202,7 +205,8 @@ class Application {
             'notificationModel' => $this->notificationModel,
             'mailModel' => $this->mailModel,
             'ribbonModel' => $this->ribbonModel,
-            'filterModel' => $this->filterModel
+            'filterModel' => $this->filterModel,
+            'archiveModel' => $this->archiveModel
         );
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);

@@ -49,6 +49,9 @@ class UserActionRights {
     public const CREATE_ARCHIVE_ARCHIVE = 'create_archive_archive';
     public const MOVE_ENTITIES_WITHIN_ARCHIVE = 'move_entities_within_archive';
     public const MOVE_ENTITIES_FROM_TO_ARCHIVE = 'move_entities_from_to_archive';
+    public const VIEW_ARCHIVE_DOCUMENT_CONTENT = 'view_archive_document_content';
+    public const VIEW_ARCHIVE_BOX_CONTENT = 'view_archive_box_content';
+    public const VIEW_ARCHIVE_ARCHIVE_CONTENT = 'view_archive_archive_content';
 
     public static $all = array(
         self::CREATE_USER,
@@ -96,7 +99,10 @@ class UserActionRights {
         self::CREATE_ARCHIVE_BOX,
         self::CREATE_ARCHIVE_ARCHIVE,
         self::MOVE_ENTITIES_FROM_TO_ARCHIVE,
-        self::MOVE_ENTITIES_WITHIN_ARCHIVE
+        self::MOVE_ENTITIES_WITHIN_ARCHIVE,
+        self::VIEW_ARCHIVE_DOCUMENT_CONTENT,
+        self::VIEW_ARCHIVE_BOX_CONTENT,
+        self::VIEW_ARCHIVE_ARCHIVE_CONTENT
     );
 }
 
