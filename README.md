@@ -4,6 +4,9 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.8
+- updated backend grid renderer
+
 ### v1.7
 - added support for readonly custom metadata
 - added support for default custom metadata value
