@@ -15,10 +15,13 @@ use DMS\Core\Application;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
+use DMS\Entities\Metadata;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Modules\APresenter;
+use DMS\Services\AService;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -421,11 +424,7 @@ class Settings extends APresenter {
         $usersGrid = '';
 
         $app->logger->logFunction(function() use (&$usersGrid, $app, $page) {
-            if($app->getGridUseAjax()) {
-                $usersGrid = $this->internalCreateUsersGridAjax($page);
-            } else {
-                $usersGrid = $this->internalCreateUsersGrid();
-            }
+            $usersGrid = $this->internalCreateUsersGridAjax($page);
         }, __METHOD__);
 
         $data = array(
@@ -459,11 +458,7 @@ class Settings extends APresenter {
         }
 
         $app->logger->logFunction(function() use (&$groupsGrid, $app, $page) {
-            if($app->getGridUseAjax()) {
-                $groupsGrid = $this->internalCreateGroupGridAjax($page);
-            } else {
-                $groupsGrid = $this->internalCreateGroupGrid();
-            }
+            $groupsGrid = $this->internalCreateGroupGridAjax($page);
         }, __METHOD__);
 
         $data = array(
@@ -919,165 +914,11 @@ class Settings extends APresenter {
         return $code;
     }
 
-    private function internalCreateGroupGrid() {
-        global $app;
-
-        $tb = TableBuilder::getTemporaryObject();
-
-        $headers = array(
-            'Actions',
-            'Name',
-            'Code'
-        );
-
-        $headerRow = null;
-
-        $groups = $app->groupModel->getAllGroups();
-
-        if(empty($groups)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($groups as $group) {
-                $actionLinks = [];
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_GROUP_USERS)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId()), 'Group rights');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-                
-                    $tb->addRow($row);
-                }
-
-                $groupRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $groupRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $groupData = array(
-                    $group->getName() ?? '-',
-                    $group->getCode() ?? '-'
-                );
-
-                foreach($groupData as $gd) {
-                    $groupRow->addCol($tb->createCol()->setText($gd));
-                }
-
-                $tb->addRow($groupRow);
-            }
-        }
-
-        return $tb->build();
-    }
-
     private function internalCreateUsersGridAjax(int $page = 1) {
         $code = '<script type="text/javascript">loadUsers("' . $page . '");</script>';
         $code .= '<table border="1"><img id="users-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
 
         return $code;
-    }
-
-    private function internalCreateUsersGrid() {
-        global $app;
-
-        $tb = TableBuilder::getTemporaryObject();
-
-        $headers = array(
-            'Actions',
-            'Firstname',
-            'Lastname',
-            'Username',
-            'Email',
-            'Status'
-        );
-
-        $headerRow = null;
-
-        $users = $app->userModel->getAllUsers();
-
-        if(empty($users)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($users as $user) {
-                $actionLinks = [];
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_USER_PROFILE)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId()), 'User rights');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-                
-                    $tb->addRow($row);
-                }
-
-                $userRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $userRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $userData = array(
-                    $user->getFirstname() ?? '-',
-                    $user->getLastname() ?? '-',
-                    $user->getUsername() ?? '-',
-                    $user->getEmail() ?? '-',
-                    UserStatus::$texts[$user->getStatus()]
-                );
-
-                foreach($userData as $ud) {
-                    $userRow->addCol($tb->createCol()->setText($ud));
-                }
-
-                $tb->addRow($userRow);
-            }
-        }
-
-        return $tb->build();
     }
 
     private function internalDashboardCreateWidgets() {
@@ -1164,91 +1005,61 @@ class Settings extends APresenter {
     private function internalCreateMetadataGrid() {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $metadataModel = $app->metadataModel;
+        $metadataAuthorizator = $app->metadataAuthorizator;
+        $actionAuthorizator = $app->actionAuthorizator;
+        $idUser = $app->user->getId();
 
-        $headers = array(
-            'Actions',
-            'Name',
-            'Text',
-            'Database table',
-            'Input type'
-        );
-        
-        $headerRow = null;
+        $data = function() use ($metadataModel, $metadataAuthorizator, $idUser) {
+            $values = [];
+            foreach($metadataModel->getAllMetadata() as $m) {
+                if(!$metadataAuthorizator->canUserViewMetadata($idUser, $m->getId())) continue;
 
-        $metadata = $app->metadataModel->getAllMetadata();
-
-        if(empty($metadata)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($metadata as $m) {
-                $actionLinks = array(
-                    'values' => '-',
-                    'delete' => '-',
-                    'edit_user_rights' => '-'
-                );
-
-                if(!$app->metadataAuthorizator->canUserViewMetadata($app->user->getId(), $m->getId())) continue;
-
-                if($app->metadataAuthorizator->canUserEditMetadata($app->user->getId(), $m->getId()) && !$m->getIsSystem() && $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA)) {
-                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete');
-                }
-
-                if(($m->getInputType() == 'select' || $m->getInputType() == 'select_external') && $app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId()) && $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
-                    $actionLinks['values'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values');
-                }
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER_METADATA_RIGHTS)) {
-                    $actionLinks['edit_user_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showUserRights', 'id_metadata' => $m->getId()), 'User rights');
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $metaRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $metaRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $metaArray = array(
-                    $m->getName(),
-                    $m->getText(),
-                    $m->getTableName(),
-                    MetadataInputType::$texts[$m->getInputType()]
-                );
-
-                foreach($metaArray as $ma) {
-                    $metaRow->addCol($tb->createCol()->setText($ma));
-                }
-
-                $tb->addRow($metaRow);
+                $values[] = $m;
             }
-        }
+            return $values;
+        };
 
-        return $tb->build();
+        $gb = new GridBuilder();
+        
+        $gb->addColumns(['name' => 'Name', 'text' => 'Text', 'dbTable' => 'Database table', 'inputType' => 'Input type']);
+        $gb->addDataSourceCallback($data);
+        $gb->addOnColumnRender('dbTable', function (\DMS\Entities\Metadata $metadata) {
+            return $metadata->getTableName();
+        });
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($metadataAuthorizator, $idUser, $actionAuthorizator) {
+            $link = '-';
+            if($metadataAuthorizator->canUserEditMetadata($idUser, $metadata->getId()) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA) &&
+               !$metadata->getIsSystem()) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $metadata->getId()), 'Delete');
+            }
+            return $link;
+        });
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($metadataAuthorizator, $idUser, $actionAuthorizator) {
+            $link = '-';
+            if((in_array($metadata->getInputType(), ['select', 'select_external'])) &&
+               $metadataAuthorizator->canUserViewMetadataValues($idUser, $metadata->getId()) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $metadata->getId()), 'Values');
+            }
+            return $link;
+        });
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($actionAuthorizator) {
+            $link = '-';
+            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER_METADATA_RIGHTS)) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showUserRights', 'id_metadata' => $metadata->getId()), 'User rights');
+            }
+            return $link;
+        });
+
+        return $gb->build();
     }
 
     private function internalCreateFolderGrid() {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $folderModel = $app->folderModel;
 
         $idFolder = null;
 
@@ -1256,63 +1067,22 @@ class Settings extends APresenter {
             $idFolder = htmlspecialchars($_GET['id_folder']);
         }
 
-        $headers = array(
-            'Actions',
-            'Name',
-            'Description'
-        );
+        $data = function() use ($folderModel, $idFolder) {
+            return $folderModel->getFoldersForIdParentFolder($idFolder);
+        };
 
-        $headerRow = null;
+        $gb = new GridBuilder();
 
-        $folders = $app->folderModel->getFoldersForIdParentFolder($idFolder);
-        $cacheFolders = [];
+        $gb->addColumns(['name' => 'Name', 'description' => 'Description']);
+        $gb->addDataSourceCallback($data);
+        $gb->addAction(function(Folder $folder) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open');
+        });
+        $gb->addAction(function(Folder $folder) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete');
+        });
 
-        foreach($folders as $folder) {
-            $cacheFolders[$folder->getId()] = array('name' => $folder->getName(), 'description' => $folder->getDescription());
-        }
-
-        if(empty($folders)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($folders as $folder) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete')
-                );
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $folderRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $folderRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $folderRow->addCol($tb->createCol()->setText($folder->getName()))
-                          ->addCol($tb->createCol()->setText($folder->getDescription() ?? '-'));
-
-                $tb->addRow($folderRow);
-            }
-        }
-
-        return $tb->build();
+        return $gb->build();
     }
 
     private function internalCreateNewFolderForm(?int $idParentFolder) {
@@ -1363,78 +1133,75 @@ class Settings extends APresenter {
     private function internalCreateServicesGrid() {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $serviceManager = $app->serviceManager;
+        $serviceModel = $app->serviceModel;
+        $user = $app->user;
+        $actionAuthorizator = $app->actionAuthorizator;
 
-        $headers = array(
-            'Actions',
-            'System name',
-            'Name',
-            'Description',
-            'Last run date'
-        );
-
-        $headerRow = null;
-
-        $services = $app->serviceManager->services;
-
-        foreach($services as $serviceName => $service) {
-            $actionLinks = [];
-
-            if($app->actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run');
-            } else {
-                $actionLinks[] = '-';
-            }
-
-            if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->name), 'Edit');
-            } else {
-                $actionLinks[] = '-';
-            }
-
-            if(is_null($headerRow)) {
-                $row = $tb->createRow();
-
-                foreach($headers as $header) {
-                    $col = $tb->createCol()->setText($header)
-                                           ->setBold();
-
-                    if($header == 'Actions') {
-                        $col->setColspan(count($actionLinks));
-                    }
-
-                    $row->addCol($col);
+        $data = function() use ($serviceManager, $serviceModel, $user) {
+            $values = [];
+            foreach($serviceManager->services as $k => $v) {
+                $serviceLogEntry = $serviceModel->getServiceLogLastEntryForServiceName($v->name);
+                $serviceLastRunDate = '-';
+            
+                if($serviceLogEntry !== NULL) {
+                    $serviceLastRunDate = $serviceLogEntry['date_created'];
+                    $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
                 }
 
-                $headerRow = $row;
+                $values[] = new class($v->name, $k, $v->description, $serviceLastRunDate) {
+                    private $systemName;
+                    private $name;
+                    private $description;
+                    private $lastRunDate;
 
-                $tb->addRow($row);
+                    function __construct($systemName, $name, $description, $lastRunDate) {
+                        $this->systemName = $systemName;
+                        $this->name = $name;
+                        $this->description = $description;
+                        $this->lastRunDate = $lastRunDate;
+                    }
+
+                    function getSystemName() {
+                        return $this->systemName;
+                    }
+
+                    function getName() {
+                        return $this->name;
+                    }
+
+                    function getDescription() {
+                        return $this->description;
+                    }
+
+                    function getLastRunDate() {
+                        return $this->lastRunDate;
+                    }
+                };
             }
+            return $values;
+        };
 
-            $serviceRow = $tb->createRow();
+        $gb = new GridBuilder();
 
-            foreach($actionLinks as $actionLink) {
-                $serviceRow->addCol($tb->createCol()->setText($actionLink));
+        $gb->addColumns(['systemName' => 'System name', 'name' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date']);
+        $gb->addDataSourceCallback($data);
+        $gb->addAction(function($service) use ($actionAuthorizator) {
+            $link = '-';
+            if($actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE)) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->getName()), 'Run');
             }
-
-            $serviceLogEntry = $app->serviceModel->getServiceLogLastEntryForServiceName($service->name);
-            $serviceLastRunDate = '-';
-            
-            if($serviceLogEntry !== NULL) {
-                $serviceLastRunDate = $serviceLogEntry['date_created'];
-                $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $app->user);
+            return $link;
+        });
+        $gb->addAction(function($service) use ($actionAuthorizator) {
+            $link = '-';
+            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE)) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->getName()), 'Edit');
             }
+            return $link;
+        });
 
-            $serviceRow ->addCol($tb->createCol()->setText($service->name))
-                        ->addCol($tb->createCol()->setText($serviceName))
-                        ->addCol($tb->createCol()->setText($service->description))
-                        ->addCol($tb->createCol()->setText($serviceLastRunDate))
-            ;
-
-            $tb->addRow($serviceRow);
-        }
-
-        return $tb->build();
+        return $gb->build();
     }
 
     private function _getFolderCount(int &$count, Folder $folder) {
