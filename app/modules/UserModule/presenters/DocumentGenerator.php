@@ -45,7 +45,7 @@ class DocumentGenerator extends APresenter {
             <input type="number" id="id_folder" name="id_folder">
             <br>
             <br>
-            <button type="button" onclick="generateDocuments(\'' . ($isDebug ? 1 : 0) . '\')">Submit</button>
+            <button id="submitBtn" type="button" onclick="generateDocuments(\'' . ($isDebug ? 1 : 0) . '\')">Submit</button>
         ';
 
         return $code;

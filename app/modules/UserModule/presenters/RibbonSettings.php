@@ -5,10 +5,13 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
+use DMS\Entities\Group;
 use DMS\Entities\Ribbon;
+use DMS\Entities\User;
 use DMS\Models\AModel;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -564,98 +567,73 @@ class RibbonSettings extends APresenter {
     private function internalCreateRibbonGrid() {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $ribbonModel = $app->ribbonModel;
+        $ribbonAuthorizator = $app->ribbonAuthorizator;
+        $actionAuthorizator = $app->actionAuthorizator;
+        $idUser = $app->user->getId();
 
-        $headers = array(
-            'Actions',
-            'Name',
-            'Code',
-            'Visible',
-            'URL'
-        );
+        $data = function() use ($ribbonModel) {
+            $ribbons = $ribbonModel->getAllRibbons(true);
 
-        $headerRow = null;
-        $ribbons = [];
+            return $ribbons;
+        };
 
-        $app->logger->logFunction(function() use ($app, &$ribbons) {
-            $ribbons = $app->ribbonModel->getAllRibbons(true);
-        }, __METHOD__);
+        $gb = new GridBuilder();
 
-        if(empty($ribbons)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($ribbons as $ribbon) {
-                if(!($ribbon instanceof Ribbon)) {
-                    continue;
-                }
-
-                $actionLinks = array(
-                    'edit' => '-',
-                    'edit_dropdown_content' => '-',
-                    'edit_user_rights' => '-',
-                    'edit_group_rights' => '-',
-                    'delete' => '-'
-                );
-
-                if($app->ribbonAuthorizator->checkRibbonEditable($app->user->getId(), $ribbon) &&
-                   $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
-                   $ribbon->getName() != 'SPLITTER') {
-                    $actionLinks['edit'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
-
-                    if($ribbon->isJS()) {{
-                        $actionLinks['edit_dropdown_content'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showDropdownItems', 'id' => $ribbon->getId()), 'Edit dropdown items');
-                    }}
-                }
-
-                if($app->ribbonAuthorizator->checkRibbonDeletable($app->user->getId(), $ribbon) &&
-                   $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS)) {
-                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
-                }
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
-                   $ribbon->getName() != 'SPLITTER') {
-                    $actionLinks['edit_user_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
-                    $actionLinks['edit_group_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $ribbonRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $ribbonRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $visible = $ribbon->isVisible() ? '<span style="color: green">Yes</span>' : '<span style="color: red">No</span>';
-
-                $ribbonRow  ->addCol($tb->createCol()->setText($ribbon->getName()))
-                            ->addCol($tb->createCol()->setText($ribbon->getCode()))
-                            ->addCol($tb->createCol()->setText($visible))
-                            ->addCol($tb->createCol()->setText($ribbon->getPageUrl()))
-                ;
-
-                $tb->addRow($ribbonRow);
+        $gb->addColumns(['name' => 'Name', 'code' => 'Code', 'isVisible' => 'Visible', 'url' => 'URL']);
+        $gb->addDataSourceCallback($data);
+        $gb->addOnColumnRender('isVisible', function(Ribbon $ribbon) {
+            return $ribbon->isVisible() ? '<span style="color: green">Yes</span>' : '<span style="color: red">No</span>';
+        });
+        $gb->addOnColumnRender('url', function(Ribbon $ribbon) {
+            return $ribbon->getPageUrl();
+        });
+        $gb->addAction(function(Ribbon $ribbon) use ($ribbonAuthorizator, $actionAuthorizator, $idUser) {
+            $link = '-';
+            if($ribbonAuthorizator->checkRibbonEditable($idUser, $ribbon) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
+               $ribbon->getName() != 'SPLITTER') {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
             }
-        }
-        
-        return $tb->build();
+            return $link;
+        });
+        $gb->addAction(function(Ribbon $ribbon) use ($ribbonAuthorizator, $actionAuthorizator, $idUser) {
+            $link = '-';
+            if($ribbonAuthorizator->checkRibbonEditable($idUser, $ribbon) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
+               $ribbon->getName() != 'SPLITTER') {
+                if($ribbon->isJS()) {{
+                    $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showDropdownItems', 'id' => $ribbon->getId()), 'Edit dropdown items');
+                }}
+            }
+            return $link;
+        });
+        $gb->addAction(function(Ribbon $ribbon) use ($ribbonAuthorizator, $actionAuthorizator, $idUser) {
+            $link = '-';
+            if($ribbonAuthorizator->checkRibbonDeletable($idUser, $ribbon) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS)) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
+            }
+            return $link;
+        });
+        $gb->addAction(function(Ribbon $ribbon) use ($actionAuthorizator) {
+            $link = '-';
+            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
+               $ribbon->getName() != 'SPLITTER') {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
+            }
+            return $link;
+        });
+        $gb->addAction(function(Ribbon $ribbon) use ($actionAuthorizator) {
+            $link = '-';
+            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
+               $ribbon->getName() != 'SPLITTER') {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
+            }
+            return $link;
+        });
+
+        return $gb->build();
     }
 
     private function internalCreateNewSplitterForm() {
@@ -802,33 +780,39 @@ class RibbonSettings extends APresenter {
 
         $visible = $ribbon->isVisible() ? 'checked' : '';
 
+        $pageUrl = $fb->createInput()->setType('text')->setName('page_url')->setMaxLength('256')->require()->setValue($ribbon->getPageUrl());
+
+        if($ribbon->isJS()) {
+            $pageUrl->readonly();
+        }
+
         $fb
             ->setAction('?page=UserModule:RibbonSettings:processEditForm&id=' . $ribbon->getId())
             ->setMethod('POST')
 
             ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require()->setValue($ribbon->getName()))
-
+            
             ->addElement($fb->createLabel()->setText('Title (display name, can be same as Name)'))
             ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256')->setValue($ribbon->getTitle(true) ?? ''))
-
+            
             ->addElement($fb->createLabel()->setText('Code'))
             ->addElement($fb->createInput()->setType('text')->setName('code')->setMaxLength('256')->require()->setValue($ribbon->getCode()))
-
+            
             ->addElement($fb->createLabel()->setText('Page URL'))
-            ->addElement($fb->createInput()->setType('text')->setName('page_url')->setMaxLength('256')->require()->setValue($ribbon->getPageUrl()))
-
+            ->addElement($pageUrl)
+            
             ->addElement($fb->createLabel()->setText('Parent'))
             ->addElement($fb->createSelect()->setName('parent')->addOptionsBasedOnArray($parentRibbonsArr))
-
+            
             ->addElement($fb->createLabel()->setText('Image'))
             ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256')->setValue($ribbon->getImage() ?? ''))
-
+            
             ->addElement($fb->createLabel()->setText('Is visible'))
             ->addElement($fb->createInput()->setType('checkbox')->setName('is_visible')->setSpecial($visible))
-
-            ->addElement($fb->createSubmit('Save'));
-        ;
+            
+            ->addElement($fb->createSubmit('Save'))
+            ;
 
         return $fb->build();
     }
@@ -836,283 +820,192 @@ class RibbonSettings extends APresenter {
     private function internalCreateUserRightsGrid(Ribbon $ribbon) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $userModel = $app->userModel;
+        $ribbonRightsModel = $app->ribbonRightsModel;
 
-        $headers = array(
-            'Actions',
-            'User',
-            'View',
-            'Edit',
-            'Delete'
-        );
-        
-        $headerRow = null;
-        
-        $users = $app->userModel->getAllUsers();
+        $data = function() use ($userModel) {
+            return $userModel->getAllUsers();
+        };
 
-        if(empty($users)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($users as $user) {
-                $userRights = $app->ribbonRightsModel->getRibbonRightsForIdUser($ribbon->getId(), $user->getId());
+        $grant = function(string $name, User $user) use ($ribbon) {
+            return '<a class="general-link" style="color: red" href="?page=UserModule:RibbonSettings:grantRibbonRightToUser&id_ribbon=' . $ribbon->getId() . '&id_user=' . $user->getId() . '&name=' . $name . '">No</a>';
+        };
 
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:grantAllRibbonRightsToUser', 'id_ribbon' => $ribbon->getId(), 'id_user' => $user->getId()), 'Grant all'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:revokeAllRibbonRightsToUser', 'id_ribbon' => $ribbon->getId(), 'id_user' => $user->getId()), 'Revoke all')
-                );
+        $revoke = function(string $name, User $user) use ($ribbon) {
+            return '<a class="general-link" style="color: green" href="?page=UserModule:RibbonSettings:revokeRibbonRightToUser&id_ribbon=' . $ribbon->getId() . '&id_user=' . $user->getId() . '&name=' . $name . '">Yes</a>';
+        };
 
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-    
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)->setBold();
-    
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-    
-                        $row->addCol($col);
-                    }
-    
-                    $headerRow = $row;
-                    $tb->addRow($row);
-                }
+        $userRightsArr = [];
+        foreach($data() as $user) {
+            $userRights = $ribbonRightsModel->getRibbonRightsForIdUser($ribbon->getId(), $user->getId());
 
-                $rightRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $rightRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $grant = function(string $name) use ($user, $ribbon) {
-                    return '<a class="general-link" style="color: red" href="?page=UserModule:RibbonSettings:grantRibbonRightToUser&id_ribbon=' . $ribbon->getId() . '&id_user=' . $user->getId() . '&name=' . $name . '">No</a>';
-                };
-
-                $revoke = function(string $name) use ($user, $ribbon) {
-                    return '<a class="general-link" style="color: green" href="?page=UserModule:RibbonSettings:revokeRibbonRightToUser&id_ribbon=' . $ribbon->getId() . '&id_user=' . $user->getId() . '&name=' . $name . '">Yes</a>';
-                };
-
-                $canSee = $grant('can_see');
-                $canEdit = $grant('can_edit');
-                $canDelete = $grant('can_delete');
-
-                if($userRights !== FALSE && $userRights !== NULL) {
-                    if($userRights['can_see'] == '1') {
-                        $canSee = $revoke('can_see');
-                    }
-
-                    if($userRights['can_edit'] == '1') {
-                        $canEdit = $revoke('can_edit');
-                    }
-
-                    if($userRights['can_delete'] == '1') {
-                        $canDelete = $revoke('can_delete');
-                    }
-                }
-
-                $data = array(
-                    $user->getFullname(),
-                    $canSee,
-                    $canEdit, 
-                    $canDelete
-                );
-
-                foreach($data as $d) {
-                    $rightRow->addCol($tb->createCol()->setText($d));
-                }
-
-                $tb->addRow($rightRow);
+            if($userRights === NULL) {
+                continue;
             }
+
+            $userRightsArr[$user->getId()] = array(
+                'can_see' => $userRights['can_see'],
+                'can_edit' => $userRights['can_edit'],
+                'can_delete' => $userRights['can_delete']
+            );
         }
 
-        return $tb->build();
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['user' => 'User', 'view' => 'View', 'edit' => 'Edit', 'delete' => 'Delete']);
+        $gb->addDataSourceCallback($data);
+        $gb->addOnColumnRender('user', function(User $user) {
+            return $user->getFullname();
+        });
+        $gb->addOnColumnRender('view', function(User $user) use ($userRightsArr, $grant, $revoke) {
+            $link = $grant('can_see', $user);
+            if(array_key_exists($user->getId(), $userRightsArr) && $userRightsArr[$user->getId()]['can_see'] == '1') {
+                $link = $revoke('can_see', $user);
+            }
+            return $link;
+        });
+        $gb->addOnColumnRender('edit', function(User $user) use ($userRightsArr, $grant, $revoke) {
+            $link = $grant('can_edit', $user);
+            if(array_key_exists($user->getId(), $userRightsArr) && $userRightsArr[$user->getId()]['can_edit'] == '1') {
+                $link = $revoke('can_edit', $user);
+            }
+            return $link;
+        });
+        $gb->addOnColumnRender('delete', function(User $user) use ($userRightsArr, $grant, $revoke) {
+            $link = $grant('can_delete', $user);;
+            if(array_key_exists($user->getId(), $userRightsArr) && $userRightsArr[$user->getId()]['can_delete'] == '1') {
+                $link = $revoke('can_delete', $user);
+            }
+            return $link;
+        });
+        
+        return $gb->build();
     }
 
     private function internalCreateGroupRightsGrid(Ribbon $ribbon) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $groupModel = $app->groupModel;
+        $ribbonRightsModel = $app->ribbonRightsModel;
 
-        $headers = array(
-            'Actions',
-            'Group',
-            'View',
-            'Edit',
-            'Delete'
-        );
+        $data = function() use ($groupModel) {
+            return $groupModel->getAllGroups();
+        };
 
-        $headerRow = null;
+        $grant = function(string $name, Group $group) use ($ribbon) {
+            return '<a class="general-link" style="color: red" href="?page=UserModule:RibbonSettings:grantRibbonRightToGroup&id_ribbon=' . $ribbon->getId() . '&id_group=' . $group->getId() . '&name=' . $name . '">No</a>';
+        };
 
-        $groups = $app->groupModel->getAllGroups();
+        $revoke = function(string $name, Group $group) use ($ribbon) {
+            return '<a class="general-link" style="color: green" href="?page=UserModule:RibbonSettings:revokeRibbonRightToGroup&id_ribbon=' . $ribbon->getId() . '&id_group=' . $group->getId() . '&name=' . $name . '">Yes</a>';
+        };
 
-        if(empty($groups)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($groups as $group) {
-                $groupRights = $app->ribbonRightsModel->getRibbonRightsForIdGroup($ribbon->getId(), $group->getId());
+        $groupRightsArr = [];
+        foreach($data() as $group) {
+            $groupRights = $ribbonRightsModel->getRibbonRightsForIdGroup($ribbon->getId(), $group->getId());
 
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:grantAllRibbonRightsToGroup', 'id_ribbon' => $ribbon->getId(), 'id_group' => $group->getId()), 'Grant all'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:revokeAllRibbonRightsToGroup', 'id_ribbon' => $ribbon->getId(), 'id_group' => $group->getId()), 'Revoke all')
-                );
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-    
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)->setBold();
-    
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-    
-                        $row->addCol($col);
-                    }
-    
-                    $headerRow = $row;
-                    $tb->addRow($row);
-                }
-
-                $rightRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $rightRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $grant = function(string $name) use ($group, $ribbon) {
-                    return '<a class="general-link" style="color: red" href="?page=UserModule:RibbonSettings:grantRibbonRightToGroup&id_ribbon=' . $ribbon->getId() . '&id_group=' . $group->getId() . '&name=' . $name . '">No</a>';
-                };
-
-                $revoke = function(string $name) use ($group, $ribbon) {
-                    return '<a class="general-link" style="color: green" href="?page=UserModule:RibbonSettings:revokeRibbonRightToGroup&id_ribbon=' . $ribbon->getId() . '&id_group=' . $group->getId() . '&name=' . $name . '">Yes</a>';
-                };
-
-                $canSee = $grant('can_see');
-                $canEdit = $grant('can_edit');
-                $canDelete = $grant('can_delete');
-
-                if($groupRights !== FALSE && $groupRights !== NULL) {
-                    if($groupRights['can_see'] == '1') {
-                        $canSee = $revoke('can_see');
-                    }
-
-                    if($groupRights['can_edit'] == '1') {
-                        $canEdit = $revoke('can_edit');
-                    }
-
-                    if($groupRights['can_delete'] == '1') {
-                        $canDelete = $revoke('can_delete');
-                    }
-                }
-
-                $data = array(
-                    $group->getName(),
-                    $canSee,
-                    $canEdit, 
-                    $canDelete
-                );
-
-                foreach($data as $d) {
-                    $rightRow->addCol($tb->createCol()->setText($d));
-                }
-
-                $tb->addRow($rightRow);
+            if($groupRights === NULL) {
+                continue;
             }
+
+            $groupRightsArr[$group->getId()] = array(
+                'can_see' => $groupRights['can_see'],
+                'can_edit' => $groupRights['can_edit'],
+                'can_delete' => $groupRights['can_delete']
+            );
         }
 
-        return $tb->build();
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['group' => 'Group', 'view' => 'View', 'edit' => 'Edit', 'delete' => 'Delete']);
+        $gb->addDataSourceCallback($data);
+        $gb->addOnColumnRender('group', function(Group $group) {
+            return $group->getName();
+        });
+        $gb->addOnColumnRender('view', function(Group $group) use ($groupRightsArr, $grant, $revoke) {
+            $link = $grant('can_see', $group);
+            if(array_key_exists($group->getId(), $groupRightsArr) && $groupRightsArr[$group->getId()]['can_see'] == '1') {
+                $link = $revoke('can_see', $group);
+            }
+            return $link;
+        });
+        $gb->addOnColumnRender('edit', function(Group $group) use ($groupRightsArr, $grant, $revoke) {
+            $link = $grant('can_edit', $group);
+            if(array_key_exists($group->getId(), $groupRightsArr) && $groupRightsArr[$group->getId()]['can_edit'] == '1') {
+                $link = $revoke('can_edit', $group);
+            }
+            return $link;
+        });
+        $gb->addOnColumnRender('delete', function(Group $group) use ($groupRightsArr, $grant, $revoke) {
+            $link = $grant('cen_delete', $group);
+            if(array_key_exists($group->getId(), $groupRightsArr) && $groupRightsArr[$group->getId()]['can_delete'] == '1') {
+                $link = $revoke('can_delete', $group);
+            }
+            return $link;
+        });
+
+        return $gb->build();
     }
 
     private function internalCreateRibbonDropdownItemsGrid(Ribbon $ribbon) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $ribbonModel = $app->ribbonModel;
+        $ribbonAuthorizator = $app->ribbonAuthorizator;
+        $actionAuthorizator = $app->actionAuthorizator;
+        $idUser = $app->user->getId();
 
-        $headers = array(
-            'Actions',
-            'Name',
-            'Code',
-            'Visible',
-            'URL'
-        );
+        $data = function() use ($ribbonModel, $ribbon) {
+            $ribbons = $ribbonModel->getRibbonsForIdParentRibbon($ribbon->getId());
 
-        $headerRow = null;
-        $ribbons = [];
+            return $ribbons;
+        };
 
-        $app->logger->logFunction(function() use ($app, &$ribbons, $ribbon) {
-            $ribbons = $app->ribbonModel->getRibbonsForIdParentRibbon($ribbon->getId());
-        }, __METHOD__);
+        $gb = new GridBuilder();
 
-        if(empty($ribbons)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($ribbons as $ribbon) {
-                if(!($ribbon instanceof Ribbon)) {
-                    continue;
-                }
-
-                $actionLinks = array(
-                    'edit' => '-',
-                    'edit_user_rights' => '-',
-                    'edit_group_rights' => '-',
-                    'delete' => '-'
-                );
-
-                if($app->ribbonAuthorizator->checkRibbonEditable($app->user->getId(), $ribbon) &&
-                   $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
-                   $ribbon->getName() != 'SPLITTER') {
-                    $actionLinks['edit'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
-                }
-
-                if($app->ribbonAuthorizator->checkRibbonDeletable($app->user->getId(), $ribbon) &&
-                   $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS)) {
-                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
-                }
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
-                   $ribbon->getName() != 'SPLITTER') {
-                    $actionLinks['edit_user_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
-                    $actionLinks['edit_group_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $ribbonRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $ribbonRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $visible = $ribbon->isVisible() ? '<span style="color: green">Yes</span>' : '<span style="color: red">No</span>';
-
-                $ribbonRow  ->addCol($tb->createCol()->setText($ribbon->getName()))
-                            ->addCol($tb->createCol()->setText($ribbon->getCode()))
-                            ->addCol($tb->createCol()->setText($visible))
-                            ->addCol($tb->createCol()->setText($ribbon->getPageUrl()))
-                ;
-
-                $tb->addRow($ribbonRow);
+        $gb->addColumns(['name' => 'Name', 'code' => 'Code', 'isVisible' => 'Visible', 'url' => 'URL']);
+        $gb->addDataSourceCallback($data);
+        $gb->addOnColumnRender('isVisible', function(Ribbon $ribbon) {
+            return $ribbon->isVisible() ? '<span style="color: green">Yes</span>' : '<span style="color: red">No</span>';
+        });
+        $gb->addOnColumnRender('url', function(Ribbon $ribbon) {
+            return $ribbon->getPageUrl();
+        });
+        $gb->addAction(function(Ribbon $ribbon) use ($ribbonAuthorizator, $actionAuthorizator, $idUser) {
+            $link = '-';
+            if($ribbonAuthorizator->checkRibbonEditable($idUser, $ribbon) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
+               $ribbon->getName() != 'SPLITTER') {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
             }
-        }
-        
-        return $tb->build();
+            return $link;
+        });
+        $gb->addAction(function(Ribbon $ribbon) use ($ribbonAuthorizator, $actionAuthorizator, $idUser) {
+            $link = '-';
+            if($ribbonAuthorizator->checkRibbonDeletable($idUser, $ribbon) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS)) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
+            }
+            return $link;
+        });
+        $gb->addAction(function(Ribbon $ribbon) use ($actionAuthorizator) {
+            $link = '-';
+            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
+               $ribbon->getName() != 'SPLITTER') {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
+            }
+            return $link;
+        });
+        $gb->addAction(function(Ribbon $ribbon) use ($actionAuthorizator) {
+            $link = '-';
+            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
+               $ribbon->getName() != 'SPLITTER') {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
+            }
+            return $link;
+        });
+
+        return $gb->build();
     }
 }
 

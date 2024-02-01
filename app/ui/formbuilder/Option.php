@@ -2,6 +2,8 @@
 
 namespace DMS\UI\FormBuilder;
 
+use DMS\UI\IBuildable;
+
 /**
  * Option form element is used in the select form element
  * 

@@ -104,6 +104,9 @@ class Processes extends APresenter {
         return $form;
     }
 
+    /**
+     * Currently not in use
+     */
     private function internalCreateProcessMenuGrid() {
         global $app;
 

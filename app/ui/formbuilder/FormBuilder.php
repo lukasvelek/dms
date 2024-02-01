@@ -2,6 +2,8 @@
 
 namespace DMS\UI\FormBuilder;
 
+use DMS\UI\IBuildable;
+
 /**
  * FormBuilder allows to create HTML forms using PHP.
  * 

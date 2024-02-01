@@ -512,12 +512,12 @@ class CacheManager {
 
         $dirname = 'dmsCache';
 
-        if(!is_dir(AppConfiguration::getCacheDir() . $dirname)) {
-            mkdir(AppConfiguration::getCacheDir() . $dirname);
+        if(!is_dir($this->fm->cacheFolder . $dirname)) {
+            mkdir($this->fm->cacheFolder . $dirname);
         }
 
-        if(!is_dir(AppConfiguration::getCacheDir() . $dirname . '/' . $this->category . '/')) {
-            mkdir(AppConfiguration::getCacheDir() . $dirname . '/' . $this->category . '/');
+        if(!is_dir($this->fm->cacheFolder . $dirname . '/' . $this->category . '/')) {
+            mkdir($this->fm->cacheFolder . $dirname . '/' . $this->category . '/');
         }
 
         $file = $dirname . '/' . $this->category . '/' . md5($name) . '.tmp';

@@ -2,6 +2,8 @@
 
 namespace DMS\UI\TableBuilder;
 
+use DMS\UI\IBuildable;
+
 /**
  * TableCol class represents a table column
  * 

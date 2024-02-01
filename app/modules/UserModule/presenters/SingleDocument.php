@@ -7,6 +7,7 @@ use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
@@ -628,7 +629,7 @@ class SingleDocument extends APresenter {
     private function createUserLink(int $id) {
         global $app;
 
-        $ucm = new CacheManager(true, CacheCategories::USERS);
+        $ucm = new CacheManager(true, CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 
         $cacheUser = $ucm->loadUserByIdFromCache($id);
 

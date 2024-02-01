@@ -9,6 +9,7 @@ use DMS\Core\CacheManager;
 use DMS\Entities\DocumentFilter as EntitiesDocumentFilter;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -259,132 +260,99 @@ class DocumentFilter extends APresenter {
 
     private function internalCreateStandardFilterGrid() {
         global $app;
-
-        $tb = TableBuilder::getTemporaryObject();
+        
+        $userModel = $app->userModel;
+        $actionAuthorizator = $app->actionAuthorizator;
+        $filterModel = $app->filterModel;
+        $user = $app->user;
+        $ribbonModel = $app->ribbonModel;
 
         $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
+        
+        $dataSourceCallback = function() use ($filterModel, $actionAuthorizator, $user) {
+            $seeSystemFilters = $actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTERS);
+            $seeOtherUsersFilters = $actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTERS);
 
-        $headers = array(
-            'Actions',
-            'Name',
-            'Description',
-            'Author'
-        );
-
-        $headerRow = null;
-
-        $seeSystemFilters = $app->actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTERS);
-        $seeOtherUsersFilters = $app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTERS);
-
-        $filters = [];
-        if(!$seeSystemFilters && !$seeOtherUsersFilters) {
-            $filters = $app->filterModel->getAllDocumentFiltersForIdUser($app->user->getId());
-        } else {
-            $filters = $app->filterModel->getAllDocumentFilters($seeSystemFilters, $seeOtherUsersFilters, $app->user->getId());
-        }
-
-        if(empty($filters)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($filters as $filter) {
-                $showResultsLink = '-';
-                $editLink = '-';
-                $deleteLink = '-';
-                $pinLink = '-';
-
-                $ribbonFilterEntry = $app->ribbonModel->getRibbonForIdDocumentFilter($filter->getId());
-
-                if(!is_null($filter->getIdAuthor())) {
-                    if($filter->getIdAuthor() == $app->user->getId()) {
-                        $showResultsLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
-                        $editLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
-                        $deleteLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
-
-                        if($ribbonFilterEntry === NULL) {
-                            $pinLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:pinFilter', 'id_filter' => $filter->getId()), 'Pin');
-                        } else {
-                            $pinLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:unpinFilter', 'id_filter' => $filter->getId()), 'Unpin');
-                        }
-                    } else if($filter->getIdAuthor() != $app->user->getId()) {
-                        if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTER_RESULTS)) {
-                            $showResultsLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
-                        }
-
-                        if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_OTHER_USERS_FILTER)) {
-                            $editLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
-                        }
-
-                        if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_OTHER_USERS_FILTER)) {
-                            $deleteLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
-                        }
-                    }
-                } else {
-                    if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTER_RESULTS)) {
-                        $showResultsLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
-                    }
-                }
-
-                $actionLinks = array(
-                    $showResultsLink,
-                    $editLink,
-                    $deleteLink,
-                    $pinLink
-                );
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $filterRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $filterRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $authorName = 'System';
-
-                if(!is_null($filter->getIdAuthor())) {
-                    $cacheData = $ucm->loadUserByIdFromCache($filter->getIdAuthor());
-                    $author = null;
-
-                    if(!is_null($cacheData)) {
-                        $author = $cacheData;
-                    } else {
-                        $author = $app->userModel->getUserById($filter->getIdAuthor());
-                    }
-
-                    $authorName = $author->getFullname();
-                }
-
-                $filterData = array(
-                    $filter->getName(),
-                    $filter->getDescription() ?? '-',
-                    $authorName
-                );
-
-                foreach($filterData as $fd) {
-                    $filterRow->addCol($tb->createCol()->setText($fd));
-                }
-
-                $tb->addRow($filterRow);
+            if(!$seeSystemFilters && !$seeOtherUsersFilters) {
+                return $filterModel->getAllDocumentFiltersForIdUser($user->getId());
+            } else {
+                return $filterModel->getAllDocumentFilters($seeSystemFilters, $seeOtherUsersFilters, $user->getId());
             }
-        }
+        };
 
-        return $tb->build();
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['name' => 'Name', 'description' => 'Description', 'idAuthor' => 'Author']);
+        $gb->addOnColumnRender('idAuthor', function(\DMS\Entities\DocumentFilter $filter) use ($userModel, $ucm) {
+            if(is_null($filter->getIdAuthor())) {
+                return 'System';
+            } else {
+                $user = $ucm->loadUserByIdFromCache($filter->getIdAuthor());
+
+                if(is_null($user)) {
+                    $user = $userModel->getUserById($filter->getIdAuthor());
+
+                    $ucm->saveUserToCache($user);
+                }
+
+                return $user->getFullname();
+            }
+        });
+        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $actionAuthorizator) {
+            if(!is_null($filter->getIdAuthor())) {
+                if($filter->getIdAuthor() == $user->getId()) {
+                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                } else {
+                    if($actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTER_RESULTS)) {
+                        return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                    }
+                }
+            } else {
+                if($actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTER_RESULTS)) {
+                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                }
+            }
+        });
+        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $actionAuthorizator) {
+            if(!is_null($filter->getIdAuthor())) {
+                if($filter->getIdAuthor() == $user->getId()) {
+                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                } else {
+                    if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_OTHER_USERS_FILTER)) {
+                        return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                    }
+                }
+            } else {
+                if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_SYSTEM_FILTER)) {
+                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                }
+            }
+        });
+        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $actionAuthorizator) {
+            if(!is_null($filter->getIdAuthor())) {
+                if($filter->getIdAuthor() == $user->getId()) {
+                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
+                } else {
+                    if($actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTER_RESULTS)) {
+                        return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
+                    }
+                }
+            } else {
+                return '-';
+            }
+        });
+        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($ribbonModel) {
+            $ribbonFilterEntry = $ribbonModel->getRibbonForIdDocumentFilter($filter->getId());
+
+            if(is_null($ribbonFilterEntry)) {
+                return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:pinFilter', 'id_filter' => $filter->getId()), 'Pin');
+            } else {
+                return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:unpinFilter', 'id_filter' => $filter->getId()), 'Unpin');
+            }
+        });
+        $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
     }
 
     private function internalCreateEditFilterForm(EntitiesDocumentFilter $filter) {
@@ -416,106 +384,12 @@ class DocumentFilter extends APresenter {
     }
 
     private function internalCreateFilterResultsGrid(EntitiesDocumentFilter $filter) {
-        global $app;
-
-        $tb = TableBuilder::getTemporaryObject();
-
-        $tb->showRowBorder();
-
-        $headers = array(
-            '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
-            'Actions',
-            'Name',
-            'Author',
-            'Status',
-            'Folder'
-        );
-    
-        $headerRow = null;
-
-        $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($app->metadataModel->getMetadataByName('status', 'documents')->getId());
-
-        $documents = $app->documentModel->getDocumentsBySQL($filter->getSql());
-    
-        if(empty($documents)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($documents as $document) {
-                $actionLinks = [];
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION, null, false)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT, null, false)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                $shared = false;
-
-                if(!$shared && $app->actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
-                } else {
-                    $actionLinks[] = '-';
-                }
-    
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-    
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-    
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-    
-                        $row->addCol($col);
-                    }
-    
-                    $headerRow = $row;
-    
-                    $tb->addRow($row);
-                }
-    
-                $docuRow = $tb->createRow();
-    
-                $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">'));
-                
-                foreach($actionLinks as $actionLink) {
-                    $docuRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $author = $app->userModel->getUserById($document->getIdAuthor());
-
-                $docuRow->addCol($tb->createCol()->setText($document->getName()))
-                        ->addCol($tb->createCol()->setText($author->getFullname()))
-                ;
-    
-                foreach($dbStatuses as $dbs) {
-                    if($dbs->getValue() == $document->getStatus()) {
-                        $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
-                    }
-                }
-    
-                $folderName = '-';
-
-                if(!is_null($document->getIdFolder())) {
-                    $folder = $app->folderModel->getFolderById($document->getIdFolder());
-                    $folderName = $folder->getName();
-                }
-    
-                $docuRow->addCol($tb->createCol()->setText($folderName));
-                    
-                $tb->addRow($docuRow);
-            }
-        }
-    
-        return $tb->build();
+        return '
+            <script type="text/javascript">
+                loadDocumentsCustomFilter("' . $filter->getId() . '");
+            </script>
+            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+        ';
     }
 }
 

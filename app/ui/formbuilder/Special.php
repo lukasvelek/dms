@@ -2,6 +2,8 @@
 
 namespace DMS\UI\FormBuilder;
 
+use DMS\UI\IBuildable;
+
 /**
  * Special form element is used to pass custom code to the form
  * 

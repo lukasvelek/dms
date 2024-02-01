@@ -3,8 +3,8 @@
 namespace DMS\Core;
 
 class FileManager {
-    private string $logFolder;
-    private string $cacheFolder;
+    public string $logFolder;
+    public string $cacheFolder;
 
     public function __construct(string $logFolder, string $cacheFolder) {
         if(is_dir($logFolder) || $logFolder == '') {
