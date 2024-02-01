@@ -12,6 +12,24 @@ class ArchiveModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllArchiveEntitiesForIdParent(int $idParentArchiveEntity) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('archive_entities')
+                   ->where('id_parent_archive_entity=:id_parent')
+                   ->setParam(':id_parent', $idParentArchiveEntity)
+                   ->execute()
+                   ->fetch();
+
+        $entities = [];
+        foreach($rows as $row) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row);
+        }
+           
+        return $entities;
+    }
+
     public function getAllDocuments() {
         return $this->getAllArchiveEntitiesByType(ArchiveType::DOCUMENT);
     }
@@ -30,7 +48,7 @@ class ArchiveModel extends AModel {
         $rows = $qb->select('*')
                    ->from('archive_entities')
                    ->where('type=:type')
-                   ->setParam('type', $type)
+                   ->setParam(':type', $type)
                    ->execute()
                    ->fetch();
 

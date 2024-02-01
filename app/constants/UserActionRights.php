@@ -44,6 +44,11 @@ class UserActionRights {
     public const CREATE_DOCUMENT_FOLDER = 'create_document_folder';
     public const DELETE_USER = 'delete_user';
     public const DELETE_GROUP = 'delete_group';
+    public const CREATE_ARCHIVE_DOCUMENT = 'create_archive_document';
+    public const CREATE_ARCHIVE_BOX = 'create_archive_box';
+    public const CREATE_ARCHIVE_ARCHIVE = 'create_archive_archive';
+    public const MOVE_ENTITIES_WITHIN_ARCHIVE = 'move_entities_within_archive';
+    public const MOVE_ENTITIES_FROM_TO_ARCHIVE = 'move_entities_from_to_archive';
 
     public static $all = array(
         self::CREATE_USER,
@@ -86,7 +91,12 @@ class UserActionRights {
         self::VIEW_GROUP_USERS,
         self::CREATE_DOCUMENT_FOLDER,
         self::DELETE_USER,
-        self::DELETE_GROUP
+        self::DELETE_GROUP,
+        self::CREATE_ARCHIVE_DOCUMENT,
+        self::CREATE_ARCHIVE_BOX,
+        self::CREATE_ARCHIVE_ARCHIVE,
+        self::MOVE_ENTITIES_FROM_TO_ARCHIVE,
+        self::MOVE_ENTITIES_WITHIN_ARCHIVE
     );
 }
 

@@ -14,6 +14,25 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentForIdArchiveEntity(int $idArchiveEntity) {
+        $qb = $this->composeQueryStandardDocuments();
+        $qb ->explicit('AND (')
+            ->where('id_archive_document=:id_archive_entity', false, false)
+            ->orWhere('id_archive_box=:id_archive_entity')
+            ->orWhere('id_archive_archive=:id_archive_entity')
+            ->rightBracket()
+            ->setParam(':id_archive_entity', $idArchiveEntity);
+
+        $rows = $qb->execute()->fetch();
+
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function getDocumentsBySQL(string $sql) {
         $result = $this->db->query($sql);
 

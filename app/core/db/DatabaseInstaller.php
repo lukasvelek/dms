@@ -1098,6 +1098,13 @@ class DatabaseInstaller {
                 'is_system' => '1'
             ),
             array(
+                'name' => 'Archive',
+                'code' => 'archive',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:Archive:showDocuments',
+                'is_system' => '1'
+            ),
+            array(
                 'name' => 'Settings',
                 'code' => 'settings',
                 'image' => 'img/settings.svg',
@@ -1276,6 +1283,29 @@ class DatabaseInstaller {
                     'code' => 'settings.ribbons',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:RibbonSettings:showAll',
+                    'is_system' => '1'
+                )
+            ),
+            'archive' => array(
+                array(
+                    'name' => 'Documents',
+                    'code' => 'archive.documents',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Archive:showDocuments',
+                    'is_system' => '1'
+                ),
+                array(
+                    'name' => 'Boxes',
+                    'code' => 'archive.boxes',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Archive:showBoxes',
+                    'is_system' => '1'
+                ),
+                array(
+                    'name' => 'Archives',
+                    'code' => 'archive.archives',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Archive:showArchives',
                     'is_system' => '1'
                 )
             )
