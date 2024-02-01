@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Entities\MetadataValue;
 use DMS\Entities\User;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -264,107 +265,49 @@ class Metadata extends APresenter {
     private function internalCreateValuesGrid(int $id, bool $isSystem = false) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $metadataModel = $app->metadataModel;
+        $externalEnumComponent = $app->externalEnumComponent;
+        $metadataAuthorizator = $app->metadataAuthorizator;
+        $idUser = $app->user->getId();
 
-        $headers = array(
-            'Actions',
-            'Name',
-            'Value'
-        );
+        $dataSourceCallback = function() use ($metadataModel, $externalEnumComponent, $id) {
+            $metadata = $metadataModel->getMetadataById($id);
 
-        $headerRow = null;
+            if($metadata->getInputType() == 'select_external') {
+                $enum = $externalEnumComponent->getEnumByName($metadata->getSelectExternalEnumName());
 
-        $metadata = $app->metadataModel->getMetadataById($id);
-
-        if($metadata->getInputType() == 'select_external') {
-            $enum = $app->externalEnumComponent->getEnumByName($metadata->getSelectExternalEnumName());
-
-            if(empty($enum->getValues())) {
-                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+                return $enum->getValues();
             } else {
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-    
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-    
-                        $row->addCol($col);
-                    }
-    
-                    $headerRow = $row;
-                
-                    $tb->addRow($row);
-                }
+                $values = $metadataModel->getAllValuesForIdMetadata($id);
 
-                foreach($enum->getValues() as $name => $text) {
-                    $valueRow = $tb->createRow();
+                return $values;
+            }
+        };
 
-                    $valueRow   ->addCol($tb->createCol()->setText('-'))
-                                ->addCol($tb->createCol()->setText($text))
-                                ->addCol($tb->createCol()->setText($name))
-                    ;
+        $gb = new GridBuilder();
 
-                    $tb->addRow($valueRow);
+        $gb->addColumns(['name' => 'Name', 'value' => 'Value']);
+        $gb->addDataSourceCallback($dataSourceCallback);
+        $gb->addAction(function($value) use ($metadataAuthorizator, $idUser, $id, $isSystem) {
+            $actionLink = '-';
+            if($value instanceof MetadataValue) {
+                if($metadataAuthorizator->canUserEditMetadataValues($idUser, $id, true) && !$isSystem) {
+                    $actionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Delete');
                 }
             }
-        } else {
-            $values = $app->metadataModel->getAllValuesForIdMetadata($id);
-
-            if(empty($values)) {
-                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-            } else {
-                foreach($values as $v) {
-                    $actionLinks = array('new' => '-', 'set_as_default' => '-');
-                    
-                    if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $id) && !$isSystem) {
-                        $actionLinks['new'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
-
-                        if(!$v->getIsDefault()) {
-                            $actionLinks['set_as_default'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:setAsDefault', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Set as default');
-                        }
-                    }
-
-                    if(is_null($headerRow)) {
-                        $row = $tb->createRow();
-
-                        foreach($headers as $header) {
-                            $col = $tb->createCol()->setText($header)
-                                                   ->setBold();
-
-                            if($header == 'Actions') {
-                                $col->setColspan(count($actionLinks));
-                            }
-
-                            $row->addCol($col);
-                        }
-
-                        $headerRow = $row;
-                    
-                        $tb->addRow($row);
-                    }
-
-                    $valueRow = $tb->createRow();
-
-                    foreach($actionLinks as $actionLink) {
-                        $valueRow->addCol($tb->createCol()->setText($actionLink));
-                    }
-
-                    $valueArray = array(
-                        $v->getName(),
-                        $v->getValue()
-                    );
-
-                    foreach($valueArray as $va) {
-                        $valueRow->addCol($tb->createCol()->setText($va));
-                    }
-
-                    $tb->addRow($valueRow);
+            return $actionLink;
+        });
+        $gb->addAction(function($value) use ($metadataAuthorizator, $idUser, $id, $isSystem) {
+            $actionLink = '-';
+            if($value instanceof MetadataValue) {
+                if($metadataAuthorizator->canUserEditMetadataValues($idUser, $id, true) && !$isSystem && !$value->getIsDefault()) {
+                    $actionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:setAsDefault', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Set as default');
                 }
             }
-        }
+            return $actionLink;
+        });
 
-        return $tb->build();
+        return $gb->build();
     }
 }
 
