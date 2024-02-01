@@ -2,7 +2,7 @@
 
 namespace DMS\Helpers;
 
-use DMS\Constnats\DatetimeFormats;
+use DMS\Constants\DatetimeFormats;
 use DMS\Core\AppConfiguration;
 use DMS\Entities\User;
 

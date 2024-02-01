@@ -106,7 +106,10 @@ class DatabaseInstaller {
                 'shred_year' => 'VARCHAR(4) NOT NULL',
                 'after_shred_action' => 'VARCHAR(256) NOT NULL',
                 'shredding_status' => 'INT(32) NOT NULL',
-                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'id_archive_document' => 'INT(32) NULL',
+                'id_archive_box' => 'INT(32) NULL',
+                'id_archive_archive' => 'INT(32) NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -327,6 +330,13 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user1' => 'INT(32) NOT NULL',
                 'id_user2' => 'INT(32) NOT NULL'
+            ),
+            'archive_entities' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'type' => 'INT(2) NOT NULL',
+                'id_parent_archive_entity' => 'INT(32) NULL'
             )
         );
 

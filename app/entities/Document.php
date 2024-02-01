@@ -16,10 +16,13 @@ class Document extends AEntity {
     private string $shredYear;
     private string $afterShredAction;
     private int $shreddingStatus;
+    private ?int $idArchiveDocument;
+    private ?int $idArchiveBox;
+    private ?int $idArchiveArchive;
 
     private array $metadata;
     
-    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted, string $rank, ?int $idFolder, ?string $file, string $shredYear, string $afterShredAction, int $shreddingStatus, string $dateUpdated) {
+    public function __construct(int $id, string $dateCreated, int $idAuthor, ?int $idOfficer, string $name, int $status, int $idManager, int $idGroup, int $isDeleted, string $rank, ?int $idFolder, ?string $file, string $shredYear, string $afterShredAction, int $shreddingStatus, string $dateUpdated, ?int $idArchiveDocument, ?int $idArchiveBox, ?int $idArchiveArchive) {
         parent::__construct($id, $dateCreated, $dateUpdated);
 
         $this->idAuthor = $idAuthor;
@@ -35,6 +38,9 @@ class Document extends AEntity {
         $this->shredYear = $shredYear;
         $this->afterShredAction = $afterShredAction;
         $this->shreddingStatus = $shreddingStatus;
+        $this->idArchiveDocument = $idArchiveDocument;
+        $this->idArchiveBox = $idArchiveBox;
+        $this->idArchiveArchive = $idArchiveArchive;
     }
 
     public function getIdAuthor() {
@@ -103,6 +109,18 @@ class Document extends AEntity {
 
     public function getShreddingStatus() {
         return $this->shreddingStatus;
+    }
+
+    public function getIdArchiveDocument() {
+        return $this->idArchiveDocument;
+    }
+
+    public function getIdArchiveBox() {
+        return $this->idArchiveBox;
+    }
+
+    public function getIdArchiveArchive() {
+        return $this->idArchiveArchive;
     }
 }
 

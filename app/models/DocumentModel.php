@@ -587,6 +587,9 @@ class DocumentModel extends AModel {
         $afterShredAction = $row['after_shred_action'];
         $shreddingStatus = $row['shredding_status'];
         $dateUpdated = $row['date_updated'];
+        $idArchiveDocument = null;
+        $idArchiveBox = null;
+        $idArchiveArchive = null;
 
         if(isset($row['id_folder'])) {
             $idFolder = $row['id_folder'];
@@ -596,9 +599,21 @@ class DocumentModel extends AModel {
             $file = $row['file'];
         }
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'date_updated'));
+        if(isset($row['id_archive_document'])) {
+            $idArchiveDocument = $row['id_archive_document'];
+        }
 
-        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus, $dateUpdated);
+        if(isset($row['id_archive_box'])) {
+            $idArchiveBox = $row['id_archive_box'];
+        }
+
+        if(isset($row['id_archive_archive'])) {
+            $idArchiveArchive = $row['id_archive_archive'];
+        }
+
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'date_updated', 'id_archive_document', 'id_archive_box', 'id_archive_archive'));
+
+        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus, $dateUpdated, $idArchiveDocument, $idArchiveBox, $idArchiveArchive);
         $document->setMetadata($row);
 
         return $document;
