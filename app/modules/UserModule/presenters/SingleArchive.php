@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\ArchiveType;
 use DMS\Modules\APresenter;
+use DMS\UI\LinkBuilder;
 
 class SingleArchive extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -21,19 +22,23 @@ class SingleArchive extends APresenter {
 
         $id = htmlspecialchars($_GET['id']);
         $type = htmlspecialchars($_GET['type']);
-
+        
+        $backLink = '';
         $archiveEntity = null;
         switch($type) {
             case ArchiveType::DOCUMENT:
                 $archiveEntity = $app->archiveModel->getDocumentById($id);
+                $backLink = 'UserModule:Archive:showDocuments';
                 break;
             
             case ArchiveType::BOX:
                 $archiveEntity = $app->archiveModel->getBoxById($id);
+                $backLink = 'UserModule:Archive:showBoxes';
                 break;
 
             case ArchiveType::ARCHIVE:
                 $archiveEntity = $app->archiveModel->getArchiveById($id);
+                $backLink = 'UserModule:Archive:showArchives';
                 break;
         }
 
@@ -50,6 +55,8 @@ class SingleArchive extends APresenter {
             '$CONTENT_GRID$' => $this->internalCreateContentGrid($id, $page, $type),
             '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($id, $page, 'show' . ArchiveType::$texts[$archiveEntity->getType()] . 'Content')
         ];
+
+        $data['$LINKS$'][] = LinkBuilder::createLink($backLink, '<-');
 
         $this->templateManager->fill($data, $template);
 

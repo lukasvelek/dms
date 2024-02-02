@@ -45,6 +45,26 @@ class ArchiveAuthorizator extends AAuthorizator {
         return true;
     }
 
+    public function bulkActionMoveBoxToArchive(Archive $archive, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function bulkActionMoveBoxFromArchive(Archive $archive, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if($archive->getIdParentArchiveEntity() === NULL) {
+            return false;
+        }
+
+        return true;
+    }
+
     private function assignUser(?int &$idUser) {
         if($this->idUser == null) {
             if($idUser == null) {

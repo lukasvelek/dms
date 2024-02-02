@@ -43,6 +43,15 @@ function getBoxBulkActions() {
     if(!is_null($user)) {
         foreach($idDocuments as $idDocument) {
             $archive = $archiveModel->getBoxById($idDocument);
+
+            if($archiveAuthorizator->bulkActionMoveBoxToArchive($archive, null, true, false) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::MOVE_ENTITIES_WITHIN_ARCHIVE, null, false) &&
+               ($archiveModel->getChildrenCount($idDocument, ArchiveType::BOX) > 0) &&
+               (is_null($canMoveBoxToArchive) || $canMoveBoxToArchive)) {
+                $canMoveBoxToArchive = true;
+            } else {
+                $canMoveBoxFromArchive = false;
+            }
         }
     }
 
@@ -316,9 +325,9 @@ function getBoxes() {
         }
         return $link;
     });
-    $gb->addHeaderCheckbox('select-all', 'selectAllArchiveEntries()');
+    $gb->addHeaderCheckbox('select-all', 'selectAllArchiveBoxEntries()');
     $gb->addRowCheckbox(function(Archive $archive) {
-        return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveBulkActions()" onchange="drawArchiveBulkActions()">';
+        return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveBoxBulkActions()" onchange="drawArchiveBoxBulkActions()">';
     });
 
     return $gb->build();
@@ -367,10 +376,10 @@ function getArchives() {
         }
         return $link;
     });
-    $gb->addHeaderCheckbox('select-all', 'selectAllArchiveEntries()');
+    /*$gb->addHeaderCheckbox('select-all', 'selectAllArchiveArchiveEntries()');
     $gb->addRowCheckbox(function(Archive $archive) {
-        return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveBulkActions()" onchange="drawArchiveBulkActions()">';
-    });
+        return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveArchiveBulkActions()" onchange="drawArchiveArchiveBulkActions()">';
+    });*/
 
     return $gb->build();
 }

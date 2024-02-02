@@ -12,6 +12,37 @@ class ArchiveModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllAvailableArchiveEntitiesByType(int $type) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb->select('*');
+
+        switch($type) {
+            case ArchiveType::DOCUMENT:
+                $qb->from('archive_documents');
+                break;
+
+            case ArchiveType::BOX:
+                $qb->from('archive_boxes');
+                break;
+
+            case ArchiveType::ARCHIVE:
+                $qb->from('archive_archives');
+                break;
+        }
+
+        $qb->whereNull('id_parent_archive_entity');
+
+        $rows = $qb->execute()->fetch();
+
+        $entities = [];
+        foreach($rows as $row) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row, $type);
+        }
+           
+        return $entities;
+    }
+
     public function getChildrenCount(int $id, int $type) {
         $qb = $this->qb(__METHOD__);
 
@@ -38,12 +69,14 @@ class ArchiveModel extends AModel {
                    ->execute()
                    ->fetch();
 
-        $entities = [];
+        return $rows->num_rows;
+
+        /*$entities = [];
         foreach($rows as $row) {
             $entities[] = $this->createArchiveObjectFromDbRow($row, $type);
         }
            
-        return $entities;
+        return $entities;*/
     }
 
     public function getFirstIdDocumentOnAGridPage(int $gridPage) {
