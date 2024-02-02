@@ -30,13 +30,11 @@ if($action == null) {
 
 echo($action());
 
-function getBulkActions() {
+function getBoxBulkActions() {
     global $user, $archiveModel, $archiveAuthorizator, $actionAuthorizator, $documentModel;
 
     $bulkActions = [];
     $text = '';
-    $canMoveDocumentToBox = null;
-    $canMoveDocumentFromBox = null;
     $canMoveBoxToArchive = null;
     $canMoveBoxFromArchive = null;
 
@@ -44,58 +42,8 @@ function getBulkActions() {
 
     if(!is_null($user)) {
         foreach($idDocuments as $idDocument) {
-            $archive = $archiveModel->getArchiveEntityById($idDocument);
-
-            if($archiveAuthorizator->bulkActionMoveDocumentToBox($archive, null, true, false) &&
-               $actionAuthorizator->checkActionRight(UserActionRights::MOVE_ENTITIES_WITHIN_ARCHIVE, null, false) &&
-               ($documentModel->getDocumentCountInArchiveDocument($idDocument) > 0) &&
-               (is_null($canMoveDocumentToBox) || $canMoveDocumentToBox)) {
-                $canMoveDocumentToBox = true;
-            } else {
-                $canMoveDocumentToBox = false;
-            }
-
-            if($archiveAuthorizator->bulkActionMoveDocumentFromBox($archive, null, true, false) &&
-               (is_null($canMoveDocumentFromBox) || $canMoveDocumentFromBox)) {
-                $canMoveDocumentFromBox = true;
-            } else {
-                $canMoveDocumentFromBox = false;
-            }
+            $archive = $archiveModel->getBoxById($idDocument);
         }
-    }
-
-    if($canMoveDocumentToBox) {
-        $link = '?page=UserModule:Archive:performBulkAction&';
-
-        $i = 0;
-        foreach($idDocuments as $idDocument) {
-            if(($i + 1) == count($idDocuments)) {
-                $link .= 'select[]=' . $idDocument;
-            } else {
-                $link .= 'select[]=' . $idDocument . '&';
-            }
-        }
-
-        $link .= '&action=move_document_to_box';
-
-        $bulkActions['Move document to box'] = $link;
-    }
-
-    if($canMoveDocumentFromBox) {
-        $link = '?page=UserModule:Archive:performBulkAction&';
-
-        $i = 0;
-        foreach($idDocuments as $idDocument) {
-            if(($i + 1) == count($idDocuments)) {
-                $link .= 'select[]=' . $idDocument;
-            } else {
-                $link .= 'select[]=' . $idDocument . '&';
-            }
-        }
-
-        $link .= '&action=move_document_from_box';
-
-        $bulkActions['Move document from box'] = $link;
     }
 
     if($canMoveBoxToArchive) {
@@ -169,6 +117,109 @@ function getBulkActions() {
     return $text;
 }
 
+function getDocumentBulkActions() {
+    global $user, $archiveModel, $archiveAuthorizator, $actionAuthorizator, $documentModel;
+
+    $bulkActions = [];
+    $text = '';
+    $canMoveDocumentToBox = null;
+    $canMoveDocumentFromBox = null;
+
+    $idDocuments = $_GET['idDocuments'];
+
+    if(!is_null($user)) {
+        foreach($idDocuments as $idDocument) {
+            $archive = $archiveModel->getDocumentById($idDocument);
+
+            if($archiveAuthorizator->bulkActionMoveDocumentToBox($archive, null, true, false) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::MOVE_ENTITIES_WITHIN_ARCHIVE, null, false) &&
+               ($documentModel->getDocumentCountInArchiveDocument($idDocument) > 0) &&
+               (is_null($canMoveDocumentToBox) || $canMoveDocumentToBox)) {
+                $canMoveDocumentToBox = true;
+            } else {
+                $canMoveDocumentToBox = false;
+            }
+
+            if($archiveAuthorizator->bulkActionMoveDocumentFromBox($archive, null, true, false) &&
+               (is_null($canMoveDocumentFromBox) || $canMoveDocumentFromBox)) {
+                $canMoveDocumentFromBox = true;
+            } else {
+                $canMoveDocumentFromBox = false;
+            }
+        }
+    }
+
+    if($canMoveDocumentToBox) {
+        $link = '?page=UserModule:Archive:performBulkAction&';
+
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=move_document_to_box';
+
+        $bulkActions['Move document to box'] = $link;
+    }
+
+    if($canMoveDocumentFromBox) {
+        $link = '?page=UserModule:Archive:performBulkAction&';
+
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=move_document_from_box';
+
+        $bulkActions['Move document from box'] = $link;
+    }
+
+    $i = 0;
+    $x = 0;
+    $br = 0;
+    foreach($bulkActions as $name => $url) {
+        if(($x + 1) % 5 == 0) {
+            $br++;
+            $x = 0;
+        }
+
+        if($i == 0) {
+            $left = ($x * 75) + 10;
+            $top = 10;
+
+            if($name == 'br') {
+                $text .= _createBlankLink($left, $top);
+            } else {
+                $text .= _createLink($url, $name, $left, $top);
+            }
+        } else {
+            $nextLineTop = $br * -130;
+            $left = ($x * 75) + (($x + 1) * 10);
+            $top = (($x * -75) + 10) + ($br * -85) + $nextLineTop;
+            
+            if($name == 'br') {
+                $text .= _createBlankLink($left, $top);
+            } else {
+                $text .= _createLink($url, $name, $left, $top);
+            }
+        }
+
+        $i++;
+        $x++;
+    }
+
+    return $text;
+}
+
 function getDocuments() {
     global $archiveModel, $actionAuthorizator, $gridSize, $archiveAuthorizator;
     
@@ -181,7 +232,7 @@ function getDocuments() {
     $dataSourceCallback = function() use ($archiveModel, $page, $gridSize) {
         $page -= 1;
 
-        $firstIdOnPage = $archiveModel->getFirstIdEntityOnAGridPage(($page * $gridSize), ArchiveType::DOCUMENT);
+        $firstIdOnPage = $archiveModel->getFirstIdDocumentOnAGridPage(($page * $gridSize));
 
         return $archiveModel->getAllDocumentsFromId($firstIdOnPage, $gridSize);
     };
@@ -193,14 +244,14 @@ function getDocuments() {
     $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
         $link = '-';
         if($actionAuthorizator->checkActionRight(UserActionRights::VIEW_ARCHIVE_DOCUMENT_CONTENT, null, false)) {
-            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showContent', 'id' => $archive->getId()], 'Open');
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showContent', 'id' => $archive->getId(), 'type' => $archive->getType()], 'Open');
         }
         return $link;
     });
     $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
         $link = '-';
         if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_ARCHIVE_DOCUMENT, null, false)) {
-            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showEditForm', 'id' => $archive->getId()], 'Edit');
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showEditForm', 'id' => $archive->getId(), 'type' => $archive->getType()], 'Edit');
         }
         return $link;
     });
@@ -208,7 +259,111 @@ function getDocuments() {
         $link = '-';
         if($actionAuthorizator->checkActionRight(UserActionRights::DELETE_ARCHIVE_DOCUMENT, null, false) &&
            $archiveAuthorizator->canDeleteDocument($archive)) {
-            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:Archive:deleteDocument', 'id' => $archive->getId()], 'Delete');
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:Archive:deleteDocument', 'id' => $archive->getId(), 'type' => $archive->getType()], 'Delete');
+        }
+        return $link;
+    });
+    $gb->addHeaderCheckbox('select-all', 'selectAllArchiveDocumentEntries()');
+    $gb->addRowCheckbox(function(Archive $archive) {
+        return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveDocumentBulkActions()" onchange="drawArchiveDocumentBulkActions()">';
+    });
+
+    return $gb->build();
+}
+
+function getBoxes() {
+    global $archiveModel, $actionAuthorizator, $gridSize, $archiveAuthorizator;
+    
+    $page = 1;
+
+    if(isset($_GET['page'])) {
+        $page = (int)(htmlspecialchars($_GET['page']));
+    }
+
+    $dataSourceCallback = function() use ($archiveModel, $page, $gridSize) {
+        $page -= 1;
+
+        $firstIdOnPage = $archiveModel->getFirstIdBoxOnAGridPage(($page * $gridSize));
+
+        $result =  $archiveModel->getAllBoxesFromId($firstIdOnPage, $gridSize);
+
+        return $result;
+    };
+
+    $gb = new GridBuilder();
+
+    $gb->addColumns(['name' => 'Name']);
+    $gb->addDataSourceCallback($dataSourceCallback);
+    $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
+        $link = '-';
+        if($actionAuthorizator->checkActionRight(UserActionRights::VIEW_ARCHIVE_DOCUMENT_CONTENT, null, false)) {
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showContent', 'id' => $archive->getId(), 'type' => $archive->getType()], 'Open');
+        }
+        return $link;
+    });
+    $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
+        $link = '-';
+        if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_ARCHIVE_DOCUMENT, null, false)) {
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showEditForm', 'id' => $archive->getId(), 'type' => $archive->getType()], 'Edit');
+        }
+        return $link;
+    });
+    $gb->addAction(function(Archive $archive) use ($actionAuthorizator, $archiveAuthorizator) {
+        $link = '-';
+        if($actionAuthorizator->checkActionRight(UserActionRights::DELETE_ARCHIVE_DOCUMENT, null, false) &&
+           $archiveAuthorizator->canDeleteDocument($archive)) {
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:Archive:deleteDocument', 'id' => $archive->getId(), 'type' => $archive->getType()], 'Delete');
+        }
+        return $link;
+    });
+    $gb->addHeaderCheckbox('select-all', 'selectAllArchiveEntries()');
+    $gb->addRowCheckbox(function(Archive $archive) {
+        return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveBulkActions()" onchange="drawArchiveBulkActions()">';
+    });
+
+    return $gb->build();
+}
+
+function getArchives() {
+    global $archiveModel, $actionAuthorizator, $gridSize, $archiveAuthorizator;
+    
+    $page = 1;
+
+    if(isset($_GET['page'])) {
+        $page = (int)(htmlspecialchars($_GET['page']));
+    }
+
+    $dataSourceCallback = function() use ($archiveModel, $page, $gridSize) {
+        $page -= 1;
+
+        $firstIdOnPage = $archiveModel->getFirstIdArchiveOnAGridPage(($page * $gridSize));
+
+        return $archiveModel->getAllArchivesFromId($firstIdOnPage, $gridSize);
+    };
+
+    $gb = new GridBuilder();
+
+    $gb->addColumns(['name' => 'Name']);
+    $gb->addDataSourceCallback($dataSourceCallback);
+    $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
+        $link = '-';
+        if($actionAuthorizator->checkActionRight(UserActionRights::VIEW_ARCHIVE_DOCUMENT_CONTENT, null, false)) {
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showContent', 'id' => $archive->getId(), 'type' => $archive->getType()], 'Open');
+        }
+        return $link;
+    });
+    $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
+        $link = '-';
+        if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_ARCHIVE_DOCUMENT, null, false)) {
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showEditForm', 'id' => $archive->getId(), 'type' => $archive->getType()], 'Edit');
+        }
+        return $link;
+    });
+    $gb->addAction(function(Archive $archive) use ($actionAuthorizator, $archiveAuthorizator) {
+        $link = '-';
+        if($actionAuthorizator->checkActionRight(UserActionRights::DELETE_ARCHIVE_DOCUMENT, null, false) &&
+           $archiveAuthorizator->canDeleteDocument($archive)) {
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:Archive:deleteDocument', 'id' => $archive->getId(), 'type' => $archive->getType()], 'Delete');
         }
         return $link;
     });
@@ -225,6 +380,7 @@ function getContent() {
 
     $page = 1;
     $id = null;
+    $type = null;
 
     if(isset($_GET['page'])) {
         $page = (int)(htmlspecialchars($_GET['page']));
@@ -234,16 +390,29 @@ function getContent() {
         $id = htmlspecialchars($_GET['id']);
     }
 
+    if(isset($_GET['type'])) {
+        $type = htmlspecialchars($_GET['type']);
+    }
+
     if($id === NULL) {
         return;
     }
 
-    $entity = $archiveModel->getArchiveEntityById($id);
-
     $content = '';
-    switch($entity->getType()) {
+    switch($type) {
         case ArchiveType::DOCUMENT:
+            $entity = $archiveModel->getDocumentById($id);
             $content = internalCreateDocumentGrid($entity, $page);
+            break;
+        
+        case ArchiveType::BOX:
+            $entity = $archiveModel->getBoxById($id);
+            $content = internalCreateBoxGrid($entity, $page);
+            break;
+        
+        case ArchiveType::ARCHIVE:
+            $entity = $archiveModel->getArchiveById($id);
+            $content = internalCreateArchiveGrid($entity, $page);
             break;
     }
 
@@ -283,6 +452,44 @@ function internalCreateDocumentGrid(Archive $entity, int $page) {
         
         return $user->getFullname();
     });
+
+    return $gb->build();
+}
+
+function internalCreateBoxGrid(Archive $entity, int $page) {
+    global $archiveModel, $gridSize;
+
+    $dataSourceCallback = function() use ($archiveModel, $entity, $page, $gridSize) {
+        $page -= 1;
+
+        $firstIdOnPage = $archiveModel->getFirstIdDocumentOnAGridPage(($page * $gridSize), ArchiveType::DOCUMENT);
+
+        return $archiveModel->getDocumentsForIdBoxFromId($firstIdOnPage, $gridSize, $entity->getId());
+    };
+
+    $gb = new GridBuilder();
+
+    $gb->addColumns(['name' => 'Name']);
+    $gb->addDataSourceCallback($dataSourceCallback);
+
+    return $gb->build();
+}
+
+function internalCreateArchiveGrid(Archive $entity, int $page) {
+    global $archiveModel, $gridSize;
+
+    $dataSourceCallback = function() use ($archiveModel, $entity, $page, $gridSize) {
+        $page -= 1;
+
+        $firstIdOnPage = $archiveModel->getFirstIdBoxOnAGridPage(($page * $gridSize), ArchiveType::BOX);
+
+        return $archiveModel->getBoxesForIdArchiveFromId($firstIdOnPage, $gridSize, $entity->getId());
+    };
+
+    $gb = new GridBuilder();
+
+    $gb->addColumns(['name' => 'Name']);
+    $gb->addDataSourceCallback($dataSourceCallback);
 
     return $gb->build();
 }

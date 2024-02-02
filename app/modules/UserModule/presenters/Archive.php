@@ -17,6 +17,76 @@ class Archive extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function showArchives() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/archive/archive-grid.html');
+        
+        $page = 1;
+
+        if(isset($_GET['grid_page'])) {
+            $page = (int)(htmlspecialchars($_GET['grid_page']));
+        }
+
+        $grid = '';
+
+        $app->logger->logFunction(function() use (&$grid, $page) {
+            $grid = $this->internalCreateArchiveGrid($page);
+        });
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Archive archives',
+            '$BULK_ACTION_CONTROLLER$' => '',
+            '$SEARCH_FIELD$' => '',
+            '$ARCHIVE_GRID$' => $grid,
+            '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, 'showArchives'),
+            '$LINKS$' => []
+        );
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_ARCHIVE_DOCUMENT)) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewArchiveForm', 'New archive');
+        }
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showBoxes() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/archive/archive-grid.html');
+        
+        $page = 1;
+
+        if(isset($_GET['grid_page'])) {
+            $page = (int)(htmlspecialchars($_GET['grid_page']));
+        }
+
+        $grid = '';
+
+        $app->logger->logFunction(function() use (&$grid, $page) {
+            $grid = $this->internalCreateBoxGrid($page);
+        });
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Archive boxes',
+            '$BULK_ACTION_CONTROLLER$' => '',
+            '$SEARCH_FIELD$' => '',
+            '$ARCHIVE_GRID$' => $grid,
+            '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, 'showBoxes'),
+            '$LINKS$' => []
+        );
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_ARCHIVE_DOCUMENT)) {
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewBoxForm', 'New box');
+        }
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showDocuments() {
         global $app;
 
@@ -44,7 +114,7 @@ class Archive extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_ARCHIVE_DOCUMENT)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewDocumentForm', 'New archive document');
+            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewDocumentForm', 'New document');
         }
 
         $this->templateManager->fill($data, $template);
@@ -65,6 +135,32 @@ class Archive extends APresenter {
         return $template;
     }
 
+    protected function showNewBoxForm() {
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/archive/new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New archive box',
+            '$NEW_ENTITY_FORM$' => $this->internalCreateNewBoxForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showNewArchiveForm() {
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/archive/new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New archive',
+            '$NEW_ENTITY_FORM$' => $this->internalCreateNewArchiveForm()
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function processNewDocumentForm() {
         global $app;
 
@@ -78,11 +174,10 @@ class Archive extends APresenter {
         }
 
         $data = [
-            'name' => $name,
-            'type' => ArchiveType::DOCUMENT
+            'name' => $name
         ];
 
-        $app->archiveModel->insertNewArchiveEntity($data);
+        $app->archiveModel->insertNewDocument($data);
 
         $app->flashMessage('Created new archive document', 'success');
         if($idRibbon == '') {
@@ -92,24 +187,59 @@ class Archive extends APresenter {
         }
     }
 
-    private function internalCreateNewDocumentForm() {
+    protected function processNewBoxForm() {
         global $app;
 
-        $parentEntities = $app->archiveModel->getAllArchiveEntitiesByType(ArchiveType::BOX);
+        $app->flashMessageIfNotIsset(['name'], true, ['page' => 'UserModule:Archive:showNewBoxForm']);
 
-        $entityArr = [];
-        $entityArr[] = array(
-            'value' => 'null',
-            'text' => '-'
-        );
+        $name = htmlspecialchars($_POST['name']);
 
-        foreach($parentEntities as $entity) {
-            $entityArr[] = array(
-                'value' => $entity->getId(),
-                'text' => $entity->getName()
-            );
+        $idRibbon = '';
+        if(isset($_GET['id_ribbon'])) {
+            $idRibbon = htmlspecialchars($_GET['id_ribbon']);
         }
 
+        $data = [
+            'name' => $name
+        ];
+
+        $app->archiveModel->insertNewBox($data);
+
+        $app->flashMessage('Created new archive box', 'success');
+        if($idRibbon == '') {
+            $app->redirect('UserModule:Archive:showBoxes');
+        } else {
+            $app->redirect('UserModule:Archive:showBoxes', ['id_ribbon' => $idRibbon]);
+        }
+    }
+
+    protected function processNewArchiveForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['name'], true, ['page' => 'UserModule:Archive:showNewArchiveForm']);
+
+        $name = htmlspecialchars($_POST['name']);
+
+        $idRibbon = '';
+        if(isset($_GET['id_ribbon'])) {
+            $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        }
+
+        $data = [
+            'name' => $name
+        ];
+
+        $app->archiveModel->insertNewArchive($data);
+
+        $app->flashMessage('Created new archive', 'success');
+        if($idRibbon == '') {
+            $app->redirect('UserModule:Archive:showArchives');
+        } else {
+            $app->redirect('UserModule:Archive:showArchives', ['id_ribbon' => $idRibbon]);
+        }
+    }
+
+    private function internalCreateNewDocumentForm() {
         $idRibbon = '';
         if(isset($_GET['id_ribbon'])) {
             $idRibbon = '&id_ribbon=' . htmlspecialchars($_GET['id_ribbon']);
@@ -118,6 +248,44 @@ class Archive extends APresenter {
         $fb = new FormBuilder();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Archive:processNewDocumentForm' . $idRibbon)
+
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
+
+            ->addElement($fb->createSubmit('Create'))
+        ;
+
+        return $fb->build();
+    }
+
+    private function internalCreateNewBoxForm() {
+        $idRibbon = '';
+        if(isset($_GET['id_ribbon'])) {
+            $idRibbon = '&id_ribbon=' . htmlspecialchars($_GET['id_ribbon']);
+        }
+
+        $fb = new FormBuilder();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Archive:processNewBoxForm' . $idRibbon)
+
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
+
+            ->addElement($fb->createSubmit('Create'))
+        ;
+
+        return $fb->build();
+    }
+
+    private function internalCreateNewArchiveForm() {
+        $idRibbon = '';
+        if(isset($_GET['id_ribbon'])) {
+            $idRibbon = '&id_ribbon=' . htmlspecialchars($_GET['id_ribbon']);
+        }
+
+        $fb = new FormBuilder();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Archive:processNewArchiveForm' . $idRibbon)
 
             ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
@@ -137,6 +305,24 @@ class Archive extends APresenter {
         return $code;
     }
 
+    private function internalCreateBoxGrid(int $page) {
+        $code = '<script type="text/javascript">';
+        $code .= 'loadArchiveBoxes("' . $page . '");';
+        $code .= '</script>';
+        $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+
+        return $code;
+    }
+
+    private function internalCreateArchiveGrid(int $page) {
+        $code = '<script type="text/javascript">';
+        $code .= 'loadArchiveArchives("' . $page . '");';
+        $code .= '</script>';
+        $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+
+        return $code;
+    }
+
     private function internalCreateGridPageControl(int $page, string $action) {
         global $app;
 
@@ -145,6 +331,14 @@ class Archive extends APresenter {
         switch($action) {
             case 'showDocuments':
                 $entityCount = $app->archiveModel->getDocumentCount();
+                break;
+
+            case 'showBoxes':
+                $entityCount = $app->archiveModel->getBoxCount();
+                break;
+
+            case 'showArchives':
+                $entityCount = $app->archiveModel->getArchiveCount();
                 break;
         }
 

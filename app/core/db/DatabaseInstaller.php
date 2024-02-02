@@ -331,11 +331,22 @@ class DatabaseInstaller {
                 'id_user1' => 'INT(32) NOT NULL',
                 'id_user2' => 'INT(32) NOT NULL'
             ),
-            'archive_entities' => array(
+            'archive_documents' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'name' => 'VARCHAR(256) NOT NULL',
-                'type' => 'INT(2) NOT NULL',
+                'id_parent_archive_entity' => 'INT(32) NULL'
+            ),
+            'archive_boxes' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'id_parent_archive_entity' => 'INT(32) NULL'
+            ),
+            'archive_archives' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'name' => 'VARCHAR(256) NOT NULL',
                 'id_parent_archive_entity' => 'INT(32) NULL'
             )
         );

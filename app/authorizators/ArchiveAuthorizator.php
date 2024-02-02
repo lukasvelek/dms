@@ -18,11 +18,7 @@ class ArchiveAuthorizator extends AAuthorizator {
     }
 
     public function canDeleteDocument(Archive $archive) {
-        if($this->archiveModel->getChildrenCount($archive->getId()) > 0) {
-            return false;
-        }
-
-        if($this->archiveModel->getChildrenDocumentsCount($archive->getId()) > 0) {
+        if($this->archiveModel->getChildrenCount($archive->getId(), $archive->getType()) > 0) {
             return false;
         }
 

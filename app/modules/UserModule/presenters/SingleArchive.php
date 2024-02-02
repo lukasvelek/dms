@@ -17,10 +17,25 @@ class SingleArchive extends APresenter {
     protected function showContent() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['id'], true, ['page' => 'UserModule:Archive:showDocuments']);
+        $app->flashMessageIfNotIsset(['id', 'type'], true, ['page' => 'UserModule:Archive:showDocuments']);
 
         $id = htmlspecialchars($_GET['id']);
-        $archiveEntity = $app->archiveModel->getArchiveEntityById($id);
+        $type = htmlspecialchars($_GET['type']);
+
+        $archiveEntity = null;
+        switch($type) {
+            case ArchiveType::DOCUMENT:
+                $archiveEntity = $app->archiveModel->getDocumentById($id);
+                break;
+            
+            case ArchiveType::BOX:
+                $archiveEntity = $app->archiveModel->getBoxById($id);
+                break;
+
+            case ArchiveType::ARCHIVE:
+                $archiveEntity = $app->archiveModel->getArchiveById($id);
+                break;
+        }
 
         $page = 1;
         if(isset($_GET['grid_page'])) {
@@ -32,7 +47,7 @@ class SingleArchive extends APresenter {
         $data = [
             '$PAGE_TITLE$' => ArchiveType::$texts[$archiveEntity->getType()] . ' content',
             '$LINKS$' => [],
-            '$CONTENT_GRID$' => $this->internalCreateContentGrid($id, $page),
+            '$CONTENT_GRID$' => $this->internalCreateContentGrid($id, $page, $type),
             '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($id, $page, 'show' . ArchiveType::$texts[$archiveEntity->getType()] . 'Content')
         ];
 
@@ -41,9 +56,9 @@ class SingleArchive extends APresenter {
         return $template;
     }
 
-    private function internalCreateContentGrid(int $id, int $page) {
+    private function internalCreateContentGrid(int $id, int $page, int $type) {
         $code = '<script type="text/javascript">';
-        $code .= 'loadArchiveEntityContent("' . $id . '", "' . $page . '");';
+        $code .= 'loadArchiveEntityContent("' . $id . '", "' . $page . '", "' . $type . '");';
         $code .= '</script>';
         $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
 
