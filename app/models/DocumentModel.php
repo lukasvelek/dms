@@ -14,6 +14,10 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentCountInArchiveDocument(int $idArchiveDocument) {
+        return $this->getRowCount('documents', 'id', 'WHERE `id_archive_document` = ' . $idArchiveDocument);
+    }
+
     public function moveToArchiveDocument(int $id, int $idArchiveDocument) {
         $data = ['id_archive_document' => $idArchiveDocument];
 

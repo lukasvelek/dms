@@ -65,6 +65,46 @@ async function deleteAllNotifications() {
     });
 }
 
+function selectAllArchiveEntries() {
+    var selectAllElem = $('#select-all:checked').val();
+
+    if(selectAllElem == "on") {
+        $('#select:not(:checked)').prop('checked', true);
+        drawArchiveBulkActions();
+    } else {
+        $('#select:checked').prop('checked', false);
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
+
+function drawArchiveBulkActions() {
+    var elems = $('#select:checked');
+
+    if(elems.length > 0) {
+        $('#bulk_actions').show();
+        $('#bulk_actions').html('<img style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">');
+
+        var ids = [];
+
+        elems.each(function(i) {
+            ids[i] = this.value;
+        });
+
+        $.get('app/ajax/Archive.php', {
+            idDocuments: ids,
+            action: "getBulkActions"
+        },
+        async function(data) {
+            await sleep(general_sleep_length);
+            $('#bulk_actions').html(data);
+        });
+    } else {
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
+
 function drawDocumentBulkActions() {
     var elems = $('#select:checked');
 

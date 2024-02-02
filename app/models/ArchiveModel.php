@@ -12,6 +12,10 @@ class ArchiveModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentCount() {
+        return $this->getRowCount('archive_entities', 'id', 'WHERE type=' . ArchiveType::DOCUMENT);
+    }
+
     public function getArchiveEntityById(int $id) {
         $qb = $this->qb(__METHOD__);
 

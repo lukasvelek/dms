@@ -1,6 +1,7 @@
 <?php
 
 use DMS\Constants\ArchiveType;
+use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
@@ -28,6 +29,145 @@ if($action == null) {
 }
 
 echo($action());
+
+function getBulkActions() {
+    global $user, $archiveModel, $archiveAuthorizator, $actionAuthorizator, $documentModel;
+
+    $bulkActions = [];
+    $text = '';
+    $canMoveDocumentToBox = null;
+    $canMoveDocumentFromBox = null;
+    $canMoveBoxToArchive = null;
+    $canMoveBoxFromArchive = null;
+
+    $idDocuments = $_GET['idDocuments'];
+
+    if(!is_null($user)) {
+        foreach($idDocuments as $idDocument) {
+            $archive = $archiveModel->getArchiveEntityById($idDocument);
+
+            if($archiveAuthorizator->bulkActionMoveDocumentToBox($archive, null, true, false) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::MOVE_ENTITIES_WITHIN_ARCHIVE, null, false) &&
+               ($documentModel->getDocumentCountInArchiveDocument($idDocument) > 0) &&
+               (is_null($canMoveDocumentToBox) || $canMoveDocumentToBox)) {
+                $canMoveDocumentToBox = true;
+            } else {
+                $canMoveDocumentToBox = false;
+            }
+
+            if($archiveAuthorizator->bulkActionMoveDocumentFromBox($archive, null, true, false) &&
+               (is_null($canMoveDocumentFromBox) || $canMoveDocumentFromBox)) {
+                $canMoveDocumentFromBox = true;
+            } else {
+                $canMoveDocumentFromBox = false;
+            }
+        }
+    }
+
+    if($canMoveDocumentToBox) {
+        $link = '?page=UserModule:Archive:performBulkAction&';
+
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=move_document_to_box';
+
+        $bulkActions['Move document to box'] = $link;
+    }
+
+    if($canMoveDocumentFromBox) {
+        $link = '?page=UserModule:Archive:performBulkAction&';
+
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=move_document_from_box';
+
+        $bulkActions['Move document from box'] = $link;
+    }
+
+    if($canMoveBoxToArchive) {
+        $link = '?page=UserModule:Archive:performBulkAction&';
+
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=move_box_to_archive';
+
+        $bulkActions['Move box to archive'] = $link;
+    }
+
+    if($canMoveBoxFromArchive) {
+        $link = '?page=UserModule:Archive:performBulkAction&';
+
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=move_box_from_archive';
+
+        $bulkActions['Move box from archive'] = $link;
+    }
+
+    $i = 0;
+    $x = 0;
+    $br = 0;
+    foreach($bulkActions as $name => $url) {
+        if(($x + 1) % 5 == 0) {
+            $br++;
+            $x = 0;
+        }
+
+        if($i == 0) {
+            $left = ($x * 75) + 10;
+            $top = 10;
+
+            if($name == 'br') {
+                $text .= _createBlankLink($left, $top);
+            } else {
+                $text .= _createLink($url, $name, $left, $top);
+            }
+        } else {
+            $nextLineTop = $br * -130;
+            $left = ($x * 75) + (($x + 1) * 10);
+            $top = (($x * -75) + 10) + ($br * -85) + $nextLineTop;
+            
+            if($name == 'br') {
+                $text .= _createBlankLink($left, $top);
+            } else {
+                $text .= _createLink($url, $name, $left, $top);
+            }
+        }
+
+        $i++;
+        $x++;
+    }
+
+    return $text;
+}
 
 function getDocuments() {
     global $archiveModel, $actionAuthorizator, $gridSize, $archiveAuthorizator;
@@ -71,6 +211,10 @@ function getDocuments() {
             $link = LinkBuilder::createAdvLink(['page' => 'UserModule:Archive:deleteDocument', 'id' => $archive->getId()], 'Delete');
         }
         return $link;
+    });
+    $gb->addHeaderCheckbox('select-all', 'selectAllArchiveEntries()');
+    $gb->addRowCheckbox(function(Archive $archive) {
+        return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveBulkActions()" onchange="drawArchiveBulkActions()">';
     });
 
     return $gb->build();
@@ -141,6 +285,29 @@ function internalCreateDocumentGrid(Archive $entity, int $page) {
     });
 
     return $gb->build();
+}
+
+function _createLink(string $url, string $text, int $left, int $top) {
+    $code = '
+        <div style="width: 75px; height: 75px; position: relative; left: ' . $left . 'px; top: ' . $top . 'px; text-align: center; border: 1px solid black; border-radius: 25px; background-color: white">
+            <a style="color: black; text-decoration: none; font-size: 14px; width: 75xp; height: 75px" href="' . $url . '">
+                <div style="width: 75xp; height: 75px">
+                    ' . $text . '
+                </div>
+            </a>
+        </div>
+    ';
+
+    return $code;
+}
+
+function _createBlankLink(int $left, int $top) {
+    $code = '
+        <div style="width: 75px; height: 75px; position: relative; left: ' . $left . 'px; top: ' . $top . 'px">
+        </div>
+    ';
+
+    return $code;
 }
 
 ?>
