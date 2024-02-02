@@ -515,3 +515,21 @@ async function loadArchiveDocuments(_page) {
         $('#documents-loading').hide();
     });
 }
+
+async function loadArchiveEntityContent(_id, _page) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Archive.php',
+        type: 'GET',
+        data: {
+            action: "getContent",
+            page: _page,
+            id: _id
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}

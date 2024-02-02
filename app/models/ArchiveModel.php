@@ -12,6 +12,19 @@ class ArchiveModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getArchiveEntityById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $row = $qb->select('*')
+                  ->from('archive_entities')
+                  ->where('id=:id')
+                  ->setParam(':id', $id)
+                  ->execute()
+                  ->fetchSingle();
+
+        return $this->createArchiveObjectFromDbRow($row);
+    }
+
     public function getAllAvailableArchiveEntitiesByType(int $type) {
         $qb = $this->qb(__METHOD__);
 

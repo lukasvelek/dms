@@ -235,6 +235,10 @@ abstract class AModel {
             return $row;
         }
     }
+
+    public function query(string $sql) {
+        return $this->db->query($sql);
+    }
 }
 
 ?>

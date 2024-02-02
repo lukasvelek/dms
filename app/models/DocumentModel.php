@@ -83,6 +83,37 @@ class DocumentModel extends AModel {
         return $documents;
     }
 
+    public function getFirstIdDocumentInIdArchiveDocumentOnAGridPage(int $idArchiveDocument, int $gridPage) {
+        if($gridPage == 0) $gridPage = 1;
+        return $this->getFirstRowWithCountWithCond($gridPage, 'documents', ['id'], 'id', 'WHERE `id_archive_document` = ' . $idArchiveDocument);
+    }
+
+    public function getDocumentsInIdArchiveDocumentFromId(?int $idFrom, int $idArchiveDocument, int $limit) {
+        if(is_null($idFrom)) return [];
+
+        $qb = $this->composeQueryStandardDocuments();
+
+        if($idFrom == 1) {
+            $qb->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $qb->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        $qb ->andWhere('id_archive_document=:id_archive_document')
+            ->setParam(':id_archive_document', $idArchiveDocument);
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
+    
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+    
+        return $documents;
+    }
+
     public function getFirstIdDocumentOnAGridPage(int $gridPage) {
         if($gridPage == 0) $gridPage = 1;
         return $this->getFirstRowWithCount($gridPage, 'documents', ['id']);

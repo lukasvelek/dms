@@ -1,12 +1,19 @@
 <?php
 
 use DMS\Constants\ArchiveType;
+use DMS\Constants\CacheCategories;
+use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
+use DMS\Core\CacheManager;
 use DMS\Entities\Archive;
+use DMS\Entities\Document;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
 require_once('Ajax.php');
+
+$ucm = new CacheManager(true, CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
 
 $action = null;
 
@@ -64,6 +71,73 @@ function getDocuments() {
             $link = LinkBuilder::createAdvLink(['page' => 'UserModule:Archive:deleteDocument', 'id' => $archive->getId()], 'Delete');
         }
         return $link;
+    });
+
+    return $gb->build();
+}
+
+function getContent() {
+    global $archiveModel;
+
+    $page = 1;
+    $id = null;
+
+    if(isset($_GET['page'])) {
+        $page = (int)(htmlspecialchars($_GET['page']));
+    }
+
+    if(isset($_GET['id'])) {
+        $id = htmlspecialchars($_GET['id']);
+    }
+
+    if($id === NULL) {
+        return;
+    }
+
+    $entity = $archiveModel->getArchiveEntityById($id);
+
+    $content = '';
+    switch($entity->getType()) {
+        case ArchiveType::DOCUMENT:
+            $content = internalCreateDocumentGrid($entity, $page);
+            break;
+    }
+
+    return $content;
+}
+
+
+
+/**
+ * PRIVATE METHODS
+ */
+
+function internalCreateDocumentGrid(Archive $entity, int $page) {
+    global $documentModel, $gridSize, $userModel, $ucm;
+
+    $dataSourceCallback = function() use ($documentModel, $entity, $page, $gridSize) {
+        $page -= 1;
+
+        $firstIdOnPage = $documentModel->getFirstIdDocumentInIdArchiveDocumentOnAGridPage($entity->getId(), ($page * $gridSize));
+
+        return $documentModel->getDocumentsInIdArchiveDocumentFromId($firstIdOnPage, $entity->getId(), $gridSize);
+    };
+
+    $gb = new GridBuilder();
+
+    $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status']);
+    $gb->addDataSourceCallback($dataSourceCallback);
+    $gb->addOnColumnRender('status', function(Document $document) {
+        return DocumentStatus::$texts[$document->getStatus()];
+    });
+    $gb->addOnColumnRender('idAuthor', function(Document $document) use ($userModel, $ucm) {
+        $user = $ucm->loadUserByIdFromCache($document->getIdAuthor());
+
+        if(is_null($user)) {
+            $user = $userModel->getUserById($document->getIdAuthor());
+        }
+        
+        return $user->getFullname();
     });
 
     return $gb->build();
