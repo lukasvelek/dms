@@ -52,6 +52,12 @@ class UserActionRights {
     public const VIEW_ARCHIVE_DOCUMENT_CONTENT = 'view_archive_document_content';
     public const VIEW_ARCHIVE_BOX_CONTENT = 'view_archive_box_content';
     public const VIEW_ARCHIVE_ARCHIVE_CONTENT = 'view_archive_archive_content';
+    public const DELETE_ARCHIVE_DOCUMENT = 'delete_archive_document';
+    public const DELETE_ARCHIVE_BOX = 'delete_archive_box';
+    public const DELETE_ARCHIVE_ARCHIVE = 'delete_archive_archive';
+    public const EDIT_ARCHIVE_DOCUMENT = 'edit_archive_document';
+    public const EDIT_ARCHIVE_BOX = 'edit_archive_box';
+    public const EDIT_ARCHIVE_ARCHIVE = 'edit_archive_archive';
 
     public static $all = array(
         self::CREATE_USER,
@@ -102,7 +108,13 @@ class UserActionRights {
         self::MOVE_ENTITIES_WITHIN_ARCHIVE,
         self::VIEW_ARCHIVE_DOCUMENT_CONTENT,
         self::VIEW_ARCHIVE_BOX_CONTENT,
-        self::VIEW_ARCHIVE_ARCHIVE_CONTENT
+        self::VIEW_ARCHIVE_ARCHIVE_CONTENT,
+        self::DELETE_ARCHIVE_DOCUMENT,
+        self::DELETE_ARCHIVE_BOX,
+        self::DELETE_ARCHIVE_ARCHIVE,
+        self::EDIT_ARCHIVE_DOCUMENT,
+        self::EDIT_ARCHIVE_BOX,
+        self::EDIT_ARCHIVE_ARCHIVE
     );
 }
 

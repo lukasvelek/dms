@@ -7,6 +7,7 @@ use DMS\Modules\IModule;
 use DMS\Core\DB\Database;
 use DMS\Authenticators\UserAuthenticator;
 use DMS\Authorizators\ActionAuthorizator;
+use DMS\Authorizators\ArchiveAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
@@ -121,6 +122,7 @@ class Application {
     public MetadataAuthorizator $metadataAuthorizator;
     public DocumentBulkActionAuthorizator $documentBulkActionAuthorizator;
     public RibbonAuthorizator $ribbonAuthorizator;
+    public ArchiveAuthorizator $archiveAuthorizator;
 
     public ProcessComponent $processComponent;
     public WidgetComponent $widgetComponent;
@@ -214,6 +216,7 @@ class Application {
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user, $this->userModel, $this->groupUserModel);
         $this->ribbonAuthorizator = new RibbonAuthorizator($this->conn, $this->logger, $this->user, $this->ribbonModel, $this->ribbonRightsModel, $this->groupUserModel);
+        $this->archiveAuthorizator = new ArchiveAuthorizator($this->conn, $this->logger, $this->archiveModel, $this->user);
         
         $sessionDestroyed = false;
         if($install) {

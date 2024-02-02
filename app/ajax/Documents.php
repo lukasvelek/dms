@@ -42,6 +42,8 @@ function getBulkActions() {
     $canDeclineArchivation = null;
     $canArchive = null;
     $canSuggestShredding = null;
+    $canMoveToArchiveDocument = null;
+    $canMoveFromArchiveDocument = null;
 
     $idDocuments = $_GET['idDocuments'];
 
@@ -88,6 +90,22 @@ function getBulkActions() {
                 $canSuggestShredding = true;
             } else {
                 $canSuggestShredding = false;
+            }
+
+            if($documentBulkActionAuthorizator->canMoveToArchiveDocument($document, null, true, false) &&
+               (is_null($canMoveToArchiveDocument) || $canMoveToArchiveDocument) &&
+               !$inProcess) {
+                $canMoveToArchiveDocument = true;
+            } else {
+                $canMoveToArchiveDocument = false;
+            }
+
+            if($documentBulkActionAuthorizator->canMoveFromArchiveDocument($document, null, true, false) &&
+               (is_null($canMoveFromArchiveDocument) || $canMoveFromArchiveDocument) &&
+               !$inProcess) {
+                $canMoveFromArchiveDocument = true;
+            } else {
+                $canMoveFromArchiveDocument = false;
             }
         }
     }
@@ -175,6 +193,40 @@ function getBulkActions() {
         $link .= '&action=suggest_for_shredding';
 
         $bulkActions['Suggest shredding'] = $link;
+    }
+
+    if($canMoveToArchiveDocument) {
+        $link = '?page=UserModule:Documents:performBulkAction&';
+        
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=move_to_archive_document';
+
+        $bulkActions['Move to archive document'] = $link;
+    }
+
+    if($canMoveFromArchiveDocument) {
+        $link = '?page=UserModule:Documents:performBulkAction&';
+        
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=move_from_archive_document';
+
+        $bulkActions['Move from archive document'] = $link;
     }
 
     $i = 0;

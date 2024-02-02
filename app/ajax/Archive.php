@@ -23,7 +23,7 @@ if($action == null) {
 echo($action());
 
 function getDocuments() {
-    global $archiveModel, $actionAuthorizator, $gridSize;
+    global $archiveModel, $actionAuthorizator, $gridSize, $archiveAuthorizator;
     
     $page = 1;
 
@@ -46,7 +46,22 @@ function getDocuments() {
     $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
         $link = '-';
         if($actionAuthorizator->checkActionRight(UserActionRights::VIEW_ARCHIVE_DOCUMENT_CONTENT, null, false)) {
-            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showContent', 'id' => $archive->getId()], 'Content');
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showContent', 'id' => $archive->getId()], 'Open');
+        }
+        return $link;
+    });
+    $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
+        $link = '-';
+        if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_ARCHIVE_DOCUMENT, null, false)) {
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleArchive:showEditForm', 'id' => $archive->getId()], 'Edit');
+        }
+        return $link;
+    });
+    $gb->addAction(function(Archive $archive) use ($actionAuthorizator, $archiveAuthorizator) {
+        $link = '-';
+        if($actionAuthorizator->checkActionRight(UserActionRights::DELETE_ARCHIVE_DOCUMENT, null, false) &&
+           $archiveAuthorizator->canDeleteDocument($archive)) {
+            $link = LinkBuilder::createAdvLink(['page' => 'UserModule:Archive:deleteDocument', 'id' => $archive->getId()], 'Delete');
         }
         return $link;
     });

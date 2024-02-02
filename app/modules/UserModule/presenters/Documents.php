@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\ArchiveType;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
@@ -28,6 +29,27 @@ class Documents extends APresenter {
         parent::__construct('Documents');
 
         $this->getActionNamesFromClass($this);
+    }
+    
+    protected function processMoveToArchiveDocumentFormBulkAction() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['ids', 'archive_document'], true, ['page' => 'UserModule:Documents:showAll']);
+
+        $ids = $_GET['ids'];
+        $archiveDocument = htmlspecialchars($_POST['archive_document']);
+
+        if(!is_array($ids)) {
+            $ids = [$ids];
+        }
+
+        foreach($ids as $id) {
+            echo $app->documentModel->moveToArchiveDocument($id, $archiveDocument);
+        }
+
+        $app->flashMessage('Documents moved to selected archive document', 'success');
+        //$app->redirect('UserModule:SingleArchive:showContent', ['id' => $archiveDocument]);
+        $app->redirect('UserModule:Documents:showAll');
     }
 
     protected function showDocumentsCustomFilter() {
@@ -498,7 +520,7 @@ class Documents extends APresenter {
         }
 
         if(method_exists($this, '_' . $action)) {
-            $this->{'_' . $action}($ids);
+            return $this->{'_' . $action}($ids);
         } else {
             die('Method does not exist!');
         }
@@ -873,6 +895,32 @@ class Documents extends APresenter {
         }
     }
 
+    private function _move_to_archive_document(array $ids) {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/new-document-form.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'Move document to archive document',
+            '$NEW_DOCUMENT_FORM$' => $this->internalCreateMoveToArchiveDocumentForm($ids)
+        ];
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    private function _move_from_archive_document(array $ids) {
+        global $app;
+
+        foreach($ids as $id) {
+            $app->documentModel->moveFromArchiveDocument($id);
+        }
+
+        $app->flashMessage('Documents moved from the archive document', 'success');
+        $app->redirect('UserModule:Documents:showAll');
+    }
+
     private function _suggest_for_shredding(array $ids) {
         global $app;
 
@@ -1231,6 +1279,42 @@ class Documents extends APresenter {
             ->addJSScript(ScriptLoader::loadJSScript('js/ReportForm.js'))
 
             ->addElement($fb->createSubmit('Generate'))
+        ;
+
+        return $fb->build();
+    }
+
+    private function internalCreateMoveToArchiveDocumentForm(array $ids) {
+        global $app;
+
+        $archiveDocuments = $app->archiveModel->getAllAvailableArchiveEntitiesByType(ArchiveType::DOCUMENT);
+        $archiveDocumentsArr = [];
+        foreach($archiveDocuments as $ad) {
+            $archiveDocumentsArr[] = [
+                'value' => $ad->getId(),
+                'text' => $ad->getName()
+            ];
+        }
+
+        $urlIds = '&';
+        $i = 0;
+        foreach($ids as $id) {
+            if(($i + 1) == count($ids)) {
+                $urlIds .= 'ids=' . $id;
+            } else {
+                $urlIds .= 'ids=' . $id . '&';
+            }
+            $i++;
+        }
+
+        $fb = new FormBuilder();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:processMoveToArchiveDocumentFormBulkAction' . $urlIds)
+            
+            ->addElement($fb->createLabel()->setText('Archive document')->setFor('archive_document'))
+            ->addElement($fb->createSelect()->setName('archive_document')->addOptionsBasedOnArray($archiveDocumentsArr))
+
+            ->addElement($fb->createSubmit('Move'))
         ;
 
         return $fb->build();

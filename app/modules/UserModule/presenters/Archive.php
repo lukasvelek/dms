@@ -53,18 +53,43 @@ class Archive extends APresenter {
     }
 
     protected function showNewDocumentForm() {
-        global $app;
-
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/archive/new-entity-form.html');
 
         $data = array(
-            '$PAGE_TITLE$' => 'New archive entity',
+            '$PAGE_TITLE$' => 'New archive document',
             '$NEW_ENTITY_FORM$' => $this->internalCreateNewDocumentForm()
         );
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function processNewDocumentForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['name'], true, ['page' => 'UserModule:Archive:showNewDocumentForm']);
+
+        $name = htmlspecialchars($_POST['name']);
+
+        $idRibbon = '';
+        if(isset($_GET['id_ribbon'])) {
+            $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+        }
+
+        $data = [
+            'name' => $name,
+            'type' => ArchiveType::DOCUMENT
+        ];
+
+        $app->archiveModel->insertNewArchiveEntity($data);
+
+        $app->flashMessage('Created new archive document', 'success');
+        if($idRibbon == '') {
+            $app->redirect('UserModule:Archive:showDocuments');
+        } else {
+            $app->redirect('UserModule:Archive:showDocuments', ['id_ribbon' => $idRibbon]);
+        }
     }
 
     private function internalCreateNewDocumentForm() {
@@ -85,15 +110,17 @@ class Archive extends APresenter {
             );
         }
 
+        $idRibbon = '';
+        if(isset($_GET['id_ribbon'])) {
+            $idRibbon = '&id_ribbon=' . htmlspecialchars($_GET['id_ribbon']);
+        }
+
         $fb = new FormBuilder();
 
-        $fb ->setMethod('POST')->setAction('UserModule:Archive:processNewDocumentForm')
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Archive:processNewDocumentForm' . $idRibbon)
 
             ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
-
-            ->addElement($fb->createLabel()->setText('Parent entity')->setFor('parent_entity'))
-            ->addElement($fb->createSelect()->setName('parent_entity')->addOptionsBasedOnArray($entityArr))
 
             ->addElement($fb->createSubmit('Create'))
         ;

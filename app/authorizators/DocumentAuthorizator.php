@@ -43,6 +43,42 @@ class DocumentAuthorizator extends AAuthorizator {
         $this->processComponent = $processComponent;
     }
 
+    public function canMoveToArchiveDocument(Document $document, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
+        }
+
+        if($document->getStatus() != DocumentStatus::ARCHIVED) {
+            return false;
+        }
+
+        if($document->getIdArchiveDocument() != NULL) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canMoveFromArchiveDocument(Document $document, bool $checkForExistingProcess = false) {
+        if($checkForExistingProcess) {
+            if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
+                return false;
+            }
+        }
+
+        if($document->getStatus() != DocumentStatus::ARCHIVED) {
+            return false;
+        }
+
+        if($document->getIdArchiveDocument() == NULL) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Checks if a document can be archived
      * 

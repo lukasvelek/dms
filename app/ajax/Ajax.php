@@ -1,6 +1,7 @@
 <?php
 
 use DMS\Authorizators\ActionAuthorizator;
+use DMS\Authorizators\ArchiveAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
@@ -172,6 +173,7 @@ $panelAuthorizator = new PanelAuthorizator($db, $logger, $userRightModel, $group
 $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
+$archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user);
 
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
 $processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent, $processCommentModel);

@@ -12,6 +12,55 @@ class ArchiveModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllAvailableArchiveEntitiesByType(int $type) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('archive_entities')
+                   ->where('type=:type')
+                   ->explicit(' AND `id_parent_archive_entity` IS NULL ')
+                   ->setParam(':type', $type)
+                   ->execute()
+                   ->fetch();
+
+        $entities = [];
+        foreach($rows as $row) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row);
+        }
+
+        return $entities;
+    }
+
+    public function getChildrenDocumentsCount(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('id')
+                   ->from('documents')
+                   ->where('id_archive_document=:id')
+                   ->setParam(':id', $id)
+                   ->execute()
+                   ->fetch();
+
+        return $rows->num_rows;
+    }
+
+    public function getChildrenCount(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('id')
+                   ->from('archive_entities')
+                   ->where('id_parent_archive_entity=:id')
+                   ->setParam(':id', $id)
+                   ->execute()
+                   ->fetch();
+
+        return $rows->num_rows;
+    }
+
+    public function insertNewArchiveEntity(array $data) {
+        return $this->insertNew($data, 'archive_entities');
+    }
+
     public function getAllArchivesFromId(?int $idFrom, int $limit) {
         if(is_null($idFrom)) {
             return [];

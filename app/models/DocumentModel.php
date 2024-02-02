@@ -14,6 +14,25 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function moveToArchiveDocument(int $id, int $idArchiveDocument) {
+        $data = ['id_archive_document' => $idArchiveDocument];
+
+        return $this->updateDocument($id, $data);
+    }
+
+    public function moveFromArchiveDocument(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('documents')
+                     ->setNull(['id_archive_document'])
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
     public function getDocumentForIdArchiveEntity(int $idArchiveEntity) {
         $qb = $this->composeQueryStandardDocuments();
         $qb ->explicit('AND (')

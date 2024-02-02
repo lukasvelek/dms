@@ -2,6 +2,7 @@
 
 namespace DMS\Authorizators;
 
+use DMS\Constants\BulkActionRights;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
@@ -27,6 +28,38 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
 
         $this->documentAuthorizator = $documentAuthorizator;
         $this->bulkActionAuthorizator = $bulkActionAuthorizator;
+    }
+
+    public function canMoveFromArchiveDocument(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::MOVE_DOCUMENT_FROM_ARCHIVE_DOCUMENT, $idUser, $checkCache)) {
+            return false;
+        }
+
+        if(!$this->documentAuthorizator->canMoveFromArchiveDocument($document, $checkForExistingProcess)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canMoveToArchiveDocument(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::MOVE_DOCUMENT_TO_ARCHIVE_DOCUMENT, $idUser, $checkCache)) {
+            return false;
+        }
+
+        if(!$this->documentAuthorizator->canMoveToArchiveDocument($document, $checkForExistingProcess)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
