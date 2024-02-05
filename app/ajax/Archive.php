@@ -55,12 +55,12 @@ function getArchiveBulkActions() {
                 $canCloseArchive = false;
             }
 
-            if($archiveAuthorizator->bulkActionSuggestForShredding($archive, null, true, true) &&
+            /*if($archiveAuthorizator->bulkActionSuggestForShredding($archive, null, true, true) &&
                (is_null($canSuggestForShredding) || $canSuggestForShredding)) {
                 $canSuggestForShredding = true;
             } else {
                 $canSuggestForShredding = false;
-            }
+            }*/
         }
     }
 
@@ -81,7 +81,7 @@ function getArchiveBulkActions() {
         $bulkActions['Close archive'] = $link;
     }
 
-    if($canSuggestForShredding) {
+    /*if($canSuggestForShredding) {
         $link = '?page=UserModule:Archive:performBulkAction&';
 
         $i = 0;
@@ -96,7 +96,7 @@ function getArchiveBulkActions() {
         $link .= '&action=suggest_for_shredding';
 
         $bulkActions['Suggest for shredding'] = $link;
-    }
+    }*/
 
     $i = 0;
     $x = 0;

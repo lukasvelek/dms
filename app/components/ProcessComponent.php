@@ -266,7 +266,7 @@ class ProcessComponent extends AComponent {
         return true;
     }
 
-    public function checkIfArchiveArchiveIsInProcess(int $idArchive) {
+    /*public function checkIfArchiveArchiveIsInProcess(int $idArchive) {
         $process = null;
 
         $this->logger->logFunction(function() use (&$process, $idArchive) {
@@ -278,7 +278,7 @@ class ProcessComponent extends AComponent {
         }
 
         return false;
-    }
+    }*/
 }
 
 ?>
