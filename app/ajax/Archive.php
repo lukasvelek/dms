@@ -1,5 +1,6 @@
 <?php
 
+use DMS\Constants\ArchiveStatus;
 use DMS\Constants\ArchiveType;
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
@@ -30,6 +31,110 @@ if($action == null) {
 
 echo($action());
 
+function getArchiveBulkActions() {
+    global $user, $archiveModel, $archiveAuthorizator, $actionAuthorizator, $documentModel;
+
+    $bulkActions = [];
+    $text = '';
+    $canCloseArchive = null;
+    $canSuggestForShredding = null;
+    $canShred = null;
+
+    $idDocuments = $_GET['idDocuments'];
+
+    if(!is_null($user)) {
+        foreach($idDocuments as $idDocument) {
+            $archive = $archiveModel->getArchiveById($idDocument);
+
+            if($archiveAuthorizator->bulkActionCloseArchive($archive, null, true, true) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::CLOSE_ARCHIVE, null, false) &&
+               ($archiveModel->getChildrenCount($archive->getId(), ArchiveType::ARCHIVE) > 0) &&
+               (is_null($canCloseArchive) || $canCloseArchive)) {
+                $canCloseArchive = true;
+            } else {
+                $canCloseArchive = false;
+            }
+
+            if($archiveAuthorizator->bulkActionSuggestForShredding($archive, null, true, true) &&
+               (is_null($canSuggestForShredding) || $canSuggestForShredding)) {
+                $canSuggestForShredding = true;
+            } else {
+                $canSuggestForShredding = false;
+            }
+        }
+    }
+
+    if($canCloseArchive) {
+        $link = '?page=UserModule:Archive:performBulkAction&';
+
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=close_archive';
+
+        $bulkActions['Close archive'] = $link;
+    }
+
+    if($canSuggestForShredding) {
+        $link = '?page=UserModule:Archive:performBulkAction&';
+
+        $i = 0;
+        foreach($idDocuments as $idDocument) {
+            if(($i + 1) == count($idDocuments)) {
+                $link .= 'select[]=' . $idDocument;
+            } else {
+                $link .= 'select[]=' . $idDocument . '&';
+            }
+        }
+
+        $link .= '&action=suggest_for_shredding';
+
+        $bulkActions['Suggest for shredding'] = $link;
+    }
+
+    $i = 0;
+    $x = 0;
+    $br = 0;
+    foreach($bulkActions as $name => $url) {
+        if(($x + 1) % 5 == 0) {
+            $br++;
+            $x = 0;
+        }
+
+        if($i == 0) {
+            $left = ($x * 75) + 10;
+            $top = 10;
+
+            if($name == 'br') {
+                $text .= _createBlankLink($left, $top);
+            } else {
+                $text .= _createLink($url, $name, $left, $top);
+            }
+        } else {
+            $nextLineTop = $br * -130;
+            $left = ($x * 75) + (($x + 1) * 10);
+            $top = (($x * -75) + 10) + ($br * -85) + $nextLineTop;
+            
+            if($name == 'br') {
+                $text .= _createBlankLink($left, $top);
+            } else {
+                $text .= _createLink($url, $name, $left, $top);
+            }
+        }
+
+        $i++;
+        $x++;
+    }
+
+    return $text;
+}
+
 function getBoxBulkActions() {
     global $user, $archiveModel, $archiveAuthorizator, $actionAuthorizator, $documentModel;
 
@@ -49,6 +154,14 @@ function getBoxBulkActions() {
                ($archiveModel->getChildrenCount($idDocument, ArchiveType::BOX) > 0) &&
                (is_null($canMoveBoxToArchive) || $canMoveBoxToArchive)) {
                 $canMoveBoxToArchive = true;
+            } else {
+                $canMoveBoxToArchive = false;
+            }
+
+            if($archiveAuthorizator->bulkActionMoveBoxFromArchive($archive, null, true, false) &&
+              $actionAuthorizator->checkActionRight(UserActionRights::MOVE_ENTITIES_WITHIN_ARCHIVE, null, false) &&
+              (is_null($canMoveBoxFromArchive) || $canMoveBoxFromArchive)) {
+                $canMoveBoxFromArchive = true;
             } else {
                 $canMoveBoxFromArchive = false;
             }
@@ -140,6 +253,11 @@ function getDocumentBulkActions() {
         foreach($idDocuments as $idDocument) {
             $archive = $archiveModel->getDocumentById($idDocument);
 
+            $parentEntity = null;
+            if($archive->getIdParentArchiveEntity() !== NULL) {
+                $parentEntity = $archiveModel->getBoxById($archive->getIdParentArchiveEntity());
+            }
+
             if($archiveAuthorizator->bulkActionMoveDocumentToBox($archive, null, true, false) &&
                $actionAuthorizator->checkActionRight(UserActionRights::MOVE_ENTITIES_WITHIN_ARCHIVE, null, false) &&
                ($documentModel->getDocumentCountInArchiveDocument($idDocument) > 0) &&
@@ -150,6 +268,8 @@ function getDocumentBulkActions() {
             }
 
             if($archiveAuthorizator->bulkActionMoveDocumentFromBox($archive, null, true, false) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::MOVE_ENTITIES_WITHIN_ARCHIVE, null, false) &&
+               (!is_null($parentEntity) && $parentEntity->getIdParentArchiveEntity() === NULL) &&
                (is_null($canMoveDocumentFromBox) || $canMoveDocumentFromBox)) {
                 $canMoveDocumentFromBox = true;
             } else {
@@ -248,7 +368,10 @@ function getDocuments() {
 
     $gb = new GridBuilder();
 
-    $gb->addColumns(['name' => 'Name']);
+    $gb->addColumns(['name' => 'Name', 'status' => 'Status']);
+    $gb->addOnColumnRender('status', function(Archive $archive) {
+        return ArchiveStatus::$texts[$archive->getStatus()];
+    });
     $gb->addDataSourceCallback($dataSourceCallback);
     $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
         $link = '-';
@@ -301,7 +424,10 @@ function getBoxes() {
 
     $gb = new GridBuilder();
 
-    $gb->addColumns(['name' => 'Name']);
+    $gb->addColumns(['name' => 'Name', 'status' => 'Status']);
+    $gb->addOnColumnRender('status', function(Archive $archive) {
+        return ArchiveStatus::$texts[$archive->getStatus()];
+    });
     $gb->addDataSourceCallback($dataSourceCallback);
     $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
         $link = '-';
@@ -352,7 +478,10 @@ function getArchives() {
 
     $gb = new GridBuilder();
 
-    $gb->addColumns(['name' => 'Name']);
+    $gb->addColumns(['name' => 'Name', 'status' => 'Status']);
+    $gb->addOnColumnRender('status', function(Archive $archive) {
+        return ArchiveStatus::$texts[$archive->getStatus()];
+    });
     $gb->addDataSourceCallback($dataSourceCallback);
     $gb->addAction(function(Archive $archive) use ($actionAuthorizator) {
         $link = '-';
@@ -376,10 +505,10 @@ function getArchives() {
         }
         return $link;
     });
-    /*$gb->addHeaderCheckbox('select-all', 'selectAllArchiveArchiveEntries()');
+    $gb->addHeaderCheckbox('select-all', 'selectAllArchiveArchiveEntries()');
     $gb->addRowCheckbox(function(Archive $archive) {
         return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveArchiveBulkActions()" onchange="drawArchiveArchiveBulkActions()">';
-    });*/
+    });
 
     return $gb->build();
 }

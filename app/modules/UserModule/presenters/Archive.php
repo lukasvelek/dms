@@ -2,11 +2,15 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\ArchiveStatus;
 use DMS\Constants\ArchiveType;
+use DMS\Constants\DocumentStatus;
+use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
+use DMS\Widgets\HomeDashboard\DocumentStats;
 
 class Archive extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -15,6 +19,25 @@ class Archive extends APresenter {
         parent::__construct('Archive');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function performBulkAction() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['select', 'action']);
+
+        $ids = $_GET['select'];
+        $action = htmlspecialchars($_GET['action']);
+
+        if($action == '-') {
+            $app->redirect('UserModule:Archive:showDocuments');
+        }
+
+        if(method_exists($this, '_' . $action)) {
+            return $this->{'_' . $action}($ids);
+        } else {
+            die('Method does not exist!');
+        }
     }
 
     protected function showArchives() {
@@ -400,6 +423,212 @@ class Archive extends APresenter {
         $pageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
 
         return $pageControl;
+    }
+
+    private function internalCreateMoveDocumentToBoxForm(array $ids) {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/archive/new-entity-form.html');
+
+        $url = '?page=UserModule:Archive:performBulkAction&action=move_document_to_box&';
+        $i = 0;
+        foreach($ids as $id) {
+            if(($i + 1) == count($ids)) {
+                $url .= 'select[]=' . $id;
+            } else {
+                $url .= 'select[]=' . $id . '&';
+            }
+        }
+
+        $boxes = $app->archiveModel->getAllAvailableArchiveEntitiesByType(ArchiveType::BOX);
+        $boxesArr = [];
+        foreach($boxes as $box) {
+            $boxesArr[] = [
+                'value' => $box->getId(),
+                'text' => $box->getName()
+            ];
+        }
+
+        $fb = new FormBuilder();
+
+        $fb ->setMethod('POST')->setAction($url)
+
+            ->addElement($fb->createLabel()->setText('Box')->setFor('box'))
+            ->addElement($fb->createSelect()->setName('box')->addOptionsBasedOnArray($boxesArr))
+
+            ->addElement($fb->createSubmit('Move'))
+        ;
+
+        $form = $fb->build();
+
+        $data = [
+            '$PAGE_TITLE$' => 'Move document to box',
+            '$NEW_ENTITY_FORM$' => $form
+        ];
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    private function internalCreateMoveBoxToArchiveForm(array $ids) {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/archive/new-entity-form.html');
+
+        $url = '?page=UserModule:Archive:performBulkAction&action=move_box_to_archive&';
+        $i = 0;
+        foreach($ids as $id) {
+            if(($i + 1) == count($ids)) {
+                $url .= 'select[]=' . $id;
+            } else {
+                $url .= 'select[]=' . $id . '&';
+            }
+        }
+
+        $archives = $app->archiveModel->getAllAvailableArchiveEntitiesByType(ArchiveType::ARCHIVE);
+        $archivesArr = [];
+        foreach($archives as $archive) {
+            $archivesArr[] = [
+                'value' => $archive->getId(),
+                'text' => $archive->getName()
+            ];
+        }
+
+        $fb = new FormBuilder();
+
+        $fb ->setMethod('POST')->setAction($url)
+
+            ->addElement($fb->createLabel()->setText('Archive')->setFor('archive'))
+            ->addElement($fb->createSelect()->setName('archive')->addOptionsBasedOnArray($archivesArr))
+
+            ->addElement($fb->createSubmit('Move'))
+        ;
+
+        $form = $fb->build();
+
+        $data = [
+            '$PAGE_TITLE$' => 'Move box to archive',
+            '$NEW_ENTITY_FORM$' => $form
+        ];
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    /**
+     * BULK ACTIONS
+     */
+    private function _move_document_to_box(array $ids) {
+        global $app;
+
+        if(isset($_POST['box'])) {
+            $box = htmlspecialchars($_POST['box']);
+
+            foreach($ids as $id) {
+                $app->archiveModel->moveDocumentToBox($id, $box);
+            }
+
+            $app->flashMessage('Moved documents to the box', 'success');
+            $app->redirect('UserModule:Archive:showDocuments');
+        } else {
+            return $this->internalCreateMoveDocumentToBoxForm($ids);
+        }
+    }
+
+    private function _move_document_from_box(array $ids) {
+        global $app;
+
+        foreach($ids as $id) {
+            $app->archiveModel->moveDocumentFromBox($id);
+        }
+
+        $app->flashMessage('Removed documents from the box', 'success');
+        $app->redirect('UserModule:Archive:showDocuments');
+    }
+
+    private function _move_box_to_archive(array $ids) {
+        global $app;
+
+        if(isset($_POST['archive'])) {
+            $archive = htmlspecialchars($_POST['archive']);
+
+            foreach($ids as $id) {
+                $app->archiveModel->moveBoxToArchive($id, $archive);
+            }
+
+            $app->flashMessage('Moved boxes to archive', 'success');
+            $app->redirect('UserModule:Archive:showBoxes');
+        } else {
+            return $this->internalCreateMoveBoxToArchiveForm($ids);
+        }
+    }
+
+    private function _move_box_from_archive(array $ids) {
+        global $app;
+        
+        foreach($ids as $id) {
+            $app->archiveModel->moveBoxFromArchive($id);
+        }
+
+        $app->flashMessage('Removed boxes from archive', 'success');
+        $app->redirect('UserModule:Archive:showBoxes');
+    }
+
+    private function _close_archive(array $ids) {
+        global $app;
+
+        $fileCount = 0;
+        $documentCount = 0;
+        $boxCount = 0;
+        $archiveCount = count($ids);
+
+        $totalCount = 0;
+
+        foreach($ids as $id) {
+            // archives
+            $app->archiveModel->closeArchive($id);
+
+            $boxes = $app->archiveModel->getBoxesForIdParent($id);
+            $boxCount = $boxCount + count($boxes);
+
+            foreach($boxes as $box) {
+                $app->archiveModel->updateBox($box->getId(), ['status' => ArchiveStatus::FINISHED]);
+
+                $documents = $app->archiveModel->getDocumentsForIdParent($box->getId());
+                $documentCount = $documentCount + count($documents);
+                
+                foreach($documents as $document) {
+                    $app->archiveModel->updateDocument($document->getId(), ['status' => ArchiveStatus::FINISHED]);
+
+                    $files = $app->documentModel->getDocumentForIdArchiveEntity($document->getId());
+                    $fileCount = $fileCount + count($files);
+
+                    foreach($files as $file) {
+                        $app->documentModel->updateDocument($file->getId(), ['status' => DocumentStatus::FINISHED]);
+                    }
+                }
+            }
+        }
+
+        $totalCount = $fileCount + $documentCount + $boxCount + $archiveCount;
+
+        $app->flashMessage('Finished ' . $totalCount . ' entities');
+        $app->redirect('UserModule:Archive:showArchives');
+    }
+
+    private function _suggest_for_shredding(array $ids) {
+        global $app;
+
+        foreach($ids as $id) {
+            $app->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $app->user->getId(), true);
+
+            $app->archiveModel->updateArchive($id, ['status' => ArchiveStatus::SUGGESTED_FOR_SHREDDING]);
+        }
+
+        $app->flashMessage('Archives suggested for shredding', 'success');
+        $app->redirect('UserModule:Archive:showArchives');
     }
 }
 

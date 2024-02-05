@@ -239,6 +239,19 @@ abstract class AModel {
     public function query(string $sql) {
         return $this->db->query($sql);
     }
+
+    public function updateToNull(string $tableName, int $id, array $cols) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update($tableName)
+                     ->setNull($cols)
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
 }
 
 ?>

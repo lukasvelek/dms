@@ -173,13 +173,13 @@ $panelAuthorizator = new PanelAuthorizator($db, $logger, $userRightModel, $group
 $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
-$archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user);
 
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
 $processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent, $processCommentModel);
 $widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel, $mailModel);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
+$archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
 $documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 

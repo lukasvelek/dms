@@ -9,6 +9,7 @@ class DocumentStatus {
     public const ARCHIVATION_APPROVED = 4;
     public const SHREDDED = 5;
     public const ARCHIVED = 6;
+    public const FINISHED = 7;
 
     public static $texts = array(
         self::NEW => 'New',
@@ -16,7 +17,8 @@ class DocumentStatus {
         self::ARCHIVATION_APPROVED => 'Archivation approved',
         self::ARCHIVATION_DECLINED => 'Archivation declined',
         self::SHREDDED => 'Shredded',
-        self::ARCHIVED => 'Archived'
+        self::ARCHIVED => 'Archived',
+        self::FINISHED => 'Finished'
     );
 }
 

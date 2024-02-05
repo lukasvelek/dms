@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\ArchiveStatus;
 use DMS\Constants\ArchiveType;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -10,6 +11,102 @@ use DMS\Entities\Archive;
 class ArchiveModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function getDocumentsForIdParent(int $idParent) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('archive_boxes')
+                   ->where('id_parent_archive_entity=:id_parent')
+                   ->setParam(':id_parent', $idParent)
+                   ->execute()
+                   ->fetch();
+
+        $entities = [];
+        foreach($rows as $row) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::DOCUMENT);
+        }
+                  
+        return $entities;
+    }
+
+    public function getBoxesForIdParent(int $idParent) {
+        $qb = $this->qb(__METHOD__);
+
+        $rows = $qb->select('*')
+                   ->from('archive_boxes')
+                   ->where('id_parent_archive_entity=:id_parent')
+                   ->setParam(':id_parent', $idParent)
+                   ->execute()
+                   ->fetch();
+
+        $entities = [];
+        foreach($rows as $row) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::BOX);
+        }
+                  
+        return $entities;
+    }
+
+    public function closeArchive(int $idArchive) {
+        $data = [
+            'status' => ArchiveStatus::CLOSED
+        ];
+
+        return $this->updateArchive($idArchive, $data);
+    }
+
+    public function moveBoxToArchive(int $idBox, int $idArchive) {
+        $data = [
+            'id_parent_archive_entity' => $idArchive,
+            'status' => ArchiveStatus::IN_ARCHIVE
+        ];
+
+        return $this->updateBox($idBox, $data);
+    }
+
+    public function moveBoxFromArchive(int $idBox){
+        $data = [
+            'status' => ArchiveStatus::NEW
+        ];
+
+        $this->updateBox($idBox, $data);
+        $this->updateToNull('archive_boxes', $idBox, ['id_parent_archive_entity']);
+
+        return true;
+    }
+
+    public function moveDocumentToBox(int $idDocument, int $idBox) {
+        $data = [
+            'id_parent_archive_entity' => $idBox,
+            'status' => ArchiveStatus::IN_BOX
+        ];
+
+        return $this->updateDocument($idDocument, $data);
+    }
+
+    public function moveDocumentFromBox(int $idDocument) {
+        $data = [
+            'status' => ArchiveStatus::NEW
+        ];
+
+        $this->updateDocument($idDocument, $data);
+        $this->updateToNull('archive_documents', $idDocument, ['id_parent_archive_entity']);
+
+        return true;
+    }
+
+    public function updateDocument(int $id, array $data) {
+        return $this->updateExisting('archive_documents', $id, $data);
+    }
+
+    public function updateBox(int $id, array $data) {
+        return $this->updateExisting('archive_boxes', $id, $data);
+    }
+
+    public function updateArchive(int $id, array $data) {
+        return $this->updateExisting('archive_archives', $id, $data);
     }
 
     public function getAllAvailableArchiveEntitiesByType(int $type) {
@@ -43,12 +140,12 @@ class ArchiveModel extends AModel {
         return $entities;
     }
 
-    public function getChildrenCount(int $id, int $type) {
+    public function getChildrenCount(int $id, int $parentType) {
         $qb = $this->qb(__METHOD__);
 
         $qb->select('id');
 
-        switch($type) {
+        switch($parentType) {
             case ArchiveType::DOCUMENT:
                 $qb->from('documents')
                    ->where('id_archive_document=:id');
@@ -354,12 +451,13 @@ class ArchiveModel extends AModel {
         $dateCreated = $row['date_created'];
         $name = $row['name'];
         $idParentArchiveEntity = null;
+        $status = $row['status'];
         
         if(isset($row['id_parent_archive_entity'])) {
             $idParentArchiveEntity = $row['id_parent_archive_entity'];
         }
 
-        return new Archive($id, $dateCreated, $name, $type, $idParentArchiveEntity);
+        return new Archive($id, $dateCreated, $name, $type, $idParentArchiveEntity, $status);
     }
 }
 

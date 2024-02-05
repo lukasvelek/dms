@@ -141,7 +141,8 @@ class DatabaseInstaller {
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'id_author' => 'INT(32) NOT NULL',
-                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'is_archive' => 'INT(2) NOT NULL DEFAULT 0'
             ),
             'user_action_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -335,19 +336,22 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'name' => 'VARCHAR(256) NOT NULL',
-                'id_parent_archive_entity' => 'INT(32) NULL'
+                'id_parent_archive_entity' => 'INT(32) NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1'
             ),
             'archive_boxes' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'name' => 'VARCHAR(256) NOT NULL',
-                'id_parent_archive_entity' => 'INT(32) NULL'
+                'id_parent_archive_entity' => 'INT(32) NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1'
             ),
             'archive_archives' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'name' => 'VARCHAR(256) NOT NULL',
-                'id_parent_archive_entity' => 'INT(32) NULL'
+                'id_parent_archive_entity' => 'INT(32) NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1'
             )
         );
 

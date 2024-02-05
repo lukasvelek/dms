@@ -71,7 +71,7 @@ class ProcessComponent extends AComponent {
         return $processes;
     }
 
-    public function startProcess(int $type, int $idDocument, int $idAuthor) {
+    public function startProcess(int $type, int $idDocument, int $idAuthor, bool $isArchive = false) {
         $start = true;
 
         $data = [];
@@ -155,6 +155,10 @@ class ProcessComponent extends AComponent {
         $data['type'] = $type;
         $data['workflow_status'] = '1';
         $data['id_author'] = $idAuthor;
+
+        if($isArchive) {
+            $data['is_archive'] = $isArchive ? '1' : '0';
+        }
 
         if($start) {
             $this->processModel->insertNewProcess($data);
@@ -260,6 +264,20 @@ class ProcessComponent extends AComponent {
         }
 
         return true;
+    }
+
+    public function checkIfArchiveArchiveIsInProcess(int $idArchive) {
+        $process = null;
+
+        $this->logger->logFunction(function() use (&$process, $idArchive) {
+            $process = $this->processModel->getProcessForIdDocument($idArchive, true);
+        });
+
+        if(!is_null($process) && ($process->getStatus() == ProcessStatus::IN_PROGRESS)) {
+            return true;
+        }
+
+        return false;
     }
 }
 

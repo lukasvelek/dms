@@ -216,7 +216,6 @@ class Application {
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user, $this->userModel, $this->groupUserModel);
         $this->ribbonAuthorizator = new RibbonAuthorizator($this->conn, $this->logger, $this->user, $this->ribbonModel, $this->ribbonRightsModel, $this->groupUserModel);
-        $this->archiveAuthorizator = new ArchiveAuthorizator($this->conn, $this->logger, $this->archiveModel, $this->user);
         
         $sessionDestroyed = false;
         if($install) {
@@ -234,6 +233,7 @@ class Application {
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
         $this->ribbonComponent = new RibbonComponent($this->conn, $this->logger, $this->ribbonModel, $this->ribbonAuthorizator);
         
+        $this->archiveAuthorizator = new ArchiveAuthorizator($this->conn, $this->logger, $this->archiveModel, $this->user, $this->processComponent);
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         
