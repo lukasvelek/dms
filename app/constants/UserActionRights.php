@@ -44,6 +44,21 @@ class UserActionRights {
     public const CREATE_DOCUMENT_FOLDER = 'create_document_folder';
     public const DELETE_USER = 'delete_user';
     public const DELETE_GROUP = 'delete_group';
+    public const CREATE_ARCHIVE_DOCUMENT = 'create_archive_document';
+    public const CREATE_ARCHIVE_BOX = 'create_archive_box';
+    public const CREATE_ARCHIVE_ARCHIVE = 'create_archive_archive';
+    public const MOVE_ENTITIES_WITHIN_ARCHIVE = 'move_entities_within_archive';
+    public const MOVE_ENTITIES_FROM_TO_ARCHIVE = 'move_entities_from_to_archive';
+    public const VIEW_ARCHIVE_DOCUMENT_CONTENT = 'view_archive_document_content';
+    public const VIEW_ARCHIVE_BOX_CONTENT = 'view_archive_box_content';
+    public const VIEW_ARCHIVE_ARCHIVE_CONTENT = 'view_archive_archive_content';
+    public const DELETE_ARCHIVE_DOCUMENT = 'delete_archive_document';
+    public const DELETE_ARCHIVE_BOX = 'delete_archive_box';
+    public const DELETE_ARCHIVE_ARCHIVE = 'delete_archive_archive';
+    public const EDIT_ARCHIVE_DOCUMENT = 'edit_archive_document';
+    public const EDIT_ARCHIVE_BOX = 'edit_archive_box';
+    public const EDIT_ARCHIVE_ARCHIVE = 'edit_archive_archive';
+    public const CLOSE_ARCHIVE = 'close_archive';
 
     public static $all = array(
         self::CREATE_USER,
@@ -86,7 +101,22 @@ class UserActionRights {
         self::VIEW_GROUP_USERS,
         self::CREATE_DOCUMENT_FOLDER,
         self::DELETE_USER,
-        self::DELETE_GROUP
+        self::DELETE_GROUP,
+        self::CREATE_ARCHIVE_DOCUMENT,
+        self::CREATE_ARCHIVE_BOX,
+        self::CREATE_ARCHIVE_ARCHIVE,
+        self::MOVE_ENTITIES_FROM_TO_ARCHIVE,
+        self::MOVE_ENTITIES_WITHIN_ARCHIVE,
+        self::VIEW_ARCHIVE_DOCUMENT_CONTENT,
+        self::VIEW_ARCHIVE_BOX_CONTENT,
+        self::VIEW_ARCHIVE_ARCHIVE_CONTENT,
+        self::DELETE_ARCHIVE_DOCUMENT,
+        self::DELETE_ARCHIVE_BOX,
+        self::DELETE_ARCHIVE_ARCHIVE,
+        self::EDIT_ARCHIVE_DOCUMENT,
+        self::EDIT_ARCHIVE_BOX,
+        self::EDIT_ARCHIVE_ARCHIVE,
+        self::CLOSE_ARCHIVE
     );
 }
 

@@ -65,6 +65,126 @@ async function deleteAllNotifications() {
     });
 }
 
+function selectAllArchiveDocumentEntries() {
+    var selectAllElem = $('#select-all:checked').val();
+
+    if(selectAllElem == "on") {
+        $('#select:not(:checked)').prop('checked', true);
+        drawArchiveDocumentBulkActions();
+    } else {
+        $('#select:checked').prop('checked', false);
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
+
+function selectAllArchiveBoxEntries() {
+    var selectAllElem = $('#select-all:checked').val();
+
+    if(selectAllElem == "on") {
+        $('#select:not(:checked)').prop('checked', true);
+        drawArchiveBoxBulkActions();
+    } else {
+        $('#select:checked').prop('checked', false);
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
+
+function selectAllArchiveArchiveEntries() {
+    var selectAllElem = $('#select-all:checked').val();
+
+    if(selectAllElem == "on") {
+        $('#select:not(:checked)').prop('checked', true);
+        drawArchiveArchiveBulkActions();
+    } else {
+        $('#select:checked').prop('checked', false);
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
+
+function drawArchiveDocumentBulkActions() {
+    var elems = $('#select:checked');
+
+    if(elems.length > 0) {
+        $('#bulk_actions').show();
+        $('#bulk_actions').html('<img style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">');
+
+        var ids = [];
+
+        elems.each(function(i) {
+            ids[i] = this.value;
+        });
+
+        $.get('app/ajax/Archive.php', {
+            idDocuments: ids,
+            action: "getDocumentBulkActions"
+        },
+        async function(data) {
+            await sleep(general_sleep_length);
+            $('#bulk_actions').html(data);
+        });
+    } else {
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
+
+function drawArchiveBoxBulkActions() {
+    var elems = $('#select:checked');
+
+    if(elems.length > 0) {
+        $('#bulk_actions').show();
+        $('#bulk_actions').html('<img style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">');
+
+        var ids = [];
+
+        elems.each(function(i) {
+            ids[i] = this.value;
+        });
+
+        $.get('app/ajax/Archive.php', {
+            idDocuments: ids,
+            action: "getBoxBulkActions"
+        },
+        async function(data) {
+            await sleep(general_sleep_length);
+            $('#bulk_actions').html(data);
+        });
+    } else {
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
+
+function drawArchiveArchiveBulkActions() {
+    var elems = $('#select:checked');
+
+    if(elems.length > 0) {
+        $('#bulk_actions').show();
+        $('#bulk_actions').html('<img style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32">');
+
+        var ids = [];
+
+        elems.each(function(i) {
+            ids[i] = this.value;
+        });
+
+        $.get('app/ajax/Archive.php', {
+            idDocuments: ids,
+            action: "getArchiveBulkActions"
+        },
+        async function(data) {
+            await sleep(general_sleep_length);
+            $('#bulk_actions').html(data);
+        });
+    } else {
+        $('#bulk_actions').html('');
+        $('#bulk_actions').hide();
+    }
+}
+
 function drawDocumentBulkActions() {
     var elems = $('#select:checked');
 
@@ -497,4 +617,74 @@ async function showDropdownMenu(_parentRibbonId, _ribbonId) {
 async function hideDropdownMenu(_parentRibbonId, _ribbonId) {
     $('#dropdownmenu-ribbon-' + _ribbonId).remove();
     $('#dropdown-ribbon-' + _ribbonId).attr('onclick', 'showDropdownMenu("' + _parentRibbonId + '", "' + _ribbonId + '");');
+}
+
+async function loadArchiveDocuments(_page) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Archive.php',
+        type: 'GET',
+        data: {
+            action: "getDocuments",
+            page: _page
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}
+
+async function loadArchiveBoxes(_page) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Archive.php',
+        type: 'GET',
+        data: {
+            action: "getBoxes",
+            page: _page
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}
+
+async function loadArchiveArchives(_page) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Archive.php',
+        type: 'GET',
+        data: {
+            action: "getArchives",
+            page: _page
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
+}
+
+async function loadArchiveEntityContent(_id, _page, _type) {
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Archive.php',
+        type: 'GET',
+        data: {
+            action: "getContent",
+            page: _page,
+            id: _id,
+            type: _type
+        }
+    })
+    .done(function(data) {
+        $('table').html(data);
+        $('#documents-loading').hide();
+    });
 }

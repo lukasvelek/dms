@@ -1,6 +1,6 @@
 <?php
 
-namespace DMS\Constnats;
+namespace DMS\Constants;
 
 class DatetimeFormats {
     public static $formats = array(

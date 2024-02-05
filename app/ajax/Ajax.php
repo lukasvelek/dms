@@ -1,6 +1,7 @@
 <?php
 
 use DMS\Authorizators\ActionAuthorizator;
+use DMS\Authorizators\ArchiveAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
@@ -15,6 +16,7 @@ use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
+use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FilterModel;
@@ -161,6 +163,7 @@ $notificationModel = new NotificationModel($db, $logger);
 $mailModel = new MailModel($db, $logger);
 $filterModel = new FilterModel($db, $logger);
 $ribbonModel = new RibbonModel($db, $logger);
+$archiveModel = new ArchiveModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
     $user = $userModel->getUserById($_SESSION['id_current_user']);
@@ -176,6 +179,7 @@ $processComponent = new ProcessComponent($db, $logger, $processModel, $groupMode
 $widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel, $mailModel);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
+$archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
 $documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 

@@ -168,6 +168,40 @@ abstract class AModel {
         return $count;
     }
 
+    public function getFirstRowWithCountWithCond(int $count, string $tableName, array $cols, string $orderBy = 'id', string $condition) {
+        $sql = "SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY `$orderBy`) AS `row_num`";
+
+        $i = 0;
+        foreach($cols as $col) {
+            if(($i + 1) == count($cols)) {
+                $sql .= ", $col";
+            } else {
+                $sql .= ", $col";
+            }
+
+            $i++;
+        }
+
+        $sql .= " FROM `$tableName` $condition) `t2` WHERE `row_num` = $count";
+
+        $this->logger->sql($sql, __METHOD__);
+
+        $row = $this->db->query($sql);
+
+        if(count($cols) == 1) {
+            $result = null;
+
+            foreach($row as $r) {
+                $result = $r[$cols[0]];
+                break;
+            }
+
+            return $result;
+        } else {
+            return $row;
+        }
+    }
+
     public function getFirstRowWithCount(int $count, string $tableName, array $cols, string $orderBy = 'id') {
         $sql = "SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY `$orderBy`) AS `row_num`";
 
@@ -200,6 +234,23 @@ abstract class AModel {
         } else {
             return $row;
         }
+    }
+
+    public function query(string $sql) {
+        return $this->db->query($sql);
+    }
+
+    public function updateToNull(string $tableName, int $id, array $cols) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update($tableName)
+                     ->setNull($cols)
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
     }
 }
 

@@ -14,6 +14,48 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentCountInArchiveDocument(int $idArchiveDocument) {
+        return $this->getRowCount('documents', 'id', 'WHERE `id_archive_document` = ' . $idArchiveDocument);
+    }
+
+    public function moveToArchiveDocument(int $id, int $idArchiveDocument) {
+        $data = ['id_archive_document' => $idArchiveDocument];
+
+        return $this->updateDocument($id, $data);
+    }
+
+    public function moveFromArchiveDocument(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $result = $qb->update('documents')
+                     ->setNull(['id_archive_document'])
+                     ->where('id=:id')
+                     ->setParam(':id', $id)
+                     ->execute()
+                     ->fetch();
+
+        return $result;
+    }
+
+    public function getDocumentForIdArchiveEntity(int $idArchiveEntity) {
+        $qb = $this->composeQueryStandardDocuments();
+        $qb ->explicit('AND (')
+            ->where('id_archive_document=:id_archive_entity', false, false)
+            ->orWhere('id_archive_box=:id_archive_entity')
+            ->orWhere('id_archive_archive=:id_archive_entity')
+            ->rightBracket()
+            ->setParam(':id_archive_entity', $idArchiveEntity);
+
+        $rows = $qb->execute()->fetch();
+
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function getDocumentsBySQL(string $sql) {
         $result = $this->db->query($sql);
 
@@ -42,6 +84,37 @@ class DocumentModel extends AModel {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
+        return $documents;
+    }
+
+    public function getFirstIdDocumentInIdArchiveDocumentOnAGridPage(int $idArchiveDocument, int $gridPage) {
+        if($gridPage == 0) $gridPage = 1;
+        return $this->getFirstRowWithCountWithCond($gridPage, 'documents', ['id'], 'id', 'WHERE `id_archive_document` = ' . $idArchiveDocument);
+    }
+
+    public function getDocumentsInIdArchiveDocumentFromId(?int $idFrom, int $idArchiveDocument, int $limit) {
+        if(is_null($idFrom)) return [];
+
+        $qb = $this->composeQueryStandardDocuments();
+
+        if($idFrom == 1) {
+            $qb->explicit('AND `id` >= ' . $idFrom . ' ');
+        } else {
+            $qb->explicit('AND `id` > ' . $idFrom . ' ');
+        }
+
+        $qb ->andWhere('id_archive_document=:id_archive_document')
+            ->setParam(':id_archive_document', $idArchiveDocument);
+
+        $qb->limit($limit);
+
+        $rows = $qb->execute()->fetch();
+    
+        $documents = array();
+        foreach($rows as $row) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+    
         return $documents;
     }
 
@@ -587,6 +660,9 @@ class DocumentModel extends AModel {
         $afterShredAction = $row['after_shred_action'];
         $shreddingStatus = $row['shredding_status'];
         $dateUpdated = $row['date_updated'];
+        $idArchiveDocument = null;
+        $idArchiveBox = null;
+        $idArchiveArchive = null;
 
         if(isset($row['id_folder'])) {
             $idFolder = $row['id_folder'];
@@ -596,9 +672,21 @@ class DocumentModel extends AModel {
             $file = $row['file'];
         }
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'date_updated'));
+        if(isset($row['id_archive_document'])) {
+            $idArchiveDocument = $row['id_archive_document'];
+        }
 
-        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus, $dateUpdated);
+        if(isset($row['id_archive_box'])) {
+            $idArchiveBox = $row['id_archive_box'];
+        }
+
+        if(isset($row['id_archive_archive'])) {
+            $idArchiveArchive = $row['id_archive_archive'];
+        }
+
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'date_updated', 'id_archive_document', 'id_archive_box', 'id_archive_archive'));
+
+        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus, $dateUpdated, $idArchiveDocument, $idArchiveBox, $idArchiveArchive);
         $document->setMetadata($row);
 
         return $document;

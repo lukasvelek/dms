@@ -3,6 +3,7 @@
 namespace DMS\Models;
 
 use DMS\Constants\ProcessStatus;
+use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Process;
@@ -471,16 +472,25 @@ class ProcessModel extends AModel {
         return $this->insertNew($data, 'processes');
     }
 
-    public function getProcessForIdDocument(int $idDocument) {
+    public function getProcessForIdDocument(int $idDocument, bool $isArchive = false) {
         $qb = $this->qb(__METHOD__);
 
         $row = $qb->select('*')
                   ->from('processes')
                   ->where('id_document=:id_document')
-                  ->setParam(':id_document', $idDocument)
-                  ->orderBy('id', 'DESC')
-                  ->execute()
-                  ->fetchSingle();
+                  ->setParam(':id_document', $idDocument);
+
+        if($isArchive) {
+            $row->andWhere('is_archive=:is_archive')
+                ->setParam(':is_archive', '1');
+        } else {
+            $row->andWhere('is_archive=:is_archive')
+                ->setParam(':is_archive', '0');
+        }
+
+        $row = $row->orderBy('id', 'DESC')
+                   ->execute()
+                   ->fetchSingle();
 
         return $this->createProcessObjectFromDbRow($row);
     }
@@ -502,8 +512,15 @@ class ProcessModel extends AModel {
         $workflowStatus = $row['workflow_status'];
         $idAuthor = $row['id_author'];
         $dateUpdated = $row['date_updated'];
+        $isArchive = $row['is_archive'];
+        
+        if($isArchive == '1') {
+            $isArchive = true;
+        } else {
+            $isArchive = false;
+        }
 
-        return new Process($id, $dateCreated, $idDocument, $workflow1, $workflow2, $workflow3, $workflow4, $workflowStatus, $type, $status, $idAuthor, $dateUpdated);
+        return new Process($id, $dateCreated, $idDocument, $workflow1, $workflow2, $workflow3, $workflow4, $workflowStatus, $type, $status, $idAuthor, $dateUpdated, $isArchive);
     }
 }
 

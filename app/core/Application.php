@@ -7,6 +7,7 @@ use DMS\Modules\IModule;
 use DMS\Core\DB\Database;
 use DMS\Authenticators\UserAuthenticator;
 use DMS\Authorizators\ActionAuthorizator;
+use DMS\Authorizators\ArchiveAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
@@ -24,6 +25,7 @@ use DMS\Constants\FlashMessageTypes;
 use DMS\Core\Logger\Logger;
 use DMS\Core\FileManager;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FilterModel;
@@ -111,6 +113,7 @@ class Application {
     public RibbonModel $ribbonModel;
     public RibbonRightsModel $ribbonRightsModel;
     public FilterModel $filterModel;
+    public ArchiveModel $archiveModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -119,6 +122,7 @@ class Application {
     public MetadataAuthorizator $metadataAuthorizator;
     public DocumentBulkActionAuthorizator $documentBulkActionAuthorizator;
     public RibbonAuthorizator $ribbonAuthorizator;
+    public ArchiveAuthorizator $archiveAuthorizator;
 
     public ProcessComponent $processComponent;
     public WidgetComponent $widgetComponent;
@@ -183,6 +187,7 @@ class Application {
         $this->ribbonModel = new RibbonModel($this->conn, $this->logger);
         $this->ribbonRightsModel = new RibbonRightsModel($this->conn, $this->logger);
         $this->filterModel = new FilterModel($this->conn, $this->logger);
+        $this->archiveModel = new ArchiveModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -202,7 +207,8 @@ class Application {
             'notificationModel' => $this->notificationModel,
             'mailModel' => $this->mailModel,
             'ribbonModel' => $this->ribbonModel,
-            'filterModel' => $this->filterModel
+            'filterModel' => $this->filterModel,
+            'archiveModel' => $this->archiveModel
         );
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -227,6 +233,7 @@ class Application {
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
         $this->ribbonComponent = new RibbonComponent($this->conn, $this->logger, $this->ribbonModel, $this->ribbonAuthorizator);
         
+        $this->archiveAuthorizator = new ArchiveAuthorizator($this->conn, $this->logger, $this->archiveModel, $this->user, $this->processComponent);
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         

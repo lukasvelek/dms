@@ -106,7 +106,10 @@ class DatabaseInstaller {
                 'shred_year' => 'VARCHAR(4) NOT NULL',
                 'after_shred_action' => 'VARCHAR(256) NOT NULL',
                 'shredding_status' => 'INT(32) NOT NULL',
-                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'id_archive_document' => 'INT(32) NULL',
+                'id_archive_box' => 'INT(32) NULL',
+                'id_archive_archive' => 'INT(32) NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -138,7 +141,8 @@ class DatabaseInstaller {
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'id_author' => 'INT(32) NOT NULL',
-                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'is_archive' => 'INT(2) NOT NULL DEFAULT 0'
             ),
             'user_action_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -327,6 +331,27 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user1' => 'INT(32) NOT NULL',
                 'id_user2' => 'INT(32) NOT NULL'
+            ),
+            'archive_documents' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'id_parent_archive_entity' => 'INT(32) NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1'
+            ),
+            'archive_boxes' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'id_parent_archive_entity' => 'INT(32) NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1'
+            ),
+            'archive_archives' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'id_parent_archive_entity' => 'INT(32) NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1'
             )
         );
 
@@ -1059,7 +1084,8 @@ class DatabaseInstaller {
             'home',
             'documents',
             'processes',
-            'settings'
+            'settings',
+            'archive'
         );
 
         $toppanelRibbons = array(
@@ -1085,6 +1111,13 @@ class DatabaseInstaller {
                 'image' => 'img/processes.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Processes:showAll',
+                'is_system' => '1'
+            ),
+            array(
+                'name' => 'Archive',
+                'code' => 'archive',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:Archive:showDocuments',
                 'is_system' => '1'
             ),
             array(
@@ -1266,6 +1299,29 @@ class DatabaseInstaller {
                     'code' => 'settings.ribbons',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:RibbonSettings:showAll',
+                    'is_system' => '1'
+                )
+            ),
+            'archive' => array(
+                array(
+                    'name' => 'Documents',
+                    'code' => 'archive.documents',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Archive:showDocuments',
+                    'is_system' => '1'
+                ),
+                array(
+                    'name' => 'Boxes',
+                    'code' => 'archive.boxes',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Archive:showBoxes',
+                    'is_system' => '1'
+                ),
+                array(
+                    'name' => 'Archives',
+                    'code' => 'archive.archives',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Archive:showArchives',
                     'is_system' => '1'
                 )
             )
