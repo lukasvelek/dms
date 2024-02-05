@@ -22,12 +22,10 @@ class FilterModel extends AModel {
     public function getDocumentFilterById(int $id) {
         $qb = $this->composeStandardDocumentFilterQuery();
 
-        $row = $qb->where('id=:id')
-                  ->setParam(':id', $id)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->where('id = ?', [$id])
+            ->execute();
 
-        return $this->createDocumentFilterFromDbRow($row);
+        return $this->createDocumentFilterFromDbRow($qb->fetch());
     }
 
     public function insertNewDocumentFilter(array $data) {
@@ -37,32 +35,32 @@ class FilterModel extends AModel {
     public function getAllDocumentFiltersForIdUser(int $idUser) {
         $qb = $this->composeStandardDocumentFilterQuery();
 
-        $rows = $qb->where('id_author=:id_user')
-                   ->setParam(':id_user', $idUser)
-                   ->execute()
-                   ->fetch();
+        $qb ->where('id_author = ?', [$idUser])
+            ->execute();
 
-        return $this->createDocumentsFiltersFromDbRows($rows);
+        return $this->createDocumentsFiltersFromDbRows($qb->fetchAll());
     }
 
     public function getAllDocumentFilters(bool $appendSystemFilters = true, bool $appendOtherUsersResults = true, ?int $idUser = null) {
         $qb = $this->composeStandardDocumentFilterQuery();
         
         if($appendSystemFilters && (!$appendOtherUsersResults && !is_null($idUser))) {
-            $qb->explicit(' WHERE `id_author` IS NULL OR `id_author` = ' . $idUser);
+            //$qb->explicit(' WHERE `id_author` IS NULL OR `id_author` = ' . $idUser);
+            $qb->andWhere('id_author IS NULL OR id_author = ?', [$idUser]);
         } else if(!$appendSystemFilters && (!$appendOtherUsersResults && !is_null($idUser))) {
-            $qb->explicit(' WHERE `id_author` = ' . $idUser);
+            //$qb->explicit(' WHERE `id_author` = ' . $idUser);
+            $qb->andWhere('id_author = ?', [$idUser]);
         }
         
-        $rows = $qb->execute()->fetch();
+        $qb->execute();
 
-        return $this->createDocumentsFiltersFromDbRows($rows);
+        return $this->createDocumentsFiltersFromDbRows($qb->fetchAll());
     }
 
     private function composeStandardDocumentFilterQuery() {
         $qb = $this->qb(__METHOD__);
 
-        $qb->select('*')
+        $qb->select(['*'])
            ->from('document_filters');
 
         return $qb;

@@ -33,22 +33,22 @@ abstract class AModel {
      */
     protected function qb(string $methodName) : QueryBuilder {
         $qb = $this->db->createQueryBuilder();
-        $qb->setMethod($methodName);
+        $qb->setCallingMethod($methodName);
         return $qb;
     }
 
     protected function updateExisting(string $tableName, int $id, array $data) {
         $qb = $this->qb(__METHOD__);
 
-        $values = [];
+        /*$values = [];
         $params = [];
 
         foreach($data as $k => $v) {
             $values[$k] = ':' . $k;
             $params[':' . $k] = $v;
-        }
+        }*/
 
-        $result = $qb->update($tableName)
+        /*$result = $qb->update($tableName)
                      ->set($values)
                      ->setParams($params)
                      ->where('id=:id')
@@ -56,10 +56,17 @@ abstract class AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->update($tableName)
+            ->set($data)
+            ->where('id = ?', [$id])
+            ->execute();
+        
+        return $qb->fetchAll();
     }
 
-    protected function updateExistingQb(string $tableName, array $data) {
+    /*protected function updateExistingQb(string $tableName, array $data) {
         $qb = $this->qb(__METHOD__);
 
         $values = [];
@@ -75,19 +82,26 @@ abstract class AModel {
            ->setParams($params);
 
         return $qb;    
-    }
+    }*/
 
-    protected function getLastInsertedRow(string $tableName, string $ordedCol = 'id', string $orded = 'DESC') {
+    protected function getLastInsertedRow(string $tableName, string $orderCol = 'id', string $order = 'DESC') {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
+        $qb ->select(['*'])
+            ->from($tableName)
+            ->orderBy($orderCol, $order)
+            ->execute();
+        
+        return $qb->fetchAll();
+
+        /*$row = $qb->select('*')
                   ->from($tableName)
                   ->orderBy($ordedCol, $orded)
                   ->limit('1')
                   ->execute()
                   ->fetchSingle();
 
-        return $row;
+        return $row;*/
     }
 
     /**
@@ -102,21 +116,26 @@ abstract class AModel {
 
         $keys = [];
         $values = [];
-        $params = [];
+        //$params = [];
 
         foreach($data as $k => $v) {
             $keys[] = $k;
-            $values[] = ':' . $k;
-            $params[':' . $k] = $v;
+            $values[] = $v;
         }
 
-        $result = $qb->insertArr($tableName, $keys)
+        /*$result = $qb->insertArr($tableName, $keys)
                      ->valuesArr($values)
                      ->setParams($params)
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->insert($tableName, $keys)
+            ->values($values)
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     protected function deleteById(int $id, string $tableName) {
@@ -126,14 +145,21 @@ abstract class AModel {
     protected function deleteByCol(string $colName, string $colValue, string $tableName) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
+        /*$result = $qb->delete()
                      ->from($tableName)
                      ->where($colName . '=:' . $colName)
                      ->setParam(':' . $colName, $colValue)
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->delete()
+            ->from($tableName)
+            ->where($colName . ' = ?', [$colValue])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function beginTran() {
@@ -243,14 +269,21 @@ abstract class AModel {
     public function updateToNull(string $tableName, int $id, array $cols) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update($tableName)
+        /*$result = $qb->update($tableName)
                      ->setNull($cols)
                      ->where('id=:id')
                      ->setParam(':id', $id)
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->update($tableName)
+            ->setNull($cols)
+            ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 }
 
