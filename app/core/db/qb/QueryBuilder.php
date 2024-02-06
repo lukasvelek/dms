@@ -4,6 +4,9 @@ namespace QueryBuilder;
 
 class QueryBuilder
 {
+    private const STATE_CLEAN = 1;
+    private const STATE_DIRTY = 2;
+
     private IDbQueriable $conn;
     private ILoggerCallable $logger;
     private string $sql;
@@ -14,6 +17,7 @@ class QueryBuilder
     private bool $hasCustomParams;
     private string $callingMethod;
     private int $openBrackets;
+    private int $currentState;
 
     public function __construct(IDbQueriable $conn, ILoggerCallable $logger, string $callingMethod = '') {
         $this->conn = $conn;
@@ -21,6 +25,11 @@ class QueryBuilder
 
         $this->clean();
         return $this;
+    }
+
+    // WILL DEPRECATE
+    public function setMethod(string $callingMethod) {
+        return $this->setCallingMethod($callingMethod);
     }
 
     public function setCallingMethod(string $callingMethod) {
@@ -63,6 +72,7 @@ class QueryBuilder
 
     public function delete() {
         $this->queryType = 'delete';
+        $this->currentState = self::STATE_DIRTY;
 
         return $this;
     }
@@ -70,6 +80,7 @@ class QueryBuilder
     public function update(string $tableName) {
         $this->queryType = 'update';
         $this->queryData['table'] = $tableName;
+        $this->currentState = self::STATE_DIRTY;
 
         return $this;
     }
@@ -100,6 +111,7 @@ class QueryBuilder
         $this->queryType = 'insert';
         $this->queryData['table'] = $tableName;
         $this->queryData['keys'] = $keys;
+        $this->currentState = self::STATE_DIRTY;
 
         return $this;
     }
@@ -113,6 +125,7 @@ class QueryBuilder
     public function select(array$keys) {
         $this->queryType = 'select';
         $this->queryData['keys'] = $keys;
+        $this->currentState = self::STATE_DIRTY;
 
         return $this;
     }
@@ -134,7 +147,7 @@ class QueryBuilder
             $count = count(explode('?', $cond));
 
             if($count != (count($values) + 1)) {
-                die();
+                die('QueryBuilder: Number of condition parameters does not equal to the number of passed parameters!');
             }
 
             $search = [];
@@ -159,11 +172,15 @@ class QueryBuilder
     }
 
     public function andWhere(string $cond, array $values = []) {
+        if(!array_key_exists('where', $this->queryData)) {
+            $this->queryData['where'] = '';
+        }
+
         if(str_contains($cond, '?') && !empty($values)) {
             $count = count(explode('?', $cond));
 
             if($count != (count($values) + 1)) {
-                die();
+                die('QueryBuilder: Number of condition parameters does not equal to the number of passed parameters!');
             }
 
             $search = [];
@@ -182,7 +199,7 @@ class QueryBuilder
             $cond = str_replace($search, $values, $cond);
         }
 
-        if(!isset($this->queryData['where'])) {
+        if(!isset($this->queryData['where']) || ($this->queryData['where'] == '')) {
             $this->queryData['where'] .= $cond;    
         } else {
             $this->queryData['where'] .= ' AND ' . $cond;
@@ -192,11 +209,15 @@ class QueryBuilder
     }
 
     public function orWhere(string $cond, array $values = []) {
+        if(!array_key_exists('where', $this->queryData)) {
+            $this->queryData['where'] = '';
+        }
+
         if(str_contains($cond, '?') && !empty($values)) {
             $count = count(explode('?', $cond));
 
             if($count != (count($values) + 1)) {
-                die();
+                die('QueryBuilder: Number of condition parameters does not equal to the number of passed parameters!');
             }
 
             $search = [];
@@ -215,7 +236,7 @@ class QueryBuilder
             $cond = str_replace($search, $values, $cond);
         }
 
-        if(!isset($this->queryData['where'])) {
+        if(isset($this->queryData['where']) || ($this->queryData['where'] == '')) {
             $this->queryData['where'] .= $cond;    
         } else {
             $this->queryData['where'] .= ' OR ' . $cond;
@@ -250,16 +271,30 @@ class QueryBuilder
         return $this;
     }
 
-    public function leftBracket() {
-        $this->openBrackets++;
-        $this->queryData['where'] .= ' ( ';
+    public function leftBracket(int $count = 1) {
+        $this->openBrackets += $count;
+
+        $this->queryData['where'] .= ' ';
+
+        for($i = 0; $i < $count; $i++) {
+            $this->queryData['where'] .= '(';
+        }
+
+        $this->queryData['where'] .= ' ';
 
         return $this;
     }
 
-    public function rightBracket() {
-        $this->openBrackets--;
-        $this->queryData['where'] .= ' ( ';
+    public function rightBracket(int $count = 1) {
+        $this->openBrackets -= $count;
+
+        $this->queryData['where'] .= ' ';
+
+        for($i = 0; $i < $count; $i++) {
+            $this->queryData['where'] .= ')';
+        }
+
+        $this->queryData['where'] .= ' ';
 
         return $this;
     }
@@ -272,6 +307,7 @@ class QueryBuilder
         $this->queryData = [];
         $this->hasCustomParams = false;
         $this->openBrackets = 0;
+        $this->currentState = self::STATE_CLEAN;
     }
 
     public function getSQL() {
@@ -281,33 +317,56 @@ class QueryBuilder
     }
 
     public function execute() {
+        if($this->currentState != self::STATE_DIRTY) {
+            die('QueryBuilder: No query has been created!');
+        }
+
         if($this->sql === '') {
             $this->createSQLQuery();
         }
 
         if($this->openBrackets > 0) {
-            die('Not all brackets have been closed: ' . $this->sql);
+            die('QueryBuilder: Not all brackets have been closed: ' . $this->sql);
         }
 
         if($this->conn === NULL) {
-            return null;
+            //return null;
+            die('QueryBuilder: No connection has been found!');
         }
 
         $this->queryResult = $this->conn->query($this->sql);
 
         $this->log();
 
+        $this->currentState = self::STATE_CLEAN;
+
         return $this;
     }
 
+    public function fetchAssoc() {
+        return $this->queryResult->fetch_assoc();
+    }
+
     public function fetchAll() {
+        if($this->currentState != self::STATE_CLEAN) {
+            return null;
+        }
+
         return $this->queryResult;
     }
 
     public function fetch(?string $param = null) {
-        $result = [];
+        $result = null;
+
+        if($this->currentState != self::STATE_CLEAN) {
+            return $result;
+        }
 
         if($this->queryResult === NULL) {
+            return $result;
+        }
+
+        if($this->queryResult->num_rows > 1) {
             return $result;
         }
 

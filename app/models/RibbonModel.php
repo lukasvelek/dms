@@ -14,16 +14,13 @@ class RibbonModel extends AModel {
     public function getSplitterCountForIdParent(int $idParent) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->selectCount('id', 'cnt')
-                  ->from('ribbons')
-                  ->where('id_parent_ribbon=:id_ribbon')
-                  ->andWhere('name=:name')
-                  ->setParam(':id_ribbon', $idParent)
-                  ->setParam(':name', 'SPLITTER')
-                  ->execute()
-                  ->fetchSingle('cnt');
+        $qb ->select(['COUNT(id) AS cnt'])
+            ->from('ribbons')
+            ->where('id_parent_ribbon = ?', [$idParent])
+            ->andWhere('name = ?', ['SPLITTER'])
+            ->execute();
 
-        return $row;
+        return $qb->fetch('cnt');
     }
 
     public function deleteRibbonForIdDocumentFilter(int $idFilter) {
@@ -31,14 +28,12 @@ class RibbonModel extends AModel {
 
         $code = 'documents.custom_filter.' . $idFilter;
 
-        $result = $qb->delete()
-                     ->from('ribbons')
-                     ->where('code=:code')
-                     ->setParam(':code', $code)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('ribbons')
+            ->where('code = ?', [$code])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getRibbonForIdDocumentFilter(int $idFilter) {
@@ -46,12 +41,10 @@ class RibbonModel extends AModel {
 
         $code = 'documents.custom_filter.' . $idFilter;
 
-        $row = $qb->where('code=:code')
-                  ->setParam(':code', $code)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->andWhere('code = ?', [$code])
+            ->execute();
 
-        return $this->createRibbonObjectFromDbRow($row);
+        return $this->createRibbonObjectFromDbRow($qb->fetch());
     }
 
     public function deleteRibbon(int $idRibbon) {
@@ -79,62 +72,54 @@ class RibbonModel extends AModel {
     public function getRibbonById(int $id) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
-        $row = $qb ->where('id=:id')
-                   ->setParam(':id', $id)
-                   ->execute()
-                   ->fetchSingle();
+        $qb ->andWhere('id = ?', [$id])
+            ->execute();
 
-        return $this->createRibbonObjectFromDbRow($row);
+        return $this->createRibbonObjectFromDbRow($qb->fetch());
     }
 
     public function getRibbonByCode(string $code) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
-        $row = $qb ->where('code=:code')
-                   ->setParam(':code', $code)
-                   ->execute()
-                   ->fetchSingle();
+        $qb ->andWhere('code = ?', [$code])
+            ->execute();
 
-        return $this->createRibbonObjectFromDbRow($row);
+        return $this->createRibbonObjectFromDbRow($qb->fetch());
     }
 
     public function getRibbonsForIdParentRibbon(int $idParentRibbon) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
-        $rows = $qb ->where('id_parent_ribbon=:id_parent_ribbon')
-                    ->setParam(':id_parent_ribbon', $idParentRibbon)
-                    ->execute()
-                    ->fetch();
+        $qb ->andWhere('id_parent_ribbon = ?', [$idParentRibbon])
+            ->execute();
 
-        return $this->createRibbonObjectsFromDbRows($rows);
+        return $this->createRibbonObjectsFromDbRows($qb->fetchAll());
     }
 
     public function getToppanelRibbons() {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
-        $rows = $qb ->whereNull('id_parent_ribbon')
-                    ->execute()
-                    ->fetch();
+        $qb ->andWhere('id_parent_ribbon IS NULL')
+            ->execute();
 
-        return $this->createRibbonObjectsFromDbRows($rows);
+        return $this->createRibbonObjectsFromDbRows($qb->fetchAll());
     }
 
     public function getAllRibbons(bool $includeInvisibleRibbons = false) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
         if(!$includeInvisibleRibbons) {
-            $qb ->where('is_visible=:visible')
-                ->setParam(':visible', '1');
+            $qb ->andWhere('is_visible = 1');
         }
 
-        $rows = $qb->execute()->fetch();
+        $qb->execute();
 
-        return $this->createRibbonObjectsFromDbRows($rows);
+        return $this->createRibbonObjectsFromDbRows($qb->fetchAll());
     }
 
     private function composeStandardRibbonQuery(string $callingMethod = __METHOD__) {
         $qb = $this->qb($callingMethod)
-            ->select('*')
+            ->select(['*'])
             ->from('ribbons');
 
         return $qb;

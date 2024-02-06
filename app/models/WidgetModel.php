@@ -17,7 +17,7 @@ class WidgetModel extends AModel {
     public function insertWidgetForIdUser(int $idUser, string $location, string $name) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->insert('user_widgets', 'id_user', 'location', 'widget_name')
+        /*$result = $qb->insert('user_widgets', 'id_user', 'location', 'widget_name')
                      ->values(':id_user', ':location', ':widget_name')
                      ->setParams(array(
                         ':id_user' => $idUser,
@@ -27,13 +27,19 @@ class WidgetModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->insert('user_widgets', ['id_user', 'location', 'widget_name'])
+            ->values([$idUser, $location, $name])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function updateWidgetForIdUser(int $idUser, string $location, string $name) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('user_widgets')
+        /*$result = $qb->update('user_widgets')
                      ->set(array('widget_name' => ':name'))
                      ->where('location=:location')
                      ->andWhere('id_user=:id_user')
@@ -45,24 +51,27 @@ class WidgetModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->update('user_widgets')
+            ->set(['widget_name' => $name])
+            ->where('location = ?', [$location])
+            ->andWhere('id_user = ?', [$idUser])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function getWidgetForIdUserAndLocation(int $idUser, string $location) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('user_widgets')
-                  ->where('id_user=:id_user')
-                  ->andWhere('location=:location')
-                  ->setParams(array(
-                    ':id_user' => $idUser,
-                    ':location' => $location
-                  ))
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('user_widgets')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('location = ?', [$location])
+            ->execute();
 
-        return $row;
+        return $qb->fetch();
     }
 }
 

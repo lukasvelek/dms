@@ -4,6 +4,7 @@ namespace DMS\Models;
 
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use QueryBuilder\ExpressionBuilder;
 use QueryBuilder\QueryBuilder;
 
 abstract class AModel {
@@ -35,6 +36,10 @@ abstract class AModel {
         $qb = $this->db->createQueryBuilder();
         $qb->setCallingMethod($methodName);
         return $qb;
+    }
+
+    protected function xb() {
+        return new ExpressionBuilder();
     }
 
     protected function updateExisting(string $tableName, int $id, array $data) {

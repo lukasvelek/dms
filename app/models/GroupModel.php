@@ -22,21 +22,25 @@ class GroupModel extends AModel {
 
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select('*')
+        $qb ->select(['*'])
             ->from('groups');
 
         if($idFrom == 1) {
-            $qb->explicit(' WHERE `id` >= ' . $idFrom . ' ');
+            //$qb->explicit(' WHERE `id` >= ' . $idFrom . ' ');
+            $qb->where('id >= ?', [$idFrom]);
         } else {
-            $qb->explicit(' WHERE `id` > ' . $idFrom . ' ');
+            //$qb->explicit(' WHERE `id` > ' . $idFrom . ' ');
+            $qb->where('id > ?', [$idFrom]);
         }
 
-        $qb->limit($limit);
+        $qb ->limit($limit)
+            ->execute();
 
-        $rows = $qb->execute()->fetch();
+
+        //$rows = $qb->execute()->fetch();
 
         $groups = [];
-        foreach($rows as $row) {
+        foreach($qb->fetchAll() as $row) {
             $groups[] = $this->createGroupObjectFromDbRow($row);
         }
 
@@ -55,20 +59,33 @@ class GroupModel extends AModel {
     public function getLastInsertedGroup() {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('groups')
-                  ->orderBy('id', 'DESC')
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('groups')
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $this->createGroupObjectFromDbRow($row);
+        return $this->createGroupObjectFromDbRow($qb->fetch());
     }
 
     public function insertNewGroup(string $name, ?string $code) {
         $qb = $this->qb(__METHOD__);
 
-        $keys = array('name');
+        $keys = ['name'];
+        $values = [$name];
+
+        if($code !== NULL) {
+            $keys[] = 'code';
+            $values[] = $code;
+        }
+
+        $qb ->insert('groups', $keys)
+            ->values($values)
+            ->execute();
+
+        return $qb->fetchAll();
+
+        /*$keys = array('name');
         $values = array(':name');
         $params = array(':name' => $name);
 
@@ -84,46 +101,41 @@ class GroupModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
     }
 
     public function getGroupByCode(string $code) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('groups')
-                  ->where('code=:code', true)
-                  ->setParam(':code', $code)
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('groups')
+            ->where('code LIKE ?', [$code])
+            ->limit(1)
+            ->execute();
 
-        return $this->createGroupObjectFromDbRow($row);
+        return $this->createGroupObjectFromDbRow($qb->fetch());
     }
 
     public function getGroupById(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('groups')
-                  ->where('id=:id')
-                  ->setParam(':id', $id)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('groups')
+            ->where('id = ?', [$id])
+            ->execute();
         
-        return $this->createGroupObjectFromDbRow($row);
+        return $this->createGroupObjectFromDbRow($qb->fetch());
     }
 
     public function getAllGroups() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('groups')
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('groups')
+            ->execute();
         
         $groups = [];
-        foreach($rows as $row) {
+        foreach($qb->fetchAll() as $row) {
             $groups[] = $this->createGroupObjectFromDbRow($row);
         }
 

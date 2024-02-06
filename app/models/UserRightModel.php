@@ -76,7 +76,7 @@ class UserRightModel extends AModel {
     public function insertMetadataRight(int $idUser, int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->insert('user_metadata_rights', 'id_user', 'id_metadata')
+        /*$result = $qb->insert('user_metadata_rights', 'id_user', 'id_metadata')
                      ->values(':id_user', ':id_metadata')
                      ->setParams(array(
                         ':id_user' => $idUser,
@@ -85,13 +85,19 @@ class UserRightModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->insert('user_metadata_rights', ['id_user', 'id_metadata'])
+            ->values([$idUser, $idMetadata])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function enableRight(int $idUser, int $idMetadata, string $name) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('user_metadata_rights')
+        /*$result = $qb->update('user_metadata_rights')
                      ->set(array(
                         $name => ':' . $name
                      ))
@@ -105,13 +111,21 @@ class UserRightModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->update('user_metadata_rights')
+            ->set([$name => '1'])
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('id_metadata = ?', [$idMetadata])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function disableRight(int $idUser, int $idMetadata, string $name) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('user_metadata_rights')
+        /*$result = $qb->update('user_metadata_rights')
                      ->set(array(
                         $name => ':' . $name
                      ))
@@ -125,30 +139,33 @@ class UserRightModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->update('user_metadata_rights')
+            ->set([$name => '0'])
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('id_metadata = ?', [$idMetadata])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function getMetadataRights(int $idUser, int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('user_metadata_rights')
-                  ->where('id_user=:id_user')
-                  ->andWhere('id_metadata=:id_metadata')
-                  ->setParams(array(
-                    ':id_user' => $idUser,
-                    ':id_metadata' => $idMetadata
-                  ))
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('id_metadata = ?', [$idMetadata])
+            ->execute();
 
-        return $row;
+        return $qb->fetchAll();
     }
 
     public function updateBulkActionRight(int $idUser, string $rightName, bool $status) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('user_bulk_rights')
+        /*$result = $qb->update('user_bulk_rights')
                      ->set(array(
                         'is_executable' => ':execute'
                      ))
@@ -162,13 +179,21 @@ class UserRightModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->update('user_bulk_rights')
+            ->set(['is_executable' => ($status ? '1' : '0')])
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('action_name = ?', [$rightName])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function updatePanelRight(int $idUser, string $rightName, bool $status) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('user_panel_rights')
+        /*$result = $qb->update('user_panel_rights')
                      ->set(array(
                         'is_visible' => ':visible'
                      ))
@@ -182,13 +207,21 @@ class UserRightModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->update('user_panel_rights')
+            ->set(['is_visible' => ($status ? '1' : '0')])
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('panel_name = ?', [$rightName])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function updateActionRight(int $idUser, string $rightName, bool $status) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('user_action_rights')
+        /*$result = $qb->update('user_action_rights')
                      ->set(array(
                         'is_executable' => ':execute'
                      ))
@@ -202,14 +235,22 @@ class UserRightModel extends AModel {
                      ->execute()
                      ->fetch();
 
-        return $result;
+        return $result;*/
+
+        $qb ->update('user_action_rights')
+            ->set(['is_executable' => ($status ? '1' : '0')])
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('action_name = ?', [$rightName])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function insertActionRightsForIdUser(int $idUser) {
         foreach(UserActionRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
-            $result = $qb->insert('user_action_rights', 'id_user', 'action_name', 'is_executable')
+            /*$result = $qb->insert('user_action_rights', 'id_user', 'action_name', 'is_executable')
                          ->values(':id_user', ':name', ':execute')
                          ->setParams(array(
                             ':id_user' => $idUser,
@@ -217,7 +258,15 @@ class UserRightModel extends AModel {
                             ':execute' => '0'
                          ))
                          ->execute()
-                         ->fetch();
+                         ->fetch();*/
+
+            $qb ->insert('user_action_rights', ['id_user', 'action_name', 'is_executable'])
+                ->values([$idUser, $r, '0'])
+                ->execute()
+                ->fetchAll();
+
+            $qb->clean();
+            unset($qb);
         }
 
         return true;
@@ -227,7 +276,7 @@ class UserRightModel extends AModel {
         foreach(PanelRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
-            $result = $qb->insert('user_panel_rights', 'id_user', 'panel_name', 'is_visible')
+            /*$result = $qb->insert('user_panel_rights', 'id_user', 'panel_name', 'is_visible')
                          ->values(':id_user', ':name', ':visible')
                          ->setParams(array(
                             ':id_user' => $idUser,
@@ -235,7 +284,15 @@ class UserRightModel extends AModel {
                             ':visible' => '0'
                          ))
                          ->execute()
-                         ->fetch();
+                         ->fetch();*/
+
+            $qb ->insert('user_panel_rights', ['id_user', 'panel_name', 'is_visible'])
+                ->values([$idUser, $r, '0'])
+                ->execute()
+                ->fetchAll();
+         
+            $qb->clean();
+            unset($qb);
         }
 
         return true;           
@@ -245,7 +302,7 @@ class UserRightModel extends AModel {
         foreach(BulkActionRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
-            $result = $qb->insert('user_bulk_rights', 'id_user', 'action_name', 'is_executable')
+            /*$result = $qb->insert('user_bulk_rights', 'id_user', 'action_name', 'is_executable')
                          ->values(':id_user', ':name', ':execute')
                          ->setParams(array(
                             ':id_user' => $idUser,
@@ -253,7 +310,15 @@ class UserRightModel extends AModel {
                             ':execute' => '0'
                          ))
                          ->execute()
-                         ->fetch();
+                         ->fetch();*/
+
+            $qb ->insert('user_bulk_rights', ['id_user', 'action_name', 'is_executable'])
+                ->values([$idUser, $r, '0'])
+                ->execute()
+                ->fetchAll();
+         
+            $qb->clean();
+            unset($qb);
         }
 
         return true;                
@@ -263,7 +328,7 @@ class UserRightModel extends AModel {
         foreach($metadata as $m) {
             $qb = $this->qb(__METHOD__);
 
-            $result = $qb->insert('user_metadata_rights', 'id_user', 'id_metadata', 'view')
+            /*$result = $qb->insert('user_metadata_rights', 'id_user', 'id_metadata', 'view')
                          ->values(':id_user', ':id_metadata', ':view')
                          ->setParams(array(
                             ':id_user' => $idUser,
@@ -271,7 +336,15 @@ class UserRightModel extends AModel {
                             ':view' => '1'
                          ))
                          ->execute()
-                         ->fetch();
+                         ->fetch();*/
+                         
+            $qb ->insert('user_metadata_rights', ['id_user', 'id_metadata', 'view'])
+                ->values([$idUser, $m->getId(), '1'])
+                ->execute()
+                ->fetchAll();
+
+            $qb->clean();
+            unset($qb);
         }
 
         return true;
@@ -280,16 +353,14 @@ class UserRightModel extends AModel {
     public function getActionRightsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('user_action_rights')
-                   ->where('id_user=:id_user')
-                   ->setParam(':id_user', $idUser)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('user_action_rights')
+            ->where('id_user = ?', [$idUser])
+            ->execute();
 
         $rights = array();
 
-        foreach($rows as $row) {
+        foreach($qb->fetchAll() as $row) {
             $rights[$row['action_name']] = $row['is_executable'];
         }
 
@@ -299,16 +370,21 @@ class UserRightModel extends AModel {
     public function getPanelRightsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
+        /*$rows = $qb->select('*')
                    ->from('user_panel_rights')
                    ->where('id_user=:id_user')
                    ->setParam(':id_user', $idUser)
                    ->execute()
-                   ->fetch();
+                   ->fetch();*/
+
+        $qb ->select(['*'])
+            ->from('user_panel_rights')
+            ->where('id_user = ?', [$idUser])
+            ->execute();
 
         $rights = array();
 
-        foreach($rows as $row) {
+        foreach($qb->fetchAll() as $row) {
             $rights[$row['panel_name']] = $row['is_visible'];
         }
 
@@ -318,16 +394,21 @@ class UserRightModel extends AModel {
     public function getBulkActionRightsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
+        /*$rows = $qb->select('*')
                    ->from('user_bulk_rights')
                    ->where('id_user=:id_user')
                    ->setParam(':id_user', $idUser)
                    ->execute()
-                   ->fetch();
+                   ->fetch();*/
+
+        $qb ->select(['*'])
+            ->from('user_bulk_rights')
+            ->where('id_user = ?', [$idUser])
+            ->execute();
 
         $rights = array();
 
-        foreach($rows as $row) {
+        foreach($qb->fetchAll() as $row) {
             $rights[$row['action_name']] = $row['is_executable'];
         }
 
@@ -337,16 +418,14 @@ class UserRightModel extends AModel {
     public function getAllBulkActionRightsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('user_bulk_rights')
-                   ->where('id_user=:id_user')
-                   ->setParam(':id_user', $idUser)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('user_bulk_rights')
+            ->where('id_user = ?', [$idUser])
+            ->execute();
 
         $rights = array();
 
-        foreach($rows as $row) {
+        foreach($qb->fetchAll() as $row) {
             $rights[] = $row['action_name'];
         }
 
@@ -376,18 +455,13 @@ class UserRightModel extends AModel {
                 break;
         }
 
-        $result = $qb->select('*')
-                     ->from($tableName)
-                     ->where('id_user=:id')
-                     ->andWhere($columnName . '=:name')
-                     ->setParams(array(
-                        ':id' => $idUser,
-                        ':name' => $name
-                     ))
-                     ->execute()
-                     ->fetch();
+        $qb ->select(['*'])
+            ->from($tableName)
+            ->where('id_user = ?', [$idUser])
+            ->andWhere($columnName . ' = ?', [$name])
+            ->execute();
 
-        if($result->num_rows == 1) {
+        if($qb->fetchAll()->num_rows == 1) {
             return true;
         } else {
             return false;
