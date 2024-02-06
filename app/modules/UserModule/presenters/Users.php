@@ -9,7 +9,7 @@ use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
-use DMS\Constnats\DatetimeFormats;
+use DMS\Constants\DatetimeFormats;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
 use DMS\Entities\EntityRight;

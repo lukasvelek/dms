@@ -24,6 +24,7 @@ class QueryBuilder
     private string $callingMethod;
     private int $openBrackets;
     private int $currentState;
+    private bool $hasCustomSQL;
 
     public function __construct(IDbQueriable $conn, ILoggerCallable $logger, string $callingMethod = '') {
         $this->conn = $conn;
@@ -313,6 +314,7 @@ class QueryBuilder
         $this->hasCustomParams = false;
         $this->openBrackets = 0;
         $this->currentState = self::STATE_CLEAN;
+        $this->hasCustomSQL = false;
     }
 
     public function getSQL() {
@@ -321,7 +323,22 @@ class QueryBuilder
         return $this->sql;
     }
 
+    public function setSQL(string $sql) {
+        $this->sql = $sql;
+        $this->hasCustomSQL = true;
+
+        return $this;
+    }
+
     public function execute() {
+        if($this->hasCustomSQL) {
+            $this->queryResult = $this->conn->query($this->sql);
+            $this->log();
+            $this->currentState = self::STATE_CLEAN;
+
+            return $this;
+        }
+
         if($this->currentState != self::STATE_DIRTY) {
             die('QueryBuilder: No query has been created!');
         }
@@ -471,6 +488,8 @@ class QueryBuilder
             } else {
                 $sql .= $key . ' = \'' . $value . '\', ';
             }
+
+            $i++;
         }
 
         if(str_contains($this->queryData['where'], 'WHERE')) {
@@ -531,7 +550,7 @@ class QueryBuilder
             $i++;
         }
 
-        $sql .= 'FROM ' . $this->queryData['table'];
+        $sql .= 'FROM `' . $this->queryData['table'] . '`';
 
         if(isset($this->queryData['where'])) {
             if(str_contains($this->queryData['where'], 'WHERE')) {
@@ -540,6 +559,14 @@ class QueryBuilder
             } else {
                 $sql .= ' WHERE ' . $this->queryData['where'];
             }
+        }
+
+        if(isset($this->queryData['order'])) {
+            $sql .= ' ' . $this->queryData['order'];
+        }
+
+        if(isset($this->queryData['limit'])) {
+            $sql .= ' LIMIT ' . $this->queryData['limit'];
         }
 
         $this->sql = $sql;

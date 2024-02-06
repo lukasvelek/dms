@@ -376,7 +376,11 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize, $gridUseFastLoad, $actionAuthorizator;
+    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize, $gridUseFastLoad, $actionAuthorizator, $user;
+
+    if($user === NULL) {
+        die();
+    }
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
 
@@ -406,7 +410,13 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder']);
+        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
+        });
+        $gb->addOnColumnRender('dateCreated', function(Document $document) use ($user) {
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
+        });
         $gb->addOnColumnRender('idAuthor', function(Document $document) use ($userModel, $ucm) {
             $user = $ucm->loadUserByIdFromCache($document->getIdAuthor());
 
@@ -472,7 +482,13 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder']);
+        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
+        });
+        $gb->addOnColumnRender('dateCreated', function(Document $document) use ($user) {
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
+        });
         $gb->addOnColumnRender('idAuthor', function(Document $document) use ($userModel, $ucm) {
             $user = $ucm->loadUserByIdFromCache($document->getIdAuthor());
 

@@ -131,7 +131,8 @@ class DocumentModel extends AModel {
             $this->addFilterCondition($filter, $qb);
         }
 
-        $qb ->limit($limit)
+        $qb ->orderBy('date_created', 'DESC')
+            ->limit($limit)
             ->execute();
 
         $documents = array();
