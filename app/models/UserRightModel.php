@@ -161,11 +161,7 @@ class UserRightModel extends AModel {
 
             $qb ->insert('user_action_rights', ['id_user', 'action_name', 'is_executable'])
                 ->values([$idUser, $r, '0'])
-                ->execute()
-                ->fetchAll();
-
-            $qb->clean();
-            unset($qb);
+                ->execute();
         }
 
         return true;
@@ -177,11 +173,7 @@ class UserRightModel extends AModel {
 
             $qb ->insert('user_panel_rights', ['id_user', 'panel_name', 'is_visible'])
                 ->values([$idUser, $r, '0'])
-                ->execute()
-                ->fetchAll();
-         
-            $qb->clean();
-            unset($qb);
+                ->execute();
         }
 
         return true;           
@@ -193,11 +185,7 @@ class UserRightModel extends AModel {
 
             $qb ->insert('user_bulk_rights', ['id_user', 'action_name', 'is_executable'])
                 ->values([$idUser, $r, '0'])
-                ->execute()
-                ->fetchAll();
-         
-            $qb->clean();
-            unset($qb);
+                ->execute();
         }
 
         return true;                
@@ -209,11 +197,7 @@ class UserRightModel extends AModel {
                          
             $qb ->insert('user_metadata_rights', ['id_user', 'id_metadata', 'view'])
                 ->values([$idUser, $m->getId(), '1'])
-                ->execute()
-                ->fetchAll();
-
-            $qb->clean();
-            unset($qb);
+                ->execute();
         }
 
         return true;

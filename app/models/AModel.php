@@ -79,7 +79,7 @@ abstract class AModel {
 
         foreach($data as $k => $v) {
             $keys[] = $k;
-            $values[] = "'" . $v . "'";
+            $values[] = $v;
         }
 
         $qb ->insert($tableName, $keys)

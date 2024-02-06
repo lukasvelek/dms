@@ -74,11 +74,13 @@ if(isset($_GET['id_ribbon']) && $_GET['id_ribbon'] != '') {
     $app->currentIdRibbon = $_SESSION['id_current_ribbon'];
 }
 
-$rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+if($app->user !== NULL) {
+    $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
 
-if($rcm->loadRibbons() === NULL) {
-    // generate cache
-    Panels::generateRibbons($app->ribbonAuthorizator, $app->ribbonModel, $app->user);
+    if($rcm->loadRibbons() === NULL) {
+        // generate cache
+        Panels::generateRibbons($app->ribbonAuthorizator, $app->ribbonModel, $app->user);
+    }
 }
 
 $app->loadPages();

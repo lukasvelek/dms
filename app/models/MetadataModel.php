@@ -24,7 +24,7 @@ class MetadataModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('metadata_values')
-            ->set(['is_default = ?', [($isDefault ? '1' : '0')]])
+            ->set(['is_default' => ($isDefault ? '1' : '0')])
             ->where('id_metadata = ?', [$idMetadata])
             ->andWhere('id = ?', [$idMetadataValue])
             ->execute();
