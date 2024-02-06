@@ -447,6 +447,11 @@ class Application {
         return $panel;
     }
 
+    /**
+     * Renders the subpanel
+     * 
+     * @return string HTML code of the subpanel
+     */
     public function renderSubpanel() {
         $panel = Panels::createSubpanel();
 

@@ -5,6 +5,7 @@ use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
+use DMS\Panels\Panels;
 
 session_start();
 
@@ -71,6 +72,13 @@ if(isset($_GET['id_ribbon']) && $_GET['id_ribbon'] != '') {
     $_SESSION['id_current_ribbon'] = $app->currentIdRibbon;
 } else if(isset($_SESSION['id_current_ribbon'])) {
     $app->currentIdRibbon = $_SESSION['id_current_ribbon'];
+}
+
+$rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+
+if($rcm->loadRibbons() === NULL) {
+    // generate cache
+    Panels::generateRibbons($app->ribbonAuthorizator, $app->ribbonModel, $app->user);
 }
 
 $app->loadPages();
