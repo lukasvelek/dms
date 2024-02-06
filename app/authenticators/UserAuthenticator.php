@@ -31,14 +31,15 @@ class UserAuthenticator extends AAuthenticator {
      */
     public function authUser(string $username, string $password) {
         $qb = $this->qb(__METHOD__);
-        $row = $qb->select('id', 'username', 'password')
-                  ->from('users')
-                  ->where('username=:username')
-                  ->setParam(':username', $username)
-                  ->execute()
-                  ->fetchSingle();
 
-        if($row !== FALSE && !is_null($row)) {
+        $qb ->select(['id', 'username', 'password'])
+            ->from('users')
+            ->where('username = ?', [$username])
+            ->execute();
+
+        $row = $qb->fetch();
+
+        if($row !== NULL) {
             if(password_verify($password, $row['password'])) {
                 $this->logger->info('Successfully authenticated user #' . $row['id']);
                 return $row['id'];

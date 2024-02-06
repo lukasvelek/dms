@@ -150,7 +150,7 @@ class ProcessModel extends AModel {
     public function getProcessCountByStatus(int $status = 0) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['COUNT(id)'])
+        $qb ->select(['COUNT(id) AS cnt'])
             ->from('processes');
 
         switch($status) {
@@ -164,7 +164,7 @@ class ProcessModel extends AModel {
 
         $qb->execute();
 
-        return $qb->fetch();
+        return $qb->fetch('cnt');
     }
 
     public function getFinishedProcessesWithIdUserFromId(?int $idFrom, int $idUser, int $limit) {
