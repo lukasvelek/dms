@@ -3,6 +3,8 @@
 namespace DMS\Core\DB;
 
 use DMS\Authenticators\UserAuthenticator;
+use DMS\Constants\ArchiveStatus;
+use DMS\Constants\ArchiveType;
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
@@ -839,6 +841,20 @@ class DatabaseInstaller {
                 'length' => '256'
             ),
             array(
+                'table_name' => 'documents',
+                'name' => 'after_shred_action',
+                'text' => 'Action after shredding',
+                'input_type' => 'select',
+                'length' => '256'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'shredding_status',
+                'text' => 'Shredding status',
+                'input_type' => 'select',
+                'length' => '256'
+            ),
+            array(
                 'table_name' => 'users',
                 'name' => 'status',
                 'text' => 'Status',
@@ -860,16 +876,16 @@ class DatabaseInstaller {
                 'length' => '256'
             ),
             array(
-                'table_name' => 'documents',
-                'name' => 'after_shred_action',
-                'text' => 'Action after shredding',
+                'table_name' => 'archive',
+                'name' => 'status',
+                'text' => 'Status',
                 'input_type' => 'select',
                 'length' => '256'
             ),
             array(
-                'table_name' => 'documents',
-                'name' => 'shredding_status',
-                'text' => 'Shredding status',
+                'table_name' => 'archive',
+                'name' => 'type',
+                'text' => 'Type',
                 'input_type' => 'select',
                 'length' => '256'
             )
@@ -949,6 +965,20 @@ class DatabaseInstaller {
 
                 case 'documents.shredding_status':
                     foreach(DocumentShreddingStatus::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
+
+                case 'archive.status':
+                    foreach(ArchiveStatus::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
+
+                case 'archive.type':
+                    foreach(ArchiveType::$texts as $v => $n) {
                         $values[$id][] = array('name' => $n, 'value' => $v);
                     }
 
