@@ -2,10 +2,16 @@
 
 namespace QueryBuilder;
 
+/**
+ * QueryBuilder allows users to create an SQL query.
+ * 
+ * @author Lukas Velek
+ * @version 2.0
+ */
 class QueryBuilder
 {
-    private const STATE_CLEAN = 1;
-    private const STATE_DIRTY = 2;
+    private const STATE_CLEAN = 1; // QB has not been used yet
+    private const STATE_DIRTY = 2; // QB has been already used
 
     private IDbQueriable $conn;
     private ILoggerCallable $logger;
@@ -25,11 +31,6 @@ class QueryBuilder
 
         $this->clean();
         return $this;
-    }
-
-    // WILL DEPRECATE
-    public function setMethod(string $callingMethod) {
-        return $this->setCallingMethod($callingMethod);
     }
 
     public function setCallingMethod(string $callingMethod) {
