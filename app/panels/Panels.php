@@ -2,14 +2,29 @@
 
 namespace DMS\Panels;
 
+use DMS\Authorizators\RibbonAuthorizator;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\TemplateManager;
+use DMS\Entities\User;
+use DMS\Models\RibbonModel;
 use DMS\UI\LinkBuilder;
 
 class Panels {
+    public static function generateRibbons(RibbonAuthorizator $ra, RibbonModel $rm, User $user) {
+        $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+        
+        $ribbons = $rm->getAllRibbons();
+
+        foreach($ribbons as $ribbon) {
+            if($ra->checkRibbonVisible($user->getId(), $ribbon)) {
+                $rcm->saveRibbon($ribbon);
+            }
+        }
+    }
+
     public static function createTopPanel() {
         global $app;
 
@@ -27,7 +42,14 @@ class Panels {
             return;
         }
 
-        $visibleRibbons = $app->ribbonComponent->getToppanelRibbonsVisibleToUser($app->user->getId());
+        $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+
+        $cacheRibbons = $rcm->loadRibbons();
+
+        $visibleRibbons = [];
+        foreach($cacheRibbons['null'] as $cr) {
+            $visibleRibbons[] = $cr;
+        }
 
         foreach($visibleRibbons as $ribbon) {
             if($ribbon->hasImage()) {
@@ -87,23 +109,13 @@ class Panels {
         $currentRibbon = null;
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
-        $valFromCache = $cm->loadRibbonById($currentIdRibbon);
-
-        if(!is_null($valFromCache)) {
-            $currentRibbon = $valFromCache;
-        } else {
-            $currentRibbon = $app->ribbonModel->getRibbonById($currentIdRibbon);
-
-            $cm->saveRibbon($currentRibbon);
-        }
-        
-        $idRibbon = $currentRibbon->getId();
+        $currentRibbon = $cm->loadRibbonById($currentIdRibbon);
         
         if($currentRibbon->hasParent()) {
-            $idRibbon = $currentRibbon->getIdParentRibbon();
+            $currentIdRibbon = $currentRibbon->getIdParentRibbon();
         }
 
-        $subRibbons = $app->ribbonComponent->getChildrenRibbonsVisibleToUser($app->user->getId(), $idRibbon);
+        $subRibbons = $app->ribbonComponent->getChildrenRibbonsVisibleToUser($app->user->getId(), $currentIdRibbon);
 
         if(empty($subRibbons)) {
             return null;

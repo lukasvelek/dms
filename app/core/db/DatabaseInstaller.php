@@ -13,6 +13,7 @@ use DMS\Constants\DocumentStatus;
 use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Constants\Ribbons;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
@@ -303,7 +304,8 @@ class DatabaseInstaller {
                 'image' => 'VARCHAR(256) NULL',
                 'is_visible' => 'INT(2) NOT NULL DEFAULT 1',
                 'is_system' => 'INT(2) NOT NULL DEFAULT 1',
-                'page_url' => 'VARCHAR(256) NOT NULL'
+                'page_url' => 'VARCHAR(256) NOT NULL',
+                'ribbon_right' => 'INT(32) NOT NULL'
             ),
             'ribbon_user_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -1125,7 +1127,8 @@ class DatabaseInstaller {
                 'image' => 'img/home.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:HomePage:showHomepage',
-                'is_system' => '1'
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_HOME
             ),
             array(
                 'name' => 'Documents',
@@ -1133,7 +1136,8 @@ class DatabaseInstaller {
                 'image' => 'img/documents.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Documents:showAll',
-                'is_system' => '1'
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_DOCUMENTS
             ),
             array(
                 'name' => 'Processes',
@@ -1141,14 +1145,16 @@ class DatabaseInstaller {
                 'image' => 'img/processes.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Processes:showAll',
-                'is_system' => '1'
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_PROCESSES
             ),
             array(
                 'name' => 'Archive',
                 'code' => 'archive',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Archive:showDocuments',
-                'is_system' => '1'
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_ARCHIVE
             ),
             array(
                 'name' => 'Settings',
@@ -1156,7 +1162,8 @@ class DatabaseInstaller {
                 'image' => 'img/settings.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Settings:showDashboard',
-                'is_system' => '1'
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_SETTINGS
             )
         );
 
@@ -1212,28 +1219,32 @@ class DatabaseInstaller {
                     'code' => 'documents.all_documents',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Documents:showAll',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::DOCUMENTS_ALL_DOCUMENTS
                 ),
                 array(
                     'name' => 'Waiting for archivation',
                     'code' => 'documents.waiting_for_archivation',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Documents:showFiltered&filter=waitingForArchivation',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::DOCUMENTS_WAITING_FOR_ARCHIVATION
                 ),
                 array(
                     'name' => 'New documents',
                     'code' => 'documents.new_documents',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Documents:showFiltered&filter=new',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::DOCUMENTS_NEW_DOCUMENTS
                 ),
                 array(
                     'name' => 'SPLITTER',
                     'code' => 'documents.splitter',
                     'is_visible' => '1',
                     'page_url' => '#',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::DOCUMENTS_SPLITTER
                 )
             ),
             'processes' => array(
@@ -1242,21 +1253,24 @@ class DatabaseInstaller {
                     'code' => 'processes.started_by_me',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Processes:showAll&filter=startedByMe',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::PROCESSES_STARTED_BY_ME
                 ),
                 array(
                     'name' => 'Processes waiting for me',
                     'code' => 'processes.waiting_for_me',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Processes:showAll&filter=waitingForMe',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::PROCESSES_WAITING_FOR_ME
                 ),
                 array(
                     'name' => 'Finished processes',
                     'code' => 'processes.finished',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Processes:showAll&filter=finished',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::PROCESSES_FINISHED
                 )
             ),
             'settings' => array(
@@ -1266,7 +1280,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboard',
                     'image' => 'img/dashboard.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_DASHBOARD
                 ),
                 array(
                     'name' => 'Document folders',
@@ -1274,7 +1289,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showFolders',
                     'image' => 'img/folder.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_DOCUMENT_FOLDERS
                 ),
                 array(
                     'name' => 'Users',
@@ -1282,7 +1298,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showUsers',
                     'image' => 'img/users.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_USERS
                 ),
                 array(
                     'name' => 'Groups',
@@ -1290,7 +1307,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showGroups',
                     'image' => 'img/groups.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_GROUPS
                 ),
                 array(
                     'name' => 'Metadata',
@@ -1298,7 +1316,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showMetadata',
                     'image' => 'img/metadata.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_METADATA
                 ),
                 array(
                     'name' => 'System',
@@ -1306,7 +1325,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showSystem',
                     'image' => 'img/system.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_SYSTEM
                 ),
                 array(
                     'name' => 'Services',
@@ -1314,7 +1334,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showServices',
                     'image' => 'img/services.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_SERVICES
                 ),
                 array(
                     'name' => 'Dashboard widgets',
@@ -1322,14 +1343,16 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboardWidgets',
                     'image' => 'img/dashboard-widgets.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_DASHBOARD_WIDGETS
                 ),
                 array(
                     'name' => 'Ribbons',
                     'code' => 'settings.ribbons',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:RibbonSettings:showAll',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_RIBBONS
                 )
             ),
             'archive' => array(
@@ -1338,21 +1361,24 @@ class DatabaseInstaller {
                     'code' => 'archive.documents',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Archive:showDocuments',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::ARCHIVE_DOCUMENTS
                 ),
                 array(
                     'name' => 'Boxes',
                     'code' => 'archive.boxes',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Archive:showBoxes',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::ARCHIVE_BOXES
                 ),
                 array(
                     'name' => 'Archives',
                     'code' => 'archive.archives',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Archive:showArchives',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::ARCHIVE_ARCHIVES
                 )
             )
         );
