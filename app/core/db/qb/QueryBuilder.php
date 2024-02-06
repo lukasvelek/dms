@@ -508,9 +508,9 @@ class QueryBuilder
         $i = 0;
         foreach($this->queryData['keys'] as $key) {
             if(($i + 1) == count($this->queryData['keys'])) {
-                $sql .= $key . ') VALUES (';
+                $sql .= '`' . $key . '`) VALUES (';
             } else {
-                $sql  .= $key . ', ';
+                $sql .= '`' . $key . '`, ';
             }
 
             $i++;
@@ -519,9 +519,9 @@ class QueryBuilder
         $i = 0;
         foreach($this->queryData['values'] as $value) {
             if(($i + 1) == count($this->queryData['values'])) {
-                $sql .= $value . ')';
+                $sql .= "'" . $value . "')";
             } else {
-                $sql  .= $value . ', ';
+                $sql .= "'" . $value . "', ";
             }
 
             $i++;

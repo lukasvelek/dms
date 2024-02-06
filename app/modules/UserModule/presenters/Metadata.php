@@ -276,7 +276,29 @@ class Metadata extends APresenter {
             if($metadata->getInputType() == 'select_external') {
                 $enum = $externalEnumComponent->getEnumByName($metadata->getSelectExternalEnumName());
 
-                return $enum->getValues();
+                $values = [];
+
+                foreach($enum->getValues() as $k => $v) {
+                    $values[] = new class($k, $v) {
+                        private string $key;
+                        private string $value;
+
+                        public function __construct(string $k, string $v) {
+                            $this->key = $k;
+                            $this->value = $v;
+                        }
+
+                        public function getName() {
+                            return $this->value;
+                        }
+
+                        public function getValue() {
+                            return $this->key;
+                        }
+                    };
+                }
+
+                return $values;
             } else {
                 $values = $metadataModel->getAllValuesForIdMetadata($id);
 
