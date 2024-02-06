@@ -14,59 +14,48 @@ class DocumentCommentModel extends AModel {
     public function removeCommentsForIdDocument(int $idDocument) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('document_comments')
-                     ->where('id_document=:id_document')
-                     ->setParam(':id_document', $idDocument)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('document_comments')
+            ->where('id_document = ?', [$idDocument])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getCommentById(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('document_comments')
-                  ->where('id=:id')
-                  ->setParam(':id', $id)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('document_comments')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $this->createCommentObjectFromDbRow($row);
+        return $this->createCommentObjectFromDbRow($qb->fetch());
     }
 
     public function getLastInsertedCommentForIdUserAndIdDocument(int $idAuthor, int $idDocument) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('document_comments')
-                  ->where('id_author=:id_author')
-                  ->andWhere('id_document=:id_document')
-                  ->setParams(array(
-                    ':id_author' => $idAuthor,
-                    ':id_document' => $idDocument
-                  ))
-                  ->orderBy('id', 'DESC')
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('document_comments')
+            ->where('id_author = ?', [$idAuthor])
+            ->andWhere('id_document = ?', [$idDocument])
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $this->createCommentObjectFromDbRow($row);
+        return $this->createCommentObjectFromDbRow($qb->fetch());
     }
 
     public function deleteComment(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('document_comments')
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('document_comments')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function insertComment(array $data) {
@@ -76,19 +65,17 @@ class DocumentCommentModel extends AModel {
     public function getCommentsForIdDocument(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('document_comments')
-                   ->where('id_document=:id_document')
-                   ->setParam(':id_document', $id)
-                   ->orderBy('id', 'DESC')
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('document_comments')
+            ->where('id_document = ?', [$id])
+            ->orderBy('id', 'DESC')
+            ->execute();
 
         $comments = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $comments[] = $this->createCommentObjectFromDbRow($row);
         }
-
+    
         return $comments;
     }
 

@@ -26,21 +26,20 @@ class UserModel extends AModel {
 
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select('*')
+        $qb ->select(['*'])
             ->from('users');
 
         if($idFrom == 1) {
-            $qb->explicit(' WHERE `id` >= ' . $idFrom . ' ');
+            $qb->andWhere('id >= ?', [$idFrom]);
         } else {
-            $qb->explicit(' WHERE `id` > ' . $idFrom . ' ');
+            $qb->andWhere('id > ?', [$idFrom]);
         }
 
-        $qb->limit($limit);
-
-        $rows = $qb->execute()->fetch();
+        $qb ->limit($limit)
+            ->execute();
 
         $users = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $users[] = $this->getUserObjectFromDbRow($row);
         }
 
@@ -55,26 +54,22 @@ class UserModel extends AModel {
     public function removeConnectionForTwoUsers(int $idUser1, int $idUser2) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('user_connections')
-                     ->explicit(' WHERE ')
-                     ->leftBracket()
-                     ->where('id_user1=:id_user1', false, false)
-                     ->andWhere('id_user2=:id_user2')
-                     ->rightBracket()
-                     ->explicit(' OR ')
-                     ->leftBracket()
-                     ->where('id_user1=:id_user2', false, false)
-                     ->andWhere('id_user2=:id_user1')
-                     ->rightBracket()
-                     ->setParams(array(
-                        ':id_user1' => $idUser1,
-                        ':id_user2' => $idUser2
-                     ))
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('user_connections')
+            ->where('WHERE ' . $this->xb()
+                                    ->lb()
+                                        ->where('id_user1 = ?', [$idUser1])
+                                        ->andWhere('id_user2 = ?', [$idUser2])
+                                    ->rb()
+                                    ->or()
+                                    ->lb()
+                                        ->where('id_user1 = ?', [$idUser2])
+                                        ->andWhere('id_user2 = ?', [$idUser1])
+                                    ->rb()
+                                    ->build())
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function insertNewUserConnect(array $data) {
@@ -84,13 +79,19 @@ class UserModel extends AModel {
     public function getConnectedUsersForIdUser(int $idUser) {
         $ids = $this->getIdConnectedUsersForIdUser($idUser);
 
-        if($ids === NULL) {
+        if($ids === NULL || empty($ids)) {
             return [];
         }
 
         $users = [];
-        foreach($ids as $id) {
-            $users[] = $this->getUserById($id);
+        $qb = $this->qb(__METHOD__);
+        $qb ->select(['*'])
+            ->from('users')
+            ->where($qb->getColumnInValues('id_user', $ids))
+            ->execute();
+
+        while($row = $qb->fetchAssoc()) {
+            $users[] = $this->getUserObjectFromDbRow($row);
         }
 
         return $users;
@@ -118,29 +119,25 @@ class UserModel extends AModel {
     public function getUserConnectionsByIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('user_connections')
-                   ->where('id_user1=:id_user')
-                   ->orWhere('id_user2=:id_user')
-                   ->setParam(':id_user', $idUser)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('user_connections')
+            ->where('id_user1 = ?', [$idUser])
+            ->orWhere('id_user2 = ?', [$idUser])
+            ->execute();
 
-        return $rows;
+        return $qb->fetchAll();
     }
 
     public function getUserByUsername(string $username) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('users')
-                  ->where('username=:username')
-                  ->setParam(':username', $username)
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('users')
+            ->where('username = ?', [$username])
+            ->limit(1)
+            ->execute();
 
-        return $this->getUserObjectFromDbRow($row);
+        return $this->getUserObjectFromDbRow($qb->fetch());
     }
 
     public function getUserCount() {
@@ -158,14 +155,13 @@ class UserModel extends AModel {
     public function getAllUsersMeetingCondition(string $condition) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('users')
-                   ->explicit($condition)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('users')
+            ->where($condition)
+            ->execute();
 
         $users = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $users[] = $this->getUserObjectFromDbRow($row);
         }
 
@@ -175,94 +171,75 @@ class UserModel extends AModel {
     public function nullUserPassword(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('users')
-                     ->setNull(array('password'))
-                     ->explicit(', `date_updated`=\'' . date(Database::DB_DATE_FORMAT) . '\'')
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->update('users')
+            ->setNull(['password'])
+            ->set(['date_updated' => date(Database::DB_DATE_FORMAT)])
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function updateUser(int $id, array $data) {
         $qb = $this->qb(__METHOD__);
 
-        $values = [];
-        $params = [];
-
-        foreach($data as $k => $v) {
-            $values[$k] = ':' . $k;
-            $params[':' . $k] = $v;
+        if(!array_key_exists('date_updated', $data)) {
+            $data['date_updated'] = date(Database::DB_DATE_FORMAT);
         }
 
-        if(!array_key_exists('date_updated', $values)) {
-            $values['date_updated'] = ':date_updated';
-            $params[':date_updated'] = date(Database::DB_DATE_FORMAT);
-        }
+        $qb ->update('users')
+            ->set($data)
+            ->where('id = ?', [$id])
+            ->execute();
 
-        $result = $qb->update('users')
-                     ->set($values)
-                     ->where('id=:id')
-                     ->setParams($params)
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
-
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function updateUserStatus(int $id, int $status) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('users')
-                     ->set(array('status' => ':status', 'date_updated' => ':date'))
-                     ->where('id=:id')
-                     ->setParams(array(':status' => $status, ':id' => $id, ':date' => date(Database::DB_DATE_FORMAT)))
-                     ->execute()
-                     ->fetch();
+        $qb ->update('users')
+            ->set(['status' => $status, 'date_updated' => date(Database::DB_DATE_FORMAT)])
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function updateUserPassword(int $id, string $hashedPassword) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('users')
-                     ->set(array('password' => ':password', 'date_password_changed' => ':date_password_changed', 'date_updated' => ':date'))
-                     ->where('id=:id')
-                     ->setParams(array(':password' => $hashedPassword, ':id' => $id, ':date_password_changed' => date('Y-m-d H:i:s'), ':date' => date(Database::DB_DATE_FORMAT)))
-                     ->execute()
-                     ->fetch();
+        $date = date(Database::DB_DATE_FORMAT);
 
-        return $result;
+        $qb ->update('users')
+            ->set(array('password' => $hashedPassword, 'date_password_changed' => $date, 'date_updated' => $date))
+            ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function getUserForFirstLoginByUsername(string $username) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('users')
-                  ->where('username=:username')
-                  ->setParam(':username', $username)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('users')
+            ->where('username = ?', [$username])
+            ->execute();
 
-        return $this->getUserObjectFromDbRow($row);
+        return $this->getUserObjectFromDbRow($qb->fetch());
     }
 
     public function getLastInsertedUser() {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('users')
-                  ->orderBy('id', 'DESC')
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('users')
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $this->getUserObjectFromDbRow($row);
+        return $this->getUserObjectFromDbRow($qb->fetch());
     }
 
     public function insertUser(array $data) {
@@ -272,30 +249,28 @@ class UserModel extends AModel {
     public function getUserById(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('users')
-                  ->where('id=:id')
-                  ->setParam(':id', $id)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('users')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $this->getUserObjectFromDbRow($row);
+        return $this->getUserObjectFromDbRow($qb->fetch());
     }
 
     public function getAllUsers(int $limit = 0) {
         $qb = $this->qb(__METHOD__);
 
-        $qb->select('*')
-           ->from('users');
+        $qb ->select(['*'])
+            ->from('users');
 
         if($limit > 0) {
-            $qb->limit((string)$limit);
+            $qb->limit($limit);
         }
 
-        $rows = $qb->execute()->fetch();
+        $qb->execute();
         
         $users = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $users[] = $this->getUserObjectFromDbRow($row);
         }
 

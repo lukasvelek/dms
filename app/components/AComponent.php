@@ -16,7 +16,7 @@ abstract class AComponent {
 
     protected function qb(string $methodName) {
         $qb = $this->db->createQueryBuilder();
-        $qb->setMethod($methodName);
+        $qb->setCallingMethod($methodName);
 
         return $qb;
     }

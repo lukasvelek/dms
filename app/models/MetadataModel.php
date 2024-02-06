@@ -23,105 +23,83 @@ class MetadataModel extends AModel {
     public function updateDefaultMetadataValue(int $idMetadata, int $idMetadataValue, bool $isDefault) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('metadata_values')
-                     ->set(array('is_default' => ':is_default'))
-                     ->where('id_metadata=:id_metadata')
-                     ->andWhere('id=:id_value')
-                     ->setParams(array(
-                        ':id_metadata' => $idMetadata,
-                        ':id_value' => $idMetadataValue,
-                        ':is_default' => ($isDefault ? '1' : '0')
-                     ))
-                     ->execute()
-                     ->fetch();
+        $qb ->update('metadata_values')
+            ->set(['is_default = ?', [($isDefault ? '1' : '0')]])
+            ->where('id_metadata = ?', [$idMetadata])
+            ->andWhere('id = ?', [$idMetadataValue])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function hasMetadataDefaultValue(int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->select('id')
-                     ->from('metadata_values')
-                     ->where('id_metadata=:id_metadata')
-                     ->andWhere('is_default=:is_default')
-                     ->setParams(array(
-                        ':id_metadata' => $idMetadata,
-                        ':is_default' => '1'
-                     ))
-                     ->limit('1')
-                     ->execute()
-                     ->fetchSingle('id');
+        $qb ->select(['id'])
+            ->from('metadata_values')
+            ->where('id_metadata = ?', [$idMetadata])
+            ->andWhere('is_default = ?', ['1'])
+            ->limit(1)
+            ->execute();
 
-        return $result;
+        return $qb->fetch('id');
     }
 
     public function deleteMetadataValueByIdMetadataValue(int $idMetadataValue) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('metadata_values')
-                     ->where('id=:id')
-                     ->setParam(':id', $idMetadataValue)
-                     ->execute()
-                     ->fetch();
-                    
-        return $result;
+        $qb ->delete()
+            ->from('metadata_values')
+            ->where('id = ?', [$idMetadataValue])
+            ->execute();
+
+        return $qb->fetchAll();
     }
 
     public function deleteMetadata(int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('metadata')
-                     ->where('id=:id')
-                     ->setParam(':id', $idMetadata)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('metadata')
+            ->where('id = ?', [$idMetadata])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function deleteMetadataValues(int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('metadata_values')
-                     ->where('id_metadata=:id_metadata')
-                     ->setParam(':id_metadata', $idMetadata)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('metadata_values')
+            ->where('id_metadata = ?', [$idMetadata])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getMetadataByName(string $name, string $tableName) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('metadata')
-                  ->where('name=:name')
-                  ->andWhere('table_name=:table_name')
-                  ->setParam(':name', $name)
-                  ->setParam(':table_name', $tableName)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('metadata')
+            ->where('name = ?', [$name])
+            ->andWhere('table_name = ?', [$tableName])
+            ->execute();
 
-        return $this->createMetadataObjectFromDbRow($row);
+        return $this->createMetadataObjectFromDbRow($qb->fetch());
     }
 
     public function getAllMetadataForTableName(string $tableName) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('metadata')
-                   ->where('table_name=:table_name')
-                   ->setParam(':table_name', $tableName)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('metadata')
+            ->where('table_name = ?', [$tableName])
+            ->execute();
 
         $metadata = [];
-        foreach($rows as $row) {
+        foreach($qb->fetchAll() as $row) {
             $metadata[] = $this->createMetadataObjectFromDbRow($row);
         }
 
@@ -131,30 +109,22 @@ class MetadataModel extends AModel {
     public function insertMetadataValueForIdMetadata(int $idMetadata, string $name, string $value) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->insert('metadata_values', 'id_metadata', 'name', 'value')
-                     ->values(':id_metadata', ':name', ':value')
-                     ->setParams(array(
-                        ':id_metadata' => $idMetadata,
-                        ':name' => $name,
-                        ':value' => $value
-                     ))
-                     ->execute()
-                     ->fetch();
+        $qb ->insert('metadata_values', ['id_metadata', 'name', 'value'])
+            ->values([$idMetadata, $name, $value])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getMetadataById(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('metadata')
-                  ->where('id=:id')
-                  ->setParam(':id', $id)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('metadata')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $this->createMetadataObjectFromDbRow($row);
+        return $this->createMetadataObjectFromDbRow($qb->fetch());
     }
 
     public function insertNewMetadata(array $data) {
@@ -164,26 +134,24 @@ class MetadataModel extends AModel {
     public function getLastInsertedMetadata() {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('metadata')
-                  ->orderBy('id', 'DESC')
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('metadata')
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $this->createMetadataObjectFromDbRow($row);
+        return $this->createMetadataObjectFromDbRow($qb->fetch());
     }
 
     public function getAllMetadata() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('metadata')
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('metadata')
+            ->execute();
 
         $metadata = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $metadata[] = $this->createMetadataObjectFromDbRow($row);
         }
 
@@ -193,15 +161,13 @@ class MetadataModel extends AModel {
     public function getAllValuesForIdMetadata(int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('metadata_values')
-                   ->where('id_metadata=:id_metadata')
-                   ->setParam(':id_metadata', $idMetadata)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('metadata_values')
+            ->where('id_metadata = ?', [$idMetadata])
+            ->execute();
 
         $values = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $values[] = $this->createMetadataValueObjectFromDbRow($row);
         }
 

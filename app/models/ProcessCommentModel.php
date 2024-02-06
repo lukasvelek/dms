@@ -14,46 +14,37 @@ class ProcessCommentModel extends AModel {
     public function removeProcessCommentsForIdProcess(int $idProcess) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('process_comments')
-                     ->where('id_process=:id_process')
-                     ->setParam(':id_process', $idProcess)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('process_comments')
+            ->where('id_process = ?', [$idProcess])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getLastInsertedCommentForIdUserAndIdProcess(int $idAuthor, int $idProcess) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('process_comments')
-                  ->where('id_author=:id_author')
-                  ->andWhere('id_process=:id_process')
-                  ->setParams(array(
-                    ':id_author' => $idAuthor,
-                    ':id_process' => $idProcess
-                  ))
-                  ->orderBy('id', 'DESC')
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('process_comments')
+            ->where('id_author = ?', [$idAuthor])
+            ->andWhere('id_process = ?', [$idProcess])
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $this->createCommentObjectFromDbRow($row);
+        return $this->createCommentObjectFromDbRow($qb->fetch());
     }
 
     public function deleteComment(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('process_comments')
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('process_comments')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function insertComment(array $data) {
@@ -63,16 +54,14 @@ class ProcessCommentModel extends AModel {
     public function getCommentsForIdProcess(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('process_comments')
-                   ->where('id_process=:id_process')
-                   ->setParam(':id_process', $id)
-                   ->orderBy('id', 'DESC')
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('process_comments')
+            ->where('id_process = ?', [$id])
+            ->orderBy('id', 'DESC')
+            ->execute();
 
         $comments = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $comments[] = $this->createCommentObjectFromDbRow($row);
         }
 

@@ -150,16 +150,12 @@ class MetadataAuthorizator extends AAuthorizator {
                 return $valFromCache;
             }
 
-            $row = $qb->select('*')
+            $row = $qb->select(['*'])
                       ->from('user_metadata_rights')
-                      ->where('id_user=:id_user')
-                      ->andWhere('id_metadata=:id_metadata')
-                      ->setParams(array(
-                        ':id_user' => $idUser,
-                        ':id_metadata' => $idMetadata
-                      ))
+                      ->where('id_user = ?', [$idUser])
+                      ->andWhere('id_metadata = ?', [$idMetadata])
                       ->execute()
-                      ->fetchSingle();
+                      ->fetch();
 
             if(!is_null($row)) {
                 if(!array_key_exists($key, $row)) {
@@ -177,14 +173,10 @@ class MetadataAuthorizator extends AAuthorizator {
         } else {
             $row = $qb->select('*')
                       ->from('user_metadata_rights')
-                      ->where('id_user=:id_user')
-                      ->andWhere('id_metadata=:id_metadata')
-                      ->setParams(array(
-                        ':id_user' => $idUser,
-                        ':id_metadata' => $idMetadata
-                      ))
+                      ->where('id_user = ?', [$idUser])
+                      ->andWhere('id_metadata = ?', [$idMetadata])
                       ->execute()
-                      ->fetchSingle();
+                      ->fetch();
 
             $result = $row[$key];
         }

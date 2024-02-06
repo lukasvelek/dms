@@ -3,563 +3,580 @@
 namespace QueryBuilder;
 
 /**
- * QueryBuilder allows user to simply create a SQL query and retrieve the result with just a couple of commands.
+ * QueryBuilder allows users to create an SQL query.
  * 
- * @version 1.1
  * @author Lukas Velek
+ * @version 2.0
  */
-class QueryBuilder {
-  /**
-   * Connection to the database server
-   */
-  private IDbQueriable $conn;
+class QueryBuilder
+{
+    private const STATE_CLEAN = 1; // QB has not been used yet
+    private const STATE_DIRTY = 2; // QB has been already used
 
-  /**
-   * Logger instance
-   */
-  private ILoggerCallable $logger;
+    private IDbQueriable $conn;
+    private ILoggerCallable $logger;
+    private string $sql;
+    private array $params;
+    private mixed $queryResult;
+    private string $queryType;
+    private array $queryData;
+    private bool $hasCustomParams;
+    private string $callingMethod;
+    private int $openBrackets;
+    private int $currentState;
+    private bool $hasCustomSQL;
 
-  /**
-   * SQL string
-   */
-  private string $sql;
+    public function __construct(IDbQueriable $conn, ILoggerCallable $logger, string $callingMethod = '') {
+        $this->conn = $conn;
+        $this->logger = $logger;
 
-  /**
-   * Query result
-   */
-  private $queryResult;
-
-  /**
-   * Method the Query Builder is called from
-   */
-  private string $method;
-
-  /**
-   * Variables array
-   * Indexed by variable names and values are variable values
-   * E.g.: $variables['foo'] = 'bar'; would be the same as $foo = 'bar';
-   */
-  private array $variables;
-
-  public function __construct(IDbQueriable $conn, ?ILoggerCallable $logger = null, ?string $method = '') {
-    if(!($conn instanceof IDbQueriable)) {
-      die();
-    }
-
-    if($logger != null) {
-      if(!($logger instanceof ILoggerCallable)) {
-        die();
-      }
-    }
-
-    $this->method = $method;
-
-    $this->conn = $conn;
-    $this->logger = $logger;
-    $this->sql = '';
-    $this->variables = array();
-  }
-
-  public function selectCount(string $key, string $alias) {
-    $this->sql .= 'SELECT COUNT(' . $key . ') AS `' . $alias . '`';
-
-    return $this;
-  }
-
-  public function select(string ...$keys) {
-    if(count($keys) == 1) {
-      if($keys[0] == '*') {
-        $this->sql .= 'SELECT *';
-        
+        $this->clean();
         return $this;
-      }
     }
 
-    $this->sql .= 'SELECT ';
+    public function setCallingMethod(string $callingMethod) {
+        $this->callingMethod = $callingMethod;
 
-    $i = 0;
-    foreach($keys as $key) {
-      if(count($keys) != 1) {
-        if(($i + 1) == count($keys)) {
-          $this->sql .= '`' . $key . '`';
-        } else {
-          $this->sql .= '`' . $key . '`, ';
+        return $this;
+    }
+
+    public function getColumnInValues(string $column, array $values) {
+        $code = $column . ' IN (';
+
+        $i = 0;
+        foreach($values as $value) {
+            if(($i + 1) == count($values)) {
+                $code .= $value;
+            } else {
+                $code .= $value . ', ';
+            }
+
+            $i++;
         }
-      } else {
-        $this->sql .= '`' . $key . '`';
-      }
 
-      $i++;
+        $code .= ')';
+
+        return $code;
     }
 
-    return $this;
-  }
+    public function getColumnNotInValues(string $column, array $values) {
+        $code = $column . ' NOT IN (';
 
-  public function selectArr(array $keys) {
-    $this->sql .= 'SELECT (';
+        $i = 0;
+        foreach($values as $value) {
+            if(($i + 1) == count($values)) {
+                $code .= $value . ')';
+            } else {
+                $code .= $value . ', ';
+            }
 
-    $i = 0;
-    foreach($keys as $key) {
-      if(count($keys) != 1) {
-        if(($i + 1) == count($keys)) {
-          $this->sql .= '`' . $key . '`) ';
-        } else {
-          $this->sql .= '`' . $key . '`, ';
+            $i++;
         }
-      } else {
-        $this->sql .= '`' . $key . '`';
-      }
 
-      $i++;
+        return $code;
     }
 
-    return $this;
-  }
+    public function delete() {
+        $this->queryType = 'delete';
+        $this->currentState = self::STATE_DIRTY;
 
-  public function from(string ...$tables) {
-    $this->sql .= ' FROM ';
-
-    $i = 0;
-    foreach($tables as $table) {
-      if(($i + 1) == count($tables)) {
-        $this->sql .= '`' . $table . '`';
-      } else {
-        $this->sql .= '`' . $table . '`, ';
-      }
-
-      $i++;
+        return $this;
     }
 
-    return $this;
-  }
+    public function update(string $tableName) {
+        $this->queryType = 'update';
+        $this->queryData['table'] = $tableName;
+        $this->currentState = self::STATE_DIRTY;
 
-  public function inWhere(string $columnName, array $values, bool $or = true, bool $renderText = true) {
-    $paramKeys = [];
-
-    $x = 0;
-    foreach($values as $value) {
-      $key = ':' . $columnName . '_' . $x;
-      $paramKeys[] = $key;
-      $this->setParam($key, $value);
-
-      $x++;
+        return $this;
     }
 
-    if($renderText == true) {
-      $this->sql .= ' WHERE (';
-    }
-
-    $i = 0;
-    foreach($paramKeys as $k) {
-      $this->sql .= '(`' . $columnName . '` = \'' . $k . '\')';
-
-      if(($i + 1) != count($paramKeys)) {
-        if($or == true) {
-          $this->sql .= ' OR ';
-        } else {
-          $this->sql .= ' AND ';
+    public function set(array $values) {
+        if(!isset($this->queryData['values'])) {
+            $this->queryData['values'] = $values;
+        } else{
+            $this->queryData['values'] = array_merge($values, $this->queryData['values']);
         }
-      } else {
-        $this->sql .= ')';
-      }
 
-      $i++;
+        return $this;
     }
 
-    return $this;
-  }
+    public function setNull(array $values) {
+        $this->queryType = 'update_null';
 
-  public function where(string $text, bool $like = false, bool $renderText = true) {
-    $text = trim($text);
-
-    $dbKey = explode('=', $text)[0];
-    $dbVal = explode('=', $text)[1];
-
-    if($renderText == true) {
-      $this->sql .= ' WHERE ';
-    }
-
-    if($like == true) {
-      $this->sql .= '`' . $dbKey . '` LIKE \'%' . $dbVal . '%\'';
-    } else {
-      $this->sql .= '`' . $dbKey . '` = \'' . $dbVal . '\'';
-    }
-
-    return $this;
-  }
-
-  public function whereNull(string $text) {
-    $text = trim($text);
-
-    $this->sql .= ' WHERE `' . $text . '` IS NULL';
-
-    return $this;
-  }
-
-  public function whereNot(string $text, bool $like = false, bool $renderText = true) {
-    $text = trim($text);
-
-    $dbKey = explode('=', $text)[0];
-    $dbVal = explode('=', $text)[1];
-
-    if($renderText == true) {
-      $this->sql .= ' WHERE ';
-    }
-
-    if($like == true) {
-      $this->sql .= '`' . $dbKey . '` NOT LIKE \'%' . $dbVal . '%\'';
-    } else {
-      $this->sql .= '`' . $dbKey . '` <> \'' . $dbVal . '\'';
-    }
-
-    return $this;
-  }
-
-  public function andWhere(string $text, bool $like = false) {
-    $text = trim($text);
-
-    $dbKey = explode('=', $text)[0];
-    $dbVal = explode('=', $text)[1];
-
-    $this->sql .= ' AND ';
-
-    if($like == true) {
-      $this->sql .= '`' . $dbKey . '` LIKE \'%' . $dbVal . '%\'';
-    } else {
-      $this->sql .= '`' . $dbKey . '` = \'' . $dbVal . '\'';
-    }
-
-    return $this;
-  }
-
-  public function andWhereNot(string $text, bool $like = false) {
-    $text = trim($text);
-
-    $dbKey = explode('=', $text)[0];
-    $dbVal = explode('=', $text)[1];
-
-    $this->sql .= ' AND ';
-
-    if($like == true) {
-      $this->sql .= '`' . $dbKey . '` NOT LIKE \'%' . $dbVal . '%\'';
-    } else {
-      $this->sql .= '`' . $dbKey . '` <> \'' . $dbVal . '\'';
-    }
-
-    return $this;
-  }
-
-  public function orWhere(string $text, bool $like = false) {
-    $text = trim($text);
-
-    $dbKey = explode('=', $text)[0];
-    $dbVal = explode('=', $text)[1];
-
-    $this->sql .= ' OR ';
-
-    if($like == true) {
-      $this->sql .= '`' . $dbKey . '` LIKE \'%' . $dbVal . '%\'';
-    } else {
-      $this->sql .= '`' . $dbKey . '` = \'' . $dbVal . '\'';
-    }
-
-    return $this;
-  }
-
-  public function orWhereNot(string $text, bool $like = false) {
-    $text = trim($text);
-
-    $dbKey = explode('=', $text)[0];
-    $dbVal = explode('=', $text)[1];
-
-    $this->sql .= ' OR ';
-
-    if($like == true) {
-      $this->sql .= '`' . $dbKey . '` NOT LIKE \'%' . $dbVal . '%\'';
-    } else {
-      $this->sql .= '`' . $dbKey . '` <> \'' . $dbVal . '\'';
-    }
-
-    return $this;
-  }
-
-  public function leftBracket() {
-    $this->sql .= '(';
-
-    return $this;
-  }
-
-  public function rightBracket() {
-    $this->sql .= ')';
-
-    return $this;
-  }
-
-  public function explicit(string $text) {
-    $this->sql .= ' ' . $text . ' ';
-
-    return $this;
-  }
-
-  public function orderBy(string $key, string $ascDesc = 'ASC') {
-    $this->sql .= ' ORDER BY `' . $key . '` ' . $ascDesc;
-
-    return $this;
-  }
-
-  public function limit(string $number) {
-    $this->sql .= ' LIMIT ' . $number;
-
-    return $this;
-  }
-
-  public function update(string $tableName) {
-    $this->sql .= 'UPDATE `' . $tableName . '`';
-
-    return $this;
-  }
-
-  public function set(array $values, bool $showText = true) {
-    if($showText) {
-      $this->sql .= ' SET ';
-    }
-
-    $i = 0;
-    foreach($values as $k => $v) {
-      $value = trim($v);
-
-      if(count($values) != 1) {
-        if(($i + 1) == count($values)) {
-          $this->sql .= '`' . $k . '` = \'' . $value . '\'';
-        } else {
-          $this->sql .= '`' . $k . '` = \'' . $value . '\', ';
+        if(!isset($this->queryData['values'])) {
+            $this->queryData['values'] = $values;
+        } else{
+            $this->queryData['values'] = array_merge($values, $this->queryData['values']);
         }
-      } else {
-        $this->sql .= '`' . $k . '` = \'' . $value . '\'';
-      }
 
-      $i++;
+        return $this;
     }
 
-    return $this;
-  }
+    public function insert(string $tableName, array $keys) {
+        $this->queryType = 'insert';
+        $this->queryData['table'] = $tableName;
+        $this->queryData['keys'] = $keys;
+        $this->currentState = self::STATE_DIRTY;
 
-  public function setNull(array $values, bool $showText = true) {
-    if($showText) {
-      $this->sql .= ' SET ';
+        return $this;
     }
 
-    $i = 0;
-    foreach($values as $value) {
-      if(($i + 1) == count($values)) {
-        $this->sql .= '`' . $value . '` = NULL';
-      } else {
-        $this->sql .= '`' . $value . '` = NULL, ';
-      }
+    public function values(array $values) {
+        $this->queryData['values'] = $values;
 
-      $i++;
+        return $this;
     }
 
-    return $this;
-  }
+    public function select(array$keys) {
+        $this->queryType = 'select';
+        $this->queryData['keys'] = $keys;
+        $this->currentState = self::STATE_DIRTY;
 
-  public function insert(string $tableName, string ...$keys) {
-    $this->sql .= 'INSERT INTO `' . $tableName . '` (';
+        return $this;
+    }
 
-    $i = 0;
-    foreach($keys as $key) {
-      if(count($keys) != 1) {
-        if(($i + 1) == count($keys)) {
-          $this->sql .= '`' . $key . '`';
-        } else {
-          $this->sql .= '`' . $key . '`, ';
+    public function from(string $tableName) {
+        $this->queryData['table'] = $tableName;
+
+        return $this;
+    }
+
+    public function whereEx(string $where) {
+        $this->queryData['where'] = $where;
+
+        return $this;
+    }
+
+    public function where(string $cond, array $values = []) {
+        if(str_contains($cond, '?') && !empty($values)) {
+            $count = count(explode('?', $cond));
+
+            if($count != (count($values) + 1)) {
+                die('QueryBuilder: Number of condition parameters does not equal to the number of passed parameters!');
+            }
+
+            $search = [];
+
+            for($i = 0; $i < ($count - 1); $i++) {
+                $search[] = '?';
+            }
+
+            $tmp = [];
+            foreach($values as $value) {
+                $tmp[] = "'" . $value . "'";
+            }
+
+            $values = $tmp;
+
+            $cond = str_replace($search, $values, $cond);
         }
-      } else {
-        $this->sql .= '`' . $key . '`';
-      }
 
-      $i++;
+        $this->queryData['where'] = $cond;
+
+        return $this;
     }
 
-    $this->sql .= ')';
-
-    return $this;
-  }
-
-  public function insertArr(string $tableName, array $keys) {
-    $this->sql .= 'INSERT INTO `' . $tableName . '` (';
-
-    $i = 0;
-    foreach($keys as $key) {
-      if(count($keys) != 1) {
-        if(($i + 1) == count($keys)) {
-          $this->sql .= '`' . $key . '`';
-        } else {
-          $this->sql .= '`' . $key . '`, ';
+    public function andWhere(string $cond, array $values = []) {
+        if(!array_key_exists('where', $this->queryData)) {
+            $this->queryData['where'] = '';
         }
-      } else {
-        $this->sql .= '`' . $key . '`';
-      }
 
-      $i++;
-    }
+        if(str_contains($cond, '?') && !empty($values)) {
+            $count = count(explode('?', $cond));
 
-    $this->sql .= ')';
+            if($count != (count($values) + 1)) {
+                die('QueryBuilder: Number of condition parameters does not equal to the number of passed parameters!');
+            }
 
-    return $this;
-  }
+            $search = [];
 
-  public function values(string ...$values) {
-    $this->sql .= ' VALUES (';
+            for($i = 0; $i < ($count - 1); $i++) {
+                $search[] = '?';
+            }
 
-    $i = 0;
-    foreach($values as $value) {
-      $v = trim($value);
+            $tmp = [];
+            foreach($values as $value) {
+                $tmp[] = "'" . $value . "'";
+            }
 
-      if(count($values) != 1) {
-        if(($i + 1) == count($values)) {
-          $this->sql .= '\'' . $v . '\'';
-        } else {
-          $this->sql .= '\'' . $v . '\', ';
+            $values = $tmp;
+
+            $cond = str_replace($search, $values, $cond);
         }
-      } else {
-        $this->sql .= '\'' . $v . '\'';
-      }
 
-      $i++;
-    }
-
-    $this->sql .= ')';
-
-    return $this;
-  }
-
-  public function valuesArr(array $values) {
-    $this->sql .= ' VALUES (';
-
-    $i = 0;
-    foreach($values as $value) {
-      $v = trim($value);
-
-      if(count($values) != 1) {
-        if(($i + 1) == count($values)) {
-          $this->sql .= '\'' . $v . '\'';
+        if(!isset($this->queryData['where']) || ($this->queryData['where'] == '')) {
+            $this->queryData['where'] .= $cond;    
         } else {
-          $this->sql .= '\'' . $v . '\', ';
+            $this->queryData['where'] .= ' AND ' . $cond;
         }
-      } else {
-        $this->sql .= '\'' . $v . '\'';
-      }
 
-      $i++;
+        return $this;
     }
 
-    $this->sql .= ')';
+    public function orWhere(string $cond, array $values = []) {
+        if(!array_key_exists('where', $this->queryData)) {
+            $this->queryData['where'] = '';
+        }
 
-    return $this;
-  }
+        if(str_contains($cond, '?') && !empty($values)) {
+            $count = count(explode('?', $cond));
 
-  public function delete() {
-    $this->sql .= 'DELETE ';
+            if($count != (count($values) + 1)) {
+                die('QueryBuilder: Number of condition parameters does not equal to the number of passed parameters!');
+            }
 
-    return $this;
-  }
+            $search = [];
 
-  public function setParam(string $key, string $value) {
-    $this->variables[$key] = $value;
+            for($i = 0; $i < ($count - 1); $i++) {
+                $search[] = '?';
+            }
 
-    return $this;
-  }
+            $tmp = [];
+            foreach($values as $value) {
+                $tmp[] = "'" . $value . "'";
+            }
 
-  public function setParams(array $array) {
-    foreach($array as $key => $value) {
-      $this->variables[$key] = $value;
-    }
+            $values = $tmp;
 
-    return $this;
-  }
+            $cond = str_replace($search, $values, $cond);
+        }
 
-  public function getSQL() {
-    return $this->sql;
-  }
-
-  public function setSQL(string $sql, bool $cleanVariables = true) {
-    $this->clean();
-
-    $this->sql = $sql;
-    
-    return $this;
-  }
-
-  public function execute() {
-    $this->createQuery();
-
-    $this->log();
-
-    $this->queryResult = $this->conn->query($this->sql);
-
-    return $this;
-  }
-
-  public function fetch() {
-    $result = $this->queryResult;
-
-    $this->clean();
-
-    return $result;
-  }
-
-  public function fetchSingle(string $key = '') {
-    $result = $this->queryResult;
-
-    $this->clean();
-
-    if($result != null) {
-      foreach($result as $r) {
-        if($key == '') {
-          return $r;
+        if(!isset($this->queryData['where']) || ($this->queryData['where'] == '')) {
+            $this->queryData['where'] .= $cond;    
         } else {
-          return $r[$key];
+            $this->queryData['where'] .= ' OR ' . $cond;
         }
-      }
+
+        return $this;
     }
 
-    return null;
-  }
+    public function orderBy(string $key, string $order = 'ASC') {
+        $this->queryData['order'] = ' ORDER BY `' . $key . '` ' . $order;
 
-  public function setMethod(string $method) {
-    $this->method = $method;
-  }
-
-  private function createQuery() {
-    foreach($this->variables as $key => $value) {
-      $this->sql = str_replace($key, $value, $this->sql);
-    }
-  }
-
-  private function clean() {
-    $this->variables = array();
-    $this->sql = '';
-    $this->queryResult = null;
-  }
-
-  private function tryGetVariable(string $varKey) {
-    if(count($this->variables) == 0) {
-      return $varKey;
+        return $this;
     }
 
-    if(array_key_exists($varKey, $this->variables)) {
-      return $this->variables[$varKey];
+    public function limit(int $limit) {
+        $this->queryData['limit'] = $limit;
+
+        return $this;
     }
 
-    return $varKey;
-  }
+    public function setParams(array $params) {
+        foreach($params as $k => $v) {
+            if($k[0] != ':') {
+                $this->params[':' . $k] = "'" . $v . "'";
+            } else {
+                $this->params[$k] = "'" . $v . "'";
+            }
+        }
 
-  private function log() {
-    if($this->logger != null) {
-      $this->logger->sql($this->sql, $this->method);
+        $this->hasCustomParams = true;
+
+        return $this;
     }
-  }
+
+    public function leftBracket(int $count = 1) {
+        $this->openBrackets += $count;
+
+        $this->queryData['where'] .= ' ';
+
+        for($i = 0; $i < $count; $i++) {
+            $this->queryData['where'] .= '(';
+        }
+
+        $this->queryData['where'] .= ' ';
+
+        return $this;
+    }
+
+    public function rightBracket(int $count = 1) {
+        $this->openBrackets -= $count;
+
+        $this->queryData['where'] .= ' ';
+
+        for($i = 0; $i < $count; $i++) {
+            $this->queryData['where'] .= ')';
+        }
+
+        $this->queryData['where'] .= ' ';
+
+        return $this;
+    }
+
+    public function clean() {
+        $this->sql = '';
+        $this->params = [];
+        $this->queryResult = null;
+        $this->queryType = '';
+        $this->queryData = [];
+        $this->hasCustomParams = false;
+        $this->openBrackets = 0;
+        $this->currentState = self::STATE_CLEAN;
+        $this->hasCustomSQL = false;
+    }
+
+    public function getSQL() {
+        $this->createSQLQuery();
+
+        return $this->sql;
+    }
+
+    public function setSQL(string $sql) {
+        $this->sql = $sql;
+        $this->hasCustomSQL = true;
+
+        return $this;
+    }
+
+    public function execute() {
+        if($this->hasCustomSQL) {
+            $this->queryResult = $this->conn->query($this->sql);
+            $this->log();
+            $this->currentState = self::STATE_CLEAN;
+
+            return $this;
+        }
+
+        if($this->currentState != self::STATE_DIRTY) {
+            die('QueryBuilder: No query has been created!');
+        }
+
+        if($this->sql === '') {
+            $this->createSQLQuery();
+        }
+
+        if($this->openBrackets > 0) {
+            die('QueryBuilder: Not all brackets have been closed: ' . $this->sql);
+        }
+
+        if($this->conn === NULL) {
+            //return null;
+            die('QueryBuilder: No connection has been found!');
+        }
+
+        $this->queryResult = $this->conn->query($this->sql);
+
+        $this->log();
+
+        $this->currentState = self::STATE_CLEAN;
+
+        return $this;
+    }
+
+    public function fetchAssoc() {
+        return $this->queryResult->fetch_assoc();
+    }
+
+    public function fetchAll() {
+        if($this->currentState != self::STATE_CLEAN) {
+            return null;
+        }
+
+        return $this->queryResult;
+    }
+
+    public function fetch(?string $param = null) {
+        $result = null;
+
+        if($this->currentState != self::STATE_CLEAN) {
+            return $result;
+        }
+
+        if($this->queryResult === NULL) {
+            return $result;
+        }
+
+        if($this->queryResult->num_rows > 1) {
+            return $result;
+        }
+
+        foreach($this->queryResult as $row) {
+            if($param !== NULL) {
+                if(array_key_exists($param, $row)) {
+                    $result = $row[$param];
+                    break;
+                } else {
+                    break;
+                }
+            } else {
+                $result = $row;
+                break;
+            }
+        }
+
+        return $result;
+    }
+
+    private function createSQLQuery() {
+        switch($this->queryType) {
+            case 'select':
+                $this->createSelectSQLQuery();
+                break;
+
+            case 'insert':
+                $this->createInsertSQLQuery();
+                break;
+
+            case 'update':
+                $this->createUpdateSQLQuery();
+                break;
+
+            case 'delete':
+                $this->createDeleteSQLQuery();
+                break;
+
+            case 'update_null':
+                $this->createUpdateNullSQLQuery();
+                break;
+        }
+
+        $keys = [];
+        $values = [];
+        foreach($this->params as $k => $v) {
+            $keys[] = $k;
+            $values[] = $v;
+        }
+
+        if($this->hasCustomParams) {
+            $this->sql = str_replace($keys, $values, $this->sql);
+        }
+    }
+
+    private function createUpdateNullSQLQuery() {
+        $sql = 'UPDATE ' . $this->queryData['table'] . ' SET ';
+
+        $i = 0;
+        foreach($this->queryData['values'] as $key) {
+            if(($i + 1) == count($this->queryData['values'])) {
+                $sql .= $key . ' = NULL';
+            } else {
+                $sql .= $key . ' = NULL, ';
+            }
+        }
+
+        if(str_contains($this->queryData['where'], 'WHERE')) {
+            // explicit
+            $sql .= ' ' . $this->queryData['where'];
+        } else {
+            $sql .= ' WHERE ' . $this->queryData['where'];
+        }
+
+        $this->sql = $sql;
+    }
+
+    private function createDeleteSQLQuery() {
+        $sql = 'DELETE FROM ' . $this->queryData['table'];
+
+        if(str_contains($this->queryData['where'], 'WHERE')) {
+            $sql .= ' ' . $this->queryData['where'];
+        } else {
+            $sql .= ' WHERE ' . $this->queryData['where'];
+        }
+
+        $this->sql = $sql;
+    }
+
+    private function createUpdateSQLQuery() {
+        $sql = 'UPDATE ' . $this->queryData['table'] . ' SET ';
+
+        $i = 0;
+        foreach($this->queryData['values'] as $key => $value) {
+            if(($i + 1) == count($this->queryData['values'])) {
+                $sql .= $key . ' = \'' . $value . '\'';
+            } else {
+                $sql .= $key . ' = \'' . $value . '\', ';
+            }
+
+            $i++;
+        }
+
+        if(str_contains($this->queryData['where'], 'WHERE')) {
+            // explicit
+            $sql .= ' ' . $this->queryData['where'];
+        } else {
+            $sql .= ' WHERE ' . $this->queryData['where'];
+        }
+
+        $this->sql = $sql;
+    }
+
+    private function createInsertSQLQuery() {
+        $sql = 'INSERT INTO ' . $this->queryData['table'] . ' (';
+
+        $i = 0;
+        foreach($this->queryData['keys'] as $key) {
+            if(($i + 1) == count($this->queryData['keys'])) {
+                $sql .= $key . ') VALUES (';
+            } else {
+                $sql  .= $key . ', ';
+            }
+
+            $i++;
+        }
+
+        $i = 0;
+        foreach($this->queryData['values'] as $value) {
+            if(($i + 1) == count($this->queryData['values'])) {
+                $sql .= $value . ')';
+            } else {
+                $sql  .= $value . ', ';
+            }
+
+            $i++;
+        }
+
+        $this->sql = $sql;
+    }
+
+    private function createSelectSQLQuery() {
+        $sql = 'SELECT ';
+
+        $i = 0;
+        foreach($this->queryData['keys'] as $key) {
+            if(($i + 1) == count($this->queryData['keys'])) {
+                if($key === '*') {
+                    $sql .= $key . ' ';
+                } else if(str_starts_with($key, 'COUNT')) {
+                    $sql .= $key . ' ';
+                } else {
+                    $sql .= '`' . $key . '` ';
+                }
+            } else {
+                $sql .= '`' . $key . '`, ';
+            }
+
+            $i++;
+        }
+
+        $sql .= 'FROM `' . $this->queryData['table'] . '`';
+
+        if(isset($this->queryData['where'])) {
+            if(str_contains($this->queryData['where'], 'WHERE')) {
+                // explicit
+                $sql .= ' ' . $this->queryData['where'];
+            } else {
+                $sql .= ' WHERE ' . $this->queryData['where'];
+            }
+        }
+
+        if(isset($this->queryData['order'])) {
+            $sql .= ' ' . $this->queryData['order'];
+        }
+
+        if(isset($this->queryData['limit'])) {
+            $sql .= ' LIMIT ' . $this->queryData['limit'];
+        }
+
+        $this->sql = $sql;
+    }
+
+    private function log() {
+        if($this->logger !== NULL) {
+            $this->logger->sql($this->sql, $this->callingMethod);
+        }
+    }
 }
 
 ?>

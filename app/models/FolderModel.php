@@ -18,27 +18,24 @@ class FolderModel extends AModel {
     public function deleteFolder(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('folders')
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('folders')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getLastInsertedFolder() {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('folders')
-                  ->orderBy('id', 'DESC')
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('folders')
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $this->createFolderObjectFromDbRow($row);
+        return $this->createFolderObjectFromDbRow($qb->fetch());
     }
 
     public function insertNewFolder(array $data) {
@@ -48,13 +45,12 @@ class FolderModel extends AModel {
     public function getAllFolders() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('folders')
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('folders')
+            ->execute();
 
         $folders = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $folders[] = $this->createFolderObjectFromDbRow($row);
         }
 
@@ -64,20 +60,19 @@ class FolderModel extends AModel {
     public function getFoldersForIdParentFolder(?int $idFolder) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('folders');
+        $qb ->select(['*'])
+            ->from('folders');
 
         if(is_null($idFolder)) {
-            $rows = $rows->whereNull('id_parent_folder');
+            $qb->where('id_parent_folder IS NULL');
         } else {
-            $rows = $rows->where('id_parent_folder=:id_folder')
-                         ->setParam(':id_folder', $idFolder);
+            $qb->where('id_parent_folder = ?', [$idFolder]);
         }
 
-        $rows = $rows->execute()->fetch();
+        $qb->execute();
 
         $folders = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $folders[] = $this->createFolderObjectFromDbRow($row);
         }
 
@@ -87,14 +82,12 @@ class FolderModel extends AModel {
     public function getFolderById(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('folders')
-                  ->where('id=:id')
-                  ->setParam(':id', $id)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('folders')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $this->createFolderObjectFromDbRow($row);
+        return $this->createFolderObjectFromDbRow($qb->fetch());
     }
 
     private function createFolderObjectFromDbRow($row) {

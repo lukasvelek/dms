@@ -119,7 +119,7 @@ class Documents extends APresenter {
         $qb = $app->documentModel->composeQueryStandardDocuments(false);
 
         if($idFolder > 0) {
-            $qb->where('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+            $qb->where('id_folder = ?', [$idFolder]);
             $isCondition = true;
         }
 
@@ -127,27 +127,27 @@ class Documents extends APresenter {
             switch($filter) {
                 case 'shredded':
                     if($isCondition) {
-                        $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
+                        $qb->andWhere('status = ?', [DocumentStatus::SHREDDED]);
                     } else {
-                        $qb->where('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
+                        $qb->where('status = ?', [DocumentStatus::SHREDDED]);
                         $isCondition = true;
                     }
                     break;
     
                 case 'waitingForArchivation':
                     if($isCondition) {
-                        $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
+                        $qb->andWhere('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
                     } else {
-                        $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
+                        $qb->where('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
                         $isCondition = true;
                     }
                     break;
     
                 case 'archived':
                     if($isCondition) {
-                        $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
+                        $qb->andWhere('status = ?', [DocumentStatus::ARCHIVED]);
                     } else {
-                        $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
+                        $qb->where('status = ?', [DocumentStatus::ARCHIVED]);
                         $isCondition = true;
                     }
                     break;
