@@ -31,17 +31,15 @@ class UserModel extends AModel {
 
         if($idFrom == 1) {
             $qb->andWhere('id >= ?', [$idFrom]);
-            //$qb->explicit(' WHERE `id` >= ' . $idFrom . ' ');
         } else {
             $qb->andWhere('id > ?', [$idFrom]);
-            //$qb->explicit(' WHERE `id` > ' . $idFrom . ' ');
         }
 
         $qb ->limit($limit)
             ->execute();
 
         $users = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $users[] = $this->getUserObjectFromDbRow($row);
         }
 
@@ -55,27 +53,6 @@ class UserModel extends AModel {
 
     public function removeConnectionForTwoUsers(int $idUser1, int $idUser2) {
         $qb = $this->qb(__METHOD__);
-
-        /*$result = $qb->delete()
-                     ->from('user_connections')
-                     ->explicit(' WHERE ')
-                     ->leftBracket()
-                     ->where('id_user1=:id_user1', false, false)
-                     ->andWhere('id_user2=:id_user2')
-                     ->rightBracket()
-                     ->explicit(' OR ')
-                     ->leftBracket()
-                     ->where('id_user1=:id_user2', false, false)
-                     ->andWhere('id_user2=:id_user1')
-                     ->rightBracket()
-                     ->setParams(array(
-                        ':id_user1' => $idUser1,
-                        ':id_user2' => $idUser2
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         $qb ->delete()
             ->from('user_connections')
@@ -102,13 +79,19 @@ class UserModel extends AModel {
     public function getConnectedUsersForIdUser(int $idUser) {
         $ids = $this->getIdConnectedUsersForIdUser($idUser);
 
-        if($ids === NULL) {
+        if($ids === NULL || empty($ids)) {
             return [];
         }
 
         $users = [];
-        foreach($ids as $id) {
-            $users[] = $this->getUserById($id);
+        $qb = $this->qb(__METHOD__);
+        $qb ->select(['*'])
+            ->from('users')
+            ->where($qb->getColumnInValues('id_user', $ids))
+            ->execute();
+
+        while($row = $qb->fetchAssoc()) {
+            $users[] = $this->getUserObjectFromDbRow($row);
         }
 
         return $users;
@@ -139,7 +122,7 @@ class UserModel extends AModel {
         $qb ->select(['*'])
             ->from('user_connections')
             ->where('id_user1 = ?', [$idUser])
-            ->orWhere('id_user2= ?', [$idUser])
+            ->orWhere('id_user2 = ?', [$idUser])
             ->execute();
 
         return $qb->fetchAll();
@@ -178,7 +161,7 @@ class UserModel extends AModel {
             ->execute();
 
         $users = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $users[] = $this->getUserObjectFromDbRow($row);
         }
 
@@ -199,29 +182,6 @@ class UserModel extends AModel {
 
     public function updateUser(int $id, array $data) {
         $qb = $this->qb(__METHOD__);
-
-        /*$values = [];
-        $params = [];
-
-        foreach($data as $k => $v) {
-            $values[$k] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        if(!array_key_exists('date_updated', $values)) {
-            $values['date_updated'] = ':date_updated';
-            $params[':date_updated'] = date(Database::DB_DATE_FORMAT);
-        }
-
-        $result = $qb->update('users')
-                     ->set($values)
-                     ->where('id=:id')
-                     ->setParams($params)
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         if(!array_key_exists('date_updated', $data)) {
             $data['date_updated'] = date(Database::DB_DATE_FORMAT);
@@ -310,7 +270,7 @@ class UserModel extends AModel {
         $qb->execute();
         
         $users = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $users[] = $this->getUserObjectFromDbRow($row);
         }
 

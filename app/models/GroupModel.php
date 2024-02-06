@@ -26,21 +26,16 @@ class GroupModel extends AModel {
             ->from('groups');
 
         if($idFrom == 1) {
-            //$qb->explicit(' WHERE `id` >= ' . $idFrom . ' ');
             $qb->where('id >= ?', [$idFrom]);
         } else {
-            //$qb->explicit(' WHERE `id` > ' . $idFrom . ' ');
             $qb->where('id > ?', [$idFrom]);
         }
 
         $qb ->limit($limit)
             ->execute();
 
-
-        //$rows = $qb->execute()->fetch();
-
         $groups = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $groups[] = $this->createGroupObjectFromDbRow($row);
         }
 
@@ -84,24 +79,6 @@ class GroupModel extends AModel {
             ->execute();
 
         return $qb->fetchAll();
-
-        /*$keys = array('name');
-        $values = array(':name');
-        $params = array(':name' => $name);
-
-        if(!is_null($code)) {
-            $keys[] = 'code';
-            $values[] = ':code';
-            $params[':code'] = $code;
-        }
-
-        $result = $qb->insertArr('groups', $keys)
-                     ->valuesArr($values)
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
     }
 
     public function getGroupByCode(string $code) {
@@ -135,7 +112,7 @@ class GroupModel extends AModel {
             ->execute();
         
         $groups = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $groups[] = $this->createGroupObjectFromDbRow($row);
         }
 

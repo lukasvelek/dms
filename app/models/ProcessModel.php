@@ -43,7 +43,7 @@ class ProcessModel extends AModel {
             ->execute();
 
         $ids = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $ids[] = $row['id'];
         }
 
@@ -58,7 +58,7 @@ class ProcessModel extends AModel {
             ->execute();
 
         $processes = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $processes[] = $this->createProcessObjectFromDbRow($row);
         }
 
@@ -74,7 +74,7 @@ class ProcessModel extends AModel {
             ->execute();
 
         $processes = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $processes[] = $this->createProcessObjectFromDbRow($row);
         }
 
@@ -105,42 +105,6 @@ class ProcessModel extends AModel {
 
     public function getProcessesWaitingForUser(int $idUser, int $limit = 0) {
         $qb = $this->qb(__METHOD__);
-
-        /*$rows = $qb->select('*')
-                   ->from('processes')
-                   ->explicit(' WHERE ')
-                   ->leftBracket()
-                   ->leftBracket()
-                   ->where('workflow1=:id_user', false, false)
-                   ->andWhere('workflow_status=1')
-                   ->rightBracket()
-                   ->explicit('OR')
-                   ->leftBracket()
-                   ->where('workflow2=:id_user', false, false)
-                   ->andWhere('workflow_status=2')
-                   ->rightBracket()
-                   ->explicit('OR')
-                   ->leftBracket()
-                   ->where('workflow3=:id_user', false, false)
-                   ->andWhere('workflow_status=3')
-                   ->rightBracket()
-                   ->explicit('OR')
-                   ->leftBracket()
-                   ->where('workflow4=:id_user', false, false)
-                   ->andWhere('workflow_status=4')
-                   ->rightBracket()
-                   ->rightBracket()
-                   ->andWhere('status=:status')
-                   ->setParams(array(
-                    ':id_user' => $idUser,
-                    ':status' => ProcessStatus::IN_PROGRESS
-                   ));
-
-        if($limit > 0) {
-            $rows->limit($limit);
-        }
-
-        $rows = $rows->execute()->fetch();*/
 
         $qb ->select(['*'])
             ->from('processes')
@@ -176,7 +140,7 @@ class ProcessModel extends AModel {
         $qb->execute();
 
         $processes = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $processes[] = $this->createProcessObjectFromDbRow($row);
         }
 
@@ -185,25 +149,6 @@ class ProcessModel extends AModel {
 
     public function getProcessCountByStatus(int $status = 0) {
         $qb = $this->qb(__METHOD__);
-
-        /*$qb = $qb->selectCount('id', 'cnt')
-                 ->from('processes');
-
-        switch($status) {
-            case 0:
-                break;
-
-            default:
-                $qb->where('status=:status')
-                   ->setParam(':status', $status);
-
-                break;
-        }
-
-        $row = $qb->execute()
-                  ->fetchSingle('cnt');
-
-        return $row;*/
 
         $qb ->select(['COUNT(id)'])
             ->from('processes');
@@ -228,29 +173,6 @@ class ProcessModel extends AModel {
         }
 
         $qb = $this->qb(__METHOD__);
-        
-        /*$rows = $qb->select('*')
-                   ->from('processes')
-                   ->where('status=:status')
-                   ->explicit(' AND')
-                   ->leftBracket()
-                   ->where('workflow1=:id_user', false, false)
-                   ->orWhere('workflow2=:id_user')
-                   ->orWhere('workflow3=:id_user')
-                   ->orWhere('workflow4=:id_user')
-                   ->rightBracket()
-                   ->setParams(array(
-                    ':id_user' => $idUser,
-                    ':status' => ProcessStatus::FINISHED
-                   ));
-
-        if($idFrom == 1) {
-            $rows->explicit('AND `id` >= ' . $idFrom . ' ');
-        } else {
-            $rows->explicit('AND `id` > ' . $idFrom . ' ');
-        }
-
-        $rows = $rows->execute()->fetch();*/
 
         $qb ->select(['*'])
             ->from('processes')
@@ -276,7 +198,7 @@ class ProcessModel extends AModel {
         $qb->execute();
 
         $processes = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $processes[] = $this->createProcessObjectFromDbRow($row);
         }
 
@@ -285,29 +207,6 @@ class ProcessModel extends AModel {
 
     public function getFinishedProcessesWithIdUser(int $idUser, int $limit) {
         $qb = $this->qb(__METHOD__);
-
-        /*$rows = $qb->select(['*'])
-                   ->from('processes')
-                   ->where('status=:status')
-                   ->setParam(':status', ProcessStatus::FINISHED)
-                   ->explicit(' AND')
-                   ->leftBracket()
-                   ->where('workflow1=:id_user', false, false)
-                   ->orWhere('workflow2=:id_user')
-                   ->orWhere('workflow3=:id_user')
-                   ->orWhere('workflow4=:id_user')
-                   ->rightBracket()
-                   ->setParam(':id_user', $idUser)
-                   ->limit($limit)
-                   ->execute()
-                   ->fetch();
-
-        $processes = [];
-        foreach($rows as $row) {
-            $processes[] = $this->createProcessObjectFromDbRow($row);
-        }
-
-        return $processes;*/
 
         $qb ->select(['*'])
             ->from('processes')
@@ -327,7 +226,7 @@ class ProcessModel extends AModel {
             ->execute();
 
         $processes = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $processes[] = $this->createProcessObjectFromDbRow($row);
         }
 
@@ -348,25 +247,15 @@ class ProcessModel extends AModel {
 
         if($idFrom == 1) {
             $qb->andWhere('id >= ?', [$idFrom]);
-            //$rows->explicit('AND `id` >= ' . $idFrom . ' ');
         } else {
             $qb->andWhere('id > ?', [$idFrom]);
-            //$rows->explicit('AND `id` > ' . $idFrom . ' ');
         }
-
-        /*$rows = $rows->limit($limit)
-                     ->setParams(array(
-                        ':id_author' => $idUser,
-                        ':status' => ProcessStatus::FINISHED
-                     ))
-                     ->execute()
-                     ->fetch();*/
 
         $qb ->limit($limit)
             ->execute();
 
         $processes = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $processes[] = $this->createProcessObjectFromDbRow($row);
         }
 
@@ -384,7 +273,7 @@ class ProcessModel extends AModel {
             ->execute();
 
         $processes = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $processes[] = $this->createProcessObjectFromDbRow($row);
         }
 
@@ -393,17 +282,6 @@ class ProcessModel extends AModel {
 
     public function updateStatus(int $idProcess, int $status) {
         $qb = $this->qb(__METHOD__);
-
-        /*$qb ->update('processes')
-            ->set(array(
-                'status' => ':status',
-                'date_updated' => ':date'
-            ))
-            ->setParam(':status', $status)
-            ->setParam(':date', date(Database::DB_DATE_FORMAT))
-            ->where('id=:id')
-            ->setParam(':id', $idProcess)
-            ->execute();*/
 
         $qb ->update('processes')
             ->set(['status' => $status, 'date_updated' => date(Database::DB_DATE_FORMAT)])
@@ -415,20 +293,6 @@ class ProcessModel extends AModel {
 
     public function updateWorkflowStatus(int $idProcess, int $status) {
         $qb = $this->qb(__METHOD__);
-
-        /*$result = $qb->update('processes')
-                     ->set(array(
-                        'workflow_status' => ':status',
-                        'date_updated' => ':date'
-                     ))
-                     ->setParam(':status', $status)
-                     ->setParam(':date', date(Database::DB_DATE_FORMAT))
-                     ->where('id=:id')
-                     ->setParam(':id', $idProcess)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         $qb ->update('processes')
             ->set(['workflow_status' => $status, 'date_updated' => date(Database::DB_DATE_FORMAT)])
@@ -456,31 +320,6 @@ class ProcessModel extends AModel {
 
         $qb = $this->qb(__METHOD__);
 
-        /*$rows = $qb->select('*')
-                   ->from('processes')
-                   ->whereNot('status=:status')
-                   ->explicit(' AND ')
-                   ->leftBracket()
-                   ->where('workflow1=:id_user', false, false)
-                   ->orWhere('workflow2=:id_user')
-                   ->orWhere('workflow3=:id_user')
-                   ->orWhere('workflow4=:id_user')
-                   ->rightBracket()
-                   ->setParams(array(
-                    ':id_user' => $idUser,
-                    ':status' => ProcessStatus::FINISHED
-                   ));
-
-        if($idFrom == 1) {
-            $rows->explicit('AND `id` >= ' . $idFrom . ' ');
-        } else {
-            $rows->explicit('AND `id` > ' . $idFrom . ' ');
-        }
-
-        $rows = $rows->limit($limit)
-                     ->execute()
-                     ->fetch();*/
-
         $qb ->select(['*'])
             ->from('processes')
             ->where('WHERE ' . $this->xb()
@@ -506,38 +345,14 @@ class ProcessModel extends AModel {
             ->execute();
 
         $processes = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $processes[] = $this->createProcessObjectFromDbRow($row);
         }
-
         return $processes;
     }
 
     public function getProcessesWithIdUser(int $idUser, int $limit = 25) {
         $qb = $this->qb(__METHOD__);
-
-        /*$rows = $qb->select('*')
-                   ->from('processes')
-                   ->whereNot('status=:status')
-                   ->setParam(':status', ProcessStatus::FINISHED)
-                   ->explicit(' AND')
-                   ->leftBracket()
-                   ->where('workflow1=:id_user', false, false)
-                   ->orWhere('workflow2=:id_user')
-                   ->orWhere('workflow3=:id_user')
-                   ->orWhere('workflow4=:id_user')
-                   ->rightBracket()
-                   ->setParam(':id_user', $idUser)
-                   ->limit($limit)
-                   ->execute()
-                   ->fetch();
-
-        $processes = [];
-        foreach($rows as $row) {
-            $processes[] = $this->createProcessObjectFromDbRow($row);
-        }
-
-        return $processes;*/
 
         $qb ->select(['*'])
             ->from('processes')
@@ -557,7 +372,7 @@ class ProcessModel extends AModel {
             ->execute();
 
         $processes = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $processes[] = $this->createProcessObjectFromDbRow($row);
         }
 
@@ -576,27 +391,6 @@ class ProcessModel extends AModel {
 
     public function updateProcess(int $id, array $data) {
         $qb = $this->qb(__METHOD__);
-
-        /*$sets = [];
-        $params = [];
-
-        foreach($data as $k => $v) {
-            $sets[] = $k . '=:' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        if(!array_key_exists('date_updated', $sets)) {
-            $sets[] = 'date_updated=:date_updated';
-            $params[':date_updated'] = date(Database::DB_DATE_FORMAT);
-        }
-
-        $result = $qb->update('processes')
-                     ->set($sets)
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         $qb ->update('processes')
             ->set($data)
@@ -624,25 +418,6 @@ class ProcessModel extends AModel {
 
     public function getProcessForIdDocument(int $idDocument, bool $isArchive = false) {
         $qb = $this->qb(__METHOD__);
-
-        /*$row = $qb->select('*')
-                  ->from('processes')
-                  ->where('id_document=:id_document')
-                  ->setParam(':id_document', $idDocument);
-
-        if($isArchive) {
-            $row->andWhere('is_archive=:is_archive')
-                ->setParam(':is_archive', '1');
-        } else {
-            $row->andWhere('is_archive=:is_archive')
-                ->setParam(':is_archive', '0');
-        }
-
-        $row = $row->orderBy('id', 'DESC')
-                   ->execute()
-                   ->fetchSingle();
-
-        return $this->createProcessObjectFromDbRow($row);*/
 
         $qb ->select(['*'])
             ->from('processes')

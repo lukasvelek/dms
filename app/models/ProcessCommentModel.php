@@ -61,7 +61,7 @@ class ProcessCommentModel extends AModel {
             ->execute();
 
         $comments = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $comments[] = $this->createCommentObjectFromDbRow($row);
         }
 

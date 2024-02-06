@@ -50,7 +50,7 @@ class FolderModel extends AModel {
             ->execute();
 
         $folders = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $folders[] = $this->createFolderObjectFromDbRow($row);
         }
 
@@ -64,19 +64,15 @@ class FolderModel extends AModel {
             ->from('folders');
 
         if(is_null($idFolder)) {
-            //$rows = $rows->whereNull('id_parent_folder');
             $qb->where('id_parent_folder IS NULL');
         } else {
-            /*$rows = $rows->where('id_parent_folder=:id_folder')
-                         ->setParam(':id_folder', $idFolder);*/
-
             $qb->where('id_parent_folder = ?', [$idFolder]);
         }
 
         $qb->execute();
 
         $folders = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $folders[] = $this->createFolderObjectFromDbRow($row);
         }
 

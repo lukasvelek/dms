@@ -16,19 +16,7 @@ class WidgetModel extends AModel {
 
     public function insertWidgetForIdUser(int $idUser, string $location, string $name) {
         $qb = $this->qb(__METHOD__);
-
-        /*$result = $qb->insert('user_widgets', 'id_user', 'location', 'widget_name')
-                     ->values(':id_user', ':location', ':widget_name')
-                     ->setParams(array(
-                        ':id_user' => $idUser,
-                        ':location' => $location,
-                        ':widget_name' => $name
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
+        
         $qb ->insert('user_widgets', ['id_user', 'location', 'widget_name'])
             ->values([$idUser, $location, $name])
             ->execute();
@@ -38,20 +26,6 @@ class WidgetModel extends AModel {
 
     public function updateWidgetForIdUser(int $idUser, string $location, string $name) {
         $qb = $this->qb(__METHOD__);
-
-        /*$result = $qb->update('user_widgets')
-                     ->set(array('widget_name' => ':name'))
-                     ->where('location=:location')
-                     ->andWhere('id_user=:id_user')
-                     ->setParams(array(
-                        ':name' => $name,
-                        ':location' => $location,
-                        ':id_user' => $idUser
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         $qb ->update('user_widgets')
             ->set(['widget_name' => $name])

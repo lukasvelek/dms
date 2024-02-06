@@ -37,20 +37,12 @@ class DocumentModel extends AModel {
 
     public function getDocumentForIdArchiveEntity(int $idArchiveEntity) {
         $qb = $this->composeQueryStandardDocuments();
-        /*$qb ->explicit('AND (')
-            ->where('id_archive_document=:id_archive_entity', false, false)
-            ->orWhere('id_archive_box=:id_archive_entity')
-            ->orWhere('id_archive_archive=:id_archive_entity')
-            ->rightBracket()
-            ->setParam(':id_archive_entity', $idArchiveEntity);
-
-        $rows = $qb->execute()->fetch();*/
 
         $qb ->andWhere('id_archive_document = ? OR id_archive_box = ? OR id_archive_archive = ?', [$idArchiveEntity, $idArchiveEntity, $idArchiveEntity])
             ->execute();
 
         $documents = array();
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -65,7 +57,7 @@ class DocumentModel extends AModel {
         }
 
         $documents = [];
-        foreach($result as $row) {
+        while($row = $result->fetch_assoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -78,10 +70,8 @@ class DocumentModel extends AModel {
         $qb ->andWhere('status = ?', [$status])
             ->execute();
 
-        //$rows = $qb->execute()->fetch();
-
         $documents = array();
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -103,15 +93,12 @@ class DocumentModel extends AModel {
         } else {
             $qb->andWhere('id > ?', [$idFrom]);
         }
-
-        $qb ->andWhere('id_archive_document = ?', [$idArchiveDocument]);
-
-        $qb->limit($limit);
-
-        $qb->execute();
+        $qb ->andWhere('id_archive_document = ?', [$idArchiveDocument])
+            ->limit($limit)
+            ->execute();
     
         $documents = array();
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
     
@@ -144,12 +131,11 @@ class DocumentModel extends AModel {
             $this->addFilterCondition($filter, $qb);
         }
 
-        $qb->limit($limit);
-
-        $qb->execute();
+        $qb ->limit($limit)
+            ->execute();
 
         $documents = array();
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -159,14 +145,13 @@ class DocumentModel extends AModel {
     public function getLastDocumentStatsEntry() {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select(['*'])
-                  ->from('document_stats')
-                  ->orderBy('id', 'DESC')
-                  ->limit(1)
-                  ->execute()
-                  ->fetch();
+        $qb ->select(['*'])
+            ->from('document_stats')
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $row;
+        return $qb->fetch();
     }
 
     public function insertDocumentStatsEntry(array $data) {
@@ -185,7 +170,7 @@ class DocumentModel extends AModel {
             ->execute();
 
         $ids = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $ids[] = $row['id'];
         }
 
@@ -248,13 +233,6 @@ class DocumentModel extends AModel {
             ->where('id_user = ?', [$idUser])
             ->andWhere('(date_from < current_timestamp AND date_to > current_timestamp)')
             ->execute();
-                   /*->explicit(' AND ')
-                   ->leftBracket()
-                   ->explicit(' `date_from` < current_timestamp AND `date_to` > current_timestamp')
-                   ->rightBracket()
-                   ->setParam(':id_user', $idUser) 
-                   ->execute()
-                   ->fetch();*/
 
         return $qb->fetchAll();
     }
@@ -273,19 +251,8 @@ class DocumentModel extends AModel {
             ->where($qb->getColumnInValues('id', $documentSharings))
             ->execute();
 
-        /*$idDocuments = [];
-        foreach($documentSharings as $ds) {
-            $idDocuments[] = $ds['id_document'];
-        }
-
-        $rows = $qb->select('*')
-                   ->from('documents')
-                   ->inWhere('id', $idDocuments)
-                   ->execute()
-                   ->fetch();*/
-
         $documents = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -307,7 +274,7 @@ class DocumentModel extends AModel {
 
         $result = false;
 
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $dateFrom = $row['date_from'];
             $dateTo = $row['date_to'];
 
@@ -367,7 +334,7 @@ class DocumentModel extends AModel {
         $qb->execute();
 
         $documents = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -387,12 +354,11 @@ class DocumentModel extends AModel {
             $qb ->andWhere('id_folder = ?', [$idFolder]);
         }
 
-        $qb->limit(20);
-
-        $qb->execute();
+        $qb ->limit(25)
+            ->execute();
 
         $documents = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -408,7 +374,7 @@ class DocumentModel extends AModel {
             ->execute();
 
         $documents = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -421,7 +387,6 @@ class DocumentModel extends AModel {
         $qb ->update('documents')
             ->setNull(['id_folder'])
             ->set(['date_updated' => date(Database::DB_DATE_FORMAT)])
-            //->explicit(', `date_updated`=\'' . date(Database::DB_DATE_FORMAT) . '\'')
             ->where('id = ?', [$id])
             ->execute();
 
@@ -434,7 +399,6 @@ class DocumentModel extends AModel {
         $qb ->update('documents')
             ->setNull(array('id_officer'))
             ->set(['date_updated' => date(Database::DB_DATE_FORMAT)])
-            //->explicit(', `date_updated`=\'' . date(Database::DB_DATE_FORMAT) . '\'')
             ->where('id = ?', [$id])
             ->execute();
 
@@ -443,19 +407,6 @@ class DocumentModel extends AModel {
 
     public function updateDocument(int $id, array $values) {
         $qb = $this->qb(__METHOD__);
-
-        /*$keys = [];
-        $params = [];
-
-        foreach($values as $k => $v) {
-            $keys[$k] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        if(!array_key_exists('date_updated', $keys)) {
-            $keys['date_updated'] = ':date_updated';
-            $params[':date_updated'] = date(Database::DB_DATE_FORMAT);
-        }*/
 
         $values['date_updated'] = date(Database::DB_DATE_FORMAT);
 
@@ -476,7 +427,7 @@ class DocumentModel extends AModel {
             ->execute();
 
         $documents = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -546,7 +497,7 @@ class DocumentModel extends AModel {
         $qb->execute();
 
         $documents = array();
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -568,7 +519,7 @@ class DocumentModel extends AModel {
             ->execute();
 
         $documents = array();
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -582,7 +533,7 @@ class DocumentModel extends AModel {
             ->execute();
 
         $documents = array();
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 

@@ -45,24 +45,6 @@ abstract class AModel {
     protected function updateExisting(string $tableName, int $id, array $data) {
         $qb = $this->qb(__METHOD__);
 
-        /*$values = [];
-        $params = [];
-
-        foreach($data as $k => $v) {
-            $values[$k] = ':' . $k;
-            $params[':' . $k] = $v;
-        }*/
-
-        /*$result = $qb->update($tableName)
-                     ->set($values)
-                     ->setParams($params)
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         $qb ->update($tableName)
             ->set($data)
             ->where('id = ?', [$id])
@@ -70,24 +52,6 @@ abstract class AModel {
         
         return $qb->fetchAll();
     }
-
-    /*protected function updateExistingQb(string $tableName, array $data) {
-        $qb = $this->qb(__METHOD__);
-
-        $values = [];
-        $params = [];
-
-        foreach($data as $k => $v) {
-            $values[$k] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        $qb->update($tableName)
-           ->set($values)
-           ->setParams($params);
-
-        return $qb;    
-    }*/
 
     protected function getLastInsertedRow(string $tableName, string $orderCol = 'id', string $order = 'DESC') {
         $qb = $this->qb(__METHOD__);
@@ -98,15 +62,6 @@ abstract class AModel {
             ->execute();
         
         return $qb->fetchAll();
-
-        /*$row = $qb->select('*')
-                  ->from($tableName)
-                  ->orderBy($ordedCol, $orded)
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
-
-        return $row;*/
     }
 
     /**
@@ -121,20 +76,11 @@ abstract class AModel {
 
         $keys = [];
         $values = [];
-        //$params = [];
 
         foreach($data as $k => $v) {
             $keys[] = $k;
             $values[] = $v;
         }
-
-        /*$result = $qb->insertArr($tableName, $keys)
-                     ->valuesArr($values)
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         $qb ->insert($tableName, $keys)
             ->values($values)
@@ -149,15 +95,6 @@ abstract class AModel {
 
     protected function deleteByCol(string $colName, string $colValue, string $tableName) {
         $qb = $this->qb(__METHOD__);
-
-        /*$result = $qb->delete()
-                     ->from($tableName)
-                     ->where($colName . '=:' . $colName)
-                     ->setParam(':' . $colName, $colValue)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         $qb ->delete()
             ->from($tableName)
@@ -273,15 +210,6 @@ abstract class AModel {
 
     public function updateToNull(string $tableName, int $id, array $cols) {
         $qb = $this->qb(__METHOD__);
-
-        /*$result = $qb->update($tableName)
-                     ->setNull($cols)
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         $qb ->update($tableName)
             ->setNull($cols)

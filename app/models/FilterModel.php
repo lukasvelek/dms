@@ -45,10 +45,8 @@ class FilterModel extends AModel {
         $qb = $this->composeStandardDocumentFilterQuery();
         
         if($appendSystemFilters && (!$appendOtherUsersResults && !is_null($idUser))) {
-            //$qb->explicit(' WHERE `id_author` IS NULL OR `id_author` = ' . $idUser);
             $qb->andWhere('id_author IS NULL OR id_author = ?', [$idUser]);
         } else if(!$appendSystemFilters && (!$appendOtherUsersResults && !is_null($idUser))) {
-            //$qb->explicit(' WHERE `id_author` = ' . $idUser);
             $qb->andWhere('id_author = ?', [$idUser]);
         }
         

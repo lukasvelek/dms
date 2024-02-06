@@ -139,22 +139,6 @@ class GroupRightModel extends AModel {
     public function updatePanelRight(int $idGroup, string $rightName, bool $status) {
         $qb = $this->qb(__METHOD__);
 
-        /*$result = $qb->update('group_panel_rights')
-                     ->set(array(
-                        'is_visible' => ':visible'
-                     ))
-                     ->where('id_group=:id_group')
-                     ->andWhere('panel_name=:name')
-                     ->setParams(array(
-                        ':id_group' => $idGroup,
-                        ':name' => $rightName,
-                        ':visible' => $status ? '1' : '0'
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         $qb ->update('group_panel_rights')
             ->set(['is_visible' => ($status ? '1' : '0')])
             ->where('id_group = ?', [$idGroup])
@@ -167,22 +151,6 @@ class GroupRightModel extends AModel {
     public function updateBulkActionRight(int $idGroup, string $rightName, bool $status) {
         $qb = $this->qb(__METHOD__);
 
-        /*$result = $qb->update('group_bulk_rights')
-                     ->set(array(
-                        'is_executable' => ':execute'
-                     ))
-                     ->where('id_group=:id_group')
-                     ->andWhere('action_name=:name')
-                     ->setParams(array(
-                        ':id_group' => $idGroup,
-                        ':name' => $rightName,
-                        ':execute' => $status ? '1' : '0'
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         $qb ->update('group_bulk_rights')
             ->set(['is_executable', ($status ? '1' : '0')])
             ->where('id_group = ?', [$idGroup])
@@ -194,22 +162,6 @@ class GroupRightModel extends AModel {
 
     public function updateActionRight(int $idGroup, string $rightName, bool $status) {
         $qb = $this->qb(__METHOD__);
-
-        /*$result = $qb->update('group_action_rights')
-                     ->set(array(
-                        'is_executable' => ':execute'
-                     ))
-                     ->where('id_group=:id_group')
-                     ->andWhere('action_name=:name')
-                     ->setParams(array(
-                        ':id_group' => $idGroup,
-                        ':name' => $rightName,
-                        ':execute' => $status ? '1' : '0'
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         $qb ->update('group_action_rights')
             ->set(['is_executable', ($status ? '1' : '0')])
@@ -229,7 +181,7 @@ class GroupRightModel extends AModel {
             ->execute();
 
         $rights = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $rights[$row['action_name']] = $row['is_executable'];
         }
 
@@ -245,7 +197,7 @@ class GroupRightModel extends AModel {
             ->execute();
 
         $rights = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $rights[$row['panel_name']] = $row['is_visible'];
         }
 
@@ -261,7 +213,7 @@ class GroupRightModel extends AModel {
             ->execute();
 
         $rights = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $rights[$row['action_name']] = $row['is_executable'];
         }
 

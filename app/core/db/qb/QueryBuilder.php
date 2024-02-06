@@ -44,11 +44,15 @@ class QueryBuilder
         $i = 0;
         foreach($values as $value) {
             if(($i + 1) == count($values)) {
-                $code .= $value . ')';
+                $code .= $value;
             } else {
                 $code .= $value . ', ';
             }
+
+            $i++;
         }
+
+        $code .= ')';
 
         return $code;
     }
@@ -236,7 +240,7 @@ class QueryBuilder
             $cond = str_replace($search, $values, $cond);
         }
 
-        if(isset($this->queryData['where']) || ($this->queryData['where'] == '')) {
+        if(!isset($this->queryData['where']) || ($this->queryData['where'] == '')) {
             $this->queryData['where'] .= $cond;    
         } else {
             $this->queryData['where'] .= ' OR ' . $cond;

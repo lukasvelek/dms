@@ -23,20 +23,6 @@ class MetadataModel extends AModel {
     public function updateDefaultMetadataValue(int $idMetadata, int $idMetadataValue, bool $isDefault) {
         $qb = $this->qb(__METHOD__);
 
-        /*$result = $qb->update('metadata_values')
-                     ->set(array('is_default' => ':is_default'))
-                     ->where('id_metadata=:id_metadata')
-                     ->andWhere('id=:id_value')
-                     ->setParams(array(
-                        ':id_metadata' => $idMetadata,
-                        ':id_value' => $idMetadataValue,
-                        ':is_default' => ($isDefault ? '1' : '0')
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         $qb ->update('metadata_values')
             ->set(['is_default = ?', [($isDefault ? '1' : '0')]])
             ->where('id_metadata = ?', [$idMetadata])
@@ -123,18 +109,6 @@ class MetadataModel extends AModel {
     public function insertMetadataValueForIdMetadata(int $idMetadata, string $name, string $value) {
         $qb = $this->qb(__METHOD__);
 
-        /*$result = $qb->insert('metadata_values', 'id_metadata', 'name', 'value')
-                     ->values(':id_metadata', ':name', ':value')
-                     ->setParams(array(
-                        ':id_metadata' => $idMetadata,
-                        ':name' => $name,
-                        ':value' => $value
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         $qb ->insert('metadata_values', ['id_metadata', 'name', 'value'])
             ->values([$idMetadata, $name, $value])
             ->execute();
@@ -177,10 +151,6 @@ class MetadataModel extends AModel {
             ->execute();
 
         $metadata = [];
-        /*foreach($qb->fetchAssoc() as $row) {
-            $metadata[] = $this->createMetadataObjectFromDbRow($row);
-        }*/
-
         while($row = $qb->fetchAssoc()) {
             $metadata[] = $this->createMetadataObjectFromDbRow($row);
         }
@@ -197,7 +167,7 @@ class MetadataModel extends AModel {
             ->execute();
 
         $values = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $values[] = $this->createMetadataValueObjectFromDbRow($row);
         }
 

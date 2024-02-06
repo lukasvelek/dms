@@ -32,7 +32,7 @@ class NotificationModel extends AModel {
             ->execute();
 
         $notifications = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $notifications[] = $this->createNotificationObjectFromDbRow($row);
         }
 
@@ -69,7 +69,7 @@ class NotificationModel extends AModel {
             ->execute();
 
         $notifications = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $notifications[] = $this->createNotificationObjectFromDbRow($row);
         }
 

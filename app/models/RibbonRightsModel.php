@@ -82,16 +82,6 @@ class RibbonRightsModel extends AModel {
 
         // update
 
-       /* $qb = $this->updateExistingQb('ribbon_group_rights', $rights);
-        $qb ->where('id_ribbon=:id_ribbon')
-            ->andWhere('id_group=:id_group')
-            ->setParams(array(
-                ':id_ribbon' => $idRibbon,
-                ':id_group' => $idGroup
-            ));
-
-        $result = $qb->execute()->fetch();*/
-
         $qb ->update('ribbon_group_rights')
             ->set($rights)
             ->where('id_ribbon = ?', [$idRibbon])
@@ -118,18 +108,6 @@ class RibbonRightsModel extends AModel {
         }
 
         // update
-
-        /*$qb = $this->updateExistingQb('ribbon_user_rights', $rights);
-        $qb ->where('id_ribbon=:id_ribbon')
-            ->andWhere('id_user=:id_user')
-            ->setParams(array(
-                ':id_ribbon' => $idRibbon,
-                ':id_user' => $idUser
-            ));
-
-        $result = $qb->execute()->fetch();
-
-        return $result;*/
 
         $qb ->update('ribbon_user_rights')
             ->set($rights)

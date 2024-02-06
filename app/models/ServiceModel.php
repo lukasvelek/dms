@@ -30,20 +30,6 @@ class ServiceModel extends AModel {
     public function updateService(string $name, string $key, string $value) {
         $qb = $this->qb(__METHOD__);
 
-        /*$result = $qb->update('service_config')
-                     ->set(array('value' => ':value'))
-                     ->where('name=:name')
-                     ->andWhere('key=:key')
-                     ->setParams(array(
-                        ':value' => $value,
-                        ':key' => $key,
-                        ':name' => $name
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         $qb ->update('service_config')
             ->set(['value' => $value])
             ->where('name = ?', [$name])
@@ -62,7 +48,7 @@ class ServiceModel extends AModel {
             ->execute();
 
         $cfg = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $cfg[$row['key']] = $row['value'];
         }
 

@@ -44,27 +44,6 @@ class GroupUserModel extends AModel {
     public function updateUserInGroup(int $idGroup, int $idUser, array $data) {
         $qb = $this->qb(__METHOD__);
 
-        /*$keys = [];
-        $params = [];
-
-        foreach($data as $k => $v) {
-            $keys[$k] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        $params[':id_user'] = $idUser;
-        $params[':id_group'] = $idGroup;
-
-        $result = $qb->update('group_users')
-                     ->set($keys)
-                     ->where('id_user=:id_user')
-                     ->andWhere('id_group=:id_group')
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         $qb ->update('group_users')
             ->set($data)
             ->where('id_group = ? AND id_user = ?', [$idGroup, $idUser])
@@ -76,19 +55,6 @@ class GroupUserModel extends AModel {
     public function removeUserFromGroup(int $idGroup, int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        /*$result = $qb->delete()
-                     ->from('group_users')
-                     ->where('id_group=:id_group')
-                     ->andWhere('id_user=:id_user')
-                     ->setParams(array(
-                        ':id_user' => $idUser,
-                        ':id_group' => $idGroup
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
-
         $qb ->delete()
             ->from('group_users')
             ->where('id_group = ? AND id_user = ?', [$idGroup, $idUser])
@@ -99,17 +65,6 @@ class GroupUserModel extends AModel {
 
     public function insertUserToGroup(int $idGroup, int $idUser) {
         $qb = $this->qb(__METHOD__);
-
-        /*$result = $qb->insert('group_users', 'id_user', 'id_group')
-                     ->values(':id_user', ':id_group')
-                     ->setParams(array(
-                        ':id_user' => $idUser,
-                        ':id_group' => $idGroup
-                     ))
-                     ->execute()
-                     ->fetch();
-
-        return $result;*/
 
         $qb ->insert('group_users', ['id_user', 'id_group'])
             ->values([$idUser, $idGroup])
@@ -139,7 +94,7 @@ class GroupUserModel extends AModel {
             ->execute();
 
         $groups = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $groups[] = $this->createGroupUserObjectFromDbRow($row);
         }
 
@@ -155,10 +110,9 @@ class GroupUserModel extends AModel {
             ->execute();
 
         $groups = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $groups[] = $this->createGroupUserObjectFromDbRow($row);
         }
-
         return $groups;
     }
 
@@ -171,7 +125,7 @@ class GroupUserModel extends AModel {
             ->execute();
 
         $groups = [];
-        foreach($qb->fetchAll() as $row) {
+        while($row = $qb->fetchAssoc()) {
             $groups[] = $this->createGroupUserObjectFromDbRow($row);
         }
 
