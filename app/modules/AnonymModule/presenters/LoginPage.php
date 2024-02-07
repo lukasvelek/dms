@@ -127,15 +127,9 @@ class LoginPage extends APresenter {
             unset($_SESSION['login_in_process']);
 
             $app->redirect('UserModule:HomePage:showHomepage');
-            /*if(!is_null($user)) {
-                if(!is_null($user->getDefaultUserPageUrl())) {
-                    $app->redirect($user->getDefaultUserPageUrl());
-                } else {
-                    $app->redirect('UserModule:HomePage:showHomepage');
-                }
-            } else {
-                $app->redirect('UserModule:HomePage:showHomepage');
-            }*/
+        } else {
+            $app->flashMessage('You have entered wrong credentials. Please log in again.', 'warn');
+            $app->redirect('AnonymModule:LoginPage:showForm');
         }
     }
 

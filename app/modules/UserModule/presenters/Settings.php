@@ -1485,26 +1485,26 @@ class Settings extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($userCount <= ($page * $app->getGridSize())) {
+        if($userCount <= ($page * AppConfiguration::getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($userCount / $app->getGridSize()));
+        $lastPageLink .= '&grid_page=' . (ceil($userCount / AppConfiguration::getGridSize()));
         $lastPageLink .= '"';
         
-        if($userCount <= ($page * $app->getGridSize())) {
+        if($userCount <= ($page * AppConfiguration::getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($userCount > $app->getGridSize()) {
-            if($pageCheck * $app->getGridSize() >= $userCount) {
-                $userPageControl = (1 + ($page * $app->getGridSize()));
+        if($userCount > AppConfiguration::getGridSize()) {
+            if($pageCheck * AppConfiguration::getGridSize() >= $userCount) {
+                $userPageControl = (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $userPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
+                $userPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
             }
         } else {
             $userPageControl = $userCount;
@@ -1550,26 +1550,26 @@ class Settings extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($groupCount <= ($page * $app->getGridSize())) {
+        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($groupCount / $app->getGridSize()));
+        $lastPageLink .= '&grid_page=' . (ceil($groupCount / AppConfiguration::getGridSize()));
         $lastPageLink .= '"';
         
-        if($groupCount <= ($page * $app->getGridSize())) {
+        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($groupCount > $app->getGridSize()) {
-            if($pageCheck * $app->getGridSize() >= $groupCount) {
-                $groupPageControl = (1 + ($page * $app->getGridSize()));
+        if($groupCount > AppConfiguration::getGridSize()) {
+            if($pageCheck * AppConfiguration::getGridSize() >= $groupCount) {
+                $groupPageControl = (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $groupPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
+                $groupPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
             }
         } else {
             $groupPageControl = $groupCount;

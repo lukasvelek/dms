@@ -268,9 +268,7 @@ class Application {
         }
 
         if(!array_key_exists('id_ribbon', $newParams) && $url != self::URL_LOGIN_PAGE) {
-            if($this->currentIdRibbon != null) {
-                //$newParams['id_ribbon'] = $this->currentIdRibbon;
-            } else if(isset($_SESSION['id_current_ribbon'])) {
+            if(isset($_SESSION['id_current_ribbon'])) {
                 $newParams['id_ribbon'] = $this->currentIdRibbon;
             }
         }
@@ -301,6 +299,7 @@ class Application {
         $page .= $hashtag;
 
         header('Location: ' . $page);
+        die();
     }
 
     /**
@@ -318,19 +317,20 @@ class Application {
      * Renders the current page and saves it to the $pageContent variable
      */
     public function renderPage() {
-        // --- TOPPANEL ---
-
-        $toppanel = $this->renderToppanel();
-        $subpanel = $this->renderSubpanel();
-
-        // --- TOPPANEL ---
-
         if(is_null($this->currentUrl)) {
             die('Current URL is null!');
         }
 
-        // Module:Presenter:action
 
+        // --- PANELS ---
+
+        $toppanel = $this->renderToppanel();
+        $subpanel = $this->renderSubpanel();
+
+        // --- END OF PANELS ---
+
+        
+        // URL Link: Module:Presenter:action
         $parts = explode(':', $this->currentUrl);
         $module = $parts[0];
         $presenter = $parts[1];
@@ -369,6 +369,7 @@ class Application {
         // Load page body
         $pageBody = $module->currentPresenter->performAction($action);
 
+
         // --- PAGE CONTENT CREATION ---
 
         $this->pageContent = '';
@@ -386,6 +387,7 @@ class Application {
         $this->pageContent .= $pageBody;
 
         // --- END OF PAGE CONTENT CREATION ---
+
 
         if(str_contains($action, 'show')) {
             $this->clearFlashMessage();
@@ -520,24 +522,11 @@ class Application {
      * 
      * @param bool $clearFromSession If the flash message should be removed entirely
      */
-    public function clearFlashMessage(bool $clearFromSession = true) {
+    public function clearFlashMessage() {
         $this->flashMessage = null;
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::FLASH_MESSAGES);
         $cm->invalidateCache();
-    }
-
-    /**
-     * Returns the grid size config parameter as defined in the config file
-     * 
-     * @return int Grid size
-     */
-    public function getGridSize() {
-        return AppConfiguration::getGridSize();
-    }
-
-    public function getGridUseAjax() {
-        return AppConfiguration::getGridUseAjax();
     }
 
     /**

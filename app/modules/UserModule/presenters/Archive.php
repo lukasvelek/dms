@@ -7,6 +7,7 @@ use DMS\Constants\ArchiveType;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
@@ -395,26 +396,26 @@ class Archive extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($entityCount <= ($page * $app->getGridSize())) {
+        if($entityCount <= ($page * AppConfiguration::getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($entityCount / $app->getGridSize()));
+        $lastPageLink .= '&grid_page=' . (ceil($entityCount / AppConfiguration::getGridSize()));
         $lastPageLink .= '"';
 
-        if($entityCount <= ($page * $app->getGridSize())) {
+        if($entityCount <= ($page * AppConfiguration::getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($entityCount > $app->getGridSize()) {
-            if($pageCheck * $app->getGridSize() >= $entityCount) {
-                $pageControl = (1 + ($page * $app->getGridSize()));
+        if($entityCount > AppConfiguration::getGridSize()) {
+            if($pageCheck * AppConfiguration::getGridSize() >= $entityCount) {
+                $pageControl = (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $pageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
+                $pageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
             }
         } else {
             $pageControl = $entityCount;

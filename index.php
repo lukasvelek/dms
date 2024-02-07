@@ -26,7 +26,6 @@ if(isset($_SESSION['id_current_user'])) {
         unset($_SESSION['session_end_date']);
         unset($_SESSION['last_login_hash']);
 
-        //$app->flashMessage('You have exceeded login time. Please log in again.', FlashMessageTypes::ERROR);
         $app->flashMessage('You must login again.', 'error');
 
         if($app->currentUrl != $app::URL_LOGIN_PAGE) {

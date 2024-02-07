@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Components\Process\HomeOffice;
 use DMS\Constants\ProcessTypes;
+use DMS\Core\AppConfiguration;
 use DMS\Modules\APresenter;
 use DMS\Panels\Panels;
 use DMS\UI\LinkBuilder;
@@ -208,26 +209,26 @@ class Processes extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($processCount <= ($page * $app->getGridSize())) {
+        if($processCount <= ($page * AppConfiguration::getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($processCount / $app->getGridSize()));
+        $lastPageLink .= '&grid_page=' . (ceil($processCount / AppConfiguration::getGridSize()));
         $lastPageLink .= '"';
 
-        if($processCount <= ($page * $app->getGridSize())) {
+        if($processCount <= ($page * AppConfiguration::getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($processCount > $app->getGridSize()) {
-            if(($page * $app->getGridSize()) >= $processCount) {
+        if($processCount > AppConfiguration::getGridSize()) {
+            if(($page * AppConfiguration::getGridSize()) >= $processCount) {
                 $processPageControl = $processCount;
             } else {
-                $processPageControl = ($page * $app->getGridSize()) . '+';
+                $processPageControl = ($page * AppConfiguration::getGridSize()) . '+';
             }
         } else {
             $processPageControl = $processCount;

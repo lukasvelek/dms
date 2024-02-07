@@ -317,7 +317,7 @@ class Documents extends APresenter {
         }
 
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter, $page, $app) {
-            if($app->getGridUseAjax()) {
+            if(AppConfiguration::getGridUseAjax()) {
                 $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $filter, $page);
             } else{
                 $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $filter, $page);
@@ -381,7 +381,7 @@ class Documents extends APresenter {
         $folderList = '';
         
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $page, $app) {
-            if($app->getGridUseAjax()) {
+            if(AppConfiguration::getGridUseAjax()) {
                 $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, '', $page);
             } else{
                 $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $page);
@@ -1176,26 +1176,26 @@ class Documents extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($documentCount <= ($page * $app->getGridSize())) {
+        if($documentCount <= ($page * AppConfiguration::getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($documentCount / $app->getGridSize()));
+        $lastPageLink .= '&grid_page=' . (ceil($documentCount / AppConfiguration::getGridSize()));
         $lastPageLink .= '"';
 
-        if($documentCount <= ($page * $app->getGridSize())) {
+        if($documentCount <= ($page * AppConfiguration::getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($documentCount > $app->getGridSize()) {
-            if($pageCheck * $app->getGridSize() >= $documentCount) {
-                $documentPageControl = (1 + ($page * $app->getGridSize()));
+        if($documentCount > AppConfiguration::getGridSize()) {
+            if($pageCheck * AppConfiguration::getGridSize() >= $documentCount) {
+                $documentPageControl = (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $documentPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
+                $documentPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
             }
         } else {
             $documentPageControl = $documentCount;
