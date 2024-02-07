@@ -374,24 +374,23 @@ class SingleDocument extends APresenter {
 
             if($cm->getInputType() == 'select_external') {
                 $name = $cm->getName();
-                    $text = $cm->getText();
-                    $values = $app->externalEnumComponent->getEnumByName($cm->getSelectExternalEnumName())->getValues();
+                $text = $cm->getText();
+                $values = $app->externalEnumComponent->getEnumByName($cm->getSelectExternalEnumName())->getValues();
 
-                    $options = [];
-                    foreach($values as $value => $vtext) {
-                        $option = array(
-                            'value' => $value,
-                            'text' => $vtext
-                        );
-
-                        if(!is_null($document->getMetadata($name)) && ($document->getMetadata($name) == $vtext)) {
-                            $option['selected'] = 'selected';
-                        }
-
-                        $options[] = $option;
+                $options = [];
+                foreach($values as $value => $vtext) {
+                    $option = array(
+                        'value' => $value,
+                        'text' => $vtext
+                    );
+                    if(!is_null($document->getMetadata($name)) && ($document->getMetadata($name) == $value)) {
+                        $option['selected'] = 'selected';
                     }
 
-                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());
+                    $options[] = $option;
+                }
+
+                $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());
             } else {
                 $name = $cm->getName();
                 $text = $cm->getText();
@@ -411,7 +410,7 @@ class SingleDocument extends APresenter {
                         'text' => $v->getName()
                     );
                 
-                    if(!is_null($document->getMetadata($name)) && ($document->getMetadata($name) == $v)) {
+                    if(!is_null($document->getMetadata($name)) && ($document->getMetadata($name) == $v->getValue())) {
                         $option['selected'] = 'selected';
                         $hasDefault = true;
                     }

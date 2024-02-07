@@ -357,7 +357,7 @@ class QueryBuilder
             die('QueryBuilder: No connection has been found!');
         }
 
-        if($useSafe && $this->queryType == 'insert') {
+        if($useSafe && in_array($this->queryType, ['insert'])) {
             $this->queryResult = $this->conn->query($this->sql, $this->queryData['values']);
         } else {
             $this->queryResult = $this->conn->query($this->sql);
