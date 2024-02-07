@@ -3,7 +3,7 @@
 namespace QueryBuilder;
 
 interface IDbQueriable {
-    function query(string $sql);
+    function query(string $sql, array $params = []);
 }
 
 ?>

@@ -12,6 +12,7 @@ use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Document;
+use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -231,8 +232,24 @@ class SingleDocument extends APresenter {
         unset($_POST['group']);
         unset($_POST['folder']);
 
+        ArrayHelper::deleteKeysFromArray($_POST, [
+            'name',
+            'manager',
+            'status',
+            'group',
+            'folder'
+        ]);
+
         $customMetadata = $_POST;
 
+        $remove = [];
+        foreach($customMetadata as $key => $value) {
+            if($value == 'null') {
+                $remove[] = $key;
+            }
+        }
+
+        ArrayHelper::deleteKeysFromArray($customMetadata, $remove);
         $data = array_merge($data, $customMetadata);
 
         $app->documentModel->updateDocument($id, $data);
@@ -367,7 +384,7 @@ class SingleDocument extends APresenter {
                             'text' => $vtext
                         );
 
-                        if(!is_null($document->getMetadata($name))) {
+                        if(!is_null($document->getMetadata($name)) && ($document->getMetadata($name) == $vtext)) {
                             $option['selected'] = 'selected';
                         }
 
@@ -381,17 +398,29 @@ class SingleDocument extends APresenter {
                 $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
 
                 $options = [];
+
+                $options[] = [
+                    'value' => 'null',
+                    'text' => '-'
+                ];
+
+                $hasDefault = false;
                 foreach($values as $v) {
                     $option = array(
                         'value' => $v->getValue(),
                         'text' => $v->getName()
                     );
                 
-                    if(!is_null($document->getMetadata($name))) {
+                    if(!is_null($document->getMetadata($name)) && ($document->getMetadata($name) == $v)) {
                         $option['selected'] = 'selected';
+                        $hasDefault = true;
                     }
 
                     $options[] = $option;
+                }
+
+                if($hasDefault === FALSE) {
+                    $options[0]['selected'] = 'selected';
                 }
 
                 $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
@@ -527,7 +556,11 @@ class SingleDocument extends APresenter {
             if($m->getInputType() == 'select_external') {
                 $mValues = $app->externalEnumComponent->getEnumByName($m->getSelectExternalEnumName())->getValues();
 
-                $data[$m->getText()] = $mValues[$v];
+                if($v === NULL) {
+                    $data[$m->getText()] = '-';
+                } else {
+                    $data[$m->getText()] = $mValues[$v];
+                }
             } else {
                 $mValues = $app->metadataModel->getAllValuesForIdMetadata($m->getId());
             

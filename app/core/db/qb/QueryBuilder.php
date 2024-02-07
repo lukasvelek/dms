@@ -331,6 +331,8 @@ class QueryBuilder
     }
 
     public function execute() {
+        $useSafe = true;
+
         if($this->hasCustomSQL) {
             $this->queryResult = $this->conn->query($this->sql);
             $this->log();
@@ -344,7 +346,7 @@ class QueryBuilder
         }
 
         if($this->sql === '') {
-            $this->createSQLQuery();
+            $this->createSQLQuery($useSafe);
         }
 
         if($this->openBrackets > 0) {
@@ -352,11 +354,14 @@ class QueryBuilder
         }
 
         if($this->conn === NULL) {
-            //return null;
             die('QueryBuilder: No connection has been found!');
         }
 
-        $this->queryResult = $this->conn->query($this->sql);
+        if($useSafe && $this->queryType == 'insert') {
+            $this->queryResult = $this->conn->query($this->sql, $this->queryData['values']);
+        } else {
+            $this->queryResult = $this->conn->query($this->sql);
+        }
 
         $this->log();
 
@@ -409,14 +414,18 @@ class QueryBuilder
         return $result;
     }
 
-    private function createSQLQuery() {
+    private function createSQLQuery(bool $useSafe = false) {
         switch($this->queryType) {
             case 'select':
                 $this->createSelectSQLQuery();
                 break;
 
             case 'insert':
-                $this->createInsertSQLQuery();
+                if($useSafe) {
+                    $this->createInsertSafeSQLQuery();
+                } else {
+                    $this->createInsertSQLQuery();
+                }
                 break;
 
             case 'update':
@@ -442,6 +451,34 @@ class QueryBuilder
         if($this->hasCustomParams) {
             $this->sql = str_replace($keys, $values, $this->sql);
         }
+    }
+
+    private function createInsertSafeSQLQuery() {
+        $sql = 'INSERT INTO ' . $this->queryData['table'] . ' (';
+
+        $i = 0;
+        foreach($this->queryData['keys'] as $key) {
+            if(($i + 1) == count($this->queryData['keys'])) {
+                $sql .= '`' . $key . '`) VALUES (';
+            } else {
+                $sql .= '`' . $key . '`, ';
+            }
+
+            $i++;
+        }
+
+        $i = 0;
+        foreach($this->queryData['values'] as $value) {
+            if(($i + 1) == count($this->queryData['values'])) {
+                $sql .= "?)";
+            } else {
+                $sql .= "?, ";
+            }
+
+            $i++;
+        }
+
+        $this->sql = $sql;
     }
 
     private function createUpdateNullSQLQuery() {

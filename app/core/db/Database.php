@@ -44,9 +44,29 @@ class Database implements IDbQueriable {
         $this->installer = new DatabaseInstaller($this, $this->logger);
     }
     
-    public function query(string $sql) {
+    public function query(string $sql, array $params = []) {
         if(!is_null($this->conn)) {
-            return $this->conn->query($sql);
+            if(empty($params)) {
+                return $this->conn->query($sql);
+            } else {
+                $types = '';
+
+                foreach($params as $param) {
+                    if(is_integer($param)) {
+                        $types .= 'i';
+                    }
+                    if(is_double($param)) {
+                        $types .= 'd';
+                    }
+                    if(is_string($param)) {
+                        $types .= 's';
+                    }
+                }
+
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param($types, ...$params);
+                return $stmt->execute();
+            }
         } else {
             return null;
         }

@@ -859,13 +859,15 @@ class Documents extends APresenter {
             $data['file'] = $_FILES['file']['name'];
         }
 
-        unset($_POST['name']);
-        unset($_POST['manager']);
-        unset($_POST['status']);
-        unset($_POST['group']);
-        unset($_POST['folder']);
-        unset($_POST['shred_year']);
-        unset($_POST['after_shred_action']);
+        ArrayHelper::deleteKeysFromArray($_POST, [
+            'name',
+            'manager',
+            'status',
+            'group',
+            'folder',
+            'shred_year',
+            'after_shred_action'
+        ]);
 
         $customMetadata = $_POST;
 
@@ -877,12 +879,14 @@ class Documents extends APresenter {
         }
 
         ArrayHelper::deleteKeysFromArray($customMetadata, $remove);
-
         $data = array_merge($data, $customMetadata);
 
         if(isset($data['file']) && !empty($data['file'])) {
             $app->fsManager->uploadFile($_FILES['file'], $data['file']);
         }
+        
+        // CUSTOM OPERATION DEFINITION
+        // END OF CUSTOM OPERATION DEFINITION
         
         $app->documentModel->insertNewDocument($data);
 
