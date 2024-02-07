@@ -11,6 +11,28 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertLastLoginHashForIdUser(int $id, string $hash) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->update('users')
+            ->set(['last_login_hash' => $hash])
+            ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getLastLoginHashForIdUser(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['last_login_hash'])
+            ->from('users')
+            ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetch('last_login_hash');
+    }
+
     public function deleteConnectionsForIdUser(int $id) {
         return $this->deleteByCol('id_user1', $id, 'user_connections') && $this->deleteByCol('id_user2', $id, 'user_connections');
     }
