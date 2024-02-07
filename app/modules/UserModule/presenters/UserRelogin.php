@@ -69,7 +69,7 @@ class UserRelogin extends APresenter {
 
         $app->flashMessageIfNotIsset(array('user'), true, array('page' => 'UserModule:UserRelogin:showNewConnectionForm'));
 
-        $user = htmlspecialchars($_POST['user']); // id user
+        $user = $this->post('user'); // id user
 
         $data = array(
             'id_user1' => $app->user->getId(),
@@ -89,7 +89,7 @@ class UserRelogin extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_user'), true, array('page' => 'UserModule:UserRelogin:showConnectedUsers'));
 
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idUser = $this->get('id_user');
 
         $app->userModel->removeConnectionForTwoUsers($idUser, $app->user->getId());
 
@@ -104,7 +104,7 @@ class UserRelogin extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_user'), true, array('page' => 'UserModule:UserRelogin:showConnectedUsers'));
 
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idUser = $this->get('id_user');
         $user = $app->userModel->getUserById($idUser);
 
         $_SESSION['id_current_user'] = $idUser;

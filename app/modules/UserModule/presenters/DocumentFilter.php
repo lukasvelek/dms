@@ -27,7 +27,7 @@ class DocumentFilter extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_filter'));
 
-        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $idFilter = $this->get('id_filter');
         $ribbon = $app->ribbonModel->getRibbonForIdDocumentFilter($idFilter);
 
         $app->ribbonModel->deleteRibbonForIdDocumentFilter($idFilter);
@@ -53,7 +53,7 @@ class DocumentFilter extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_filter'));
 
-        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $idFilter = $this->get('id_filter');
         $filter = $app->filterModel->getDocumentFilterById($idFilter);
 
         $parentRibbon = $app->ribbonModel->getRibbonByCode('documents');
@@ -91,7 +91,7 @@ class DocumentFilter extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
 
-        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $idFilter = $this->get('id_filter');
 
         $app->filterModel->deleteDocumentFilter($idFilter);
         
@@ -106,7 +106,7 @@ class DocumentFilter extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
 
-        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $idFilter = $this->get('id_filter');
         $filter = $app->filterModel->getDocumentFilterById($idFilter);
 
         $data = array(
@@ -130,7 +130,7 @@ class DocumentFilter extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
 
-        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $idFilter = $this->get('id_filter');
         $filter = $app->filterModel->getDocumentFilterById($idFilter);
 
         $data = array(
@@ -171,17 +171,17 @@ class DocumentFilter extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(array('name', 'id_filter'), true, array('page' => 'UserModule:DocumentFilter:showNewFilterForm'));
-        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $idFilter = $this->get('id_filter');
 
         $data = [];
-        $data['name'] = htmlspecialchars($_POST['name']);
+        $data['name'] = $this->post('name');
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = htmlspecialchars($_POST['description']);
+            $data['description'] = $this->post('description');
         }
 
         if(isset($_POST['filter_sql'])) {
-            $data['filter_sql'] = htmlspecialchars($_POST['filter_sql']);
+            $data['filter_sql'] = $this->post('filter_sql');
         }
 
         if(isset($_POST['has_ordering'])) {
@@ -200,14 +200,14 @@ class DocumentFilter extends APresenter {
         $app->flashMessageIfNotIsset(array('name'), true, array('page' => 'UserModule:DocumentFilter:showNewFilterForm'));
 
         $data = [];
-        $data['name'] = htmlspecialchars($_POST['name']);
+        $data['name'] = $this->post('name');
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = htmlspecialchars($_POST['description']);
+            $data['description'] = $this->post('description');
         }
 
         if(isset($_POST['filter_sql'])) {
-            $data['filter_sql'] = htmlspecialchars($_POST['filter_sql']);
+            $data['filter_sql'] = $this->post('filter_sql');
         }
 
         if(isset($_POST['has_ordering'])) {

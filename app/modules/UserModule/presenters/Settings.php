@@ -15,15 +15,13 @@ use DMS\Core\Application;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
-use DMS\Entities\Metadata;
+use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Modules\APresenter;
-use DMS\Services\AService;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Settings extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -39,7 +37,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $notDeletableIdGroups = array(1, 2);
 
@@ -57,7 +55,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $user = $app->userModel->getUserById($id);
 
         $notDeletableIdUsers = array($app->user->getId(), AppConfiguration::getIdServiceUser());
@@ -85,12 +83,12 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_user', 'widget00', 'widget01', 'widget10', 'widget11']);
 
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idUser = $this->get('id_user');
 
-        $widget0_0 = htmlspecialchars($_POST['widget00']);
-        $widget0_1 = htmlspecialchars($_POST['widget01']);
-        $widget1_0 = htmlspecialchars($_POST['widget10']);
-        $widget1_1 = htmlspecialchars($_POST['widget11']);
+        $widget0_0 = $this->post('widget00');
+        $widget0_1 = $this->post('widget01');
+        $widget1_0 = $this->post('widget10');
+        $widget1_1 = $this->post('widget11');
 
         if($widget0_0 != '-') {
             if(is_null($app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00))) {
@@ -146,9 +144,9 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['name']);
 
-        $name = htmlspecialchars($_GET['name']);
+        $name = $this->get('name');
         
-        $values = $_POST;
+        $values = ArrayHelper::formatArrayData($_POST);
 
         unset($values['name']);
         unset($values['description']);
@@ -192,7 +190,7 @@ class Settings extends APresenter {
         
         $app->flashMessageIfNotIsset(['name']);
         
-        $name = htmlspecialchars($_GET['name']);
+        $name = $this->get('name');
 
         $data = array(
             '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
@@ -231,7 +229,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['name']);
 
-        $name = htmlspecialchars($_GET['name']);
+        $name = $this->get('name');
 
         $urlConfirm = array(
             'page' => 'UserModule:Settings:runService',
@@ -252,7 +250,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['name']);
 
-        $name = htmlspecialchars($_GET['name']);
+        $name = $this->get('name');
 
         foreach($app->serviceManager->services as $service) {
             if($service->name == $name) {
@@ -285,7 +283,7 @@ class Settings extends APresenter {
 
         $idFolder = null;
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
 
             if((($folder->getNestLevel() + 1) < 6) && ($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER))) {
@@ -324,8 +322,7 @@ class Settings extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id_folder']);
-
-        $idFolder = htmlspecialchars($_GET['id_folder']);
+        $idFolder = $this->get('id_folder');
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
@@ -345,7 +342,7 @@ class Settings extends APresenter {
         $idParentFolder = null;
 
         if(isset($_GET['id_parent_folder'])) {
-            $idParentFolder = htmlspecialchars($_GET['id_parent_folder']);
+            $idParentFolder = $this->get('id_parent_folder');
         }
 
         $data = array(
@@ -363,19 +360,19 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['name', 'parent_folder', 'id_folder']);
 
-        $idFolder = htmlspecialchars($_GET['id_folder']);
+        $idFolder = $this->get('id_folder');
         
         $data = [];
 
-        $parentFolder = htmlspecialchars($_POST['parent_folder']);
+        $parentFolder = $this->post('parent_folder');
         $nestLevel = 0;
 
-        $data['name'] = htmlspecialchars($_POST['name']);
+        $data['name'] = $this->post('name');
 
         $create = true;
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = htmlspecialchars($_POST['description']);
+            $data['description'] = $this->post('description');
         }
 
         if($parentFolder == '-1') {
@@ -416,15 +413,15 @@ class Settings extends APresenter {
 
         $data = [];
 
-        $parentFolder = htmlspecialchars($_POST['parent_folder']);
+        $parentFolder = $this->post('parent_folder');
         $nestLevel = 0;
 
-        $data['name'] = htmlspecialchars($_POST['name']);
+        $data['name'] = $this->post('name');
 
         $create = true;
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = htmlspecialchars($_POST['description']);
+            $data['description'] = $this->post('description');
         }
 
         if($parentFolder == '-1') {
@@ -488,12 +485,12 @@ class Settings extends APresenter {
         $page = 1;
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $usersGrid = '';
 
-        $app->logger->logFunction(function() use (&$usersGrid, $app, $page) {
+        $app->logger->logFunction(function() use (&$usersGrid, $page) {
             $usersGrid = $this->internalCreateUsersGridAjax($page);
         }, __METHOD__);
 
@@ -524,10 +521,10 @@ class Settings extends APresenter {
         $page = 1;
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
-        $app->logger->logFunction(function() use (&$groupsGrid, $app, $page) {
+        $app->logger->logFunction(function() use (&$groupsGrid, $page) {
             $groupsGrid = $this->internalCreateGroupGridAjax($page);
         }, __METHOD__);
 
@@ -609,8 +606,6 @@ class Settings extends APresenter {
     }
 
     protected function showNewMetadataForm() {
-        global $app;
-
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
         $data = array(
@@ -656,22 +651,20 @@ class Settings extends APresenter {
 
         $data = [];
 
-        $name = htmlspecialchars($_POST['name']);
-        $tableName = htmlspecialchars($_POST['table_name']);
-        $length = htmlspecialchars($_POST['length']);
-        $inputType = htmlspecialchars($_POST['input_type']);
+        $data['name'] = $name = $this->post('name');
+        $data['table_name'] = $tableName = $this->post('table_name');
+        $length = $this->post('length');
+        $inputType = $this->post('input_type');
 
         if(isset($_POST['select_external_enum']) && $inputType == 'select_external') {
-            $data['select_external_enum_name'] = htmlspecialchars($_POST['select_external_enum']);
+            $data['select_external_enum_name'] = $this->post('select_external_enum');
         }
 
         if(isset($_POST['readonly'])) {
             $data['is_readonly'] = '1';
         }
 
-        $data['name'] = htmlspecialchars($_POST['name']);
-        $data['text'] = htmlspecialchars($_POST['text']);
-        $data['table_name'] = htmlspecialchars($_POST['table_name']);
+        $data['text'] = $this->post('text');
         $data['input_type'] = $inputType;
 
         if($inputType == 'boolean') {
@@ -715,7 +708,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $metadata = $app->metadataModel->getMetadataById($id);
 
         // delete table column
@@ -736,11 +729,11 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['name']);
 
-        $name = htmlspecialchars($_POST['name']);
+        $name = $this->post('name');
         $code = null;
 
         if(isset($_POST['code'])) {
-            $code = htmlspecialchars($_POST['code']);
+            $code = $this->post('code');
         }
 
         $app->groupModel->insertNewGroup($name, $code);
@@ -765,26 +758,26 @@ class Settings extends APresenter {
         $app->flashMessageIfNotIsset($required);
 
         foreach($required as $r) {
-            $data[$r] = htmlspecialchars($_POST[$r]);
+            $data[$r] = $this->post($r);
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
-            $data['email'] = htmlspecialchars($_POST['email']);
+            $data['email'] = $this->post('email');
         }
         if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
-            $data['address_street'] = htmlspecialchars($_POST['address_street']);
+            $data['address_street'] = $this->post('address_street');
         }
         if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
-            $data['address_house_number'] = htmlspecialchars($_POST['address_house_number']);
+            $data['address_house_number'] = $this->post('address_house_number');
         }
         if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
-            $data['address_city'] = htmlspecialchars($_POST['address_city']);
+            $data['address_city'] = $this->post('address_city');
         }
         if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
-            $data['address_zip_code'] = htmlspecialchars($_POST['address_zip_code']);
+            $data['address_zip_code'] = $this->post('address_zip_code');
         }
         if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
-            $data['address_country'] = htmlspecialchars($_POST['address_country']);
+            $data['address_country'] = $this->post('address_country');
         }
 
         $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
@@ -808,7 +801,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_folder']);
 
-        $id = htmlspecialchars($_GET['id_folder']);
+        $id = $this->get('id_folder');
 
         $urlConfirm = array(
             'page' => 'UserModule:Settings:deleteFolder',
@@ -829,7 +822,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_folder']);
 
-        $idFolder = htmlspecialchars($_GET['id_folder']);
+        $idFolder = $this->get('id_folder');
         $folder = $app->folderModel->getFolderById($idFolder);
 
         $childFolders = [];
@@ -1134,7 +1127,7 @@ class Settings extends APresenter {
         $idFolder = null;
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
         }
 
         $data = function() use ($folderModel, $idFolder) {

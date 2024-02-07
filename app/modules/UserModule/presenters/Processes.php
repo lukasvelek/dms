@@ -6,7 +6,6 @@ use DMS\Components\Process\HomeOffice;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\AppConfiguration;
 use DMS\Modules\APresenter;
-use DMS\Panels\Panels;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -45,11 +44,11 @@ class Processes extends APresenter {
         $page = 1;
 
         if(isset($_GET['filter'])) {
-            $filter = htmlspecialchars($_GET['filter']);
+            $filter = $this->get('filter');
         }
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $processGrid = '<!--<script type="text/javascript" src="js/ProcessAjaxSearch.js"></script>-->';
@@ -75,7 +74,7 @@ class Processes extends APresenter {
 
         $app->flashMessageIfNotIsset(['type']);
 
-        $type = htmlspecialchars($_GET['type']);
+        $type = $this->get('type');
         $name = ProcessTypes::$texts[$type];
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/processes/new-process.html');
@@ -109,8 +108,6 @@ class Processes extends APresenter {
      * Currently not in use
      */
     private function internalCreateProcessMenuGrid() {
-        global $app;
-
         $tb = TableBuilder::getTemporaryObject();
 
         $processes = array(

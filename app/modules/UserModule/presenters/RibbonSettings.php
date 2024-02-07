@@ -13,7 +13,6 @@ use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class RibbonSettings extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -29,7 +28,7 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $ribbon = $app->ribbonModel->getRibbonById($id);
 
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/settings/settings-grid.html');
@@ -54,7 +53,7 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
         
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         
         $app->ribbonRightsModel->deleteAllGroupRibbonRights($id);
         $app->ribbonRightsModel->deleteAllUserRibbonRights($id);
@@ -93,9 +92,9 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group', 'name'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
 
-        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $name = htmlspecialchars($_GET['name']);
+        $idRibbon = $this->get('id_ribbon');
+        $idGroup = $this->get('id_group');
+        $name = $this->get('name');
 
         $rights = array($name => '0');
 
@@ -110,9 +109,9 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group', 'name'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
 
-        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $name = htmlspecialchars($_GET['name']);
+        $idRibbon = $this->get('id_ribbon');
+        $idGroup = $this->get('id_group');
+        $name = $this->get('name');
 
         $rights = array($name => '1');
 
@@ -127,8 +126,8 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
 
-        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
-        $idGroup = htmlspecialchars($_GET['id_group']);
+        $idRibbon = $this->get('id_ribbon');
+        $idGroup = $this->get('id_group');
 
         $rights = array(
             AModel::VIEW => '1',
@@ -147,8 +146,8 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
 
-        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
-        $idGroup = htmlspecialchars($_GET['id_group']);
+        $idRibbon = $this->get('id_ribbon');
+        $idGroup = $this->get('id_group');
 
         $rights = array(
             AModel::VIEW => '0',
@@ -167,9 +166,9 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user', 'name'));
 
-        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
-        $idUser = htmlspecialchars($_GET['id_user']);
-        $name = htmlspecialchars($_GET['name']);
+        $idRibbon = $this->get('id_ribbon');
+        $idUser = $this->get('id_user');
+        $name = $this->get('name');
 
         $rights = array($name => '0');
 
@@ -184,9 +183,9 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user', 'name'));
 
-        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
-        $idUser = htmlspecialchars($_GET['id_user']);
-        $name = htmlspecialchars($_GET['name']);
+        $idRibbon = $this->get('id_ribbon');
+        $idUser = $this->get('id_user');
+        $name = $this->get('name');
 
         $rights = array($name => '1');
 
@@ -201,8 +200,8 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
 
-        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idRibbon = $this->get('id_ribbon');
+        $idUser = $this->get('id_user');
 
         $rights = array(
             AModel::VIEW => '1',
@@ -221,8 +220,8 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
 
-        $idRibbon = htmlspecialchars($_GET['id_ribbon']);
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idRibbon = $this->get('id_ribbon');
+        $idUser = $this->get('id_user');
 
         $rights = array(
             AModel::VIEW => '0',
@@ -242,7 +241,7 @@ class RibbonSettings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
         $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
         $valFromCache = $cm->loadRibbonById($id);
@@ -281,7 +280,7 @@ class RibbonSettings extends APresenter {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
         $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
         $valFromCache = $cm->loadRibbonById($id);
@@ -318,24 +317,23 @@ class RibbonSettings extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(array('id', 'name', 'code', 'page_url', 'parent'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $data = [];
-        $data['name'] = htmlspecialchars($_POST['name']);
-        $data['code'] = htmlspecialchars($_POST['code']);
-        $data['page_url'] = htmlspecialchars($_POST['page_url']);
+        $data['name'] = $this->post('name');
+        $data['code'] = $this->post('code');
+        $data['page_url'] = $this->post('page_url');
 
         if($_POST['parent'] != '0') {
-            $data['id_parent_ribbon'] = htmlspecialchars($_POST['parent']);
+            $data['id_parent_ribbon'] = $this->post('parent');
         }
 
         if(isset($_POST['title']) && $_POST['title'] != '') {
-            $data['title'] = htmlspecialchars($_POST['title']);
+            $data['title'] = $this->post('title');
         }
 
         if(isset($_POST['image'])) {
-            $data['image'] = htmlspecialchars($_POST['image']);
+            $data['image'] = $this->post('image');
         }
 
         if(isset($_POST['is_visible'])) {
@@ -355,10 +353,9 @@ class RibbonSettings extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $id = $this->get('id');
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
-
-        $id = htmlspecialchars($_GET['id']);
 
         $ribbon = $app->ribbonModel->getRibbonById($id);
 
@@ -378,27 +375,27 @@ class RibbonSettings extends APresenter {
         $app->flashMessageIfNotIsset(array('name', 'code', 'parent', 'page_url'), true, array('page' => 'UserModule:RibbonSettings:showNewForm'));
 
         $data = [];
-        $data['name'] = htmlspecialchars($_POST['name']);
-        $data['code'] = htmlspecialchars($_POST['code']);
-        $data['page_url'] = htmlspecialchars($_POST['page_url']);
+        $data['name'] = $this->post('name');
+        $data['code'] = $this->post('code');
+        $data['page_url'] = $this->post('page_url');
         $data['is_system'] = '0';
 
         if(isset($_POST['parent'])) {
             if($_POST['parent'] != '0') {
-                $data['id_parent_ribbon'] = htmlspecialchars($_POST['parent']);
+                $data['id_parent_ribbon'] = $this->post('parent');
             }
         } else if(isset($_GET['parent'])) {
             if($_GET['parent'] != '0') {
-                $data['id_parent_ribbon'] = htmlspecialchars($_GET['parent']);
+                $data['id_parent_ribbon'] = $this->get('parent');
             }
         }
 
         if(isset($_POST['title'])) {
-            $data['title'] = htmlspecialchars($_POST['title']);
+            $data['title'] = $this->post('title');
         }
 
         if(isset($_POST['image'])) {
-            $data['image'] = htmlspecialchars($_POST['image']);
+            $data['image'] = $this->post('image');
         }
 
         if(isset($_POST['is_visible'])) {
@@ -436,7 +433,7 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessageIfNotIsset(['parent']);
 
-        $idParent = htmlspecialchars($_POST['parent']);
+        $idParent = $this->post('parent');
         $parent = $app->ribbonModel->getRibbonById($idParent);
 
         $splitterCount = $app->ribbonModel->getSplitterCountForIdParent($idParent);
@@ -474,7 +471,7 @@ class RibbonSettings extends APresenter {
 
         if(isset($_GET['is_dropdown'])) {
             $app->flashMessageIfNotIsset(['id_parent_ribbon']);
-            $idParentRibbon = htmlspecialchars($_GET['id_parent_ribbon']);
+            $idParentRibbon = $this->get('id_parent_ribbon');
 
             $isDropdown = true;
         }

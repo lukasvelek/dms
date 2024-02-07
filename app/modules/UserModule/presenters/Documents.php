@@ -17,6 +17,7 @@ use DMS\Entities\Document;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Helpers\FormDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
@@ -37,8 +38,8 @@ class Documents extends APresenter {
 
         $app->flashMessageIfNotIsset(['ids', 'archive_document'], true, ['page' => 'UserModule:Documents:showAll']);
 
-        $ids = $_GET['ids'];
-        $archiveDocument = htmlspecialchars($_POST['archive_document']);
+        $ids = $this->get('ids', false);
+        $archiveDocument = $this->post('archive_document');
 
         if(!is_array($ids)) {
             $ids = [$ids];
@@ -60,7 +61,7 @@ class Documents extends APresenter {
         
         $app->flashMessageIfNotIsset(array('id_filter'));
 
-        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $idFilter = $this->get('id_filter');
         
         $data = array(
             '$PAGE_TITLE$' => 'Documents',
@@ -85,7 +86,7 @@ class Documents extends APresenter {
 
         $app->flashMessageIfNotIsset(['hash']);
 
-        $filename = 'cache/temp_' . htmlspecialchars($_GET['hash']) . '.csv';
+        $filename = 'cache/temp_' . $this->get('hash') . '.csv';
         $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
 
         copy($filename, $downloadFilename);
@@ -109,11 +110,11 @@ class Documents extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_folder', 'filter', 'limit_range', 'order', 'total_count']);
 
-        $idFolder = htmlspecialchars($_GET['id_folder']);
-        $totalCount = htmlspecialchars($_GET['total_count']);
-        $filter = htmlspecialchars($_POST['filter']);
-        $limit = htmlspecialchars($_POST['limit_range']);
-        $order = htmlspecialchars($_POST['order']);
+        $idFolder = $this->get('id_folder');
+        $totalCount = $this->get('total_count');
+        $filter = $this->post('filter');
+        $limit = $this->post('limit_range');
+        $order = $this->post('order');
 
         $isCondition = false;
 
@@ -182,7 +183,7 @@ class Documents extends APresenter {
         }
 
         $rows = null;
-        $app->logger->logFunction(function() use ($app, &$rows, $qb) {
+        $app->logger->logFunction(function() use (&$rows, $qb) {
             $rows = $qb->execute()->fetch();
         }, __METHOD__);
 
@@ -194,7 +195,7 @@ class Documents extends APresenter {
             'id;id_folder;name;date_created' . "\r\n"
         );
 
-        $app->logger->logFunction(function() use ($app, $rows, &$fileRow) {
+        $app->logger->logFunction(function() use ($rows, &$fileRow) {
             foreach($rows as $row) {
                 $fileRow[] = $row['id'] . ';' . ($row['id_folder'] ?? '-') . ';' . $row['name'] . ';' . $row['date_created'] . "\r\n";
             }
@@ -248,7 +249,7 @@ class Documents extends APresenter {
         }
         
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $documentGrid = '';
@@ -298,14 +299,14 @@ class Documents extends APresenter {
         }
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
             $folderName = $folder->getName();
             $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
         }
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $documentGrid = '';
@@ -314,7 +315,7 @@ class Documents extends APresenter {
         $filter = null;
 
         if(isset($_GET['filter'])) {
-            $filter = htmlspecialchars($_GET['filter']);
+            $filter = $this->get('filter');
         }
 
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter, $page, $app) {
@@ -345,9 +346,6 @@ class Documents extends APresenter {
             '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
         );
 
-        //$this->subpanel = Panels::createDocumentsPanel();
-        //$this->drawSubpanel = true;
-
         $this->templateManager->fill($data, $template);
 
         return $template;
@@ -368,14 +366,14 @@ class Documents extends APresenter {
         }
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
             $folderName = $folder->getName();
             $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
         }
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $documentGrid = '';
@@ -513,8 +511,8 @@ class Documents extends APresenter {
 
         $app->flashMessageIfNotIsset(['select']);
 
-        $ids = $_GET['select'];
-        $action = htmlspecialchars($_GET['action']);
+        $ids = $this->get('select', false);
+        $action = $this->get('action');
 
         if($action == '-') {
             $app->redirect('UserModule:Documents:showAll');
@@ -535,7 +533,7 @@ class Documents extends APresenter {
         $idFolder = null;
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
         }
 
         $data = array(
@@ -839,16 +837,16 @@ class Documents extends APresenter {
 
         $data = [];
 
-        $idGroup = htmlspecialchars($_POST['group']);
-        $idFolder = htmlspecialchars($_POST['folder']);
+        $idGroup = $this->post('group');
+        $idFolder = $this->post('folder');
         
-        $data['name'] = htmlspecialchars($_POST['name']);
-        $data['id_manager'] = htmlspecialchars($_POST['manager']);
-        $data['status'] = htmlspecialchars($_POST['status']);
-        $data['id_group'] = htmlspecialchars($idGroup);
+        $data['name'] = $this->post('name');
+        $data['id_manager'] = $this->post('manager');
+        $data['status'] = $this->post('status');
+        $data['id_group'] = $idGroup;
         $data['id_author'] = $app->user->getId();
-        $data['shred_year'] = htmlspecialchars($_POST['shred_year']);
-        $data['after_shred_action'] = htmlspecialchars($_POST['after_shred_action']);
+        $data['shred_year'] = $this->post('shred_year');
+        $data['after_shred_action'] = $this->post('after_shred_action');
         $data['shredding_status'] = DocumentShreddingStatus::NO_STATUS;
 
         if($idFolder != '-1') {
@@ -869,7 +867,7 @@ class Documents extends APresenter {
             'after_shred_action'
         ]);
 
-        $customMetadata = $_POST;
+        $customMetadata = ArrayHelper::formatArrayData($_POST);
 
         $remove = [];
         foreach($customMetadata as $key => $value) {
@@ -1238,7 +1236,7 @@ class Documents extends APresenter {
         $idFolder = 0;
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
         }
 
         $fb = FormBuilder::getTemporaryObject();

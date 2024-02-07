@@ -8,6 +8,7 @@ use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
+use DMS\Helpers\FormDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
@@ -27,8 +28,8 @@ class Archive extends APresenter {
 
         $app->flashMessageIfNotIsset(['select', 'action']);
 
-        $ids = $_GET['select'];
-        $action = htmlspecialchars($_GET['action']);
+        $ids = $this->get('select', false);
+        $action = $this->get('action');
 
         if($action == '-') {
             $app->redirect('UserModule:Archive:showDocuments');
@@ -49,7 +50,7 @@ class Archive extends APresenter {
         $page = 1;
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $grid = '';
@@ -84,7 +85,7 @@ class Archive extends APresenter {
         $page = 1;
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $grid = '';
@@ -119,7 +120,7 @@ class Archive extends APresenter {
         $page = 1;
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $grid = '';
@@ -190,11 +191,11 @@ class Archive extends APresenter {
 
         $app->flashMessageIfNotIsset(['name'], true, ['page' => 'UserModule:Archive:showNewDocumentForm']);
 
-        $name = htmlspecialchars($_POST['name']);
+        $name = $this->post('name');
 
         $idRibbon = '';
         if(isset($_GET['id_ribbon'])) {
-            $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+            $idRibbon = $this->get('id_ribbon');
         }
 
         $data = [
@@ -216,11 +217,11 @@ class Archive extends APresenter {
 
         $app->flashMessageIfNotIsset(['name'], true, ['page' => 'UserModule:Archive:showNewBoxForm']);
 
-        $name = htmlspecialchars($_POST['name']);
+        $name = $this->post('name');
 
         $idRibbon = '';
         if(isset($_GET['id_ribbon'])) {
-            $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+            $idRibbon = $this->get('id_ribbon');
         }
 
         $data = [
@@ -242,11 +243,11 @@ class Archive extends APresenter {
 
         $app->flashMessageIfNotIsset(['name'], true, ['page' => 'UserModule:Archive:showNewArchiveForm']);
 
-        $name = htmlspecialchars($_POST['name']);
+        $name = $this->post('name');
 
         $idRibbon = '';
         if(isset($_GET['id_ribbon'])) {
-            $idRibbon = htmlspecialchars($_GET['id_ribbon']);
+            $idRibbon = $this->get('id_ribbon');
         }
 
         $data = [
@@ -266,7 +267,7 @@ class Archive extends APresenter {
     private function internalCreateNewDocumentForm() {
         $idRibbon = '';
         if(isset($_GET['id_ribbon'])) {
-            $idRibbon = '&id_ribbon=' . htmlspecialchars($_GET['id_ribbon']);
+            $idRibbon = '&id_ribbon=' . $this->get('id_ribbon');
         }
 
         $fb = new FormBuilder();
@@ -285,7 +286,7 @@ class Archive extends APresenter {
     private function internalCreateNewBoxForm() {
         $idRibbon = '';
         if(isset($_GET['id_ribbon'])) {
-            $idRibbon = '&id_ribbon=' . htmlspecialchars($_GET['id_ribbon']);
+            $idRibbon = '&id_ribbon=' . $this->get('id_ribbon');
         }
 
         $fb = new FormBuilder();
@@ -304,7 +305,7 @@ class Archive extends APresenter {
     private function internalCreateNewArchiveForm() {
         $idRibbon = '';
         if(isset($_GET['id_ribbon'])) {
-            $idRibbon = '&id_ribbon=' . htmlspecialchars($_GET['id_ribbon']);
+            $idRibbon = '&id_ribbon=' . $this->get('id_ribbon');
         }
 
         $fb = new FormBuilder();
@@ -525,7 +526,7 @@ class Archive extends APresenter {
         global $app;
 
         if(isset($_POST['box'])) {
-            $box = htmlspecialchars($_POST['box']);
+            $box = $this->post('box');
 
             foreach($ids as $id) {
                 $app->archiveModel->moveDocumentToBox($id, $box);
@@ -553,7 +554,7 @@ class Archive extends APresenter {
         global $app;
 
         if(isset($_POST['archive'])) {
-            $archive = htmlspecialchars($_POST['archive']);
+            $archive = $this->post('archive');
 
             foreach($ids as $id) {
                 $app->archiveModel->moveBoxToArchive($id, $archive);

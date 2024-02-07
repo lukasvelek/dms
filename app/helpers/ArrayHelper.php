@@ -10,6 +10,15 @@ class ArrayHelper {
             }
         }
     }
+
+    public static function formatArrayData(array &$array) {
+        $temp = [];
+        foreach($array as $key => $value) {
+            $temp[$key] = FormDataHelper::escape($value);
+        }
+        $array = $temp;
+        return $array;
+    }
 }
 
 ?>

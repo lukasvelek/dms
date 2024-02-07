@@ -19,7 +19,6 @@ use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Users extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -35,9 +34,9 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
-        $defaultUserPageUrl = htmlspecialchars($_POST['default_user_page_url']);
-        $defaultUserDatetimeFormat = htmlspecialchars($_POST['default_user_datetime_format']);
+        $id = $this->get('id');
+        $defaultUserPageUrl = $this->post('default_user_page_url');
+        $defaultUserDatetimeFormat = $this->post('default_user_datetime_format');
 
         $data = array('default_user_page_url' => $defaultUserPageUrl);
 
@@ -62,7 +61,7 @@ class Users extends APresenter {
             $id = $app->user->getId();
             $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
         } else {
-            $id = htmlspecialchars($_GET['id']);
+            $id = $this->get('id');
         }
 
         $user = $app->userModel->getUserById($id);
@@ -86,8 +85,7 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -111,8 +109,7 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -120,9 +117,9 @@ class Users extends APresenter {
             $app->redirect($app::URL_HOME_PAGE);
         }
 
-        $currentPassword = htmlspecialchars($_POST['current_password']);
-        $password1 = htmlspecialchars($_POST['password1']);
-        $password2 = htmlspecialchars($_POST['password2']);
+        $currentPassword = $this->post('current_password');
+        $password1 = $this->post('password1');
+        $password2 = $this->post('password2');
 
         if($app->userAuthenticator->authUser($user->getUsername(), $currentPassword) == $id) {
             // password check ok
@@ -160,7 +157,7 @@ class Users extends APresenter {
             $id = $app->user->getId();
             $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
         } else {
-            $id = htmlspecialchars($_GET['id']);
+            $id = $this->get('id');
         }
 
         $user = $app->userModel->getUserById($id);
@@ -224,8 +221,7 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $data = array(
             'status' => UserStatus::PASSWORD_UPDATE_REQUIRED,
@@ -242,8 +238,7 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $data = array(
             'password_change_status' => UserPasswordChangeStatus::WARNING
@@ -259,10 +254,10 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
+        $id = $this->get('id');
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
 
-        $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -284,33 +279,32 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         
         $required = array('firstname', 'lastname', 'username');
         
         $data = [];
         foreach($required as $r) {
-            $data[$r] = htmlspecialchars($_POST[$r]);
+            $data[$r] = $this->post($r);
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
-            $data['email'] = htmlspecialchars($_POST['email']);
+            $data['email'] = $this->post('email');
         }
         if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
-            $data['address_street'] = htmlspecialchars($_POST['address_street']);
+            $data['address_street'] = $this->post('address_street');
         }
         if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
-            $data['address_house_number'] = htmlspecialchars($_POST['address_house_number']);
+            $data['address_house_number'] = $this->post('address_house_number');
         }
         if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
-            $data['address_city'] = htmlspecialchars($_POST['address_city']);
+            $data['address_city'] = $this->post('address_city');
         }
         if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
-            $data['address_zip_code'] = htmlspecialchars($_POST['address_zip_code']);
+            $data['address_zip_code'] = $this->post('address_zip_code');
         }
         if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
-            $data['address_country'] = htmlspecialchars($_POST['address_country']);
+            $data['address_country'] = $this->post('address_country');
         }
 
         $app->userModel->updateUser($id, $data);
@@ -330,8 +324,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'filter']);
 
-        $id = htmlspecialchars($_GET['id']);
-        $filter = htmlspecialchars($_GET['filter']);
+        $id = $this->get('id');
+        $filter = $this->get('filter');
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -367,9 +361,8 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id_user', 'filter']);
-
-        $idUser = htmlspecialchars($_GET['id_user']);
-        $filter = htmlspecialchars($_GET['filter']);
+        $idUser = $this->get('id_user');
+        $filter = $this->get('filter');
 
         $allow = true;
 
@@ -428,9 +421,8 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id_user', 'filter']);
-
-        $idUser = htmlspecialchars($_GET['id_user']);
-        $filter = htmlspecialchars($_GET['filter']);
+        $idUser = $this->get('id_user');
+        $filter = $this->get('filter');
 
         $allow = false;
 
@@ -490,8 +482,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkActionRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updateActionRight($idUser, $name, true);
@@ -512,8 +504,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkActionRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updateActionRight($idUser, $name, false);
@@ -534,8 +526,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updatePanelRight($idUser, $name, true);
@@ -556,8 +548,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updatePanelRight($idUser, $name, false);
@@ -578,8 +570,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkBulkActionRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updateBulkActionRight($idUser, $name, true);
@@ -600,8 +592,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkBulkActionRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updateBulkActionRight($idUser, $name, false);

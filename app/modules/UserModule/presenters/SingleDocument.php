@@ -33,10 +33,10 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_document', 'user', 'date_from', 'date_to']);
 
-        $idDocument = htmlspecialchars($_GET['id_document']);
-        $idUser = htmlspecialchars($_POST['user']);
-        $dateFrom = htmlspecialchars($_POST['date_from']);
-        $dateTo = htmlspecialchars($_POST['date_to']);
+        $idDocument = $this->get('id_document');
+        $idUser = $this->post('user');
+        $dateFrom = $this->post('date_from');
+        $dateTo = $this->post('date_to');
         $idAuthor = $app->user->getId();
         $hash = CypherManager::createCypher(64);
 
@@ -63,7 +63,7 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $idDocument = htmlspecialchars($_GET['id']);
+        $idDocument = $this->get('id');
         $document = $app->documentModel->getDocumentById($idDocument);
 
         if(is_null($document)) {
@@ -88,8 +88,8 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_comment', 'id_document']);
 
-        $idComment = htmlspecialchars($_GET['id_comment']);
-        $idDocument = htmlspecialchars($_GET['id_document']);
+        $idComment = $this->get('id_comment');
+        $idDocument = $this->get('id_document');
 
         $app->documentCommentModel->deleteComment($idComment);
 
@@ -103,8 +103,8 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_comment', 'id_document']);
 
-        $idDocument = htmlspecialchars($_GET['id_document']);
-        $idComment = htmlspecialchars($_GET['id_comment']);
+        $idComment = $this->get('id_comment');
+        $idDocument = $this->get('id_document');
 
         $urlConfirm = array(
             'page' => 'UserModule:SingleDocument:deleteComment',
@@ -127,9 +127,9 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_comment', 'text']);
 
-        $idDocument = htmlspecialchars($_GET['id_document']);
+        $idDocument = $this->get('id_document');
         $idAuthor = $app->user->getId();
-        $text = htmlspecialchars($_POST['text']);
+        $text = $this->post('text');
 
         $data = array(
             'id_document' => $idDocument,
@@ -147,7 +147,7 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $document = $app->documentModel->getDocumentById($id);
 
         if(is_null($document)) {
@@ -185,7 +185,7 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $document  = $app->documentModel->getDocumentById($id);
 
         if(is_null($document)) {
@@ -210,17 +210,17 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $data = [];
 
-        $idGroup = htmlspecialchars($_POST['group']);
-        $idFolder = htmlspecialchars($_POST['folder']);
+        $idGroup = $this->post('group');
+        $idFolder = $this->post('folder');
         
-        $data['name'] = htmlspecialchars($_POST['name']);
-        $data['id_manager'] = htmlspecialchars($_POST['manager']);
-        $data['status'] = htmlspecialchars($_POST['status']);
-        $data['id_group'] = htmlspecialchars($idGroup);
+        $data['name'] = $this->post('name');
+        $data['id_manager'] = $this->post('manager');
+        $data['status'] = $this->post('status');
+        $data['id_group'] = $idGroup;
 
         if($idFolder != '-1') {
             $data['id_folder'] = $idFolder;
@@ -240,7 +240,7 @@ class SingleDocument extends APresenter {
             'folder'
         ]);
 
-        $customMetadata = $_POST;
+        $customMetadata = ArrayHelper::formatArrayData($_POST);
 
         $remove = [];
         foreach($customMetadata as $key => $value) {

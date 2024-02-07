@@ -21,8 +21,8 @@ class SingleArchive extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'type'], true, ['page' => 'UserModule:Archive:showDocuments']);
 
-        $id = htmlspecialchars($_GET['id']);
-        $type = htmlspecialchars($_GET['type']);
+        $id = $this->get('id');
+        $type = $this->get('type');
         
         $backLink = '';
         $archiveEntity = null;
@@ -45,7 +45,7 @@ class SingleArchive extends APresenter {
 
         $page = 1;
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/archive/archive-content-grid.html');

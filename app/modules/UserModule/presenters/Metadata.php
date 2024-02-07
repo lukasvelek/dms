@@ -8,7 +8,6 @@ use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Metadata extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -24,8 +23,8 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata', 'id_metadata_value']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
-        $idMetadataValue = htmlspecialchars($_GET['id_metadata_value']);
+        $idMetadata = $this->get('id_metadata');
+        $idMetadataValue = $this->get('id_metadata_value');
 
         $hasDefault = $app->metadataModel->hasMetadataDefaultValue($idMetadata);
 
@@ -44,8 +43,8 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata', 'id_metadata_value']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
-        $idMetadataValue = htmlspecialchars($_GET['id_metadata_value']);
+        $idMetadata = $this->get('id_metadata');
+        $idMetadataValue = $this->get('id_metadata_value');
 
         $app->metadataModel->deleteMetadataValueByIdMetadataValue($idMetadataValue);
 
@@ -58,7 +57,7 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $idMetadata = htmlspecialchars($_GET['id']);
+        $idMetadata = $this->get('id');
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-grid.html');
@@ -93,7 +92,7 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
+        $idMetadata = $this->get('id_metadata');
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-new-entity-form.html');
 
@@ -115,9 +114,9 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata', 'name', 'value']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
-        $name = htmlspecialchars($_POST['name']);
-        $value = htmlspecialchars($_POST['value']);
+        $idMetadata = $this->get('id_metadata');
+        $name = $this->post('name');
+        $value = $this->post('value');
 
         $app->metadataModel->insertMetadataValueForIdMetadata($idMetadata, $name, $value);
 
@@ -131,7 +130,7 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
+        $idMetadata = $this->get('id_metadata');
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-rights-grid.html');
@@ -154,10 +153,10 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata', 'id_user', 'name', 'action']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
-        $idUser = htmlspecialchars($_GET['id_user']);
-        $name = htmlspecialchars($_GET['name']);
-        $action = htmlspecialchars($_GET['action']);
+        $idMetadata = $this->get('id_metadata');
+        $idUser = $this->get('id_user');
+        $name = $this->get('name');
+        $action = $this->get('action');
 
         switch($action) {
             case 'enable':

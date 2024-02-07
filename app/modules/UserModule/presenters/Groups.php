@@ -10,13 +10,10 @@ use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
 use DMS\Entities\EntityRight;
 use DMS\Entities\GroupUser;
-use DMS\Entities\User;
-use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Groups extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -32,7 +29,7 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
         
-        $idGroup = htmlspecialchars($_GET['id']);
+        $idGroup = $this->get('id');
         $group = $app->groupModel->getGroupById($idGroup);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/groups/group-new-entity-form.html');
@@ -54,7 +51,7 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
         
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $group = $app->groupModel->getGroupById($id);
 
         $data = array(
@@ -75,8 +72,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'filter']);
 
-        $id = htmlspecialchars($_GET['id']);
-        $filter = htmlspecialchars($_GET['filter']);
+        $id = $this->get('id');
+        $filter = $this->get('filter');
         $group = $app->groupModel->getGroupById($id);
 
         $data = array(
@@ -95,8 +92,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkActionRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updateActionRight($idGroup, $name, true);
@@ -117,8 +114,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkActionRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updateActionRight($idGroup, $name, false);
@@ -139,8 +136,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updatePanelRight($idGroup, $name, true);
@@ -161,8 +158,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updatePanelRight($idGroup, $name, false);
@@ -183,8 +180,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkBulkActionRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updateBulkActionRight($idGroup, $name, true);
@@ -205,8 +202,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkBulkActionRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updateBulkActionRight($idGroup, $name, false);
@@ -227,8 +224,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_group', 'user']);
 
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $idUser = htmlspecialchars($_POST['user']);
+        $idGroup = $this->get('id_group');
+        $idUser = $this->post('user');
 
         $app->groupUserModel->insertUserToGroup($idGroup, $idUser);
 
@@ -244,8 +241,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idGroup = $this->get('id_group');
+        $idUser = $this->get('id_user');
 
         $app->groupUserModel->removeUserFromGroup($idGroup, $idUser);
         
@@ -261,8 +258,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idGroup = $this->get('id_group');
+        $idUser = $this->get('id_user');
 
         $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
 
@@ -290,8 +287,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idGroup = $this->get('id_group');
+        $idUser = $this->get('id_user');
 
         $app->groupUserModel->updateUserInGroup($idGroup, $idUser, array('is_manager' => '0'));
 
