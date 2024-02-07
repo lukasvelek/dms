@@ -1,6 +1,7 @@
 <?php
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
@@ -449,7 +450,9 @@ function search() {
             return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
         });
         $gb->addAction(function(Document $document) use ($actionAuthorizator) {
-            if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false) && ($document->getStatus() == DocumentStatus::ARCHIVED)) {
+            if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false) &&
+               ($document->getStatus() == DocumentStatus::ARCHIVED) &&
+               ($document->getRank() == DocumentRank::PUBLIC)) {
                 return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
             } else {
                 return '-';
@@ -525,7 +528,9 @@ function search() {
             }
         });
         $gb->addAction(function(Document $document) use ($actionAuthorizator) {
-            if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false) && ($document->getStatus() == DocumentStatus::ARCHIVED)) {
+            if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false) &&
+               ($document->getStatus() == DocumentStatus::ARCHIVED) &&
+               ($document->getRank() == DocumentRank::PUBLIC)) {
                 return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
             } else {
                 return '-';
