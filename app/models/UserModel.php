@@ -109,7 +109,7 @@ class UserModel extends AModel {
         $qb = $this->qb(__METHOD__);
         $qb ->select(['*'])
             ->from('users')
-            ->where($qb->getColumnInValues('id_user', $ids))
+            ->where($qb->getColumnInValues('id', $ids))
             ->execute();
 
         while($row = $qb->fetchAssoc()) {

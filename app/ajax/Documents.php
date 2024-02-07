@@ -1,12 +1,14 @@
 <?php
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
+use DMS\Core\ScriptLoader;
 use DMS\Entities\Document;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
@@ -15,6 +17,7 @@ use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
+require_once('AjaxCommonMethods.php');
 
 $ucm = new CacheManager(true, CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
 $fcm = new CacheManager(true, CacheCategories::FOLDERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());

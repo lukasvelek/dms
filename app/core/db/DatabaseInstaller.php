@@ -1152,6 +1152,7 @@ class DatabaseInstaller {
             array(
                 'name' => 'Archive',
                 'code' => 'archive',
+                'image' => 'img/archive.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Archive:showDocuments',
                 'is_system' => '1',
@@ -1350,6 +1351,7 @@ class DatabaseInstaller {
                 array(
                     'name' => 'Ribbons',
                     'code' => 'settings.ribbons',
+                    'image' => 'img/ribbons.svg',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:RibbonSettings:showAll',
                     'is_system' => '1',

@@ -12,6 +12,10 @@ class MetadataModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateMetadata(int $idMetadata, array $data) {
+        return $this->updateExisting('metadata', $idMetadata, $data);
+    }
+
     public function setDefaultMetadataValue(int $idMetadata, int $idMetadataValue) {
         return $this->updateDefaultMetadataValue($idMetadata, $idMetadataValue, true);
     }

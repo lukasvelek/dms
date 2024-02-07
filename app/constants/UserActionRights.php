@@ -59,6 +59,7 @@ class UserActionRights {
     public const EDIT_ARCHIVE_BOX = 'edit_archive_box';
     public const EDIT_ARCHIVE_ARCHIVE = 'edit_archive_archive';
     public const CLOSE_ARCHIVE = 'close_archive';
+    public const EDIT_METADATA = 'edit_metadata';
 
     public static $all = array(
         self::CREATE_USER,
@@ -116,7 +117,8 @@ class UserActionRights {
         self::EDIT_ARCHIVE_DOCUMENT,
         self::EDIT_ARCHIVE_BOX,
         self::EDIT_ARCHIVE_ARCHIVE,
-        self::CLOSE_ARCHIVE
+        self::CLOSE_ARCHIVE,
+        self::EDIT_METADATA
     );
 }
 

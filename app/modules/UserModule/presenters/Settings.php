@@ -15,6 +15,7 @@ use DMS\Core\Application;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
+use DMS\Entities\Metadata;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
@@ -605,6 +606,25 @@ class Settings extends APresenter {
         $app->redirect('UserModule:Settings:showSystem');
     }
 
+    protected function showEditMetadataForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_metadata']);
+        $idMetadata = $this->get('id_metadata');
+        $metadata = $app->metadataModel->getMetadataById($idMetadata);
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New metadata form',
+            '$FORM$' => $this->internalCreateEditMetadataForm($metadata)
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showNewMetadataForm() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
@@ -642,6 +662,27 @@ class Settings extends APresenter {
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function processEditMetadataForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['name', 'text', 'id_metadata']);
+
+        $idMetadata = $this->get('id_metadata');
+
+        $data = [];
+        $data['name'] = $this->post('name');
+        $data['text'] = $this->post('text');
+
+        if(isset($_POST['readonly'])) {
+            $data['is_readonly'] = '1';
+        }
+
+        $app->metadataModel->updateMetadata($idMetadata, $data);
+
+        $app->flashMessage('Saved metadata #'. $idMetadata, 'success');
+        $app->redirect('UserModule:Settings:showMetadata');
     }
 
     protected function createNewMetadata() {
@@ -903,6 +944,26 @@ class Settings extends APresenter {
         return $form;
     }
 
+    private function internalCreateEditMetadataForm(Metadata $metadata) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Setttings:processEditMetadataForm&id_metadata=' . $metadata->getId())
+
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->setValue($metadata->getName())->disable()->require())
+
+            ->addElement($fb->createLabel()->setText('Text')->setFor('text'))
+            ->addElement($fb->createInput()->setType('text')->setName('text')->setValue($metadata->getText())->require())
+
+            ->addElement($fb->createLabel()->setFor('readonly')->setText('Readonly'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('readonly')->setSpecial($metadata->getIsReadonly() ? 'checked' : ''))
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        return $fb->build();
+    }
+
     private function internalCreateNewMetadataForm() {
         global $app;
 
@@ -1096,6 +1157,14 @@ class Settings extends APresenter {
                $actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA) &&
                !$metadata->getIsSystem()) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $metadata->getId()), 'Delete');
+            }
+            return $link;
+        });
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($metadataAuthorizator, $idUser, $actionAuthorizator) {
+            $link = '-';
+            if($metadataAuthorizator->canUserEditMetadata($idUser, $metadata->getId()) &&
+               $actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA)) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showEditMetadataForm', 'id_metadata' => $metadata->getId()), 'Edit');
             }
             return $link;
         });

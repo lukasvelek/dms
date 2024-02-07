@@ -803,7 +803,7 @@ class RibbonSettings extends APresenter {
             ->addElement($fb->createSelect()->setName('parent')->addOptionsBasedOnArray($parentRibbonsArr))
             
             ->addElement($fb->createLabel()->setText('Image'))
-            ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256')->setValue($ribbon->getImage() ?? ''))
+            ->addElement($fb->createInput()->setType('text')->setName('image')->setMaxLength('256')->setValue($ribbon->getImage() ?? ''))
             
             ->addElement($fb->createLabel()->setText('Is visible'))
             ->addElement($fb->createInput()->setType('checkbox')->setName('is_visible')->setSpecial($visible))
