@@ -269,7 +269,7 @@ class Documents extends APresenter {
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => '',
-            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction' . (is_null($idFolder) ? ('&id_folder=' . $idFolder) : ''),
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
@@ -336,7 +336,7 @@ class Documents extends APresenter {
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => '',
-            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction' . (is_null($idFolder) ? ('&id_folder=' . $idFolder) : ''),
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
@@ -365,9 +365,14 @@ class Documents extends APresenter {
 
         if(isset($_GET['id_folder'])) {
             $idFolder = $this->get('id_folder');
-            $folder = $app->folderModel->getFolderById($idFolder);
-            $folderName = $folder->getName();
-            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+
+            if($idFolder > -1) {
+                $folder = $app->folderModel->getFolderById($idFolder);
+                $folderName = $folder->getName();
+                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+            } else {
+                $idFolder = null;
+            }
         }
 
         if(isset($_GET['grid_page'])) {
@@ -399,7 +404,7 @@ class Documents extends APresenter {
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => '',
-            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction' . (is_null($idFolder) ? ('&id_folder=' . $idFolder) : ''),
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
@@ -511,13 +516,18 @@ class Documents extends APresenter {
 
         $ids = $this->get('select', false);
         $action = $this->get('action');
+        
+        $idFolder = -1;
+        if(isset($_GET['id_folder'])) {
+            $idFolder = $this->get('id_folder');
+        }
 
         if($action == '-') {
-            $app->redirect('UserModule:Documents:showAll');
+            $app->redirect('UserModule:Documents:showAll', ['id_folder' => $idFolder]);
         }
 
         if(method_exists($this, '_' . $action)) {
-            return $this->{'_' . $action}($ids);
+            return $this->{'_' . $action}($ids, $idFolder);
         } else {
             die('Method does not exist!');
         }
@@ -715,14 +725,16 @@ class Documents extends APresenter {
         }
 
         $fb = FormBuilder::getTemporaryObject();
+        
+        $name = $fb->createInput()  ->setType('text')
+                                    ->setName('name')
+                                    ->require();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')->setEncType()
 
             ->addElement($fb->createLabel()->setText('Document name')
                                            ->setFor('name'))
-            ->addElement($fb->createInput()->setType('text')
-                                           ->setName('name')
-                                           ->require())
+            ->addElement($name)
 
             ->addElement($fb->createLabel()->setText('Manager')
                                            ->setFor('manager'))
@@ -917,14 +929,14 @@ class Documents extends APresenter {
         }
     }
 
-    private function _move_to_archive_document(array $ids) {
+    private function _move_to_archive_document(array $ids, int $idFolder) {
         global $app;
 
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/new-document-form.html');
 
         $data = [
             '$PAGE_TITLE$' => 'Move document to archive document',
-            '$NEW_DOCUMENT_FORM$' => $this->internalCreateMoveToArchiveDocumentForm($ids)
+            '$NEW_DOCUMENT_FORM$' => $this->internalCreateMoveToArchiveDocumentForm($ids, $idFolder)
         ];
 
         $this->templateManager->fill($data, $template);
@@ -932,7 +944,7 @@ class Documents extends APresenter {
         return $template;
     }
 
-    private function _move_from_archive_document(array $ids) {
+    private function _move_from_archive_document(array $ids, int $idFolder) {
         global $app;
 
         foreach($ids as $id) {
@@ -940,10 +952,10 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Documents moved from the archive document', 'success');
-        $app->redirect('UserModule:Documents:showAll');
+        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
     }
 
-    private function _suggest_for_shredding(array $ids) {
+    private function _suggest_for_shredding(array $ids, int $idFolder) {
         global $app;
 
         foreach($ids as $id) {
@@ -954,10 +966,10 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Process has started', 'success');
-        $app->redirect('UserModule:Documents:showAll');
+        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
     }
 
-    private function _delete_documents(array $ids) {
+    private function _delete_documents(array $ids, int $idFolder) {
         global $app;
 
         foreach($ids as $id) {
@@ -965,10 +977,10 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Process has started', 'success');
-        $app->redirect('UserModule:Documents:showAll');
+        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
     }
 
-    private function _decline_archivation(array $ids) {
+    private function _decline_archivation(array $ids, int $idFolder) {
         global $app;
         
         foreach($ids as $id) {
@@ -993,10 +1005,10 @@ class Documents extends APresenter {
             $app->flashMessage('Declined archivation for selected documents', 'success');
         }
 
-        $app->redirect('UserModule:Documents:showAll');
+        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
     }
 
-    private function _approve_archivation(array $ids) {
+    private function _approve_archivation(array $ids, int $idFolder) {
         global $app;
 
         foreach($ids as $id) {
@@ -1021,10 +1033,10 @@ class Documents extends APresenter {
             $app->flashMessage('Approved archivation for selected documents', 'success');
         }
 
-        $app->redirect('UserModule:Documents:showAll');
+        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
     }
 
-    private function _archive(array $ids) {
+    private function _archive(array $ids, int $idFolder) {
         global $app;
 
         foreach($ids as $id) {
@@ -1049,7 +1061,7 @@ class Documents extends APresenter {
             $app->flashMessage('Archived selected documents', 'success');
         }
 
-        $app->redirect('UserModule:Documents:showAll');
+        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
     }
 
     private function internalCreateFolderList(?int $idFolder, ?string $filter) {
@@ -1306,7 +1318,7 @@ class Documents extends APresenter {
         return $fb->build();
     }
 
-    private function internalCreateMoveToArchiveDocumentForm(array $ids) {
+    private function internalCreateMoveToArchiveDocumentForm(array $ids, int $idFolder) {
         global $app;
 
         $archiveDocuments = $app->archiveModel->getAllAvailableArchiveEntitiesByType(ArchiveType::DOCUMENT);
@@ -1331,7 +1343,7 @@ class Documents extends APresenter {
 
         $fb = new FormBuilder();
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:processMoveToArchiveDocumentFormBulkAction' . $urlIds)
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:processMoveToArchiveDocumentFormBulkAction' . $urlIds . ($idFolder > -1) ? ('id_folder=' . $idFolder) : '')
             
             ->addElement($fb->createLabel()->setText('Archive document')->setFor('archive_document'))
             ->addElement($fb->createSelect()->setName('archive_document')->addOptionsBasedOnArray($archiveDocumentsArr))

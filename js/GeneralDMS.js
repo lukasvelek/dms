@@ -185,7 +185,7 @@ function drawArchiveArchiveBulkActions() {
     }
 }
 
-function drawDocumentBulkActions() {
+function drawDocumentBulkActions(_idFolder) {
     var elems = $('#select:checked');
 
     if(elems.length > 0) {
@@ -200,7 +200,8 @@ function drawDocumentBulkActions() {
 
         $.get('app/ajax/Documents.php', {
             idDocuments: ids,
-            action: "getBulkActions"
+            action: "getBulkActions",
+            id_folder: _idFolder
         },
         async function(data) {
             await sleep(general_sleep_length);

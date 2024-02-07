@@ -51,6 +51,11 @@ function getBulkActions() {
 
     $idDocuments = $_GET['idDocuments'];
 
+    $idFolder = null;
+    if(isset($_GET['id_folder']) && $_GET['id_folder'] != 'null') {
+        $idFolder = $_GET['id_folder'];
+    }
+
     if(!is_null($user)) {
         foreach($idDocuments as $idDocument) {
             $inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
@@ -128,6 +133,10 @@ function getBulkActions() {
 
         $link .= '&action=approve_archivation';
 
+        if($idFolder !== NULL) {
+            $link .= '&id_folder=' . $idFolder;
+        }
+
         $bulkActions['Approve archivation'] = $link;
     }
 
@@ -144,6 +153,10 @@ function getBulkActions() {
         }
 
         $link .= '&action=decline_archivation';
+
+        if($idFolder !== NULL) {
+            $link .= '&id_folder=' . $idFolder;
+        }
 
         $bulkActions['Decline archivation'] = $link;
     }
@@ -162,6 +175,10 @@ function getBulkActions() {
 
         $link .= '&action=archive';
 
+        if($idFolder !== NULL) {
+            $link .= '&id_folder=' . $idFolder;
+        }
+
         $bulkActions['Archive'] = $link;
     }
 
@@ -178,6 +195,10 @@ function getBulkActions() {
         }
 
         $link .= '&action=delete_documents';
+
+        if($idFolder !== NULL) {
+            $link .= '&id_folder=' . $idFolder;
+        }
 
         $bulkActions['Delete'] = $link;
     }
@@ -196,6 +217,10 @@ function getBulkActions() {
 
         $link .= '&action=suggest_for_shredding';
 
+        if($idFolder !== NULL) {
+            $link .= '&id_folder=' . $idFolder;
+        }
+
         $bulkActions['Suggest shredding'] = $link;
     }
 
@@ -213,6 +238,10 @@ function getBulkActions() {
 
         $link .= '&action=move_to_archive_document';
 
+        if($idFolder !== NULL) {
+            $link .= '&id_folder=' . $idFolder;
+        }
+
         $bulkActions['Move to archive document'] = $link;
     }
 
@@ -229,6 +258,10 @@ function getBulkActions() {
         }
 
         $link .= '&action=move_from_archive_document';
+
+        if($idFolder !== NULL) {
+            $link .= '&id_folder=' . $idFolder;
+        }
 
         $bulkActions['Move from archive document'] = $link;
     }
@@ -459,7 +492,7 @@ function search() {
         });
         $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries()');
         $gb->addRowCheckbox(function(Document $document) {
-            return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">';
+            return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')">';
         });
         $gb->addDataSourceCallback(function() use ($documentModel, $idFolder, $filter, $query) {
             return $documentModel->getDocumentsForName($query, $idFolder, $filter);
@@ -537,7 +570,7 @@ function search() {
         });
         $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries()');
         $gb->addRowCheckbox(function(Document $document) {
-            return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">';
+            return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')">';
         });
         $gb->addDataSourceCallback($dataSourceCallback);
 
@@ -628,7 +661,7 @@ function searchDocumentsSharedWithMe() {
     });
     $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries()');
     $gb->addRowCheckbox(function(Document $document) {
-        return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawDocumentBulkActions()">';
+        return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')">';
     });
     $gb->addAction(function(Document $document) {
         return LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Info');
