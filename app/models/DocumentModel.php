@@ -3,6 +3,7 @@
 namespace DMS\Models;
 
 use DMS\Constants\DocumentStatus;
+use DMS\Core\AppConfiguration;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
@@ -125,6 +126,10 @@ class DocumentModel extends AModel {
 
         if($idFolder != null) {
             $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
         }
 
         if($filter != null) {
@@ -353,6 +358,10 @@ class DocumentModel extends AModel {
 
         if($idFolder != null) {
             $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
         }
 
         $qb ->limit(25)
@@ -510,6 +519,10 @@ class DocumentModel extends AModel {
 
         if($idFolder != null) {
             $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
         }
 
         if($filter != null) {

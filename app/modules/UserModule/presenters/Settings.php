@@ -287,7 +287,7 @@ class Settings extends APresenter {
             $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
 
-            if((($folder->getNestLevel() + 1) < 6) && ($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER))) {
+            if((($folder->getNestLevel() + 1) < AppConfiguration::getFolderMaxNestLevel()) && ($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER))) {
                 $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showNewFolderForm', 'id_parent_folder' => $idFolder), 'New folder');
             } else {
                 $newEntityLink = '';
@@ -434,7 +434,7 @@ class Settings extends APresenter {
 
             $nestLevel = $nestLevelParentFolder->getNestLevel() + 1;
 
-            if($nestLevel == 6) {
+            if($nestLevel == AppConfiguration::getFolderMaxNestLevel()) {
                 $create = false;
             }
         }
@@ -585,12 +585,27 @@ class Settings extends APresenter {
         }
 
         if(Application::SYSTEM_DEBUG && $app->actionAuthorizator->checkActionRight(UserActionRights::USE_DOCUMENT_GENERATOR)) {
-            $widgets[] = LinkBuilder::createLink('UserModule:DocumentGenerator:showForm', 'Document generator');
+            $widgets[] = LinkBuilder::createLink('UserModule:DocumentGenerator:showForm', 'Document generator') . '<br>';
+        }
+
+        $widgets[] = LinkBuilder::createLink('UserModule:ImageBrowser:showAll', 'Images');
+
+        $widgetsCode = '';
+
+        $x = 100;
+        foreach($widgets as $widget) {
+            $code = '<div id="subpanel" style="position: absolute; top: 15%; left: ' . $x . 'px; width: 250px; height: 100px;">';
+            $code .= $widget;
+            $code .= '</div>';
+
+            $widgetsCode .= $code;
+
+            $x += 260;
         }
 
         $data = array(
             '$PAGE_TITLE$' => 'System',
-            '$WIDGETS$' => $widgets
+            '$WIDGETS$' => $widgetsCode
         );
 
         $this->templateManager->fill($data, $template);

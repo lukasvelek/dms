@@ -122,6 +122,14 @@ class AppConfiguration {
         return self::loadParam('enable_relogin');
     }
 
+    public static function getFolderMaxNestLevel() {
+        return self::loadParam('folder_max_nest_level');
+    }
+
+    public static function getGridMainFolderHasAllComments() {
+        return self::loadParam('grid_main_folder_has_all_documents');
+    }
+
     /**
      * ----- PRIVATE METHODS -----
      */

@@ -17,12 +17,10 @@ use DMS\Entities\Document;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
-use DMS\Helpers\FormDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Documents extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -1079,7 +1077,7 @@ class Documents extends APresenter {
         }
         
         $list = array(
-            'null1' => '&nbsp;&nbsp;' . $createLink($link, 'Main folder (all files)', null, $filter) . '<br>',
+            'null1' => '&nbsp;&nbsp;' . $createLink($link, 'Main folder' . (AppConfiguration::getGridMainFolderHasAllComments() ? ' (all documents)' : ''), null, $filter) . '<br>',
             'null2' => '<hr>'
         );
         

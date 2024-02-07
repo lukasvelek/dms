@@ -408,10 +408,6 @@ function search() {
 
         $query = str_replace('_', '%', $query);
 
-        if($idFolder == 'null') {
-            $idFolder = null;
-        }
-
         $gb = new GridBuilder();
 
         $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);

@@ -42,6 +42,7 @@ $cfg['file_dir'] = ''; // File upload directory location
 $cfg['id_service_user'] = '1'; // id of user used in services
 $cfg['default_datetime_format'] = 'Y-m-d H:i:s'; // the default datetime format that is used when user has no own format set
 $cfg['enable_relogin'] = true; // true if relogging in as other (connected) users is enabled
+$cfg['folder_max_nest_level'] = 10;
 
 
 /**
@@ -63,6 +64,7 @@ $cfg['mail_login_password'] = ''; // Mail server login password
 $cfg['grid_size'] = '25'; // grid size (number of rows)
 $cfg['grid_use_fast_load'] = true; // grid fast load usage (useful with lots of documents)
 $cfg['grid_use_ajax'] = true; // grid ajax usage (generally useful)
+$cfg['grid_main_folder_has_all_documents'] = true; // true if grid main folder contains all documents within all folders, false if it only displays documents located in main folder
 
 
 ?>
