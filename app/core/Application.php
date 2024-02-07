@@ -150,7 +150,6 @@ class Application {
      * @param array $cfg The application configuration file contents
      */
     public function __construct(string $baseDir = '', bool $install = true) {
-        //$this->cfg = $cfg;
         $this->baseDir = $baseDir;
 
         $this->currentUrl = null;

@@ -17,6 +17,8 @@ class GroupsEnum extends AEnum {
     private function loadValues() {
         $groups = $this->groupModel->getAllGroups();
 
+        $this->addValue('null', '-');
+
         foreach($groups as $group) {
             $this->addValue($group->getId(), $group->getName());
         }

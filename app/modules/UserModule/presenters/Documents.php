@@ -15,6 +15,7 @@ use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Document;
 use DMS\Entities\Folder;
+use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -687,6 +688,13 @@ class Documents extends APresenter {
                     $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
     
                     $options = [];
+
+                    $options[] = [
+                        'value' => 'null',
+                        'text' => '-'
+                    ];
+
+                    $hasDefault = false;
                     foreach($values as $v) {
                         $option = array(
                             'value' => $v->getValue(),
@@ -695,9 +703,14 @@ class Documents extends APresenter {
 
                         if($v->getIsDefault()) {
                             $option['selected'] = 'selected';
+                            $hasDefault = true;
                         }
                         
                         $options[] = $option;
+                    }
+
+                    if($hasDefault === FALSE) {
+                        $options[0]['selected'] = 'selected';
                     }
     
                     $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength(), 'readonly' => $cm->getIsReadonly());
@@ -855,6 +868,15 @@ class Documents extends APresenter {
         unset($_POST['after_shred_action']);
 
         $customMetadata = $_POST;
+
+        $remove = [];
+        foreach($customMetadata as $key => $value) {
+            if($value == 'null') {
+                $remove[] = $key;
+            }
+        }
+
+        ArrayHelper::deleteKeysFromArray($customMetadata, $remove);
 
         $data = array_merge($data, $customMetadata);
 

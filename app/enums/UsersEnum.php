@@ -17,6 +17,8 @@ class UsersEnum extends AEnum {
     private function loadValues() {
         $users = $this->userModel->getAllUsers();
 
+        $this->addValue('null', '-');
+
         foreach($users as $user) {
             $this->addValue($user->getUsername(), $user->getFirstname() . ' ' . $user->getLastname());
         }
