@@ -320,6 +320,25 @@ class Settings extends APresenter {
         return $template;
     }
 
+    protected function showEditFolderForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_folder']);
+
+        $idFolder = htmlspecialchars($_GET['id_folder']);
+
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Edit document folder form',
+            '$FORM$' => $this->internalCreateEditFolderForm((int)($idFolder))
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showNewFolderForm() {
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
@@ -337,6 +356,57 @@ class Settings extends APresenter {
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function processUpdateFolderForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['name', 'parent_folder', 'id_folder']);
+
+        $idFolder = htmlspecialchars($_GET['id_folder']);
+        
+        $data = [];
+
+        $parentFolder = htmlspecialchars($_POST['parent_folder']);
+        $nestLevel = 0;
+
+        $data['name'] = htmlspecialchars($_POST['name']);
+
+        $create = true;
+
+        if(isset($_POST['description']) && $_POST['description'] != '') {
+            $data['description'] = htmlspecialchars($_POST['description']);
+        }
+
+        if($parentFolder == '-1') {
+            $parentFolder = null;
+        } else {
+            $data['id_parent_folder'] = $parentFolder;
+
+            $nestLevelParentFolder = $app->folderModel->getFolderById($parentFolder);
+
+            $nestLevel = $nestLevelParentFolder->getNestLevel() + 1;
+
+            if($nestLevel == 6) {
+                $create = false;
+            }
+        }
+
+        $data['nest_level'] = $nestLevel;
+
+        if($create == true) {
+            $app->folderModel->updateFolder($idFolder, $data);
+        }
+
+        $idFolder = $app->folderModel->getLastInsertedFolder()->getId();
+        
+        $app->logger->info('Inserted new folder #' . $idFolder, __METHOD__);
+
+        if($parentFolder != '-1') {
+            $app->redirect('UserModule:Settings:showFolders', array('id_folder' => $idFolder));
+        } else {
+            $app->redirect('UserModule:Settings:showFolders');
+        }
     }
 
     protected function createNewFolder() {
@@ -1079,12 +1149,77 @@ class Settings extends APresenter {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open');
         });
         $gb->addAction(function(Folder $folder) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showEditFolderForm', 'id_folder' => $folder->getId()), 'Edit');
+        });
+        $gb->addAction(function(Folder $folder) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete');
         });
 
         return $gb->build();
     }
 
+    private function internalCreateEditFolderForm(int $idFolder) {
+        global $app;
+
+        $fb = FormBuilder::getTemporaryObject();
+
+        $folder = null;
+
+        $foldersDb = [];
+
+        $app->logger->logFunction(function() use ($app, &$foldersDb) {
+            $foldersDb = $app->folderModel->getAllFolders();
+        }, __METHOD__);
+
+        foreach($foldersDb as $fdb) {
+            if($fdb->getId() == $idFolder) {
+                $folder = $fdb;
+            }
+        }
+
+        if($folder === NULL) {
+            die('Folder does not exist!');
+        }
+
+        $foldersArr = array(array(
+            'value' => '-1',
+            'text' => 'None'
+        ));
+        foreach($foldersDb as $fdb) {
+            $temp = array(
+                'value' => $fdb->getId(),
+                'text' => $fdb->getName()
+            );
+
+            if(!is_null($folder->getIdParentFolder()) && ($fdb->getId() == $folder->getIdParentFolder())) {
+                $temp['selected'] = 'selected';
+            }
+
+            $foldersArr[] = $temp;
+        }
+
+        $textArea = $fb->createTextArea()->setName('description');
+        if($folder->getDescription() !== NULL) {
+            $textArea->setText($folder->getDescription());
+        }
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:processUpdateFolderForm&id_folder=' . $idFolder)
+
+            ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
+            ->addElement($fb->createInput()->setType('input')->setName('name')->setValue($folder->getName())->require())
+
+            ->addElement($fb->createLabel()->setFor('parent_folder')->setText('Parent folder'))
+            ->addElement($fb->createSelect()->setName('parent_folder')->addOptionsBasedOnArray($foldersArr))
+
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($textArea)
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        return $fb->build();
+    }
+    
     private function internalCreateNewFolderForm(?int $idParentFolder) {
         global $app;
 

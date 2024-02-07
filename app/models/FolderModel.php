@@ -11,6 +11,10 @@ class FolderModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateFolder(int $idFolder, array $data) {
+        return $this->updateExisting('folders', $idFolder, $data);
+    }
+
     public function getFolderCount() {
         return $this->getRowCount('folders');
     }
