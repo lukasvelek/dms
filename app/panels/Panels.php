@@ -89,6 +89,11 @@ class Panels {
             return null;
         }
 
+        $idFolder = null;
+        if(isset($_GET['id_folder'])) {
+            $idFolder = htmlspecialchars($_GET['id_folder']);
+        }
+
         $templateManager = self::tm();
 
         $template = $templateManager->loadTemplate('app/panels/templates/general-subpanel.html');
@@ -129,9 +134,9 @@ class Panels {
                     $data['$LINKS$'][] = '<a class="general-link" href="#" id="dropdown-ribbon-' . $ribbon->getId() . '" onclick="' . $ribbon->getJSMethodName() . '">' . $ribbon->getName() . '</a>';
                 } else {
                     if($ribbon->hasImage()) {
-                        $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
+                        $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId() . ((!is_null($idFolder)) ? ('&id_folder=' . $idFolder) : ''), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
                     } else {
-                        $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'general-link', true);
+                        $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId() . ((!is_null($idFolder)) ? ('&id_folder=' . $idFolder) : ''), $ribbon->getName(), 'general-link', true);
                     }
                 }
             }
