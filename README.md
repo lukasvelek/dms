@@ -9,6 +9,8 @@ It also enables users to manage metadata and their values.
 - updated backend grid renderer
 - updated user authentication security
 - updated backend database SQL query builder (v1.1 => v2.0)
+- updated documents grid loading speed (tested on a table with 8,000,000 entries)
+- fixed bugs and potential bugs
 
 ### v1.7
 - added support for readonly custom metadata
