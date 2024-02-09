@@ -13,16 +13,25 @@ class Logger implements ILoggerCallable {
         $this->fileManager = $fm;
     }
 
+    /**
+     * Methods logs how long a given function takes to process and returns its value.
+     * 
+     * @param callable $func Callback function
+     * @param null|string $originMethod Original calling method (for logging purpose)
+     * @return mixed Callback function result
+     */
     public function logFunction(callable $func, ?string $originMethod = null) {
         $sw = self::getStopwatch();
 
         $sw->startStopwatch();
-        $func();
+        $result = $func();
         $sw->stopStopwatch();
         
         $diff = $sw->calculate();
 
         $this->logTime($diff, $originMethod);
+
+        return $result;
     }
 
     public function logTime(string $time, ?string $method = null) {

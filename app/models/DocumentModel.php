@@ -15,6 +15,58 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentCountForStatus(?int $idFolder, ?string $filter) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['COUNT(id) AS cnt'])
+            ->from('documents');
+
+        if($idFolder !== NULL) {
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
+        }
+
+        if($filter !== NULL) {
+            $this->addFilterCondition($filter, $qb);
+        }
+
+        return $qb ->execute()->fetch('cnt');
+    }
+
+    public function getStandardDocumentsWithOffset(?int $idFolder, int $limit, int $offset, ?string $filter = null) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('documents')
+            ->orderBy('date_updated', 'DESC')
+            ->limit($limit)
+            ->offset($offset);
+
+        if($idFolder !== NULL) {
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
+        }
+
+        if($filter !== NULL) {
+            $this->addFilterCondition($filter, $qb);
+        }
+
+        $qb ->execute();
+
+        $documents = array();
+        while($row = $qb->fetchAssoc()) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+    
+        return $documents;
+    }
+
     public function getDocumentCountInArchiveDocument(int $idArchiveDocument) {
         return $this->getRowCount('documents', 'id', 'WHERE `id_archive_document` = ' . $idArchiveDocument);
     }
@@ -164,8 +216,17 @@ class DocumentModel extends AModel {
         return $this->insertNew($data, 'document_stats');
     }
 
-    public function getTotalDocumentCount() {
-        return $this->getRowCount('documents');
+    public function getTotalDocumentCount(?int $idFolder) {
+        $cond = null;
+
+        if($idFolder !== NULL) {
+            $cond = 'WHERE id_folder = ' . $idFolder;
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $cond = 'WHERE id_folder IS NULL';
+            }
+        }
+        return $this->getRowCount('documents', 'id', $cond);
     }
 
     public function getAllDocumentIds() {

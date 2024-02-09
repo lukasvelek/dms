@@ -76,6 +76,12 @@ class QueryBuilder
         return $code;
     }
 
+    public function offset(int $offset) {
+        $this->queryData['offset'] = $offset;
+
+        return $this;
+    }
+
     public function delete() {
         $this->queryType = 'delete';
         $this->currentState = self::STATE_DIRTY;
@@ -604,6 +610,10 @@ class QueryBuilder
 
         if(isset($this->queryData['limit'])) {
             $sql .= ' LIMIT ' . $this->queryData['limit'];
+        }
+
+        if(isset($this->queryData['offset'])) {
+            $sql .= ' OFFSET ' . $this->queryData['offset'];
         }
 
         $this->sql = $sql;

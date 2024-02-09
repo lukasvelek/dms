@@ -1167,9 +1167,16 @@ class Documents extends APresenter {
                 $documentCount = $app->documentModel->getCountDocumentsSharedWithUser($app->user->getId());
                 break;
 
+            case 'showFiltered':
+                if(isset($_GET['filter'])) {
+                    $f = $this->get('filter');
+                    $documentCount = $app->documentModel->getDocumentCountForStatus($idFolder, $f);
+                }
+                break;
+
             default:
             case 'showAll':
-                $documentCount = $app->documentModel->getTotalDocumentCount();
+                $documentCount = $app->documentModel->getTotalDocumentCount($idFolder);
                 break;
         }
 

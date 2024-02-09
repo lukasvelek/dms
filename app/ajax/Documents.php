@@ -413,7 +413,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $metadataModel, $ucm, $fcm, $gridSize, $gridUseFastLoad, $actionAuthorizator, $user;
+    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $gridUseFastLoad, $actionAuthorizator, $user;
 
     if($user === NULL) {
         die();
@@ -503,11 +503,9 @@ function search() {
         $dataSourceCallback = null;
         if($gridUseFastLoad) {
             $page -= 1;
-        
-            $firstIdDocumentOnPage = $documentModel->getFirstIdDocumentOnAGridPage(($page * $gridSize));
 
-            $dataSourceCallback = function() use ($documentModel, $firstIdDocumentOnPage, $idFolder, $filter, $gridSize) {
-                return $documentModel->getStandardDocumentsFromId($firstIdDocumentOnPage, $idFolder, $filter, $gridSize);
+            $dataSourceCallback = function() use ($documentModel, $idFolder, $page, $gridSize, $filter) {
+                return $documentModel->getStandardDocumentsWithOffset($idFolder, $gridSize, ($page * $gridSize), $filter);
             };
         } else {
             $dataSourceCallback = function() use ($documentModel, $idFolder, $filter, $page, $gridSize) {
@@ -739,8 +737,12 @@ function generateDocuments() {
         }
     }
 
+    if($id_folder == '0') {
+        $id_folder = null;
+    }
+
     $data = array(
-        'total_count' => $documentModel->getTotalDocumentCount(),
+        'total_count' => $documentModel->getTotalDocumentCount($id_folder),
         'shredded_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
         'archived_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
         'new_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
