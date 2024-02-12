@@ -1290,14 +1290,16 @@ class Documents extends APresenter {
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
+        $documentPageControl = 'Total documents: ' . $documentCount . ' | ';
+
         if($documentCount > AppConfiguration::getGridSize()) {
             if($pageCheck * AppConfiguration::getGridSize() >= $documentCount) {
-                $documentPageControl = (1 + ($page * AppConfiguration::getGridSize()));
+                $documentPageControl .= (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $documentPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
+                $documentPageControl .= (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
             }
         } else {
-            $documentPageControl = $documentCount;
+            $documentPageControl = 'Total documents: ' .  $documentCount;
         }
 
         $documentPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
