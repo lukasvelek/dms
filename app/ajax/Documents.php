@@ -56,6 +56,11 @@ function getBulkActions() {
         $idFolder = $_GET['id_folder'];
     }
 
+    $filter = null;
+    if(isset($_GET['filter']) && $_GET['filter'] != 'null') {
+        $filter = $_GET['filter'];
+    }
+
     if(!is_null($user)) {
         foreach($idDocuments as $idDocument) {
             $inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
@@ -120,150 +125,31 @@ function getBulkActions() {
     }
 
     if($canApproveArchivation) {
-        $link = '?page=UserModule:Documents:performBulkAction&';
-
-        $i = 0;
-        foreach($idDocuments as $idDocument) {
-            if(($i + 1) == count($idDocuments)) {
-                $link .= 'select[]=' . $idDocument;
-            } else {
-                $link .= 'select[]=' . $idDocument . '&';
-            }
-        }
-
-        $link .= '&action=approve_archivation';
-
-        if($idFolder !== NULL) {
-            $link .= '&id_folder=' . $idFolder;
-        }
-
-        $bulkActions['Approve archivation'] = $link;
+        $bulkActions['Approve archivation'] = _createBulkFunctionLink('approve_archivation', $idDocuments, $idFolder, $filter);
     }
 
     if($canDeclineArchivation) {
-        $link = '?page=UserModule:Documents:performBulkAction&';
-
-        $i = 0;
-        foreach($idDocuments as $idDocument) {
-            if(($i + 1) == count($idDocuments)) {
-                $link .= 'select[]=' . $idDocument;
-            } else {
-                $link .= 'select[]=' . $idDocument . '&';
-            }
-        }
-
-        $link .= '&action=decline_archivation';
-
-        if($idFolder !== NULL) {
-            $link .= '&id_folder=' . $idFolder;
-        }
-
-        $bulkActions['Decline archivation'] = $link;
+        $bulkActions['Decline archivation'] = _createBulkFunctionLink('decline_archivation', $idDocuments, $idFolder, $filter);
     }
 
     if($canArchive) {
-        $link = '?page=UserModule:Documents:performBulkAction&';
-
-        $i = 0;
-        foreach($idDocuments as $idDocument) {
-            if(($i + 1) == count($idDocuments)) {
-                $link .= 'select[]=' . $idDocument;
-            } else {
-                $link .= 'select[]=' . $idDocument . '&';
-            }
-        }
-
-        $link .= '&action=archive';
-
-        if($idFolder !== NULL) {
-            $link .= '&id_folder=' . $idFolder;
-        }
-
-        $bulkActions['Archive'] = $link;
+        $bulkActions['Archive'] = _createBulkFunctionLink('archive', $idDocuments, $idFolder, $filter);
     }
 
     if($canDelete) {
-        $link = '?page=UserModule:Documents:performBulkAction&';
-        
-        $i = 0;
-        foreach($idDocuments as $idDocument) {
-            if(($i + 1) == count($idDocuments)) {
-                $link .= 'select[]=' . $idDocument;
-            } else {
-                $link .= 'select[]=' . $idDocument . '&';
-            }
-        }
-
-        $link .= '&action=delete_documents';
-
-        if($idFolder !== NULL) {
-            $link .= '&id_folder=' . $idFolder;
-        }
-
-        $bulkActions['Delete'] = $link;
+        $bulkActions['Delete'] = _createBulkFunctionLink('delete_documents', $idDocuments, $idFolder, $filter);
     }
 
     if($canSuggestShredding) {
-        $link = '?page=UserModule:Documents:performBulkAction&';
-        
-        $i = 0;
-        foreach($idDocuments as $idDocument) {
-            if(($i + 1) == count($idDocuments)) {
-                $link .= 'select[]=' . $idDocument;
-            } else {
-                $link .= 'select[]=' . $idDocument . '&';
-            }
-        }
-
-        $link .= '&action=suggest_for_shredding';
-
-        if($idFolder !== NULL) {
-            $link .= '&id_folder=' . $idFolder;
-        }
-
-        $bulkActions['Suggest shredding'] = $link;
+        $bulkActions['Suggest shredding'] = _createBulkFunctionLink('suggest_for_shredding', $idDocuments, $idFolder, $filter);
     }
 
     if($canMoveToArchiveDocument) {
-        $link = '?page=UserModule:Documents:performBulkAction&';
-        
-        $i = 0;
-        foreach($idDocuments as $idDocument) {
-            if(($i + 1) == count($idDocuments)) {
-                $link .= 'select[]=' . $idDocument;
-            } else {
-                $link .= 'select[]=' . $idDocument . '&';
-            }
-        }
-
-        $link .= '&action=move_to_archive_document';
-
-        if($idFolder !== NULL) {
-            $link .= '&id_folder=' . $idFolder;
-        }
-
-        $bulkActions['Move to archive document'] = $link;
+        $bulkActions['Move to archive document'] = _createBulkFunctionLink('move_to_archive_document', $idDocuments, $idFolder, $filter);
     }
 
     if($canMoveFromArchiveDocument) {
-        $link = '?page=UserModule:Documents:performBulkAction&';
-        
-        $i = 0;
-        foreach($idDocuments as $idDocument) {
-            if(($i + 1) == count($idDocuments)) {
-                $link .= 'select[]=' . $idDocument;
-            } else {
-                $link .= 'select[]=' . $idDocument . '&';
-            }
-        }
-
-        $link .= '&action=move_from_archive_document';
-
-        if($idFolder !== NULL) {
-            $link .= '&id_folder=' . $idFolder;
-        }
-
-        $bulkActions['Move from archive document'] = $link;
+        $bulkActions['Move from archive document'] = _createBulkFunctionLink('move_from_archive_document', $idDocuments, $idFolder, $filter);
     }
 
     $i = 0;
@@ -566,9 +452,9 @@ function search() {
                 return '-';
             }
         });
-        $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries()');
-        $gb->addRowCheckbox(function(Document $document) {
-            return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')">';
+        $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries(\'' . ($idFolder ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')');
+        $gb->addRowCheckbox(function(Document $document) use ($filter) {
+            return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')">';
         });
         $gb->addDataSourceCallback($dataSourceCallback);
 
@@ -843,6 +729,31 @@ function _createBlankLink(int $left, int $top) {
     ';
 
     return $code;
+}
+
+function _createBulkFunctionLink(string $action, array $idDocuments, ?int $idFolder, ?string $filter) {
+    $link = '?page=UserModule:Documents:performBulkAction&';
+
+    $i = 0;
+    foreach($idDocuments as $idDocument) {
+        if(($i + 1) == count($idDocuments)) {
+            $link .= 'select[]=' . $idDocument;
+        } else {
+            $link .= 'select[]=' . $idDocument . '&';
+        }
+    }
+
+    $link .= '&action=' . $action;
+
+    if($idFolder !== NULL) {
+        $link .= '&id_folder=' . $idFolder;
+    }
+
+    if($filter !== NULL) {
+        $link .= '&filter=' . $filter;
+    }
+
+    return $link;
 }
 
 exit;

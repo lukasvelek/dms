@@ -185,7 +185,7 @@ function drawArchiveArchiveBulkActions() {
     }
 }
 
-function drawDocumentBulkActions(_idFolder) {
+function drawDocumentBulkActions(_idFolder, _filter) {
     var elems = $('#select:checked');
 
     if(elems.length > 0) {
@@ -201,7 +201,8 @@ function drawDocumentBulkActions(_idFolder) {
         $.get('app/ajax/Documents.php', {
             idDocuments: ids,
             action: "getBulkActions",
-            id_folder: _idFolder
+            id_folder: _idFolder,
+            filter: _filter
         },
         async function(data) {
             await sleep(general_sleep_length);
@@ -367,12 +368,12 @@ async function loadDocuments(id_folder, _page) {
     });
 }
 
-function selectAllDocumentEntries() {
+function selectAllDocumentEntries(_idFolder, _filter) {
     var selectAllElem = $('#select-all:checked').val();
 
     if(selectAllElem == "on") {
         $('#select:not(:checked)').prop('checked', true);
-        drawDocumentBulkActions();
+        drawDocumentBulkActions(_idFolder, _filter);
     } else {
         $('#select:checked').prop('checked', false);
         $('#bulk_actions').html('');

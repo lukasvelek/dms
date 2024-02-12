@@ -343,7 +343,7 @@ class Documents extends APresenter {
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
             '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
+            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder, 'showFiltered')
         );
 
         $this->templateManager->fill($data, $template);
@@ -524,12 +524,17 @@ class Documents extends APresenter {
             $idFolder = $this->get('id_folder');
         }
 
+        $filter = null;
+        if(isset($_GET['filter'])) {
+            $filter = $this->get('filter');
+        }
+
         if($action == '-') {
             $app->redirect('UserModule:Documents:showAll', ['id_folder' => $idFolder]);
         }
 
         if(method_exists($this, '_' . $action)) {
-            return $this->{'_' . $action}($ids, $idFolder);
+            return $this->{'_' . $action}($ids, $idFolder, $filter);
         } else {
             die('Method does not exist!');
         }
@@ -931,7 +936,7 @@ class Documents extends APresenter {
         }
     }
 
-    private function _move_to_archive_document(array $ids, int $idFolder) {
+    private function _move_to_archive_document(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/new-document-form.html');
@@ -946,7 +951,7 @@ class Documents extends APresenter {
         return $template;
     }
 
-    private function _move_from_archive_document(array $ids, int $idFolder) {
+    private function _move_from_archive_document(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         foreach($ids as $id) {
@@ -954,10 +959,19 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Documents moved from the archive document', 'success');
-        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
-    private function _suggest_for_shredding(array $ids, int $idFolder) {
+    private function _suggest_for_shredding(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         foreach($ids as $id) {
@@ -968,10 +982,19 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Process has started', 'success');
-        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
-    private function _delete_documents(array $ids, int $idFolder) {
+    private function _delete_documents(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         foreach($ids as $id) {
@@ -979,10 +1002,19 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Process has started', 'success');
-        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
-    private function _decline_archivation(array $ids, int $idFolder) {
+    private function _decline_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
         
         foreach($ids as $id) {
@@ -1007,10 +1039,18 @@ class Documents extends APresenter {
             $app->flashMessage('Declined archivation for selected documents', 'success');
         }
 
-        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
-    private function _approve_archivation(array $ids, int $idFolder) {
+    private function _approve_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         foreach($ids as $id) {
@@ -1035,10 +1075,18 @@ class Documents extends APresenter {
             $app->flashMessage('Approved archivation for selected documents', 'success');
         }
 
-        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
-    private function _archive(array $ids, int $idFolder) {
+    private function _archive(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         foreach($ids as $id) {
@@ -1063,7 +1111,15 @@ class Documents extends APresenter {
             $app->flashMessage('Archived selected documents', 'success');
         }
 
-        $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
     private function internalCreateFolderList(?int $idFolder, ?string $filter) {
