@@ -1117,7 +1117,7 @@ class Settings extends APresenter {
 
         $users = $app->userModel->getUserCount();
         $groups = $app->groupModel->getGroupCount();
-        $documents = $app->documentModel->getTotalDocumentCount();
+        $documents = $app->documentModel->getTotalDocumentCount(null);
         $folders = $app->folderModel->getFolderCount();
         $emails = $app->mailModel->getMailInQueueCount();
 
@@ -1401,14 +1401,14 @@ class Settings extends APresenter {
         $gb->addAction(function($service) use ($actionAuthorizator) {
             $link = '-';
             if($actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE)) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->getName()), 'Run');
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
             return $link;
         });
         $gb->addAction(function($service) use ($actionAuthorizator) {
             $link = '-';
             if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE)) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->getName()), 'Edit');
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->getSystemName()), 'Edit');
             }
             return $link;
         });

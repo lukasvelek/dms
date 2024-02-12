@@ -210,7 +210,8 @@ class Users extends APresenter {
             $data['$LINKS$'][] = $forcePasswordChangeLink;
         }
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinKBuilder::createAdvLink(array('page' => 'UserModule:Users:showSettingsForm', 'id' => $id), 'Settings');
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showSettingsForm', 'id' => $id), 'Settings');
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentReports:showAll'), 'My document reports');
 
         $this->templateManager->fill($data, $template);
 

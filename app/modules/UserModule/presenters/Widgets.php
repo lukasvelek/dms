@@ -19,7 +19,7 @@ class Widgets extends APresenter {
         global $app;
 
         $data = array(
-            'total_count' => $app->documentModel->getTotalDocumentCount(),
+            'total_count' => $app->documentModel->getTotalDocumentCount(null),
             'shredded_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
             'archived_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
             'new_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
@@ -63,7 +63,7 @@ class Widgets extends APresenter {
         );
 
         $documentData = array(
-            'total_count' => $app->documentModel->getTotalDocumentCount(),
+            'total_count' => $app->documentModel->getTotalDocumentCount(null),
             'shredded_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
             'archived_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
             'new_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::NEW),

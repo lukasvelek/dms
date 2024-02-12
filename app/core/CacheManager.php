@@ -323,7 +323,7 @@ class CacheManager {
     public function invalidateCache() {
         $filename = $this->createFilename();
 
-        $this->fm->deleteFile($filename);
+        $this->fm->deleteFile('cache/' . $filename);
     }
 
     /**

@@ -114,42 +114,24 @@ class Documents extends APresenter {
         $limit = $this->post('limit_range');
         $order = $this->post('order');
 
-        $isCondition = false;
-
         $qb = $app->documentModel->composeQueryStandardDocuments(false);
 
         if($idFolder > 0) {
             $qb->where('id_folder = ?', [$idFolder]);
-            $isCondition = true;
         }
 
         if(!is_numeric($filter)) {
             switch($filter) {
                 case 'shredded':
-                    if($isCondition) {
-                        $qb->andWhere('status = ?', [DocumentStatus::SHREDDED]);
-                    } else {
-                        $qb->where('status = ?', [DocumentStatus::SHREDDED]);
-                        $isCondition = true;
-                    }
+                    $qb->andWhere('status = ?', [DocumentStatus::SHREDDED]);
                     break;
     
                 case 'waitingForArchivation':
-                    if($isCondition) {
-                        $qb->andWhere('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
-                    } else {
-                        $qb->where('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
-                        $isCondition = true;
-                    }
+                    $qb->andWhere('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
                     break;
     
                 case 'archived':
-                    if($isCondition) {
-                        $qb->andWhere('status = ?', [DocumentStatus::ARCHIVED]);
-                    } else {
-                        $qb->where('status = ?', [DocumentStatus::ARCHIVED]);
-                        $isCondition = true;
-                    }
+                    $qb->andWhere('status = ?', [DocumentStatus::ARCHIVED]);
                     break;
     
                 default:
@@ -182,14 +164,27 @@ class Documents extends APresenter {
 
         $rows = null;
         $app->logger->logFunction(function() use (&$rows, $qb) {
-            $rows = $qb->execute()->fetch();
+            $rows = $qb->execute()->fetchAll();
         }, __METHOD__);
 
         if($rows === FALSE || $rows === NULL) {
             die('Error!');
         }
 
-        $fileRow = array(
+        if($rows->num_rows > 1000) {
+            // use background export
+            $data = [
+                'id_user' => $app->user->getId(),
+                'sql_string' => $qb->getSQL()
+            ];
+
+            $app->documentModel->insertDocumentReportQueueEntry($data);
+
+            $app->flashMessage('You requested to export more than 1000 entries. This operation will be done by background service. You will be able to find your export ' . LinkBuilder::createAdvLink(['page' => 'UserModule:DocumentReports:showAll'], 'here') . '.');
+            $app->redirect('UserModule:Documents:showAll');
+        }
+
+        /*$fileRow = array(
             'id;id_folder;name;date_created' . "\r\n"
         );
 
@@ -197,14 +192,21 @@ class Documents extends APresenter {
             foreach($rows as $row) {
                 $fileRow[] = $row['id'] . ';' . ($row['id_folder'] ?? '-') . ';' . $row['name'] . ';' . $row['date_created'] . "\r\n";
             }
-        }, __METHOD__);
+        }, __METHOD__);*/
 
         $hash = CypherManager::createCypher(32);
         $filename = 'temp_' . $hash . '.csv';
 
-        $app->fileManager->write('cache/' . $filename, $fileRow, false);
+        //$app->fileManager->write('cache/' . $filename, $fileRow, false);
 
-        $filename = 'cache/temp_' . $hash . '.csv';
+        $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $filename);
+
+        if($result === FALSE) {
+            die('ERROR! Documents presenter: line 205');
+        }
+
+        //$filename = 'cache/temp_' . $hash . '.csv';
+        $filename = $result;
         $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
 
         copy($filename, $downloadFilename);
@@ -216,7 +218,7 @@ class Documents extends APresenter {
         readfile($downloadFilename);
 
         unlink($filename);
-        unlink($downloadFilename);
+        //unlink($downloadFilename);
     }
 
     protected function showReportForm() {

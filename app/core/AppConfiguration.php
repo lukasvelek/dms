@@ -130,6 +130,10 @@ class AppConfiguration {
         return self::loadParam('grid_main_folder_has_all_documents');
     }
 
+    public static function getAbsoluteAppDir() {
+        return self::loadParam('absolute_app_dir');
+    }
+
     /**
      * ----- PRIVATE METHODS -----
      */

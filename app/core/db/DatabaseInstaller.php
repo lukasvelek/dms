@@ -357,6 +357,15 @@ class DatabaseInstaller {
                 'name' => 'VARCHAR(256) NOT NULL',
                 'id_parent_archive_entity' => 'INT(32) NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1'
+            ),
+            'document_reports' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'sql_string' => 'VARCHAR(32768) NOT NULL',
+                'id_user' => 'INT(32) NOT NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'file_src' => 'VARCHAR(256) NULL'
             )
         );
 

@@ -14,6 +14,7 @@ use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Authorizators\RibbonAuthorizator;
+use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
@@ -130,6 +131,7 @@ class Application {
     public NotificationComponent $notificationComponent;
     public ExternalEnumComponent $externalEnumComponent;
     public RibbonComponent $ribbonComponent;
+    public DocumentReportGeneratorComponent $documentReportGeneratorComponent;
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
@@ -236,13 +238,14 @@ class Application {
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel);
-
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
-
+        
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
-
+        $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager);
+        
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent);
+        
         if($sessionDestroyed) {
             CacheManager::invalidateAllCache();
             $this->redirect(self::URL_LOGIN_PAGE);
@@ -409,7 +412,7 @@ class Application {
             $code .= '<div class="col-md">';
             $code .= $message;
             $code .= '</div>';
-            $code .= '<div class="col-md" id="right">';
+            $code .= '<div class="col-md-1" id="right">';
             $code .= '<a style="cursor: pointer" onclick="hideFlashMessage(\'' . $index . '\')">x</a>';
             $code .= '</div>';
             $code .= '</div>';

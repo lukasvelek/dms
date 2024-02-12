@@ -15,6 +15,66 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertDocumentReportQueueEntry(array $data) {
+        return $this->insertNew($data, 'document_reports');
+    }
+
+    public function updateDocumentReportQueueEntry(int $id, array $data) {
+        return $this->updateExisting('document_reports', $id, $data);
+    }
+
+    public function deleteDocumentReportQueueEntry(int $id) {
+        return $this->deleteById($id, 'document_reports');
+    }
+
+    public function getLastInsertedDocumentReportQueueEntryForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id'])
+            ->from('document_reports')
+            ->where('id_user = ?', [$idUser])
+            ->orderBy('date_updated', 'DESC')
+            ->limit(1)
+            ->execute();
+
+        return $qb->fetch('id');
+    }
+
+    public function getDocumentReportQueueEntriesForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('document_reports')
+            ->where('id_user = ?', [$idUser])
+            ->orderBy('date_updated', 'DESC')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getDocumentReportQueueEntriesForStatus(int $status) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('document_reports')
+            ->where('status = ?', [$status])
+            ->orderBy('date_updated', 'DESC')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getDocumentReportQueueEntryById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('document_reports')
+            ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetch();
+    }
+
     public function getDocumentCountForStatus(?int $idFolder, ?string $filter) {
         $qb = $this->qb(__METHOD__);
 

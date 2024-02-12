@@ -43,6 +43,7 @@ $cfg['id_service_user'] = '1'; // id of user used in services
 $cfg['default_datetime_format'] = 'Y-m-d H:i:s'; // the default datetime format that is used when user has no own format set
 $cfg['enable_relogin'] = true; // true if relogging in as other (connected) users is enabled
 $cfg['folder_max_nest_level'] = 10;
+$cfg['absolute_app_dir'] = '';
 
 
 /**
