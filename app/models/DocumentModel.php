@@ -528,8 +528,11 @@ class DocumentModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('documents')
-            ->setNull(array('id_officer'))
-            ->set(['date_updated' => date(Database::DB_DATE_FORMAT)])
+            //->setNull(array('id_officer'))
+            ->set([
+                'date_updated' => date(Database::DB_DATE_FORMAT),
+                'id_officer' => 'NULL'
+            ])
             ->where('id = ?', [$id])
             ->execute();
 

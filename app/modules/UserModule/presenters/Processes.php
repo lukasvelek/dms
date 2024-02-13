@@ -165,7 +165,23 @@ class Processes extends APresenter {
     private function internalCreateGridPageControl(int $page, string $filter) {
         global $app;
 
-        $processCount = count($app->processModel->getAllProcessIds());
+        $processCount = 0;
+
+        switch($filter) {
+            case 'waitingForMe':
+                $processCount = $app->processModel->getCountProcessesWaitingForUser($app->user->getId());
+                break;
+
+            case 'startedByMe':
+                $processCount = $app->processModel->getCountProcessesStartedByUser($app->user->getId());
+                break;
+
+            case 'finished':
+                $processCount = $app->processModel->getCountFinishedProcesses();
+                break;
+        }
+
+        //$processCount = count($app->processModel->getAllProcessIds());
 
         $add = function(string $key, string $value, string &$link) {
             $link .= $key . '=' . $value;

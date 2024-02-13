@@ -14,6 +14,62 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getCountProcessesWaitingForUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['COUNT(id) AS cnt'])
+            ->from('processes')
+            ->where('WHERE ' . $this->xb()
+                        ->lb()
+                            ->lb()
+                                ->where('workflow1 = ?', [$idUser])
+                                ->andWhere('workflow_status = 1')
+                            ->rb()
+                            ->or()
+                            ->lb()
+                                ->where('workflow2 = ?', [$idUser])
+                                ->andWhere('workflow_status = 2')
+                            ->rb()
+                            ->or()
+                            ->lb()
+                                ->where('workflow3 = ?', [$idUser])
+                                ->andWhere('workflow_status = 3')
+                            ->rb()
+                            ->or()
+                            ->lb()
+                                ->where('workflow4 = ?', [$idUser])
+                                ->andWhere('workflow_status = 4')
+                            ->rb()
+                        ->rb()
+                        ->build())
+            ->andWhere('status = ?', [ProcessStatus::IN_PROGRESS])
+            ->execute();
+
+        return $qb->fetch('cnt');
+    }
+
+    public function getCountProcessesStartedByUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['COUNT(id) AS cnt'])
+            ->from('processes')
+            ->where('id_author = ?', [$idUser])
+            ->execute();
+
+        return $qb->fetch('cnt');
+    }
+
+    public function getCountFinishedProcesses() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['COUNT(id) AS cnt'])
+            ->from('processes')
+            ->where('status = ?', [ProcessStatus::FINISHED])
+            ->execute();
+
+        return $qb->fetch('cnt');
+    }
+
     public function getFirstIdProcessOnAGridPage(int $gridPage) {
         if($gridPage == 0) $gridPage = 1;
         return $this->getFirstRowWithCount($gridPage, 'processes', ['id']);

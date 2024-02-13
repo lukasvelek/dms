@@ -108,7 +108,11 @@ class QueryBuilder
     }
 
     public function setNull(array $values) {
-        $this->queryType = 'update_null';
+        $temp = [];
+        foreach($values as $v) {
+            $temp[$v] = 'NULL';
+        }
+        $values = $temp;
 
         if(!isset($this->queryData['values'])) {
             $this->queryData['values'] = $values;
@@ -395,7 +399,7 @@ class QueryBuilder
             return $result;
         }
 
-        if($this->queryResult === NULL || $this->queryResult === FALSE) {
+        if($this->queryResult === NULL || $this->queryResult === FALSE || $this->queryResult === TRUE) {
             return $result;
         }
 
@@ -526,10 +530,14 @@ class QueryBuilder
 
         $i = 0;
         foreach($this->queryData['values'] as $key => $value) {
-            if(($i + 1) == count($this->queryData['values'])) {
-                $sql .= $key . ' = \'' . $value . '\'';
+            if($value == 'NULL') {
+                $sql .= $key . ' = ' . $value;
             } else {
-                $sql .= $key . ' = \'' . $value . '\', ';
+                if(($i + 1) == count($this->queryData['values'])) {
+                    $sql .= $key . ' = \'' . $value . '\'';
+                } else {
+                    $sql .= $key . ' = \'' . $value . '\', ';
+                }
             }
 
             $i++;

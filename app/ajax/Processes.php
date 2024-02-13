@@ -290,6 +290,10 @@ function search() {
     $gb->addOnColumnRender('currentOfficer', function(Process $process) use ($userModel, $ucm) {
         $idUser = $process->getWorkflowStep(($process->getWorkflowStatus() - 1));
 
+        if($idUser === NULL) {
+            return '-';
+        }
+
         $user = $ucm->loadUserByIdFromCache($idUser);
 
         if(is_null($user)) {
