@@ -242,7 +242,7 @@ class Application {
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
         
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
-        $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager);
+        $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager, $this->externalEnumComponent);
         
         $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
         

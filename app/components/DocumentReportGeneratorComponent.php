@@ -2,23 +2,47 @@
 
 namespace DMS\Components;
 
+use DMS\Constants\DocumentAfterShredActions;
+use DMS\Constants\DocumentRank;
+use DMS\Constants\DocumentShreddingStatus;
+use DMS\Constants\DocumentStatus;
+use DMS\Constants\MetadataInputType;
 use DMS\Core\FileManager;
 
 class DocumentReportGeneratorComponent extends AComponent {
     private array $models;
     private FileManager $fm;
+    private ExternalEnumComponent $eec;
 
-    public function __construct(array $models, FileManager $fm) {
+    public function __construct(array $models, FileManager $fm, ExternalEnumComponent $eec) {
         $this->models = $models;
         $this->fm = $fm;
+        $this->eec = $eec;
     }
 
     public function generateReport($sqlResult, int $idUser, ?string $filename = null) {
         $fileRow = [];
 
         $metadata = [
-            'id', 'id_folder', 'name', 'date_created', 'date_updated', 'id_officer', 'id_manager', 'status', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'id_archive_document', 'id_archive_box', 'id_archive_archive'
+            'id', 'id_folder', 'name', 'date_created', 'date_updated', 'id_officer', 'id_manager', 'status', 'id_group', 'is_deleted', 'rank', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'id_archive_document', 'id_archive_box', 'id_archive_archive'
         ];
+
+        $metadataCustomValues = [
+            'id_folder',
+            'id_officer',
+            'id_manager',
+            'status',
+            'id_group',
+            'is_deleted',
+            'rank',
+            'id_archive_document',
+            'id_archive_box',
+            'id_archive_archive',
+            'after_shred_action',
+            'shredding_status'
+        ];
+
+        $customValues = [];
 
         // CUSTOM METADATA
 
@@ -28,9 +52,71 @@ class DocumentReportGeneratorComponent extends AComponent {
             if($cm->getIsSystem()) continue;
 
             $metadata[] = $cm->getName();
+
+            if(in_array($cm->getInputType(), [MetadataInputType::SELECT, MetadataInputType::SELECT_EXTERNAL])) {
+                $metadataCustomValues[] = $cm->getName();
+
+                if($cm->getInputType() == MetadataInputType::SELECT) {
+                    $values = $this->models['metadataModel']->getAllValuesForIdMetadata($cm->getId());
+                    $customValues[$cm->getName()] = $values;
+                } else {
+                    $enum = $this->eec->getEnumByName($cm->getSelectExternalEnumName());
+
+                    if($enum !== NULL) {
+                        $customValues[$cm->getName()] = $enum->getValues();
+                    }
+                }
+            }
         }
 
         // END OF CUSTOM METADATA
+
+        $metadataModel = $this->models['metadataModel'];
+        $documentModel = $this->models['documentModel'];
+        $userModel = $this->models['userModel'];
+        $folderModel = $this->models['folderModel'];
+        $archiveModel = $this->models['archiveModel'];
+        $groupModel = $this->models['groupModel'];
+
+        $getCustomValue = function(string $name, string $value) use ($metadataModel, $documentModel, $userModel, $folderModel, $archiveModel, $customValues, $groupModel) {
+            if(array_key_exists($name, $customValues)) {
+                return $customValues[$name][$value];
+            }
+            if($name == 'is_deleted') {
+                return $value ? 'Yes' : 'No';
+            }
+            if($name == 'id_folder') {
+                return $folderModel->getFolderById($value)->getName();
+            }
+            if(in_array($name, ['id_officer', 'id_manager'])) {
+                return $userModel->getUserById($value)->getFullname();
+            }
+            if(in_array($name, ['id_archive_document', 'id_archive_box', 'id_archive_archive'])) {
+                if($name == 'id_archive_document') {
+                    return $archiveModel->getDocumentById($value)->getName();
+                } else if($name == 'id_archive_box') {
+                    return $archiveModel->getBoxById($value)->getName();
+                } else if($name == 'id_archive_archive') {
+                    return $archiveModel->getArchiveById($value)->getName();
+                }
+            }
+            if($name == 'status') {
+                return DocumentStatus::$texts[$value];
+            }
+            if($name == 'rank') {
+                return DocumentRank::$texts[$value];
+            }
+            if(in_array($name, ['id_group'])) {
+                return $groupModel->getGroupById($value)->getName();
+            }
+            if($name == 'after_shred_action') {
+                return DocumentAfterShredActions::$texts[$value];
+            }
+            if($name == 'shredding_status') {
+                return DocumentShreddingStatus::$texts[$value];
+            }
+            return $value;
+        };
 
         $headerRow = '';
 
@@ -53,7 +139,11 @@ class DocumentReportGeneratorComponent extends AComponent {
             foreach($metadata as $m) {
                 $text = '-';
                 if(isset($row[$m]) && ($row[$m] !== NULL)) {
-                    $text = $row[$m];
+                    if(!in_array($m, $metadataCustomValues)) {
+                        $text = $row[$m];
+                    } else {
+                        $text = $getCustomValue($m, $row[$m]);
+                    }
                 }
 
                 if(($i + 1) == count($metadata)) {

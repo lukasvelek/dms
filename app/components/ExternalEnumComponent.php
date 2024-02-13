@@ -3,6 +3,7 @@
 namespace DMS\Components;
 
 use DMS\Enums\AEnum;
+use DMS\Enums\FoldersEnum;
 use DMS\Enums\GroupsEnum;
 use DMS\Enums\UsersEnum;
 
@@ -50,7 +51,8 @@ class ExternalEnumComponent {
     private function initEnums() {
         $this->enums = array(
             'UsersEnum' => new UsersEnum($this->getModelByName('userModel')),
-            'GroupsEnum' => new GroupsEnum($this->getModelByName('groupModel'))
+            'GroupsEnum' => new GroupsEnum($this->getModelByName('groupModel')),
+            'FoldersEnum' => new FoldersEnum($this->getModelByName('folderModel'))
         );
     }
 }
