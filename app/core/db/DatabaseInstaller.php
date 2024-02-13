@@ -1104,7 +1104,8 @@ class DatabaseInstaller {
             ),
             'NotificationManagerService' => array(
                 'notification_keep_length' => '1',
-                'service_run_period' => '7'
+                'service_run_period' => '7',
+                'notification_keep_unseen_service_user' => '1'
             ),
             'CacheRotateService' => array(
                 'service_run_period' => '1'

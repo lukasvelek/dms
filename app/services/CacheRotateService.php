@@ -29,6 +29,13 @@ class CacheRotateService extends AService {
             unlink($f);
         }
 
+        $dirs = [];
+        $fm->readFoldersInFolder(AppConfiguration::getCacheDir(), $dirs);
+        
+        for($i = (count($dirs) - 1); $i >= 0; $i--) {
+            rmdir($dirs[$i]);
+        }
+
         $this->stopService();
     }
 }

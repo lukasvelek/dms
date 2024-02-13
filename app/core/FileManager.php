@@ -20,6 +20,20 @@ class FileManager {
         }
     }
 
+    public function readFoldersInFolder(string $dir, array &$dirs) {
+        $contents = scandir($dir);
+
+        unset($contents[0]);
+        unset($contents[1]);
+
+        foreach($contents as $c) {
+            if(is_dir($dir . $c . '/')) {
+                $dirs[] = $dir . $c . '/';
+                $this->readFoldersinFolder($dir . $c . '/', $dirs);
+            }
+        }
+    }
+
     /**
      * Returns a list of files in the directory and all subdirectories
      * 
@@ -33,8 +47,8 @@ class FileManager {
         unset($contents[1]);
 
         foreach($contents as $c) {
-            if(is_file($c)) {
-                $this->readFilesInFolder($dir . '/' . $c, $files);
+            if(is_dir($dir . $c . '/')) {
+                $this->readFilesInFolder($dir . $c . '/', $files);
             } else {
                 $files[] = $dir . $c;
             }

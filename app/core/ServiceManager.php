@@ -98,7 +98,7 @@ class ServiceManager {
     }
 
     public function getNextRunDateForService(string $name) {
-        if(array_key_exists($name, $this->runDates)) {
+        if(array_key_exists($name, $this->runDates) && array_key_exists('last_run_date', $this->runDates[$name]) && array_key_exists('next_run_date', $this->runDates[$name])) {
             return $this->runDates[$name]['next_run_date'];
         } else {
             return '-';
@@ -112,7 +112,9 @@ class ServiceManager {
         foreach($this->services as $service) {
             $valFromCache = $cm->loadServiceEntry($service->name);
 
-            if($valFromCache === NULL) {
+            $data[$service->name] = [];
+
+            if($valFromCache === NULL || empty($valFromCache)) {
                 // load from db
 
                 $logEntry = $this->serviceModel->getServiceLogLastEntryForServiceName($service->name);

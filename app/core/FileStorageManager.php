@@ -67,6 +67,14 @@ class FileStorageManager {
         return $fileObjects;
     }
 
+    public function getDirectories() {
+        $dirs = [];
+
+        $this->fm->readFoldersInFolder($this->fileFolder, $dirs);
+
+        return $dirs;
+    }
+
     /**
      * Uploads a file to a folder defined in config.
      * Checks if the uploaded file is allowed.
