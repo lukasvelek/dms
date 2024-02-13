@@ -276,20 +276,6 @@ class ProcessComponent extends AComponent {
 
         return true;
     }
-
-    /*public function checkIfArchiveArchiveIsInProcess(int $idArchive) {
-        $process = null;
-
-        $this->logger->logFunction(function() use (&$process, $idArchive) {
-            $process = $this->processModel->getProcessForIdDocument($idArchive, true);
-        });
-
-        if(!is_null($process) && ($process->getStatus() == ProcessStatus::IN_PROGRESS)) {
-            return true;
-        }
-
-        return false;
-    }*/
 }
 
 ?>
