@@ -5,16 +5,20 @@ namespace DMS\Components;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Core\ServiceManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\DocumentModel;
 use DMS\Models\MailModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ProcessModel;
+use DMS\Models\ServiceModel;
+use DMS\Models\UserModel;
 use DMS\UI\LinkBuilder;
 use DMS\Widgets\HomeDashboard\DocumentStats;
 use DMS\Widgets\HomeDashboard\MailInfo;
 use DMS\Widgets\HomeDashboard\Notifications;
 use DMS\Widgets\HomeDashboard\ProcessStats;
+use DMS\Widgets\HomeDashboard\ServiceStats;
 use DMS\Widgets\HomeDashboard\SystemInfo;
 
 class WidgetComponent extends AComponent {
@@ -22,16 +26,22 @@ class WidgetComponent extends AComponent {
     private ProcessModel $processModel;
     private MailModel $mailModel;
     private NotificationModel $notificationModel;
+    private ServiceModel $serviceModel;
+    private ServiceManager $serviceManager;
+    private UserModel $userModel;
 
     public array $homeDashboardWidgets;
 
-    public function __construct(Database $db, Logger $logger, DocumentModel $documentModel, ProcessModel $processModel, MailModel $mailModel, NotificationModel $notificationModel) {
+    public function __construct(Database $db, Logger $logger, DocumentModel $documentModel, ProcessModel $processModel, MailModel $mailModel, NotificationModel $notificationModel, ServiceModel $serviceModel, ServiceManager $serviceManager, UserModel $userModel) {
         parent::__construct($db, $logger);
 
         $this->documentModel = $documentModel;
         $this->processModel = $processModel;
         $this->mailModel = $mailModel;
         $this->notificationModel = $notificationModel;
+        $this->serviceModel = $serviceModel;
+        $this->serviceManager = $serviceManager;
+        $this->userModel = $userModel;
 
         $this->homeDashboardWidgets = [];
         
@@ -118,6 +128,14 @@ class WidgetComponent extends AComponent {
                     $nf = new Notifications($this->notificationModel);
 
                     return $this->__getTemplate('Notifications', $nf->render());
+                }
+            ),
+            'service_stats' => array(
+                'text' => 'Service stats',
+                'render' => function() {
+                    $ss = new ServiceStats($this->serviceModel, $this->serviceManager, $this->userModel);
+
+                    return $this->__getTemplate('Service stats', $ss->render());
                 }
             )
         );

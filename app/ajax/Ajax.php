@@ -12,10 +12,13 @@ use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Core\AppConfiguration;
+use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
+use DMS\Core\FileStorageManager;
 use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
+use DMS\Core\ServiceManager;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
@@ -176,7 +179,6 @@ $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel
 
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
 $processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent, $processCommentModel);
-$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel, $mailModel, $notificationModel);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 $archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
@@ -187,6 +189,9 @@ $documentCommentRepository = new DocumentCommentRepository($db, $logger, $docume
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator);
 
 $mailManager = new MailManager();
+//$serviceManager = new ServiceManager($logger, $serviceModel, new FileStorageManager(AppConfiguration::getFileDir(), $fm, $logger), $documentModel, new CacheManager())
+
+//$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel, $mailModel, $notificationModel, $serviceModel, $serviceManager);
 
 $gridSize = AppConfiguration::getGridSize();
 $gridUseFastLoad = AppConfiguration::getGridUseFastLoad();

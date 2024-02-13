@@ -28,6 +28,10 @@ abstract class AWidget implements IRenderable {
         $this->code[] = '<p><b>Last update:</b> ' . $lastUpdate . ' | ' . $link . '</p>';
     }
 
+    protected function addLink(string $link) {
+        $this->code[] = $link;
+    }
+
     public function render() {
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($this->code);
     }
