@@ -1365,18 +1365,11 @@ class Settings extends APresenter {
         $data = function() use ($serviceManager, $serviceModel, $user) {
             $values = [];
             foreach($serviceManager->services as $k => $v) {
-                $serviceLogEntry = $serviceModel->getServiceLogLastEntryForServiceName($v->name);
-                $serviceLastRunDate = '-';
-                $serviceNextRunDate = /*DatetimeFormatHelper::formatDateByUserDefaultFormat(date('Y-m-d H:i:s'), $user)*/ '-';
-            
-                if($serviceLogEntry !== NULL) {
-                    $serviceLastRunDate = $serviceLogEntry['date_created'];
+                $serviceLastRunDate = $serviceManager->getLastRunDateForService($v->name);
+                $serviceNextRunDate = $serviceManager->getNextRunDateForService($v->name);
 
-                    $serviceNextRunDate = strtotime($serviceLastRunDate) + ($serviceModel->getConfigForServiceName($v->name)['service_run_period'] * 24 * 60 * 60);
-
-                    $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
-                    $serviceNextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat(date('Y-m-d H:i:s', $serviceNextRunDate), $user);
-                }
+                $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
+                $serviceNextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceNextRunDate, $user);
 
                 $values[] = new class($v->name, $k, $v->description, $serviceLastRunDate, $serviceNextRunDate) {
                     private $systemName;
