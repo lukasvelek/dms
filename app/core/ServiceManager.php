@@ -5,6 +5,8 @@ namespace DMS\Core;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\ProcessComponent;
+use DMS\Constants\CacheCategories;
+use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentModel;
 use DMS\Models\GroupUserModel;
@@ -38,6 +40,8 @@ class ServiceManager {
     private NotificationModel $notificationModel;
     private DocumentReportGeneratorComponent $documentReportGeneratorComponent;
 
+    private array $runDates;
+
     public array $services;
 
     public function __construct(Logger $logger, ServiceModel $serviceModel, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm, DocumentAuthorizator $documentAuthorizator, ProcessComponent $processComponent, UserModel $userModel, GroupUserModel $groupUserModel, MailModel $mailModel, MailManager $mailManager, NotificationModel $notificationModel, DocumentReportGeneratorComponent $documentReportGeneratorComponent) {
@@ -56,6 +60,7 @@ class ServiceManager {
         $this->documentReportGeneratorComponent = $documentReportGeneratorComponent;
         
         $this->loadServices();
+        $this->loadRunDates();
     }
 
     public function getServiceByName(string $name) {
@@ -66,6 +71,49 @@ class ServiceManager {
         }
 
         return null;
+    }
+
+    public function getLastRunDateForService(string $name) {
+        if(array_key_exists($name, $this->runDates)) {
+            return $this->runDates[$name]['last_run_date'];
+        } else {
+            return '-';
+        }
+    }
+
+    public function getNextRunDateForService(string $name) {
+        if(array_key_exists($name, $this->runDates)) {
+            return $this->runDates[$name]['next_run_date'];
+        } else {
+            return '-';
+        }
+    }
+
+    private function loadRunDates() {
+        $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
+        $data = [];
+
+        foreach($this->services as $service) {
+            $valFromCache = $cm->loadServiceEntry($service->name);
+
+            if($valFromCache === NULL) {
+                // load from db
+
+                $logEntry = $this->serviceModel->getServiceLogLastEntryForServiceName($service->name);
+
+                if($logEntry !== NULL) {
+                    $data[$service->name]['last_run_date'] = $logEntry['date_created'];
+                    $data[$service->name]['next_run_date'] = date(Database::DB_DATE_FORMAT, strtotime($logEntry['date_created']) + ($this->serviceModel->getConfigForServiceName($service->name)['service_run_period'] * 24 * 60 * 60));
+                }
+
+                $cm->saveServiceEntry($service->name, $data[$service->name]);
+            } else {
+                $data[$service->name]['last_run_date'] = $valFromCache['last_run_date'];
+                $data[$service->name]['next_run_date'] = $valFromCache['next_run_date'];
+            }
+        }
+
+        $this->runDates = $data;
     }
 
     private function loadServices() {

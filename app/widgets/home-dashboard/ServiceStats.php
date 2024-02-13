@@ -26,19 +26,9 @@ class ServiceStats extends AWidget {
         $user = $this->getCurrentUser();
 
         foreach($this->serviceManager->services as $displayName => $service) {
-            $serviceLogEntry = $this->serviceModel->getServiceLogLastEntryForServiceName($service->name);
-            
-            $lastRunDate = '-';
-            $nextRunDate = '-';
+            $nextRunDate = $this->serviceManager->getNextRunDateForService($service->name);
 
-            if($serviceLogEntry !== NULL) {
-                $lastRunDate = $serviceLogEntry['date_created'];
-
-                $nextRunDate = strtotime($lastRunDate) + ($this->serviceModel->getConfigForServiceName($service->name)['service_run_period'] * 24 * 60 * 60);
-
-                $lastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($lastRunDate, $user);
-                $nextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat(date('Y-m-d H:i:s', $nextRunDate), $user);
-            }
+            $nextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($nextRunDate, $user);
 
             if($nextRunDate == '-') {
                 $this->add('<span style="color: red">' . $displayName . '</span>', 'Next run: ' . $nextRunDate);

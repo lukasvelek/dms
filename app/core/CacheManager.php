@@ -30,6 +30,32 @@ class CacheManager {
         $this->category = $category;
     }
 
+    public function saveServiceEntry(string $name, array $data) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            $cacheData = [];
+        }
+
+        $cacheData[$name] = $data;
+
+        $this->saveToCache($cacheData);
+    }
+
+    public function loadServiceEntry(string $name) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(!array_key_exists($name, $cacheData)) {
+            return null;
+        }
+
+        return $cacheData[$name];
+    }
+
     public function saveFlashMessage(array $data) {
         $cacheData = $this->loadFromCache();
 

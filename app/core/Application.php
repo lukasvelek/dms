@@ -635,21 +635,9 @@ class Application {
 
     private function autoRunServices() {
         foreach($this->serviceManager->services as $displayName => $service) {
-            $logEntry = $this->serviceModel->getServiceLogLastEntryForServiceName($service->name);
+            $nextRunDate = $this->serviceManager->getNextRunDateForService($service->name);
 
-            $lastRunDate = null;
-
-            if($logEntry !== NULL) {
-                $lastRunDate = $logEntry['date_created'];
-            }
-            
-            $nextRunDate = null;
-
-            if($lastRunDate !== NULL) {
-                $nextRunDate = strtotime($lastRunDate) + ($this->serviceModel->getConfigForServiceName($service->name)['service_run_period'] * 24 * 60 * 60);
-            }
-
-            if($logEntry === NULL || ($lastRunDate !== NULL && $nextRunDate !== NULL && time() > $nextRunDate)) {
+            if($nextRunDate !== NULL && time() > strtotime($nextRunDate)) {
                 $service->run();
             }
         }

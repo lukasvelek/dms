@@ -255,6 +255,7 @@ class Settings extends APresenter {
         $app->flashMessageIfNotIsset(['name']);
 
         $name = $this->get('name');
+        $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
 
         foreach($app->serviceManager->services as $service) {
             if($service->name == $name) {
@@ -263,6 +264,8 @@ class Settings extends APresenter {
                 $app->logger->logFunction(function() use ($service) {
                     $service->run();
                 }, __METHOD__);
+
+                $cm->invalidateCache();
 
                 break;
             }
