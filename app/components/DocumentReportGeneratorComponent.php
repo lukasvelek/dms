@@ -14,12 +14,58 @@ class DocumentReportGeneratorComponent extends AComponent {
     }
 
     public function generateReport($sqlResult, int $idUser, ?string $filename = null) {
-        $fileRow = [
-            'id;id_folder;name;date_created;date_updated' . "\r\n"
+        $fileRow = [];
+
+        $metadata = [
+            'id', 'id_folder', 'name', 'date_created', 'date_updated', 'id_officer', 'id_manager', 'status', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'id_archive_document', 'id_archive_box', 'id_archive_archive'
         ];
 
+        // CUSTOM METADATA
+
+        $customMetadata = $this->models['metadataModel']->getAllMetadataForTableName('documents');
+
+        foreach($customMetadata as $cm) {
+            if($cm->getIsSystem()) continue;
+
+            $metadata[] = $cm->getName();
+        }
+
+        // END OF CUSTOM METADATA
+
+        $headerRow = '';
+
+        $i = 0;
+        foreach($metadata as $m) {
+            if(($i + 1) == count($metadata)) {
+                $headerRow .= $m;
+            } else {
+                $headerRow .= $m . ';';
+            }
+            $i++;
+        }
+
+        $fileRow[] = $headerRow . "\r\n";
+
         foreach($sqlResult as $row) {
-            $fileRow[] = $row['id'] . ';' . ($row['id_folder'] ?? '-') . ';' . $row['name'] . ';' . $row['date_created'] . "\r\n";
+            $dataRow = '';
+
+            $i = 0;
+            foreach($metadata as $m) {
+                $text = '-';
+                if(isset($row[$m]) && ($row[$m] !== NULL)) {
+                    $text = $row[$m];
+                }
+
+                if(($i + 1) == count($metadata)) {
+                    $dataRow .= $text;
+                } else {
+                    $dataRow .= $text . ';';
+                }
+
+                $i++;
+            }
+
+            $fileRow[] = $dataRow . "\r\n";
         }
 
         if($filename === NULL) {
