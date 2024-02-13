@@ -176,7 +176,7 @@ $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel
 
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
 $processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent, $processCommentModel);
-$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel, $mailModel);
+$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel, $mailModel, $notificationModel);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 $archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);

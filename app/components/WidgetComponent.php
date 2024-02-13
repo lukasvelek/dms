@@ -2,19 +2,18 @@
 
 namespace DMS\Components;
 
-use DMS\Constants\DocumentStatus;
-use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
-use DMS\Core\Application;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\DocumentModel;
 use DMS\Models\MailModel;
+use DMS\Models\NotificationModel;
 use DMS\Models\ProcessModel;
 use DMS\UI\LinkBuilder;
 use DMS\Widgets\HomeDashboard\DocumentStats;
 use DMS\Widgets\HomeDashboard\MailInfo;
+use DMS\Widgets\HomeDashboard\Notifications;
 use DMS\Widgets\HomeDashboard\ProcessStats;
 use DMS\Widgets\HomeDashboard\SystemInfo;
 
@@ -22,15 +21,17 @@ class WidgetComponent extends AComponent {
     private DocumentModel $documentModel;
     private ProcessModel $processModel;
     private MailModel $mailModel;
+    private NotificationModel $notificationModel;
 
     public array $homeDashboardWidgets;
 
-    public function __construct(Database $db, Logger $logger, DocumentModel $documentModel, ProcessModel $processModel, MailModel $mailModel) {
+    public function __construct(Database $db, Logger $logger, DocumentModel $documentModel, ProcessModel $processModel, MailModel $mailModel, NotificationModel $notificationModel) {
         parent::__construct($db, $logger);
 
         $this->documentModel = $documentModel;
         $this->processModel = $processModel;
         $this->mailModel = $mailModel;
+        $this->notificationModel = $notificationModel;
 
         $this->homeDashboardWidgets = [];
         
@@ -109,6 +110,14 @@ class WidgetComponent extends AComponent {
                     }
 
                     return $this->__getTemplate('Processes waiting for me', ArrayStringHelper::createUnindexedStringFromUnindexedArray($code));
+                }
+            ),
+            'notifications' => array(
+                'text' => 'Notifications',
+                'render' => function() {
+                    $nf = new Notifications($this->notificationModel);
+
+                    return $this->__getTemplate('Notifications', $nf->render());
                 }
             )
         );

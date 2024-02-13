@@ -12,8 +12,16 @@ abstract class AWidget implements IRenderable {
         $this->code = [];
     }
 
-    protected function add(string $title, string $text) {
-        $this->code[] = '<p><b>' . $title . ':</b> ' . $text . '</p>';
+    protected function add(string $title, string $text, bool $useColon = true) {
+        $code = '<p><b>' . $title;
+
+        if($useColon === TRUE) {
+            $code .= ':';
+        }
+
+        $code .= '</b> ' . $text . '</p>';
+
+        $this->code[] = $code;
     }
 
     protected function updateLink(string $link, string $lastUpdate) {
