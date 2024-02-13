@@ -583,7 +583,7 @@ function generateDocuments() {
             'id_group' => '1',
             'is_deleted' => '0',
             'rank' => 'public',
-            'shred_year' => '2023',
+            'shred_year' => date('Y'),
             'after_shred_action' => 'showAsShredded',
             'shredding_status' => '5'
         );
