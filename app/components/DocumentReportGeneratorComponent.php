@@ -2,22 +2,26 @@
 
 namespace DMS\Components;
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\MetadataInputType;
+use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
 
 class DocumentReportGeneratorComponent extends AComponent {
     private array $models;
     private FileManager $fm;
     private ExternalEnumComponent $eec;
+    private CacheManager $ucm;
 
     public function __construct(array $models, FileManager $fm, ExternalEnumComponent $eec) {
         $this->models = $models;
         $this->fm = $fm;
         $this->eec = $eec;
+        $this->ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
     }
 
     public function generateReport($sqlResult, int $idUser, ?string $filename = null) {
@@ -77,10 +81,12 @@ class DocumentReportGeneratorComponent extends AComponent {
         $folderModel = $this->models['folderModel'];
         $archiveModel = $this->models['archiveModel'];
         $groupModel = $this->models['groupModel'];
+        $ucm = $this->ucm;
 
-        $getCustomValue = function(string $name, string $value) use ($metadataModel, $documentModel, $userModel, $folderModel, $archiveModel, $customValues, $groupModel) {
+        $data = [];
+
+        $getCustomValue = function(string $name, string $value) use ($metadataModel, $documentModel, $userModel, $folderModel, $archiveModel, $customValues, $groupModel, $ucm, $data) {
             if(array_key_exists($name, $customValues)) {
-                //return $customValues[$name][$value];
                 foreach($customValues[$name] as $cv) {
                     if($cv->getValue() == $value) {
                         return $cv->getName();
@@ -94,7 +100,15 @@ class DocumentReportGeneratorComponent extends AComponent {
                 return $folderModel->getFolderById($value)->getName();
             }
             if(in_array($name, ['id_officer', 'id_manager'])) {
-                return $userModel->getUserById($value)->getFullname();
+                $valFromCache = $ucm->loadUserByIdFromCache($value);
+
+                if($valFromCache === NULL) {
+                    $user = $userModel->getUserById($value);
+                    $ucm->saveUserToCache($user);
+                    return $user->getFullname();
+                } else {
+                    return $valFromCache->getFullname();
+                }
             }
             if(in_array($name, ['id_archive_document', 'id_archive_box', 'id_archive_archive'])) {
                 if($name == 'id_archive_document') {
