@@ -3,7 +3,9 @@
 namespace DMS\Services;
 
 use DMS\Components\DocumentReportGeneratorComponent;
+use DMS\Components\NotificationComponent;
 use DMS\Constants\DocumentReportStatus;
+use DMS\Constants\Notifications;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -13,12 +15,14 @@ use DMS\Models\ServiceModel;
 class DocumentReportGeneratorService extends AService {
     private DocumentModel $documentModel;
     private DocumentReportGeneratorComponent $drgc;
+    private NotificationComponent $notificationComponent;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentModel $documentModel, DocumentReportGeneratorComponent $drgc) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentModel $documentModel, DocumentReportGeneratorComponent $drgc, NotificationComponent $notificationComponent) {
         parent::__construct('DocumentReportGeneratorService', 'Generates document reports', $logger, $serviceModel, $cm);
 
         $this->documentModel = $documentModel;
         $this->drgc = $drgc;
+        $this->notificationComponent = $notificationComponent;
     }
 
     public function run() {
@@ -50,6 +54,8 @@ class DocumentReportGeneratorService extends AService {
             $this->log('Generated report for queue entry #' . $id, __METHOD__);
             $this->documentModel->updateDocumentReportQueueEntry($id, ['file_src' => $result]);
             $this->updateStatusToFinished($id);
+
+            $this->notificationComponent->createNewNotification(Notifications::DOCUMENT_REPORT_GENERATED, ['id_user' => $q['id_user']]);
         }
 
         $this->stopService();

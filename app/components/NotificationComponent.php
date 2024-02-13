@@ -28,10 +28,36 @@ class NotificationComponent extends AComponent {
     }
 
     /**
+     * Notification to inform a user that their document report has been generated.
+     * 
+     * Data must contain:
+     *  'id_user' - the user the notification will pop up to
+     * 
+     * @param array $data Data array
+     * @return bool True
+     */
+    private function _documentReportFinished(array $data) {
+        $text = 'Your document report has been generated!';
+
+        $action = '?page=UserModule:DocumentReports:showAll';
+
+        $this->notificationModel->insertNewNotification([
+            'id_user' => $data['id_user'],
+            'text' => $text,
+            'status' => NotificationStatus::UNSEEN,
+            'action' => $action
+        ]);
+
+        $this->clearSession();
+
+        return true;
+    }
+
+    /**
      * Notification to inform a user that a process they started has been finished.
      * 
      * Data must contain:
-     *  'id_user' - the user the notification will pop up
+     *  'id_user' - the user the notification will pop up to
      *  'id_process' - the process that has finished
      * 
      * @param array $data Data array
@@ -58,7 +84,7 @@ class NotificationComponent extends AComponent {
      * Notification to inform a user that he has been assigned a process.
      * 
      * Data must contain:
-     *  'id_user' - the user the notification will pop up
+     *  'id_user' - the user the notification will pop up to
      *  'id_process' - the process the user has been assigned
      * 
      * @param array $data Data array

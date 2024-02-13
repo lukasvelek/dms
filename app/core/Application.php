@@ -244,7 +244,7 @@ class Application {
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
         $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager);
         
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent);
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
         
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);
         

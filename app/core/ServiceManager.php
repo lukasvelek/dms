@@ -4,6 +4,7 @@ namespace DMS\Core;
 
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Components\DocumentReportGeneratorComponent;
+use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Constants\CacheCategories;
 use DMS\Core\DB\Database;
@@ -39,12 +40,26 @@ class ServiceManager {
     private MailManager $mailManager;
     private NotificationModel $notificationModel;
     private DocumentReportGeneratorComponent $documentReportGeneratorComponent;
+    private NotificationComponent $notificationComponent;
 
     private array $runDates;
 
     public array $services;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm, DocumentAuthorizator $documentAuthorizator, ProcessComponent $processComponent, UserModel $userModel, GroupUserModel $groupUserModel, MailModel $mailModel, MailManager $mailManager, NotificationModel $notificationModel, DocumentReportGeneratorComponent $documentReportGeneratorComponent) {
+    public function __construct(Logger $logger, 
+                                ServiceModel $serviceModel, 
+                                FileStorageManager $fsm, 
+                                DocumentModel $documentModel, 
+                                CacheManager $cm, 
+                                DocumentAuthorizator $documentAuthorizator, 
+                                ProcessComponent $processComponent, 
+                                UserModel $userModel, 
+                                GroupUserModel $groupUserModel, 
+                                MailModel $mailModel, 
+                                MailManager $mailManager, 
+                                NotificationModel $notificationModel, 
+                                DocumentReportGeneratorComponent $documentReportGeneratorComponent, 
+                                NotificationComponent $notificationComponent) {
         $this->logger = $logger;
         $this->serviceModel = $serviceModel;
         $this->fsm = $fsm;
@@ -58,6 +73,7 @@ class ServiceManager {
         $this->mailManager = $mailManager;
         $this->notificationModel = $notificationModel;
         $this->documentReportGeneratorComponent = $documentReportGeneratorComponent;
+        $this->notificationComponent = $notificationComponent;
         
         $this->loadServices();
         $this->loadRunDates();
@@ -126,7 +142,7 @@ class ServiceManager {
         $this->services['Notification manager'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel);
         $this->services['Document archivator'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator);
         $this->services['Declined document remover'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator);
-        $this->services['Document report generator'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent);
+        $this->services['Document report generator'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
     }
 }
 
