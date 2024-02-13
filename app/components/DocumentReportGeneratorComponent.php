@@ -80,7 +80,12 @@ class DocumentReportGeneratorComponent extends AComponent {
 
         $getCustomValue = function(string $name, string $value) use ($metadataModel, $documentModel, $userModel, $folderModel, $archiveModel, $customValues, $groupModel) {
             if(array_key_exists($name, $customValues)) {
-                return $customValues[$name][$value];
+                //return $customValues[$name][$value];
+                foreach($customValues[$name] as $cv) {
+                    if($cv->getValue() == $value) {
+                        return $cv->getName();
+                    }
+                }
             }
             if($name == 'is_deleted') {
                 return $value ? 'Yes' : 'No';
