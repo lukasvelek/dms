@@ -2,7 +2,6 @@
 
 namespace DMS\Core\DB;
 
-use DMS\Authenticators\UserAuthenticator;
 use DMS\Constants\ArchiveStatus;
 use DMS\Constants\ArchiveType;
 use DMS\Constants\BulkActionRights;
@@ -1094,15 +1093,39 @@ class DatabaseInstaller {
     public function insertDefaultServiceConfig() {
         $serviceCfg = array(
             'LogRotateService' => array(
-                'files_keep_length' => '7'
+                'files_keep_length' => '7',
+                'service_run_period' => '7'
             ),
             'PasswordPolicyService' => array(
                 'password_change_period' => '30',
                 'password_change_force_administrators' => '0',
-                'password_change_force' => '0'
+                'password_change_force' => '0',
+                'service_run_period' => '30'
             ),
             'NotificationManagerService' => array(
-                'notification_keep_length' => '1'
+                'notification_keep_length' => '1',
+                'service_run_period' => '7'
+            ),
+            'CacheRotateService' => array(
+                'service_run_period' => '1'
+            ),
+            'FileManagerService' => array(
+                'service_run_period' => '30'
+            ),
+            'ShreddingSuggestionService' => array(
+                'service_run_period' => '30'
+            ),
+            'MailService' => array(
+                'service_run_period' => '1'
+            ),
+            'DocumentArchivationService' => array(
+                'service_run_period' => '7'
+            ),
+            'DeclinedDocumentRemoverService' => array(
+                'service_run_period' => '30'
+            ),
+            'DocumentReportGeneratorService' => array(
+                'service_run_period' => '1'
             )
         );
 

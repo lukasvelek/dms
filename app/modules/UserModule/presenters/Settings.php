@@ -195,8 +195,11 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
-            '$FORM$' => $this->internalCreateEditServiceForm($name)
+            '$FORM$' => $this->internalCreateEditServiceForm($name),
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showServices', '<-');
 
         $this->templateManager->fill($data, $template);
 
@@ -329,7 +332,8 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Edit document folder form',
-            '$FORM$' => $this->internalCreateEditFolderForm((int)($idFolder))
+            '$FORM$' => $this->internalCreateEditFolderForm((int)($idFolder)),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
@@ -348,7 +352,8 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New document folder form',
-            '$FORM$' => $this->internalCreateNewFolderForm($idParentFolder)
+            '$FORM$' => $this->internalCreateNewFolderForm($idParentFolder),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
@@ -632,7 +637,8 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New metadata form',
-            '$FORM$' => $this->internalCreateEditMetadataForm($metadata)
+            '$FORM$' => $this->internalCreateEditMetadataForm($metadata),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
@@ -645,7 +651,8 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New metadata form',
-            '$FORM$' => $this->internalCreateNewMetadataForm()
+            '$FORM$' => $this->internalCreateNewMetadataForm(),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
@@ -658,7 +665,8 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New user form',
-            '$FORM$' => $this->internalCreateNewUserForm()
+            '$FORM$' => $this->internalCreateNewUserForm(),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
@@ -671,7 +679,8 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New group form',
-            '$FORM$' => $this->internalCreateNewGroupForm()
+            '$FORM$' => $this->internalCreateNewGroupForm(),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
@@ -1355,23 +1364,31 @@ class Settings extends APresenter {
             foreach($serviceManager->services as $k => $v) {
                 $serviceLogEntry = $serviceModel->getServiceLogLastEntryForServiceName($v->name);
                 $serviceLastRunDate = '-';
+                $serviceNextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat(date('Y-m-d H:i:s'), $user);
             
                 if($serviceLogEntry !== NULL) {
                     $serviceLastRunDate = $serviceLogEntry['date_created'];
+
+                    $serviceNextRunDate = strtotime($serviceLastRunDate) + ($serviceModel->getConfigForServiceName($v->name)['service_run_period'] * 24 * 60 * 60);
+
                     $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
+                    $serviceNextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat(date('Y-m-d H:i:s', $serviceNextRunDate), $user);
                 }
 
-                $values[] = new class($v->name, $k, $v->description, $serviceLastRunDate) {
+
+                $values[] = new class($v->name, $k, $v->description, $serviceLastRunDate, $serviceNextRunDate) {
                     private $systemName;
                     private $name;
                     private $description;
                     private $lastRunDate;
+                    private $nextRunDate;
 
-                    function __construct($systemName, $name, $description, $lastRunDate) {
+                    function __construct($systemName, $name, $description, $lastRunDate, $nextRunDate) {
                         $this->systemName = $systemName;
                         $this->name = $name;
                         $this->description = $description;
                         $this->lastRunDate = $lastRunDate;
+                        $this->nextRunDate = $nextRunDate;
                     }
 
                     function getSystemName() {
@@ -1389,6 +1406,10 @@ class Settings extends APresenter {
                     function getLastRunDate() {
                         return $this->lastRunDate;
                     }
+
+                    function getNextRunDate() {
+                        return $this->nextRunDate;
+                    }
                 };
             }
             return $values;
@@ -1396,7 +1417,7 @@ class Settings extends APresenter {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['systemName' => 'System name', 'name' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date']);
+        $gb->addColumns(['systemName' => 'System name', 'name' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
         $gb->addDataSourceCallback($data);
         $gb->addAction(function($service) use ($actionAuthorizator) {
             $link = '-';
@@ -1525,6 +1546,14 @@ class Settings extends APresenter {
                     }
 
                     $fb->addElement($checkbox);
+
+                    break;
+
+                case ServiceMetadata::SERVICE_RUN_PERIOD:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="service_run_period_text_value">__VAL__</span>'))
+                    ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))
+                    ;
 
                     break;
             }
