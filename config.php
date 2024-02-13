@@ -44,6 +44,7 @@ $cfg['default_datetime_format'] = 'Y-m-d H:i:s'; // the default datetime format 
 $cfg['enable_relogin'] = true; // true if relogging in as other (connected) users is enabled
 $cfg['folder_max_nest_level'] = 10;
 $cfg['absolute_app_dir'] = '';
+$cfg['enable_service_auto_run'] = true;
 
 
 /**

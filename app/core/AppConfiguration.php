@@ -134,6 +134,10 @@ class AppConfiguration {
         return self::loadParam('absolute_app_dir');
     }
 
+    public static function getServiceAutoRun() {
+        return self::loadParam('enable_service_auto_run');
+    }
+
     /**
      * ----- PRIVATE METHODS -----
      */

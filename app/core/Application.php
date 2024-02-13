@@ -50,6 +50,7 @@ use DMS\Modules\IPresenter;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Services\AService;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -250,6 +251,10 @@ class Application {
         if($sessionDestroyed) {
             CacheManager::invalidateAllCache();
             $this->redirect(self::URL_LOGIN_PAGE);
+        }
+
+        if(AppConfiguration::getServiceAutoRun()) {
+            $this->autoRunServices();
         }
     }
 
@@ -625,6 +630,28 @@ class Application {
             file_put_contents('app/core/install', 'installed');
 
             $sessionDestroyed = session_destroy();
+        }
+    }
+
+    private function autoRunServices() {
+        foreach($this->serviceManager->services as $displayName => $service) {
+            $logEntry = $this->serviceModel->getServiceLogLastEntryForServiceName($service->name);
+
+            $lastRunDate = null;
+
+            if($logEntry !== NULL) {
+                $lastRunDate = $logEntry['date_created'];
+            }
+            
+            $nextRunDate = null;
+
+            if($lastRunDate !== NULL) {
+                $nextRunDate = strtotime($lastRunDate) + ($this->serviceModel->getConfigForServiceName($service->name)['service_run_period'] * 24 * 60 * 60);
+            }
+
+            if($logEntry === NULL || ($lastRunDate !== NULL && $nextRunDate !== NULL && time() > $nextRunDate)) {
+                $service->run();
+            }
         }
     }
 }
