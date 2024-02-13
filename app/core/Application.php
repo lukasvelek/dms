@@ -253,7 +253,7 @@ class Application {
             $this->redirect(self::URL_LOGIN_PAGE);
         }
 
-        if(AppConfiguration::getServiceAutoRun()) {
+        if(AppConfiguration::getServiceAutoRun() && isset($_SESSION['id_current_user'])) {
             $this->autoRunServices();
         }
     }
