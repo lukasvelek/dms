@@ -243,7 +243,7 @@ function search() {
         }
     });
     $gb->addOnColumnRender('workflow2', function(Process $process) use ($userModel, $ucm){
-        if($process->getWorkflowStatus(1) !== NULL) {
+        if($process->getWorkflowStep(1) !== NULL) {
             $user = $ucm->loadUserByIdFromCache($process->getWorkflowStep(1));
 
             if(is_null($user)) {

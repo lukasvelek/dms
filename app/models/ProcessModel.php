@@ -310,7 +310,7 @@ class ProcessModel extends AModel {
             ->where('id = ?', [$id])
             ->execute();
 
-        return $this->createProcessObjectFromDbRow($qb->fetchAll());
+        return $this->createProcessObjectFromDbRow($qb->fetch());
     }
 
     public function getProcessesWithIdUserFromId(?int $idFrom, int $idUser, int $limit) {
