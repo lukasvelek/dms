@@ -196,10 +196,21 @@ class ProcessComponent extends AComponent {
 
         $this->processModel->updateWorkflowStatus($idProcess, $newWfStatus);
 
-        $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
-            'id_user' => $process->getWorkflow()[$newWfStatus - 1],
-            'id_process' => $idProcess
-        ));
+        $notify = false;
+        if(isset($_SESSION['id_current_user']) && $process !== NULL) {
+            if($process->getWorkflowStep($newWfStatus - 1) != $_SESSION['id_current_user']) {
+                $notify = true;
+            }
+        } else {
+            $notify = true;
+        }
+
+        if($notify === TRUE) {
+            $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
+                'id_user' => $process->getWorkflow()[$newWfStatus - 1],
+                'id_process' => $idProcess
+            ));
+        }
 
         $this->logger->info('Updated workflow status of process #' . $idProcess, __METHOD__);
 
