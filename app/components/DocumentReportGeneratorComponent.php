@@ -75,8 +75,6 @@ class DocumentReportGeneratorComponent extends AComponent {
 
         // END OF CUSTOM METADATA
 
-        $metadataModel = $this->models['metadataModel'];
-        $documentModel = $this->models['documentModel'];
         $userModel = $this->models['userModel'];
         $folderModel = $this->models['folderModel'];
         $archiveModel = $this->models['archiveModel'];
@@ -85,7 +83,7 @@ class DocumentReportGeneratorComponent extends AComponent {
 
         $data = [];
 
-        $getCustomValue = function(string $name, string $value) use ($metadataModel, $documentModel, $userModel, $folderModel, $archiveModel, $customValues, $groupModel, $ucm, $data) {
+        $getCustomValue = function(string $name, string $value) use ($userModel, $folderModel, $archiveModel, $customValues, $groupModel, $ucm, &$data) {
             if(array_key_exists($name, $customValues)) {
                 foreach($customValues[$name] as $cv) {
                     if($cv->getValue() == $value) {
@@ -97,26 +95,56 @@ class DocumentReportGeneratorComponent extends AComponent {
                 return $value ? 'Yes' : 'No';
             }
             if($name == 'id_folder') {
-                return $folderModel->getFolderById($value)->getName();
+                if(array_key_exists('folders', $data) && array_key_exists($value, $data['folders'])) {
+                    return $data['folders'][$value];
+                } else {
+                    $folder = $folderModel->getFolderById($value)->getName();
+                    $data['folders'][$value] = $folder;
+                    return $folder;
+                }
             }
             if(in_array($name, ['id_officer', 'id_manager'])) {
-                $valFromCache = $ucm->loadUserByIdFromCache($value);
-
-                if($valFromCache === NULL) {
-                    $user = $userModel->getUserById($value);
-                    $ucm->saveUserToCache($user);
-                    return $user->getFullname();
+                if(array_key_exists('users', $data) && array_key_exists($value, $data['users'])) {
+                    return $data['users'][$value];
                 } else {
-                    return $valFromCache->getFullname();
+                    $valFromCache = $ucm->loadUserByIdFromCache($value);
+
+                    if($valFromCache === NULL) {
+                        $user = $userModel->getUserById($value);
+                        $ucm->saveUserToCache($user);
+                        $data['users'][$value] = $user->getFullname();
+                        return $user->getFullname();
+                    } else {
+                        $data['users'][$value] = $valFromCache->getFullname();
+                        return $valFromCache->getFullname();
+                    }
                 }
             }
             if(in_array($name, ['id_archive_document', 'id_archive_box', 'id_archive_archive'])) {
                 if($name == 'id_archive_document') {
-                    return $archiveModel->getDocumentById($value)->getName();
+                    if(array_key_exists('archive_documents', $data) && array_key_exists($value, $data['archive_documents'])) {
+                        return $data['archive_documents'][$value];
+                    } else {
+                        $archive = $archiveModel->getDocumentById($value)->getName();
+                        $data['archive_documents'][$value] = $archive;
+                        return $archive;
+                    }
                 } else if($name == 'id_archive_box') {
-                    return $archiveModel->getBoxById($value)->getName();
+                    if(array_key_exists('archive_boxes', $data) && array_key_exists($value, $data['archive_boxes'])) {
+                        return $data['archive_boxes'][$value];
+                    } else {
+                        $archive = $archiveModel->getBoxById($value)->getName();
+                        $data['archive_boxes'][$value] = $archive;
+                        return $archive;
+                    }
                 } else if($name == 'id_archive_archive') {
-                    return $archiveModel->getArchiveById($value)->getName();
+                    if(array_key_exists('archive_archives', $data) && array_key_exists($value, $data['archive_boxes'])) {
+                        return $data['archive_archives'][$value];
+                    } else {
+                        $archive = $archiveModel->getArchiveById($value)->getName();
+                        $data['archive_archives'][$value] = $archive;
+                        return $archive;
+                    }
                 }
             }
             if($name == 'status') {
@@ -126,7 +154,13 @@ class DocumentReportGeneratorComponent extends AComponent {
                 return DocumentRank::$texts[$value];
             }
             if(in_array($name, ['id_group'])) {
-                return $groupModel->getGroupById($value)->getName();
+                if(array_key_exists('groups', $data) && array_key_exists($value, $data['groups'])) {
+                    return $data['groups'][$value];
+                } else {
+                    $group = $groupModel->getGroupById($value)->getName();
+                    $data['groups'][$value] = $group;
+                    return $group;
+                }
             }
             if($name == 'after_shred_action') {
                 return DocumentAfterShredActions::$texts[$value];
