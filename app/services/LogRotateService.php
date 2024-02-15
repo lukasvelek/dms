@@ -26,6 +26,7 @@ class LogRotateService extends AService {
         $fm->readFilesInFolder(AppConfiguration::getLogDir(), $files);
 
         $toDelete = [];
+        $newFilenames = [];
         foreach($files as $f) {
             $filename = explode('/', $f)[1];
             $filename = explode('.', $filename)[0];
@@ -35,15 +36,34 @@ class LogRotateService extends AService {
 
             $maxOldDate = time() - (60 * 60 * 24 * $days);
 
+            $year = explode('-', $date)[0];
+            $month = explode('-', $date)[1];
+            $day = explode('-', $date)[2];
+
             if(strtotime($date) < $maxOldDate) {
                 $toDelete[] = $f;
+                $newFilenames[$f] = ['dir' => ($year . '/' . $month . '/' . $day . '/'), 'name' => $filename];
             }
         }
 
-        $this->log('Found ' . count($toDelete) . ' log files to delete', __METHOD__);
+        if($this->scfg['archive_old_logs'] == '1') {
+            // archive
+            $this->log('Found ' . count($toDelete) . ' log files to archive', __METHOD__);
 
-        foreach($toDelete as $td) {
-            unlink($td);
+            foreach($newFilenames as $f => $nf) {
+                $fm->createDirectory(AppConfiguration::getLogDir() . $nf['dir']);
+            }
+
+            foreach($toDelete as $td) {
+                $fm->moveFileToDirectory($td, AppConfiguration::getLogDir() . $newFilenames[$td]['dir'] . $newFilenames[$td]['name'] . '.log');
+            }
+        } else {
+            //delete
+            $this->log('Found ' . count($toDelete) . ' log files to delete', __METHOD__);
+
+            foreach($toDelete as $td) {
+                unlink($td);
+            }
         }
 
         $this->stopService();

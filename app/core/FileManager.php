@@ -20,6 +20,18 @@ class FileManager {
         }
     }
 
+    public function createDirectory(string $dirpath) {
+        if(is_dir($dirpath)) {
+           return false; 
+        }
+
+        return mkdir($dirpath, 0777, true);
+    }
+
+    public function moveFileToDirectory(string $filepath, string $newFilepath) {
+        return rename($filepath, $newFilepath);
+    }
+
     public function readFoldersInFolder(string $dir, array &$dirs) {
         $contents = scandir($dir);
 

@@ -163,3 +163,28 @@ if(document.getElementById('service_run_period_text_value') != null && document.
         }
     };
 }
+
+
+// NOTIFICATION_KEEP_UNSEEN_SERVICE_USER
+if(document.getElementById('archive_old_logs_text_value') != null && document.getElementById('archive_old_logs') != null) {
+    var archive_old_logs_text_value = document.getElementById('archive_old_logs_text_value');
+    var archive_old_logs = document.getElementById('archive_old_logs');
+
+    if(archive_old_logs.checked == 1) {
+        archive_old_logs_text_value.innerHTML = 'Archive';
+        archive_old_logs_text_value.style.color = 'green';
+    } else {
+        archive_old_logs_text_value.innerHTML = 'Delete';
+        archive_old_logs_text_value.style.color = 'red';
+    }
+
+    archive_old_logs.oninput = function() {
+        if(archive_old_logs.checked == 1) {
+            archive_old_logs_text_value.innerHTML = 'Archive';
+            archive_old_logs_text_value.style.color = 'green';
+        } else {
+            archive_old_logs_text_value.innerHTML = 'Delete';
+            archive_old_logs_text_value.style.color = 'red';
+        }
+    };
+}

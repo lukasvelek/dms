@@ -10,6 +10,7 @@ class ServiceMetadata {
     public const NOTIFICATION_KEEP_LENGTH = 'notification_keep_length';
     public const NOTIFICATION_KEEP_UNSEEN_SERVICE_USER = 'notification_keep_unseen_service_user';
     public const SERVICE_RUN_PERIOD = 'service_run_period';
+    public const ARCHIVE_OLD_LOGS = 'archive_old_logs';
 
     public static $texts = array(
         self::FILES_KEEP_LENGTH => 'Files keep length',
@@ -18,7 +19,8 @@ class ServiceMetadata {
         self::PASSWORD_CHANGE_FORCE => 'Force password change for general users',
         self::NOTIFICATION_KEEP_LENGTH => 'Notification keep length',
         self::NOTIFICATION_KEEP_UNSEEN_SERVICE_USER => 'Keep unseen service user\'s notifications',
-        self::SERVICE_RUN_PERIOD => 'Run period'
+        self::SERVICE_RUN_PERIOD => 'Run period',
+        self::ARCHIVE_OLD_LOGS => 'Archive old logs'
     );
 }
 

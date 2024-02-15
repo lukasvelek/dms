@@ -1573,6 +1573,22 @@ class Settings extends APresenter {
                     ;
 
                     break;
+
+                case ServiceMetadata::ARCHIVE_OLD_LOGS:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="archive_old_logs_text_value">__VAL__</span>'))
+                    ;
+
+                    $checkbox = $fb->createInput()->setType('checkbox')->setName($key);
+
+                    if($value == '1') {
+                        $checkbox->setSpecial('checked');
+                    }
+
+                    $fb->addElement($checkbox);
+
+                    break;
+                    break;
             }
         }
 

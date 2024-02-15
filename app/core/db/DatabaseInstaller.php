@@ -1094,7 +1094,8 @@ class DatabaseInstaller {
         $serviceCfg = array(
             'LogRotateService' => array(
                 'files_keep_length' => '7',
-                'service_run_period' => '7'
+                'service_run_period' => '7',
+                'archive_old_logs' => '1'
             ),
             'PasswordPolicyService' => array(
                 'password_change_period' => '30',
