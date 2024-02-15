@@ -10,6 +10,18 @@ class ServiceModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getIdServiceConfigForNameAndKey(string $name, string $key) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id'])
+            ->from('service_config')
+            ->where('name = ?', [$name])
+            ->andWhere('key = ?', [$key])
+            ->execute();
+
+        return $qb->fetch('id');
+    }
+
     public function getServiceLogLastEntryForServiceName(string $serviceName) {
         $qb = $this->qb(__METHOD__);
 
@@ -33,7 +45,7 @@ class ServiceModel extends AModel {
         $qb ->update('service_config')
             ->set(['value' => $value])
             ->where('name = ?', [$name])
-            ->andWhere('key = ?', [$key])
+            ->andWhere('`key` = ?', [$key])
             ->execute();
 
         return $qb->fetchAll();

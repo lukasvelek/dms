@@ -13,6 +13,7 @@ use DMS\Constants\WidgetLocations;
 use DMS\Core\AppConfiguration;
 use DMS\Core\Application;
 use DMS\Core\CacheManager;
+use DMS\Core\DB\Database;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Entities\Metadata;
@@ -174,6 +175,12 @@ class Settings extends APresenter {
                 $values['notification_keep_unseen_service_user'] = '0';
             } else {
                 $values['notification_keep_unseen_service_user'] = '1';
+            }
+        } else if($name == 'LogRotateService') {
+            if(!array_key_exists('archive_old_logs', $values)) {
+                $values['archive_old_logs'] = '0';
+            } else {
+                $values['archive_old_logs'] = '1';
             }
         }
 
@@ -1380,11 +1387,9 @@ class Settings extends APresenter {
         global $app;
 
         $serviceManager = $app->serviceManager;
-        $serviceModel = $app->serviceModel;
         $user = $app->user;
-        $actionAuthorizator = $app->actionAuthorizator;
 
-        $data = function() use ($serviceManager, $serviceModel, $user) {
+        $data = function() use ($serviceManager, $user) {
             $values = [];
             foreach($serviceManager->services as $k => $v) {
                 $serviceLastRunDate = $serviceManager->getLastRunDateForService($v->name);
@@ -1432,20 +1437,23 @@ class Settings extends APresenter {
             return $values;
         };
 
+        $canRunService = $app->actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE);
+        $canEditService = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE);
+
         $gb = new GridBuilder();
 
         $gb->addColumns(['systemName' => 'System name', 'name' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
         $gb->addDataSourceCallback($data);
-        $gb->addAction(function($service) use ($actionAuthorizator) {
+        $gb->addAction(function($service) use ($canRunService) {
             $link = '-';
-            if($actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE)) {
+            if($canRunService) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
             return $link;
         });
-        $gb->addAction(function($service) use ($actionAuthorizator) {
+        $gb->addAction(function($service) use ($canEditService) {
             $link = '-';
-            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE)) {
+            if($canEditService) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->getSystemName()), 'Edit');
             }
             return $link;
