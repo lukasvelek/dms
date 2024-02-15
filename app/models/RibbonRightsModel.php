@@ -10,6 +10,42 @@ class RibbonRightsModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllEditableRibbonsForIdGroups(array $idGroups) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_ribbon'])
+            ->from('ribbon_group_rights')
+            ->where($qb->getColumnInValues('id_group', $idGroups))
+            ->andWhere('can_edit = 1')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getAllDeletableRibbonsForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_ribbon'])
+            ->from('ribbon_user_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('can_delete = 1')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getAllEditableRibbonsForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_ribbon'])
+            ->from('ribbon_user_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('can_edit = 1')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
     public function deleteAllRibonRightsForIdUser(int $idUser) {
         return $this->deleteByCol('id_user', $idUser, 'ribbon_user_rights');
     }

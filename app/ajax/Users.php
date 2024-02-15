@@ -56,6 +56,10 @@ function search() {
         }
     };
 
+    $canViewUserProfile = $actionAuthorizator->checkActionRight(UserActionRights::VIEW_USER_PROFILE, null, false);
+    $canManageUserRights = $actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false);
+    $canDeleteUsers = $actionAuthorizator->checkActionRight(UserActionRights::DELETE_USER, null, false);
+
     $gb = new GridBuilder();
 
     $gb->addColumns(['firstname' => 'Firstname', 'lastname' => 'Lastname', 'username' => 'Username', 'email' => 'Email', 'status' => 'Status']);
@@ -63,38 +67,38 @@ function search() {
     $gb->addOnColumnRender('status', function(User $user) {
         return UserStatus::$texts[$user->getStatus()];
     });
-    $gb->addAction(function(User $user) use ($actionAuthorizator) {
-        if($actionAuthorizator->checkActionRight(UserActionRights::VIEW_USER_PROFILE, null, false)) {
+    $gb->addAction(function(User $user) use ($canViewUserProfile) {
+        if($canViewUserProfile) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile');
         } else {
             return '-';
         }
     });
-    $gb->addAction(function(User $user) use ($actionAuthorizator) {
-        if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false)) {
+    $gb->addAction(function(User $user) use ($canManageUserRights) {
+        if($canManageUserRights) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId(), 'filter' => 'actions'), 'Action rights');
         } else {
             return '-';
         }
     });
-    $gb->addAction(function(User $user) use ($actionAuthorizator) {
-        if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false)) {
+    $gb->addAction(function(User $user) use ($canManageUserRights) {
+        if($canManageUserRights) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId(), 'filter' => 'bulk_actions'), 'Bulk action rights');
         } else {
             return '-';
         }
     });
-    $gb->addAction(function(User $user) use ($actionAuthorizator) {
-        if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS, null, false)) {
+    $gb->addAction(function(User $user) use ($canManageUserRights) {
+        if($canManageUserRights) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId(), 'filter' => 'panels'), 'Panel rights');
         } else {
             return '-';
         }
     });
-    $gb->addAction(function(User $user) use ($actionAuthorizator, $currentUser) {
+    $gb->addAction(function(User $user) use ($canDeleteUsers, $currentUser) {
         $notDeletableIdUsers = array($currentUser->getId(), AppConfiguration::getIdServiceUser());
 
-        if($actionAuthorizator->checkActionRight(UserActionRights::DELETE_USER, null, false) &&
+        if($canDeleteUsers &&
            !in_array($user->getId(), $notDeletableIdUsers) &&
            $user->getUsername() != 'admin') {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteUser', 'id' => $user->getId()), 'Delete');

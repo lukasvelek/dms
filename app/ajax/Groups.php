@@ -47,39 +47,43 @@ function search() {
         };
     }
 
+    $canViewGroupUsers = $actionAuthorizator->checkActionRight(UserActionRights::VIEW_GROUP_USERS, null, false);
+    $canManagerGroupUsers = $actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false);
+    $canDeleteGroups = $actionAuthorizator->checkActionRight(UserActionRights::DELETE_GROUP, null, false);
+
     $gb = new GridBuilder();
 
     $gb->addColumns(['name' => 'Name', 'code' => 'Code']);
-    $gb->addAction(function(Group $group) use ($actionAuthorizator) {
-        if($actionAuthorizator->checkActionRight(UserActionRights::VIEW_GROUP_USERS, null, false)) {
+    $gb->addAction(function(Group $group) use ($canViewGroupUsers) {
+        if($canViewGroupUsers) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users');
         } else {
             return '-';
         }
     });
-    $gb->addAction(function(Group $group) use ($actionAuthorizator) {
-        if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false)) {
+    $gb->addAction(function(Group $group) use ($canManagerGroupUsers) {
+        if($canManagerGroupUsers) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'actions'), 'Action rights');
         } else {
             return '-';
         }
     });
-    $gb->addAction(function(Group $group) use ($actionAuthorizator) {
-        if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false)) {
+    $gb->addAction(function(Group $group) use ($canManagerGroupUsers) {
+        if($canManagerGroupUsers) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'bulk_actions'), 'Bulk action rights');
         } else {
             return '-';
         }
     });
-    $gb->addAction(function(Group $group) use ($actionAuthorizator) {
-        if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false)) {
+    $gb->addAction(function(Group $group) use ($canManagerGroupUsers) {
+        if($canManagerGroupUsers) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'panels'), 'Panel rights');
         } else {
             return '-';
         }
     });
-    $gb->addAction(function(Group $group) use ($actionAuthorizator, $notDeletableIdGroups) {
-        if($actionAuthorizator->checkActionRight(UserActionRights::DELETE_GROUP, null, false) &&
+    $gb->addAction(function(Group $group) use ($canDeleteGroups, $notDeletableIdGroups) {
+        if($canDeleteGroups &&
            !in_array($group->getId(), $notDeletableIdGroups)) {
             return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteGroup', 'id' => $group->getId()), 'Delete');
         } else {

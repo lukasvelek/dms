@@ -119,6 +119,18 @@ class Database implements IDbQueriable {
             }
         }
     }
+
+    public static function convertMysqliResultToArray($mysqli_result, array $keys) {
+        $array = [];
+        foreach($keys as $key) {
+            foreach($mysqli_result as $row) {
+                if(isset($row[$key])) {
+                    $array[] = $row[$key];
+                }
+            }
+        }
+        return $array;
+    }
 }
 
 ?>

@@ -25,6 +25,30 @@ class RibbonAuthorizator extends AAuthorizator {
         $this->groupUserModel = $groupUserModel;
     }
 
+    public function getDeletableRibbonsForIdUser(?int $idUser) {
+        if(is_null($idUser)) {
+            if(empty($this->idUser)) {
+                return false;
+            }
+
+            $idUser = $this->idUser;
+        }
+
+        return Database::convertMysqliResultToArray($this->ribbonRightsModel->getAllDeletableRibbonsForIdUser($idUser), ['id_ribbon']);
+    }
+
+    public function getEditableRibbonsForIdUser(?int $idUser) {
+        if(is_null($idUser)) {
+            if(empty($this->idUser)) {
+                return false;
+            }
+
+            $idUser = $this->idUser;
+        }
+
+        return Database::convertMysqliResultToArray($this->ribbonRightsModel->getAllEditableRibbonsForIdUser($idUser), ['id_ribbon']);
+    }
+
     public function checkRibbonVisible(?int $idUser, Ribbon $ribbon) {
         if(is_null($idUser)) {
             if(empty($this->idUser)) {

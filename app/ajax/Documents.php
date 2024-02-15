@@ -327,6 +327,8 @@ function search() {
 
         $query = str_replace('_', '%', $query);
 
+        $canShareDocuments = $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false);
+
         $gb = new GridBuilder();
 
         $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
@@ -341,6 +343,7 @@ function search() {
 
             if(is_null($user)) {
                 $user = $userModel->getUserById($document->getIdAuthor());
+                $ucm->saveUserToCache($user);
             }
             
             return $user->getFullname();
@@ -354,6 +357,7 @@ function search() {
 
                 if(is_null($folder)) {
                     $folder = $folderModel->getFolderById($document->getIdFolder());
+                    $fcm->saveFolderToCache($folder);
                 }
 
                 return $folder->getName();
@@ -367,8 +371,8 @@ function search() {
         $gb->addAction(function(Document $document) {
             return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
         });
-        $gb->addAction(function(Document $document) use ($actionAuthorizator) {
-            if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false) &&
+        $gb->addAction(function(Document $document) use ($canShareDocuments) {
+            if($canShareDocuments &&
                ($document->getStatus() == DocumentStatus::ARCHIVED) &&
                ($document->getRank() == DocumentRank::PUBLIC)) {
                 return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
@@ -399,6 +403,8 @@ function search() {
             };
         }
 
+        $canShareDocuments = $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false);
+
         $gb = new GridBuilder();
 
         $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
@@ -413,6 +419,7 @@ function search() {
 
             if(is_null($user)) {
                 $user = $userModel->getUserById($document->getIdAuthor());
+                $ucm->saveUserToCache($user);
             }
             
             return $user->getFullname();
@@ -426,6 +433,7 @@ function search() {
 
                 if(is_null($folder)) {
                     $folder = $folderModel->getFolderById($document->getIdFolder());
+                    $fcm->saveFolderToCache($folder);
                 }
 
                 return $folder->getName();
@@ -443,8 +451,8 @@ function search() {
                 return '-';
             }
         });
-        $gb->addAction(function(Document $document) use ($actionAuthorizator) {
-            if($actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false) &&
+        $gb->addAction(function(Document $document) use ($canShareDocuments) {
+            if($canShareDocuments &&
                ($document->getStatus() == DocumentStatus::ARCHIVED) &&
                ($document->getRank() == DocumentRank::PUBLIC)) {
                 return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');

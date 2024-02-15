@@ -565,9 +565,14 @@ class RibbonSettings extends APresenter {
         global $app;
 
         $ribbonModel = $app->ribbonModel;
-        $ribbonAuthorizator = $app->ribbonAuthorizator;
-        $actionAuthorizator = $app->actionAuthorizator;
         $idUser = $app->user->getId();
+
+        $editableRibbons = $app->ribbonAuthorizator->getEditableRibbonsForIdUser($idUser);
+        $deletableRibbons = $app->ribbonAuthorizator->getDeletableRibbonsForIdUser($idUser);
+
+        $canUserEdit = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS);
+        $canUserDelete = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS);
+        $canUserEditRights = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS);
 
         $data = function() use ($ribbonModel) {
             $ribbons = $ribbonModel->getAllRibbons(true);
@@ -585,45 +590,46 @@ class RibbonSettings extends APresenter {
         $gb->addOnColumnRender('url', function(Ribbon $ribbon) {
             return $ribbon->getPageUrl();
         });
-        $gb->addAction(function(Ribbon $ribbon) use ($ribbonAuthorizator, $actionAuthorizator, $idUser) {
+        $gb->addAction(function(Ribbon $ribbon) use ($editableRibbons, $canUserEdit) {
             $link = '-';
-            if($ribbonAuthorizator->checkRibbonEditable($idUser, $ribbon) &&
-               $actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
+            if(in_array($ribbon->getId(), $editableRibbons) &&
+               $canUserEdit &&
                $ribbon->getName() != 'SPLITTER') {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
             }
             return $link;
         });
-        $gb->addAction(function(Ribbon $ribbon) use ($ribbonAuthorizator, $actionAuthorizator, $idUser) {
+        $gb->addAction(function(Ribbon $ribbon) use ($editableRibbons, $canUserEdit) {
             $link = '-';
-            if($ribbonAuthorizator->checkRibbonEditable($idUser, $ribbon) &&
-               $actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
+            if(in_array($ribbon->getId(), $editableRibbons) &&
+               $canUserEdit &&
                $ribbon->getName() != 'SPLITTER') {
-                if($ribbon->isJS()) {{
+                if($ribbon->isJS()) {
                     $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showDropdownItems', 'id' => $ribbon->getId()), 'Edit dropdown items');
-                }}
+                }
             }
             return $link;
         });
-        $gb->addAction(function(Ribbon $ribbon) use ($ribbonAuthorizator, $actionAuthorizator, $idUser) {
+        $gb->addAction(function(Ribbon $ribbon) use ($deletableRibbons, $canUserDelete) {
             $link = '-';
-            if($ribbonAuthorizator->checkRibbonDeletable($idUser, $ribbon) &&
-               $actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS)) {
+            if(in_array($ribbon->getId(), $deletableRibbons) &&
+               $canUserDelete &&
+               $ribbon->isSystem() === FALSE) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
             }
             return $link;
         });
-        $gb->addAction(function(Ribbon $ribbon) use ($actionAuthorizator) {
+        $gb->addAction(function(Ribbon $ribbon) use ($canUserEditRights) {
             $link = '-';
-            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
+            if($canUserEditRights &&
                $ribbon->getName() != 'SPLITTER') {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
             }
             return $link;
         });
-        $gb->addAction(function(Ribbon $ribbon) use ($actionAuthorizator) {
+        $gb->addAction(function(Ribbon $ribbon) use ($canUserEditRights) {
             $link = '-';
-            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
+            if($canUserEditRights &&
                $ribbon->getName() != 'SPLITTER') {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
             }
