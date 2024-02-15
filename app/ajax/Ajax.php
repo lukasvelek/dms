@@ -189,9 +189,6 @@ $documentCommentRepository = new DocumentCommentRepository($db, $logger, $docume
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator);
 
 $mailManager = new MailManager();
-//$serviceManager = new ServiceManager($logger, $serviceModel, new FileStorageManager(AppConfiguration::getFileDir(), $fm, $logger), $documentModel, new CacheManager())
-
-//$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel, $mailModel, $notificationModel, $serviceModel, $serviceManager);
 
 $gridSize = AppConfiguration::getGridSize();
 $gridUseFastLoad = AppConfiguration::getGridUseFastLoad();

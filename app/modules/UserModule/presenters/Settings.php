@@ -1157,16 +1157,23 @@ class Settings extends APresenter {
         global $app;
 
         $metadataModel = $app->metadataModel;
-        $metadataAuthorizator = $app->metadataAuthorizator;
-        $actionAuthorizator = $app->actionAuthorizator;
         $idUser = $app->user->getId();
 
-        $data = function() use ($metadataModel, $metadataAuthorizator, $idUser) {
+        $canDeleteMetadata = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA);
+        $canEditMetadata = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA);
+        $canEditMetadataValues = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES);
+        $canEditUserMetadataRights = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER_METADATA_RIGHTS);
+
+        $idsEditableMetadata = $app->metadataAuthorizator->getEditableMetadataForIdUser($idUser);
+        $idsMetadataViewMetadataValues = $app->metadataAuthorizator->getViewMetadataForIdUser($idUser);
+        $idsViewableMetadata = $app->metadataAuthorizator->getViewableMetadataForIdUser($idUser);
+
+        $data = function() use ($metadataModel, $idsViewableMetadata) {
             $values = [];
             foreach($metadataModel->getAllMetadata() as $m) {
-                if(!$metadataAuthorizator->canUserViewMetadata($idUser, $m->getId())) continue;
-
-                $values[] = $m;
+                if(in_array($m->getId(), $idsViewableMetadata)) {
+                    $values[] = $m;
+                }
             }
             return $values;
         };
@@ -1178,35 +1185,35 @@ class Settings extends APresenter {
         $gb->addOnColumnRender('dbTable', function (\DMS\Entities\Metadata $metadata) {
             return $metadata->getTableName();
         });
-        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($metadataAuthorizator, $idUser, $actionAuthorizator) {
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($idsEditableMetadata, $canDeleteMetadata) {
             $link = '-';
-            if($metadataAuthorizator->canUserEditMetadata($idUser, $metadata->getId()) &&
-               $actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA) &&
+            if(in_array($metadata->getId(), $idsEditableMetadata) &&
+               $canDeleteMetadata &&
                !$metadata->getIsSystem()) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $metadata->getId()), 'Delete');
             }
             return $link;
         });
-        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($metadataAuthorizator, $idUser, $actionAuthorizator) {
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($idsEditableMetadata, $canEditMetadata) {
             $link = '-';
-            if($metadataAuthorizator->canUserEditMetadata($idUser, $metadata->getId()) &&
-               $actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA)) {
+            if(in_array($metadata->getId(), $idsEditableMetadata) &&
+               $canEditMetadata) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showEditMetadataForm', 'id_metadata' => $metadata->getId()), 'Edit');
             }
             return $link;
         });
-        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($metadataAuthorizator, $idUser, $actionAuthorizator) {
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($idsMetadataViewMetadataValues, $canEditMetadataValues) {
             $link = '-';
             if((in_array($metadata->getInputType(), ['select', 'select_external'])) &&
-               $metadataAuthorizator->canUserViewMetadataValues($idUser, $metadata->getId()) &&
-               $actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
+               in_array($metadata->getId(), $idsMetadataViewMetadataValues) &&
+               $canEditMetadataValues) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $metadata->getId()), 'Values');
             }
             return $link;
         });
-        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($actionAuthorizator) {
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($canEditUserMetadataRights) {
             $link = '-';
-            if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER_METADATA_RIGHTS)) {
+            if($canEditUserMetadataRights) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showUserRights', 'id_metadata' => $metadata->getId()), 'User rights');
             }
             return $link;

@@ -305,23 +305,25 @@ class Metadata extends APresenter {
             }
         };
 
+        $idsCanEditMetadataValues = $app->metadataAuthorizator->getEditableMatadataValuesForIdUser($idUser);
+
         $gb = new GridBuilder();
 
         $gb->addColumns(['name' => 'Name', 'value' => 'Value']);
         $gb->addDataSourceCallback($dataSourceCallback);
-        $gb->addAction(function($value) use ($metadataAuthorizator, $idUser, $id, $isSystem) {
+        $gb->addAction(function($value) use ($idsCanEditMetadataValues, $id, $isSystem) {
             $actionLink = '-';
             if($value instanceof MetadataValue) {
-                if($metadataAuthorizator->canUserEditMetadataValues($idUser, $id, true) && !$isSystem) {
+                if(in_array($id, $idsCanEditMetadataValues) && !$isSystem) {
                     $actionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Delete');
                 }
             }
             return $actionLink;
         });
-        $gb->addAction(function($value) use ($metadataAuthorizator, $idUser, $id, $isSystem) {
+        $gb->addAction(function($value) use ($idsCanEditMetadataValues, $id, $isSystem) {
             $actionLink = '-';
             if($value instanceof MetadataValue) {
-                if($metadataAuthorizator->canUserEditMetadataValues($idUser, $id, true) && !$isSystem && !$value->getIsDefault()) {
+                if(in_array($id, $idsCanEditMetadataValues) && !$isSystem && !$value->getIsDefault()) {
                     $actionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:setAsDefault', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Set as default');
                 }
             }
