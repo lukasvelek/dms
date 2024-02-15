@@ -11,6 +11,7 @@ use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
+use DMS\Constants\CacheCategories;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
@@ -169,7 +170,17 @@ $ribbonModel = new RibbonModel($db, $logger);
 $archiveModel = new ArchiveModel($db, $logger);
 
 if(isset($_SESSION['id_current_user'])) {
-    $user = $userModel->getUserById($_SESSION['id_current_user']);
+    $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS, true);
+
+    $valFromCache = $ucm->loadUserByIdFromCache($_SESSION['id_current_user']);
+
+    if($valFromCache === NULL) {
+        $user = $userModel->getUserById($_SESSION['id_current_user']);
+        $ucm->saveUserToCache($user);
+    } else {
+        $user = $valFromCache;
+    }
+
 }
 
 $panelAuthorizator = new PanelAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
