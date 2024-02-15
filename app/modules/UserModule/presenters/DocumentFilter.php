@@ -280,6 +280,13 @@ class DocumentFilter extends APresenter {
             }
         };
 
+        $canSeeOtherUsersFilterResults = $app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTER_RESULTS);
+        $canSeeSystemFilterResults = $app->actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTER_RESULTS);
+        $canEditOtherUsersFilters = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_OTHER_USERS_FILTER);
+        $canEditSystemFilter = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SYSTEM_FILTER);
+
+        $idPinnedFilters = $app->ribbonModel->getIdRibbonsForDocumentFilters();
+
         $gb = new GridBuilder();
 
         $gb->addColumns(['name' => 'Name', 'description' => 'Description', 'idAuthor' => 'Author']);
@@ -298,42 +305,42 @@ class DocumentFilter extends APresenter {
                 return $user->getFullname();
             }
         });
-        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $actionAuthorizator) {
+        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $canSeeOtherUsersFilterResults, $canSeeSystemFilterResults) {
             if(!is_null($filter->getIdAuthor())) {
                 if($filter->getIdAuthor() == $user->getId()) {
                     return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                 } else {
-                    if($actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTER_RESULTS)) {
+                    if($canSeeOtherUsersFilterResults) {
                         return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                     }
                 }
             } else {
-                if($actionAuthorizator->checkActionRight(UserActionRights::SEE_SYSTEM_FILTER_RESULTS)) {
+                if($canSeeSystemFilterResults) {
                     return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                 }
             }
         });
-        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $actionAuthorizator) {
+        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $canEditOtherUsersFilters, $canEditSystemFilter) {
             if(!is_null($filter->getIdAuthor())) {
                 if($filter->getIdAuthor() == $user->getId()) {
                     return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                 } else {
-                    if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_OTHER_USERS_FILTER)) {
+                    if($canEditOtherUsersFilters) {
                         return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                     }
                 }
             } else {
-                if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_SYSTEM_FILTER)) {
+                if($canEditSystemFilter) {
                     return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                 }
             }
         });
-        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $actionAuthorizator) {
+        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $canSeeOtherUsersFilterResults) {
             if(!is_null($filter->getIdAuthor())) {
                 if($filter->getIdAuthor() == $user->getId()) {
                     return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
                 } else {
-                    if($actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTER_RESULTS)) {
+                    if($canSeeOtherUsersFilterResults) {
                         return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
                     }
                 }
@@ -341,13 +348,11 @@ class DocumentFilter extends APresenter {
                 return '-';
             }
         });
-        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($ribbonModel) {
-            $ribbonFilterEntry = $ribbonModel->getRibbonForIdDocumentFilter($filter->getId());
-
-            if(is_null($ribbonFilterEntry)) {
-                return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:pinFilter', 'id_filter' => $filter->getId()), 'Pin');
-            } else {
+        $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($idPinnedFilters) {
+            if(in_array($filter->getId(), $idPinnedFilters)) {
                 return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:unpinFilter', 'id_filter' => $filter->getId()), 'Unpin');
+            } else {
+                return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:pinFilter', 'id_filter' => $filter->getId()), 'Pin');
             }
         });
         $gb->addDataSourceCallback($dataSourceCallback);

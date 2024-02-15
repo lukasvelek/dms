@@ -36,6 +36,17 @@ class RibbonModel extends AModel {
         return $qb->fetchAll();
     }
 
+    public function getIdRibbonsForDocumentFilters() {
+        $qb = $this->composeStandardRibbonQuery(__METHOD__);
+
+        $code = 'documents.custom_filter.%';
+
+        $qb ->andWhere('code LIKE "?"', [$code])
+            ->execute();
+
+        return Database::convertMysqliResultToArray($qb->fetchAll(), ['id']);
+    }
+
     public function getRibbonForIdDocumentFilter(int $idFilter) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
