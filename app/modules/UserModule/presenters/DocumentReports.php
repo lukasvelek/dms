@@ -90,6 +90,8 @@ class DocumentReports extends APresenter {
             return $entries;
         };
 
+        $canDeleteDocumentReportQueueEntry = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_DOCUMENT_REPORT_QUEUE_ENTRY);
+
         $gb = new GridBuilder();
 
         $gb->addColumns(['date_created' => 'Date created', 'date_updated' => 'Date updated', 'status' => 'Status']);
@@ -110,8 +112,8 @@ class DocumentReports extends APresenter {
                 return '-';
             }
         });
-        $gb->addAction(function(object $obj) use ($actionAuthorizator) {
-            if(($actionAuthorizator->checkActionRight(UserActionRights::DELETE_DOCUMENT_REPORT_QUEUE_ENTRY)) &&
+        $gb->addAction(function(object $obj) use ($canDeleteDocumentReportQueueEntry) {
+            if($canDeleteDocumentReportQueueEntry &&
                 in_array($obj->getStatus(), [DocumentReportStatus::FINISHED, DocumentReportStatus::IN_PROGRESS])) {
                 return LinkBuilder::createAdvLink(['page' => 'UserModule:DocumentReports:deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
             } else {

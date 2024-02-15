@@ -107,6 +107,54 @@ class UserRightModel extends AModel {
         return $qb->fetchAll();
     }
 
+    public function getIdViewableMetadataForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('view = 1')
+            ->execute();
+
+        return Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+    }
+
+    public function getIdEditableMetadataForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('edit = 1')
+            ->execute();
+
+        return Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+    }
+
+    public function getIdViewableValuesMetadataForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('view_values = 1')
+            ->execute();
+
+        return Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+    }
+
+    public function getIdEditableValuesMetadataForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('edit_values = 1')
+            ->execute();
+
+        return Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+    }
+
     public function getMetadataRights(int $idUser, int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 

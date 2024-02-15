@@ -20,11 +20,15 @@ class Logger implements ILoggerCallable {
      * @param null|string $originMethod Original calling method (for logging purpose)
      * @return mixed Callback function result
      */
-    public function logFunction(callable $func, ?string $originMethod = null) {
+    public function logFunction(callable $func, ?string $originMethod = null, array $params = []) {
         $sw = self::getStopwatch();
 
         $sw->startStopwatch();
-        $result = $func();
+        if(!empty($params)) {
+            $result = $func(...$params);
+        } else {
+            $result = $func();
+        }
         $sw->stopStopwatch();
         
         $diff = $sw->calculate();

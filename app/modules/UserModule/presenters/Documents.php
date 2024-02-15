@@ -48,7 +48,6 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Documents moved to selected archive document', 'success');
-        //$app->redirect('UserModule:SingleArchive:showContent', ['id' => $archiveDocument]);
         $app->redirect('UserModule:Documents:showAll');
     }
 
@@ -184,20 +183,8 @@ class Documents extends APresenter {
             $app->redirect('UserModule:Documents:showAll');
         }
 
-        /*$fileRow = array(
-            'id;id_folder;name;date_created' . "\r\n"
-        );
-
-        $app->logger->logFunction(function() use ($rows, &$fileRow) {
-            foreach($rows as $row) {
-                $fileRow[] = $row['id'] . ';' . ($row['id_folder'] ?? '-') . ';' . $row['name'] . ';' . $row['date_created'] . "\r\n";
-            }
-        }, __METHOD__);*/
-
         $hash = CypherManager::createCypher(32);
         $filename = 'temp_' . $hash . '.csv';
-
-        //$app->fileManager->write('cache/' . $filename, $fileRow, false);
 
         $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $filename);
 
@@ -205,7 +192,6 @@ class Documents extends APresenter {
             die('ERROR! Documents presenter: line 205');
         }
 
-        //$filename = 'cache/temp_' . $hash . '.csv';
         $filename = $result;
         $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
 
@@ -218,7 +204,6 @@ class Documents extends APresenter {
         readfile($downloadFilename);
 
         unlink($filename);
-        //unlink($downloadFilename);
     }
 
     protected function showReportForm() {

@@ -19,6 +19,11 @@ use DMS\Entities\Metadata;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Models\DocumentModel;
+use DMS\Models\FolderModel;
+use DMS\Models\GroupModel;
+use DMS\Models\MailModel;
+use DMS\Models\UserModel;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
@@ -1127,11 +1132,21 @@ class Settings extends APresenter {
     private function internalCreateCountWidget() {
         global $app;
 
-        $users = $app->userModel->getUserCount();
-        $groups = $app->groupModel->getGroupCount();
-        $documents = $app->documentModel->getTotalDocumentCount(null);
-        $folders = $app->folderModel->getFolderCount();
-        $emails = $app->mailModel->getMailInQueueCount();
+        $counts = $app->logger->logFunction(function(UserModel $userModel, GroupModel $groupModel, DocumentModel $documentModel, FolderModel $folderModel, MailModel $mailModel) {
+            $users = $userModel->getUserCount();
+            $groups = $groupModel->getGroupCount();
+            $documents = $documentModel->getTotalDocumentCount(null);
+            $folders = $folderModel->getFolderCount();
+            $emails = $mailModel->getMailInQueueCount();
+
+            return [
+                'users' => $users,
+                'groups' => $groups,
+                'documents' => $documents,
+                'folders' => $folders,
+                'emails' => $emails
+            ];
+        }, __METHOD__, [$app->userModel, $app->groupModel, $app->documentModel, $app->folderModel, $app->mailModel]);
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -1141,11 +1156,11 @@ class Settings extends APresenter {
                     </div>
                     <div class="row">
                         <div class="col-md">
-                            <p><b>Total users: </b>' . $users . '</p>
-                            <p><b>Total groups: </b>' . $groups . '</p>
-                            <p><b>Total documents: </b>' . $documents . '</p>
-                            <p><b>Total folders: </b>' . $folders . '</p>
-                            <p><b>Total emails in queue: </b>' . $emails . '</p>
+                            <p><b>Total users: </b>' . $counts['users'] . '</p>
+                            <p><b>Total groups: </b>' . $counts['groups'] . '</p>
+                            <p><b>Total documents: </b>' . $counts['documents'] . '</p>
+                            <p><b>Total folders: </b>' . $counts['folders'] . '</p>
+                            <p><b>Total emails in queue: </b>' . $counts['emails'] . '</p>
                         </div>
                     </div>
                 </div>';

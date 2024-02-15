@@ -176,11 +176,12 @@ class Metadata extends APresenter {
     private function internalCreateRightsGrid(int $idMetadata) {
         global $app;
 
-        $userModel = $app->userModel;
         $userRightModel = $app->userRightModel;
 
-        $dataSourceCallback = function() use ($userModel) {
-            return $userModel->getAllUsers();
+        $users = $app->userModel->getAllUsers();
+
+        $dataSourceCallback = function() use ($users) {
+            return $users;
         };
 
         $enableLink = function (string $name, int $idUser) use ($idMetadata) {
@@ -266,7 +267,6 @@ class Metadata extends APresenter {
 
         $metadataModel = $app->metadataModel;
         $externalEnumComponent = $app->externalEnumComponent;
-        $metadataAuthorizator = $app->metadataAuthorizator;
         $idUser = $app->user->getId();
 
         $dataSourceCallback = function() use ($metadataModel, $externalEnumComponent, $id) {

@@ -112,52 +112,6 @@ class ExternalEnumViewer extends APresenter {
         });
 
         return $gb->build();
-
-        $tb = TableBuilder::getTemporaryObject();
-
-        $enums = $app->externalEnumComponent->getEnumsList();
-
-        $headers = array(
-            'Actions',
-            'Name'
-        );
-
-        $headerRow = null;
-
-        foreach($enums as $enum) {
-            $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:ExternalEnumViewer:showValues', 'name' => $enum->getName()), 'Values')
-            );
-
-            if(is_null($headerRow)) {
-                $row = $tb->createRow();
-
-                foreach($headers as $header) {
-                    $col = $tb->createCol()->setText($header)->setBold();
-
-                    if($header == 'Actions') {
-                        $col->setColspan(count($actionLinks));
-                    }
-
-                    $row->addCol($col);
-                }
-
-                $tb->addRow($row);
-                $headerRow = $row;
-            }
-
-            $row = $tb->createRow();
-
-            foreach($actionLinks as $actionLink) {
-                $row->addCol($tb->createCol()->setText($actionLink));
-            }
-
-            $row->addCol($tb->createCol()->setText($enum->getName()));
-
-            $tb->addRow($row);
-        }
-
-        return $tb->build();
     }
 }
 

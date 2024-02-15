@@ -265,7 +265,6 @@ class DocumentFilter extends APresenter {
         $actionAuthorizator = $app->actionAuthorizator;
         $filterModel = $app->filterModel;
         $user = $app->user;
-        $ribbonModel = $app->ribbonModel;
 
         $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
         
