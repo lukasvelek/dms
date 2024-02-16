@@ -43,6 +43,13 @@ class DocumentAuthorizator extends AAuthorizator {
         $this->processComponent = $processComponent;
     }
 
+    /**
+     * This method checks if a document can be moved to an archive document
+     * 
+     * @param Document $document Document instance
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed or false if not
+     */
     public function canMoveToArchiveDocument(Document $document, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
@@ -61,6 +68,13 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * This method checks if a document can be moved from an archive document
+     * 
+     * @param Document $document Document instance
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed or false if not
+     */
     public function canMoveFromArchiveDocument(Document $document, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
@@ -82,7 +96,8 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be archived
      * 
-     * @param Document Document object
+     * @param Document $document Document object
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be archived and false if not
      */
     public function canArchive(Document $document, bool $checkForExistingProcess = false) {
@@ -102,7 +117,8 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be approved for archivation
      * 
-     * @param Document Document object
+     * @param Document $document Document object
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be approved for archivation and false if not
      */
     public function canApproveArchivation(Document $document, bool $checkForExistingProcess = false) {
@@ -123,7 +139,8 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be declined for archivation
      * 
-     * @param Document Document object
+     * @param Document $document Document object
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be declined for archivation and false if not
      */
     public function canDeclineArchivation(Document $document, bool $checkForExistingProcess = false) {
@@ -144,7 +161,8 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be deleted
      * 
-     * @param Document Document object
+     * @param Document $document Document object
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be deleted and false if not
      */
     public function canDeleteDocument(Document $document, bool $checkStatus = true, bool $checkForExistingProcess = false) {
@@ -169,7 +187,8 @@ class DocumentAuthorizator extends AAuthorizator {
     /**
      * Checks if a document can be shredded
      * 
-     * @param Document Document object
+     * @param Document $document Document object
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be shredded and false if not
      */
     public function canShred(Document $document, bool $checkForExistingProcess = false) {
@@ -194,6 +213,13 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if the document can be suggested for shredding
+     * 
+     * @param Document $document Document instance
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
+     */
     public function canSuggestForShredding(Document $document, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
@@ -216,6 +242,13 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
     
+    /**
+     * Checks if the document shredding can be approved
+     * 
+     * @param Document $document Document instance
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
+     */
     public function canApproveShredding(Document $document, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
@@ -238,6 +271,13 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if the document shredding can be declined
+     * 
+     * @param Document $document Document instance
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
+     */
     public function canDeclineShredding(Document $document, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {

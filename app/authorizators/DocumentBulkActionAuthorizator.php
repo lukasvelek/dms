@@ -30,6 +30,15 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         $this->bulkActionAuthorizator = $bulkActionAuthorizator;
     }
 
+    /**
+     * Checks if the bulk action "Move from archive document" can be displayed
+     * 
+     * @param Document $document Document instance
+     * @param null|int $idUser ID of calling user
+     * @param bool $checkCache True if cache can be checked
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
+     */
     public function canMoveFromArchiveDocument(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
@@ -46,6 +55,15 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    /**
+     * Checks if the bulk action "Move to archive document" can be displayed
+     * 
+     * @param Document $document Document instance
+     * @param null|int $idUser ID of calling user
+     * @param bool $checkCache True if cache can be checked
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
+     */
     public function canMoveToArchiveDocument(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
             return false;
@@ -68,6 +86,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
      */
     public function canApproveArchivation(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
@@ -91,6 +111,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
      */
     public function canDeclineArchivation(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
@@ -114,6 +136,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
      */
     public function canArchive(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
@@ -137,6 +161,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
      */
     public function canDelete(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
@@ -160,6 +186,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
      */
     public function canApproveShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
@@ -183,6 +211,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
      */
     public function canDeclineShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
@@ -206,6 +236,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
      */
     public function canSuggestForShredding(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {
@@ -229,6 +261,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
      * @param Document Document object
      * @param null|int $idUser User ID
      * @param bool $checkCache True if cache should be checked and false if not
+     * @param bool $checkForExistingProcess True if the method should check for an existing process
+     * @return bool True if the action is allowed
      */
     public function canShred(Document $document, ?int $idUser = null, bool $checkCache = true, bool $checkForExistingProcess = false) {
         if(!$this->assignUser($idUser)) {

@@ -33,34 +33,12 @@ class MetadataAuthorizator extends AAuthorizator {
         $this->administrators = [];
     }
 
-    public function getEditableMatadataValuesForIdUser(int $idUser) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['id_metadata'])
-            ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('edit_values = 1')
-            ->execute();
-
-        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
-
-        return $rows;
-    }
-
-    public function getViewableMetadataForIdUser(int $idUser) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['id_metadata'])
-            ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('view = 1')
-            ->execute();
-
-        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
-
-        return $rows;
-    }
-
+    /**
+     * Returns IDs of metadata of which values can be edited by the given user
+     * 
+     * @param int $idUser User ID
+     * @return array Metadata IDs
+     */
     public function getViewMetadataForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
@@ -75,6 +53,52 @@ class MetadataAuthorizator extends AAuthorizator {
         return $rows;
     }
 
+    /**
+     * Returns IDs of metadata of which values can be edited by the given user
+     * 
+     * @param int $idUser User ID
+     * @return array Metadata IDs
+     */
+    public function getEditableMatadataValuesForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_metadata'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('edit_values = 1')
+            ->execute();
+
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+
+        return $rows;
+    }
+
+    /**
+     * Returns IDs of metadata that can be viewed by the given user
+     * 
+     * @param int $idUser User ID
+     * @return array Metadata IDs
+     */
+    public function getViewableMetadataForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_metadata'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('view = 1')
+            ->execute();
+
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+
+        return $rows;
+    }
+
+    /**
+     * Returns IDs of metadata that can be edited by the given user
+     * 
+     * @param int $idUser User ID
+     * @return array Metadata IDs
+     */
     public function getEditableMetadataForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
