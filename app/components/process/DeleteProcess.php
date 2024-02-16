@@ -11,6 +11,11 @@ use DMS\Models\GroupModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\ProcessModel;
 
+/**
+ * Document delete process component
+ * 
+ * @author Lukas Velek
+ */
 class DeleteProcess implements IProcessComponent {
     private Process $process;
     private Document $document;
@@ -21,7 +26,22 @@ class DeleteProcess implements IProcessComponent {
     private GroupModel $groupModel;
     private GroupUserModel $groupUserModel;
 
-    public function __construct(int $idProcess, ProcessComponent $processComponent, DocumentModel $documentModel, ProcessModel $processModel, GroupModel $groupModel, GroupUserModel $groupUserModel) {
+    /**
+     * Class constructor
+     * 
+     * @param int $idProcess Process ID
+     * @param ProcessComponent $processComponent ProcessComponent instance
+     * @param DocumentModel $documentModel DocumentModel instance
+     * @param ProcessModel $processModel ProcessModel instance
+     * @param GroupModel $groupModel GroupModel instance
+     * @param GroupUserModel $groupUserModel GroupUserMOdel instance
+     */
+    public function __construct(int $idProcess,
+                                ProcessComponent $processComponent,
+                                DocumentModel $documentModel,
+                                ProcessModel $processModel,
+                                GroupModel $groupModel,
+                                GroupUserModel $groupUserModel) {
         $this->processComponent = $processComponent;
         $this->documentModel = $documentModel;
         $this->processModel = $processModel;
@@ -34,6 +54,12 @@ class DeleteProcess implements IProcessComponent {
         $this->idAuthor = $this->process->getIdAuthor();
     }
 
+    /**
+     * This method performs the process actions.
+     * It ends the process, deletes the document, nulls ID officer of the document and removes document sharings for the document.
+     * 
+     * @return true Returns true
+     */
     public function work() {
         $this->processComponent->endProcess($this->process->getId());
         $this->documentModel->deleteDocument($this->document->getId());
@@ -43,22 +69,47 @@ class DeleteProcess implements IProcessComponent {
         return true;
     }
 
+    /**
+     * Returns the process workflow
+     * 
+     * @return array Array of users (their IDs respectively) that make up the process workflow
+     */
     public function getWorkflow() {
         return $this->createWorkflow();
     }
 
+    /**
+     * Returns the process instance
+     * 
+     * @return Process Process instance
+     */
     public function getProcess() {
         return $this->process;
     }
 
+    /**
+     * Returns the document instance
+     * 
+     * @return Document Document instance
+     */
     public function getDocument() {
         return $this->document;
     }
 
+    /**
+     * Returns the process' author ID
+     * 
+     * @return int Author ID
+     */
     public function getIdAuthor() {
         return $this->idAuthor;
     }
 
+    /**
+     * Creates a workflow for the process
+     * 
+     * @return array Array of users (their IDs respectively) that make up the process workflow
+     */
     private function createWorkflow() {
         $workflow = [];
 
