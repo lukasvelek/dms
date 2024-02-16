@@ -1395,7 +1395,7 @@ class Documents extends APresenter {
 
         $fb = new FormBuilder();
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:processMoveToArchiveDocumentFormBulkAction' . $urlIds . ($idFolder > -1) ? ('id_folder=' . $idFolder) : '')
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:processMoveToArchiveDocumentFormBulkAction' . $urlIds . (($idFolder > -1) ? ('id_folder=' . $idFolder) : ''))
             
             ->addElement($fb->createLabel()->setText('Archive document')->setFor('archive_document'))
             ->addElement($fb->createSelect()->setName('archive_document')->addOptionsBasedOnArray($archiveDocumentsArr))
