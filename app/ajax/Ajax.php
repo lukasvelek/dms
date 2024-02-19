@@ -169,6 +169,28 @@ $filterModel = new FilterModel($db, $logger);
 $ribbonModel = new RibbonModel($db, $logger);
 $archiveModel = new ArchiveModel($db, $logger);
 
+$models = array(
+    'userModel' => $userModel,
+    'userRightModel' => $userRightModel,
+    'documentModel' => $documentModel,
+    'groupModel' => $groupModel,
+    'groupUserModel' => $groupUserModel,
+    'processModel' => $processModel,
+    'groupRightModel' => $groupRightModel,
+    'metadataModel' => $metadataModel,
+    'tableModel' => $tableModel,
+    'folderModel' => $folderModel,
+    'serviceModel' => $serviceModel,
+    'documentCommentModel' => $documentCommentModel,
+    'processCommentModel' => $processCommentModel,
+    'widgetModel' => $widgetModel,
+    'notificationModel' => $notificationModel,
+    'mailModel' => $mailModel,
+    'ribbonModel' => $ribbonModel,
+    'filterModel' => $filterModel,
+    'archiveModel' => $archiveModel
+);
+
 if(isset($_SESSION['id_current_user'])) {
     $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS, true);
 
@@ -189,7 +211,7 @@ $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $gro
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
-$processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent, $processCommentModel);
+$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 $archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
