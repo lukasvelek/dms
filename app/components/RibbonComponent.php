@@ -10,10 +10,23 @@ use DMS\Core\Logger\Logger;
 use DMS\Entities\Ribbon;
 use DMS\Models\RibbonModel;
 
+/**
+ * Component that contains useful functions for ribbons
+ * 
+ * @author Lukas Velek
+ */
 class RibbonComponent extends AComponent {
     private RibbonModel $ribbonModel;
     private RibbonAuthorizator $ribbonAuthorizator;
 
+    /**
+     * Class constructor
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param RibbonModel $ribbonModel RibbonModel instance
+     * @param RibbonAuthorizator $ribbonAuthorizator RibbonAuthorizator instance
+     */
     public function __construct(Database $db, Logger $logger, RibbonModel $ribbonModel, RibbonAuthorizator $ribbonAuthorizator) {
         parent::__construct($db, $logger);
 
@@ -21,6 +34,13 @@ class RibbonComponent extends AComponent {
         $this->ribbonAuthorizator = $ribbonAuthorizator;
     }
 
+    /**
+     * Checks if a given ribbon is visible by a given user
+     * 
+     * @param int $idUser User ID
+     * @param int $idRibbon Ribbon ID
+     * @return bool True if the ribbon is visible or false if not
+     */
     public function getRibbonVisibleToUser(int $idUser, int $idRibbon) {
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
 
@@ -57,6 +77,12 @@ class RibbonComponent extends AComponent {
         return $result;
     }
 
+    /**
+     * Returns all visible toppanels (top-tier ribbons) for a given user
+     * 
+     * @param int $idUser User ID
+     * @return array Ribbon instances array
+     */
     public function getToppanelRibbonsVisibleToUser(int $idUser) {
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
 
@@ -89,6 +115,13 @@ class RibbonComponent extends AComponent {
         return $visibleRibbons;
     }
 
+    /**
+     * Returns all children ribbon for a given ID parent ribbon that are visible by ID user
+     * 
+     * @param int $idUser User ID
+     * @param int $idParentRibbon Parent Ribbon ID
+     * @return array Ribbon instances array
+     */
     public function getChildrenRibbonsVisibleToUser(int $idUser, int $idParentRibbon) {
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
 
@@ -118,6 +151,13 @@ class RibbonComponent extends AComponent {
         return $visibleRibbons;
     }
 
+    /**
+     * Returns all sibling ribbons for a given ID ribbon that are visible by a given ID user
+     * 
+     * @param int $idUser User ID
+     * @param int $idRibbon Ribbon ID
+     * @return array Ribbon instances array
+     */
     public function getSiblingRibbonsVisibleToUser(int $idUser, int $idRibbon) {
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
 
@@ -135,8 +175,6 @@ class RibbonComponent extends AComponent {
                 $cm->saveRibbon($ribbon);
             }
         }
-
-        var_dump($valFromCache);
 
         $visibleRibbons = [];
         if(!is_null($ribbons)) {

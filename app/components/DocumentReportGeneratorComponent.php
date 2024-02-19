@@ -11,12 +11,24 @@ use DMS\Constants\MetadataInputType;
 use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
 
+/**
+ * Component that generates document reports.
+ * 
+ * @author Lukas Velek
+ */
 class DocumentReportGeneratorComponent extends AComponent {
     private array $models;
     private FileManager $fm;
     private ExternalEnumComponent $eec;
     private CacheManager $ucm;
 
+    /**
+     * Class constructor
+     * 
+     * @param array $models Database Models array
+     * @param FileManager $fm FileManager instance
+     * @param ExternalEnumComponent $eec ExternalEnumComponent instance
+     */
     public function __construct(array $models, FileManager $fm, ExternalEnumComponent $eec) {
         $this->models = $models;
         $this->fm = $fm;
@@ -24,6 +36,13 @@ class DocumentReportGeneratorComponent extends AComponent {
         $this->ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
     }
 
+    /**
+     * Method generates the document report and saves it to cache and if successful it returns the result file path
+     * 
+     * @param mixed $sqlResult The result of calling a SQL string
+     * @param int $idUser ID of the user for whom the document report is generated
+     * @param null|string $filename Explicit filename
+     */
     public function generateReport($sqlResult, int $idUser, ?string $filename = null) {
         $fileRow = [];
 
@@ -232,6 +251,12 @@ class DocumentReportGeneratorComponent extends AComponent {
         }
     }
 
+    /**
+     * Generates the filename using default macros
+     * 
+     * @param int $idUser User ID
+     * @return string Generated filename
+     */
     private function generateFilename(int $idUser) {
         // %ID_USER%_%DATE_OF_CREATION%_document_report.csv
 

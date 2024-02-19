@@ -230,7 +230,7 @@ class Application {
         $serviceManagerCacheManager = new CacheManager(AppConfiguration::getSerializeCache(), CacheCategories::SERVICE_CONFIG, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
         
         $this->notificationComponent = new NotificationComponent($this->conn, $this->logger, $this->notificationModel);
-        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel, $this->notificationComponent, $this->processCommentModel);
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->models, $this->notificationComponent);
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
         $this->ribbonComponent = new RibbonComponent($this->conn, $this->logger, $this->ribbonModel, $this->ribbonAuthorizator);
         

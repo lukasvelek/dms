@@ -2,13 +2,10 @@
 
 namespace DMS\Components;
 
-use DMS\Constants\Notifications;
 use DMS\Constants\NotificationStatus;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
-use DMS\Entities\Notification;
 use DMS\Models\NotificationModel;
-use DMS\UI\LinkBuilder;
 
 class NotificationComponent extends AComponent {
     private NotificationModel $notificationModel;
@@ -107,6 +104,9 @@ class NotificationComponent extends AComponent {
         return true;
     }
 
+    /**
+     * Clears all notification related variables kept in session
+     */
     private function clearSession() {
         unset($_SESSION['user_notification_count']);
         unset($_SESSION['user_notification_count_timestamp']);

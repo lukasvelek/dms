@@ -6,15 +6,38 @@ use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentModel;
 
+/**
+ * Component that contains useful functions for sharding documents
+ * 
+ * @author Lukas Velek
+ */
 class SharingComponent extends AComponent {
     private DocumentModel $documentModel;
 
+    /**
+     * Class constructor
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param DocumentModel $documentModel DocumentModel instance
+     */
     public function __construct(Database $db, Logger $logger, DocumentModel $documentModel) {
         parent::__construct($db, $logger);
 
         $this->documentModel = $documentModel;
     }
 
+    /**
+     * Shares a given document to user for a period of time
+     * 
+     * @param int $idDocument Document ID
+     * @param int $idAuthor Author ID
+     * @param int $idUser User ID
+     * @param null|string $dateFrom Date from
+     * @param string $dateTo Date to
+     * @param string $hash Sharing hash
+     * @return mixed Result of the database operation
+     */
     public function shareDocument(int $idDocument, int $idAuthor, int $idUser, ?string $dateFrom, string $dateTo, string $hash) {
         $data = array(
             'id_document' => $idDocument,
@@ -39,6 +62,12 @@ class SharingComponent extends AComponent {
         return $result;
     }
 
+    /**
+     * Unshares a document
+     * 
+     * @param int $idShare Sharing ID
+     * @return mixed Result of the database operation
+     */
     public function unshareDocument(int $idShare) {
         $result = $this->documentModel->removeDocumentSharing($idShare);
 
