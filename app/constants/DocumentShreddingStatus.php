@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Document shredding status constants
+ * 
+ * @author Lukas Velek
+ */
 class DocumentShreddingStatus {
     public const SHREDDED = 1;
     public const IN_APPROVAL = 2;

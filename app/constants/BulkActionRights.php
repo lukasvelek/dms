@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Bulk action right contants
+ * 
+ * @author Lukas Velek
+ */
 class BulkActionRights {
     public const DELETE_DOCUMENTS = 'delete_documents';
     public const APPROVE_ARCHIVATION = 'approve_archivation';

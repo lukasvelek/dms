@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Document status constants
+ * 
+ * @author Lukas Velek
+ */
 class DocumentStatus {
     public const NEW = 1;
     public const DELETED = 2;

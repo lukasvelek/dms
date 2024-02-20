@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Ribbon constants
+ * 
+ * @author Lukas Velek
+ */
 class Ribbons {
     public const ROOT_HOME = 0;
     public const ROOT_DOCUMENTS = 1;

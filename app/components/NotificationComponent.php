@@ -7,15 +7,34 @@ use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Models\NotificationModel;
 
+/**
+ * Component used for notifications
+ * 
+ * @author Lukas Velek
+ */
 class NotificationComponent extends AComponent {
     private NotificationModel $notificationModel;
 
+    /**
+     * Class constructor
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param NotificationModel $notificationModel NotificationModel instance
+     */
     public function __construct(Database $db, Logger $logger, NotificationModel $notificationModel) {
         parent::__construct($db, $logger);
 
         $this->notificationModel = $notificationModel;
     }
 
+    /**
+     * Creates a new notification
+     * 
+     * @param string $type Notification type
+     * @param array $data Notification data
+     * @return true
+     */
     public function createNewNotification(string $type, array $data) {
         if(method_exists($this, '_' . $type)) {
             return $this->{'_' . $type}($data);

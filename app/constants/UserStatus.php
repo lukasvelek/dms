@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * User status constants
+ * 
+ * @author Lukas Velek
+ */
 class UserStatus {
     public const INACTIVE = 0;
     public const ACTIVE = 1;

@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Service metadata constants
+ * 
+ * @author Lukas Velek
+ */
 class ServiceMetadata {
     public const FILES_KEEP_LENGTH = 'files_keep_length';
     public const PASSWORD_CHANGE_PERIOD = 'password_change_period';

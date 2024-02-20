@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Document report status constants
+ * 
+ * @author Lukas Velek
+ */
 class DocumentReportStatus {
     public const NEW = 1;
     public const IN_PROGRESS = 2;

@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Archive status constants
+ * 
+ * @author Lukas Velek
+ */
 class ArchiveStatus {
     public const NEW = 1;
     public const IN_BOX = 2;

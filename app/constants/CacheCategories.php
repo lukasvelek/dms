@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Cache category constants
+ * 
+ * @author Lukas Velek
+ */
 class CacheCategories {
     public const BULK_ACTIONS = 'bulk_actions';
     public const PANELS = 'panels';

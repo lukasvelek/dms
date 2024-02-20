@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * User action right constants
+ * 
+ * @author Lukas Velek
+ */
 class UserActionRights {
     public const CREATE_USER = 'create_user';
     public const CREATE_GROUP = 'create_group';

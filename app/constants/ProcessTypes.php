@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Process type constants
+ * 
+ * @author Lukas Velek
+ */
 class ProcessTypes {
     public const DELETE = 1;
     public const HOME_OFFICE = 2;

@@ -21,6 +21,11 @@ use DMS\Widgets\HomeDashboard\ProcessStats;
 use DMS\Widgets\HomeDashboard\ServiceStats;
 use DMS\Widgets\HomeDashboard\SystemInfo;
 
+/**
+ * Component used with widgets
+ * 
+ * @author Lukas Velek
+ */
 class WidgetComponent extends AComponent {
     private DocumentModel $documentModel;
     private ProcessModel $processModel;
@@ -32,6 +37,19 @@ class WidgetComponent extends AComponent {
 
     public array $homeDashboardWidgets;
 
+    /**
+     * Class constructor
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param DocumentModel $documentModel DocumentModel instance
+     * @param ProcessModel $processModel ProcessModel instance
+     * @param MailModel $mailModel MailModel instance
+     * @param NotificationModel $notificationModel NotificationModel instance
+     * @param ServiceModel $serviceModel ServiceModel instance
+     * @param ServiceManager $serviceManager ServiceManager instance
+     * @param UserModel $userModel UserModel instance
+     */
     public function __construct(Database $db, Logger $logger, DocumentModel $documentModel, ProcessModel $processModel, MailModel $mailModel, NotificationModel $notificationModel, ServiceModel $serviceModel, ServiceManager $serviceManager, UserModel $userModel) {
         parent::__construct($db, $logger);
 
@@ -48,10 +66,19 @@ class WidgetComponent extends AComponent {
         $this->createHomeDashboardWidgetList();
     }
 
+    /**
+     * Returns generated widget HTML code
+     * 
+     * @param string $widgetName Widget name
+     * @return string Widget HTML code
+     */
     public function render(string $widgetName) {
         return $this->homeDashboardWidgets[$widgetName]['render']();
     }
 
+    /**
+     * Generates widgets HTML codes
+     */
     private function createHomeDashboardWidgetList() {
         $this->homeDashboardWidgets = array(
             'documentStats' => array(
@@ -141,6 +168,13 @@ class WidgetComponent extends AComponent {
         );
     }
 
+    /**
+     * Returns a widget template
+     * 
+     * @param string $title Widget title
+     * @param string $widgetCode Widget HTML code
+     * @return string Widget HTML code
+     */
     private function __getTemplate(string $title, string $widgetCode) {
         $code = [];
 

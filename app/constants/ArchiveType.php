@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Archive type constants
+ * 
+ * @author Lukas Velek
+ */
 class ArchiveType {
     public const DOCUMENT = 1;
     public const BOX = 2;

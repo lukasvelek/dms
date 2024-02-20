@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * User password change status constants
+ * 
+ * @author Lukas Velek
+ */
 class UserPasswordChangeStatus {
     public const OK = 1;
     public const WARNING = 2;
