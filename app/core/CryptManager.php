@@ -4,7 +4,19 @@ namespace DMS\Core;
 
 use DMS\Helpers\ArrayStringHelper;
 
+/**
+ * Manager responsible for crypting
+ * 
+ * @author Lukas Velek
+ */
 class CryptManager {
+    /**
+     * Creates a password
+     * 
+     * @param bool $hash True if password must be hashed or false if not
+     * @param int $length Password length
+     * @return string Generated password
+     */
     public static function createPassword(bool $hash = true, int $length = 8) {
         $cypher = CypherManager::createCypher($length);
 
@@ -15,6 +27,12 @@ class CryptManager {
         }
     }
 
+    /**
+     * Suggests a password
+     * 
+     * @param int $length Password length
+     * @return string Generated password
+     */
     public static function suggestPassword(int $length = 12) {
         $partCount = 3;
         
@@ -36,6 +54,12 @@ class CryptManager {
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($parts);
     }
 
+    /**
+     * Hashes password
+     * 
+     * @param string $password Plain password text
+     * @return string Hashed password
+     */
     public static function hashPassword(string $password) {
         return password_hash($password, PASSWORD_BCRYPT);
     }

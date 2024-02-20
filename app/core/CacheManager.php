@@ -30,6 +30,13 @@ class CacheManager {
         $this->category = $category;
     }
 
+    /**
+     * Saves a service cache entry
+     * 
+     * @param string $name Service name
+     * @param array $data Service data
+     * @return void
+     */
     public function saveServiceEntry(string $name, array $data) {
         $cacheData = $this->loadFromCache();
 
@@ -42,6 +49,12 @@ class CacheManager {
         $this->saveToCache($cacheData);
     }
 
+    /**
+     * Loads a service cache entry
+     * 
+     * @param string $name Service name
+     * @return null|array|string Service data or null
+     */
     public function loadServiceEntry(string $name) {
         $cacheData = $this->loadFromCache();
 
@@ -56,6 +69,11 @@ class CacheManager {
         return $cacheData[$name];
     }
 
+    /**
+     * Saves a flash message to cache
+     * 
+     * @param array $data Flash message data
+     */
     public function saveFlashMessage(array $data) {
         $cacheData = $this->loadFromCache();
 
@@ -68,6 +86,11 @@ class CacheManager {
         $this->saveToCache($cacheData);
     }
 
+    /**
+     * Loads a flash message from cache
+     * 
+     * @return null|array|string Flash message data
+     */
     public function loadFlashMessage() {
         $cacheData = $this->loadFromCache();
 
@@ -80,6 +103,12 @@ class CacheManager {
         return null;
     }
 
+    /**
+     * Loads ribbon by ID from cache
+     * 
+     * @param int $idRibbon Ribbon ID to be returned from cache
+     * @return null|Ribbon Ribbon instance or null
+     */
     public function loadRibbonById(int $idRibbon) {
         $cacheData = $this->loadFromCache();
 
@@ -106,6 +135,12 @@ class CacheManager {
         return null;
     }
 
+    /**
+     * Saves ribbon to cache
+     * 
+     * @param Ribbon $ribbon Ribbon instance
+     * @return void
+     */
     public function saveRibbon(Ribbon $ribbon) {
         $cacheData = $this->loadFromCache();
 
@@ -118,6 +153,11 @@ class CacheManager {
         $this->saveToCache($cacheData);
     }
 
+    /**
+     * Loads ribbons from cache
+     * 
+     * @return null|array Cached ribbons
+     */
     public function loadRibbons() {
         $cacheData = $this->loadFromCache();
 
@@ -128,6 +168,11 @@ class CacheManager {
         return $cacheData;
     }
 
+    /**
+     * Loads top (root) ribbons from cache
+     * 
+     * @return null|array Cached ribbons
+     */
     public function loadTopRibbons() {
         $cacheData = $this->loadFromCache();
 
@@ -142,6 +187,12 @@ class CacheManager {
         }
     }
 
+    /**
+     * Loads chidren ribbons for ID parent ribbon from cache
+     * 
+     * @param int $idParentRibbon Children ribbon ID
+     * @return null|array Cached ribbons
+     */
     public function loadChildrenRibbons(int $idParentRibbon) {
         $cacheData = $this->loadFromCache();
 
@@ -156,6 +207,12 @@ class CacheManager {
         }
     }
 
+    /**
+     * Loads sibling ribbons for ID ribbon from cache
+     * 
+     * @param int $idRibbon Ribbon ID
+     * @return null|array Cached ribbons
+     */
     public function loadSiblingRibbons(int $idRibbon) {
         $cacheData = $this->loadFromCache();
 
@@ -180,6 +237,15 @@ class CacheManager {
         return null;
     }
 
+    /**
+     * Saves user ribbon right to cache
+     * 
+     * @param int $idRibbon Ribbon ID
+     * @param int $idUser User ID
+     * @param string $category Right category
+     * @param bool $result Result of the right evaluation
+     * @return void
+     */
     public function saveUserRibbonRight(int $idRibbon, int $idUser, string $category, bool $result) {
         $cacheData = $this->loadFromCache();
 
@@ -188,6 +254,14 @@ class CacheManager {
         $this->saveToCache($cacheData);
     }
 
+    /**
+     * Loads user ribbon right from cache
+     * 
+     * @param int $idRibbon Ribbon ID
+     * @param int $idUser User ID
+     * @param string $category Right category
+     * @return null|bool Result of the right evaluation
+     */
     public function loadUserRibbonRight(int $idRibbon, int $idUser, string $category) {
         $cacheData = $this->loadFromCache();
 
@@ -206,6 +280,15 @@ class CacheManager {
         return null;
     }
 
+    /**
+     * Saves group ribbon right to cache
+     * 
+     * @param int $idRibbon Ribbon ID
+     * @param int $idGroup Group ID
+     * @param string $category Right category
+     * @param bool $result Result of the right evaluation
+     * @return void
+     */
     public function saveGroupRibbonRight(int $idRibbon, int $idGroup, string $category, bool $result) {
         $cacheData = $this->loadFromCache();
 
@@ -214,6 +297,14 @@ class CacheManager {
         $this->saveToCache($cacheData);
     }
 
+    /**
+     * Loads group ribbon right from cache
+     * 
+     * @param int $idRibbon Ribbon ID
+     * @param int $idGroup Group ID
+     * @param string $category Right category
+     * @return null|bool Result of the right evaluation
+     */
     public function loadGroupRibbonRight(int $idRibbon, int $idGroup, string $category) {
         $cacheData = $this->loadFromCache();
 
@@ -232,6 +323,12 @@ class CacheManager {
         return null;
     }
 
+    /**
+     * Saves array to cache
+     * 
+     * @param array $array Array
+     * @return void
+     */
     public function saveArrayToCache(array $array) {
         $cacheData = $this->loadFromCache();
 
@@ -240,6 +337,12 @@ class CacheManager {
         $this->saveToCache($cacheData);
     }
 
+    /**
+     * Saves string to cache
+     * 
+     * @param string $text Text
+     * @return void
+     */
     public function saveStringToCache(string $text) {
         $cacheData = $this->loadFromCache();
 
@@ -248,6 +351,11 @@ class CacheManager {
         $this->saveToCache($cacheData);
     }
 
+    /**
+     * Loads strings from cache
+     * 
+     * @return null|mixed Cached data
+     */
     public function loadStringsFromCache() {
         $cacheData = $this->loadFromCache();
 
@@ -258,6 +366,12 @@ class CacheManager {
         return $cacheData[$this->category];
     }
 
+    /**
+     * Saves folder to cache
+     * 
+     * @param Folder $folder Folder instance
+     * @return void
+     */
     public function saveFolderToCache(Folder $folder) {
         $cacheData = $this->loadFromCache();
 
@@ -266,6 +380,12 @@ class CacheManager {
         $this->saveToCache($cacheData);
     }
 
+    /**
+     * Loads folder from cache
+     * 
+     * @param int $id Folder ID
+     * @return null|Folder Folder instance or null
+     */
     public function loadFolderByIdFromCache(int $id) {
         $cacheData = $this->loadFromCache();
 
@@ -280,6 +400,12 @@ class CacheManager {
         }
     }
 
+    /**
+     * Saves user to cache
+     * 
+     * @param User $user User instance
+     * @return void
+     */
     public function saveUserToCache(User $user) {
         $cacheData = $this->loadFromCache();
 
@@ -288,6 +414,12 @@ class CacheManager {
         $this->saveToCache($cacheData);
     }
 
+    /**
+     * Loads user from cache
+     * 
+     * @param int $id User ID
+     * @return null|User User instance or null
+     */
     public function loadUserByIdFromCache(int $id) {
         $cacheData = $this->loadFromCache();
 

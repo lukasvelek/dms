@@ -18,6 +18,11 @@ use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
 use DMS\Core\Logger\Logger;
 
+/**
+ * Database installation definition
+ * 
+ * @author Lukas Velek
+ */
 class DatabaseInstaller {
     private Database $db;
     private Logger $logger;
@@ -27,19 +32,26 @@ class DatabaseInstaller {
         'service_user'
     );
 
+    /**
+     * Class constructor
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     */
     public function __construct(Database $db, Logger $logger) {
         $this->db = $db;
         $this->logger = $logger;
     }
 
+    /**
+     * Installs the database
+     */
     public function install() {
         $this->createTables();
         $this->insertDefaultUsers();
         $this->insertDefaultGroups();
         $this->insertDefaultUserGroups();
         $this->insertDefaultMetadata();
-
-        //$this->updateDefaultUserPanelRights();
 
         $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
@@ -58,12 +70,21 @@ class DatabaseInstaller {
         $this->insertDefaultRibbonUserRights();
     }
 
+    /**
+     * Updates default user rights
+     */
     public function updateDefaultUserRights() {
         $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
+        $this->insertDefaultUserMetadataRights();
     }
 
+    /**
+     * Creates the database tables
+     * 
+     * @return true
+     */
     private function createTables() {
         $tables = array(
             'users' => array(
@@ -394,6 +415,11 @@ class DatabaseInstaller {
         return true;
     }
 
+    /**
+     * Inserts default users
+     * 
+     * @return true
+     */
     private function insertDefaultUsers() {
         $defaultUsersUsernames = array('service_user', 'admin');
         $insertUsers = array();
@@ -443,6 +469,11 @@ class DatabaseInstaller {
         return true;
     }
 
+    /**
+     * Inserts default groups
+     * 
+     * @return true
+     */
     private function insertDefaultGroups() {
         $defaultGroups = array(
             'ARCHMAN' => 'Archive Manager',
@@ -475,6 +506,11 @@ class DatabaseInstaller {
         return true;
     }
 
+    /**
+     * Inserts default users for groups
+     * 
+     * @return true
+     */
     private function insertDefaultUserGroups() {
         $groupCodes = array(
             'ADMINISTRATORS',
@@ -530,6 +566,11 @@ class DatabaseInstaller {
         return true;
     }
 
+    /**
+     * Inserts default group panel rights
+     * 
+     * @return true
+     */
     private function insertDefaultGroupPanelRights() {
         $idGroups = [];
         $panels = PanelRights::$all;
@@ -574,8 +615,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default user panel rights
+     * 
+     * @return true
+     */
     private function insertDefaultUserPanelRights() {
         $idUsers = [];
         $panels = PanelRights::$all;
@@ -631,8 +679,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default group bulk action rights
+     * 
+     * @return true
+     */
     private function insertDefaultGroupBulkActionRights() {
         $idGroups = [];
         $actions = BulkActionRights::$all;
@@ -676,8 +731,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default user bulk action rights
+     * 
+     * @return true
+     */
     private function insertDefaultUserBulkActionRights() {
         $idUsers = array();
         $actions = BulkActionRights::$all;
@@ -733,8 +795,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default group action rights
+     * 
+     * @return true
+     */
     private function insertDefaultGroupActionRights() {
         $idGroups = [];
         $actions = UserActionRights::$all;
@@ -776,8 +845,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default user action rights
+     * 
+     * @return true
+     */
     private function insertDefaultUserActionRights() {
         $idUsers = array();
         $actions = UserActionRights::$all;
@@ -833,8 +909,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default metadata
+     * 
+     * @return true
+     */
     public function insertDefaultMetadata() {
         $metadata = array(
             array(
@@ -1010,8 +1093,15 @@ class DatabaseInstaller {
                 }
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default user metadata rights
+     * 
+     * @return true
+     */
     public function insertDefaultUserMetadataRights() {
         $sql = "SELECT `id` FROM `users`";
 
@@ -1049,8 +1139,15 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 
+    /**
+     * Inserts default group metadata rights
+     * 
+     * @return true
+     */
     public function insertDefaultGroupMetadataRights() {
         $sql = "SELECT `id` FROM `groups`";
         
@@ -1088,8 +1185,15 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 
+    /**
+     * Inserts default service config
+     * 
+     * @return true
+     */
     public function insertDefaultServiceConfig() {
         $serviceCfg = array(
             'LogRotateService' => array(
@@ -1144,8 +1248,15 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 
+    /**
+     * Inserts default ribbons
+     * 
+     * @return true
+     */
     public function insertDefaultRibbons() {
         $toppanelCodes = array(
             'home',
@@ -1485,8 +1596,15 @@ class DatabaseInstaller {
                 $this->db->commit();
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default group ribbon rights
+     * 
+     * @return true
+     */
     public function insertDefaultRibbonGroupRights() {
         $sql = "SELECT `id` FROM `ribbons`";
 
@@ -1520,8 +1638,15 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 
+    /**
+     * Inserts default user ribbon rights
+     * 
+     * @return true
+     */
     public function insertDefaultRibbonUserRights() {
         $sql = "SELECT `id` FROM `ribbons`";
 
@@ -1564,6 +1689,8 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 }
 

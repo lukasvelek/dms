@@ -26,6 +26,11 @@ use DMS\Services\NotificationManagerService;
 use DMS\Services\PasswordPolicyService;
 use DMS\Services\ShreddingSuggestionService;
 
+/**
+ * Manager responsible for services
+ * 
+ * @author Lukas Velek
+ */
 class ServiceManager {
     private Logger $logger;
     private ServiceModel $serviceModel;
@@ -46,6 +51,24 @@ class ServiceManager {
 
     public array $services;
 
+    /**
+     * Class constructor
+     * 
+     * @param Logger $logger Logger instance
+     * @param ServiceModel $serviceModel ServiceModel instance
+     * @param FileStorageManager $fsm FileStorageManager instance
+     * @param DocumentModel $documentModel DocumentModel instance
+     * @param CacheManager $cm CacheManager instance
+     * @param DocumentAuthorizator $documentAuthorizator DocumentAuthorizator instance
+     * @param ProcessComponent $processComponent ProcessComponent instance
+     * @param UserModel $userModel UserModel instance
+     * @param GroupUserModel $groupUserModel GroupUserModel instance
+     * @param MailModel $mailModel MailModel instance
+     * @param MailManager $mailManager MailManager instance
+     * @param NotificationModel $notificationModel NotificationModel instance
+     * @param DocumentReportGeneratorComponent $documentReportGeneratorComponent DocumentReportGeneratorComponent instance
+     * @param NotificationComponent $notificationComponent NotificationComponent instance
+     */
     public function __construct(Logger $logger, 
                                 ServiceModel $serviceModel, 
                                 FileStorageManager $fsm, 
@@ -79,6 +102,12 @@ class ServiceManager {
         $this->loadRunDates();
     }
 
+    /**
+     * Returns service by its name
+     * 
+     * @param string $name Service name
+     * @return null|AService Service instance or null
+     */
     public function getServiceByName(string $name) {
         foreach($this->services as $k => $v) {
             if($v->name == $name) {
@@ -89,6 +118,12 @@ class ServiceManager {
         return null;
     }
 
+    /**
+     * Returns last run date for a service
+     * 
+     * @param string $name Service name
+     * @return string Run date or dash
+     */
     public function getLastRunDateForService(string $name) {
         if(array_key_exists($name, $this->runDates)) {
             return $this->runDates[$name]['last_run_date'];
@@ -97,6 +132,12 @@ class ServiceManager {
         }
     }
 
+    /**
+     * Returns next run date for a service
+     * 
+     * @param string $name Service name
+     * @return string Run date or dash
+     */
     public function getNextRunDateForService(string $name) {
         if(array_key_exists($name, $this->runDates) && array_key_exists('last_run_date', $this->runDates[$name]) && array_key_exists('next_run_date', $this->runDates[$name])) {
             return $this->runDates[$name]['next_run_date'];
@@ -105,6 +146,9 @@ class ServiceManager {
         }
     }
 
+    /**
+     * Loads run dates for services
+     */
     private function loadRunDates() {
         $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
         $data = [];
@@ -134,6 +178,9 @@ class ServiceManager {
         $this->runDates = $data;
     }
 
+    /**
+     * Creates service instances
+     */
     private function loadServices() {
         $this->services['Log Rotate'] = new LogRotateService($this->logger, $this->serviceModel, $this->cm);
         $this->services['Cache Rotate'] = new CacheRotateService($this->logger, $this->serviceModel, $this->cm);

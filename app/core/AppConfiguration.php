@@ -2,6 +2,11 @@
 
 namespace DMS\Core;
 
+/**
+ * Application configuration
+ * 
+ * @author Lukas Velek
+ */
 class AppConfiguration {
     /**
      * ----- DB SERVER -----

@@ -402,6 +402,11 @@ class Application {
         }
     }
 
+    /**
+     * Renders a flash message
+     * 
+     * @return void
+     */
     public function renderFlashMessage() {
         if($this->flashMessage != null) {
             $this->pageContent .= $this->flashMessage;
@@ -633,6 +638,9 @@ class Application {
         }
     }
 
+    /**
+     * Automatically runs scheduled services
+     */
     private function autoRunServices() {
         foreach($this->serviceManager->services as $displayName => $service) {
             $nextRunDate = $this->serviceManager->getNextRunDateForService($service->name);

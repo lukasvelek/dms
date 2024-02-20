@@ -6,6 +6,11 @@ use DMS\UI\LinkBuilder;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+/**
+ * Manager responsible for sending mails
+ * 
+ * @author Lukas Velek
+ */
 class MailManager {
     private string $fromEmail;
     private string $fromName;
@@ -14,6 +19,9 @@ class MailManager {
     private string $loginUsername;
     private string $loginPassword;
 
+    /**
+     * Class constructor
+     */
     public function __construct() {
         $this->fromEmail = AppConfiguration::getMailSenderEmail();
         $this->fromName = AppConfiguration::getMailSenderName();
@@ -23,6 +31,14 @@ class MailManager {
         $this->loginPassword = AppConfiguration::getMailLoginPassword();
     }
 
+    /**
+     * Tries to send an email
+     * 
+     * @param string $recipient Email recipient
+     * @param string $title Email title
+     * @param string $body Email body
+     * @return bool True if successful or false if not
+     */
     public function sendEmail(string $recipient, string $title, string $body) {
         $mail = new PHPMailer(true);
 
@@ -51,6 +67,14 @@ class MailManager {
         return $result;
     }
 
+    /**
+     * Composes an email
+     * 
+     * @param string $recipient Email recipient
+     * @param string $title Email title
+     * @param string $body Email body
+     * @return array Email composition
+     */
     public static function composeEmail(string $recipient, string $title, string $body) {
         return array(
             'recipient' => $recipient,
@@ -59,6 +83,13 @@ class MailManager {
         );
     }
 
+    /**
+     * Composes an email for forgotten password
+     * 
+     * @param string $recipient Email recipient
+     * @param string $hash Generated hash
+     * @return array Composed email body
+     */
     public static function composeForgottenPasswordEmail(string $recipient, string $hash) {
         $tm = TemplateManager::getTemporaryObject();
 

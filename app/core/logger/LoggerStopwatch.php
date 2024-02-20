@@ -8,7 +8,6 @@ use DMS\Core\CypherManager;
  * Logger stopwatch addon. It is used to measure time taken between operations.
  * 
  * @author Lukas Velek
- * @version 1.1
  */
 class LoggerStopwatch {
     /**

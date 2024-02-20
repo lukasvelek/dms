@@ -26,20 +26,42 @@ class QueryBuilder
     private int $currentState;
     private bool $hasCustomSQL;
 
+    /**
+     * Class constructor
+     * 
+     * @param IDbQueriable $conn Database connection that can be used to process query
+     * @param ILoggerCallable $logger Logger instance
+     * @param string $callingMethod Name of the calling method
+     * @return self
+     */
     public function __construct(IDbQueriable $conn, ILoggerCallable $logger, string $callingMethod = '') {
         $this->conn = $conn;
         $this->logger = $logger;
+        $this->callingMethod = $callingMethod;
 
         $this->clean();
         return $this;
     }
 
+    /**
+     * Sets the name of the calling method
+     * 
+     * @param string $callingMethod Name of the calling method
+     * @return self
+     */
     public function setCallingMethod(string $callingMethod) {
         $this->callingMethod = $callingMethod;
 
         return $this;
     }
 
+    /**
+     * Returns SQL code for a column where its value is in given values
+     * 
+     * @param string $column Column name
+     * @param array $values Column allowed values
+     * @return self
+     */
     public function getColumnInValues(string $column, array $values) {
         $code = $column . ' IN (';
 
@@ -59,6 +81,13 @@ class QueryBuilder
         return $code;
     }
 
+    /**
+     * Returns SQL code for a column where its value is not in given values
+     * 
+     * @param string $column Column name
+     * @param array $values Column allowed values
+     * @return self
+     */
     public function getColumnNotInValues(string $column, array $values) {
         $code = $column . ' NOT IN (';
 
@@ -76,12 +105,23 @@ class QueryBuilder
         return $code;
     }
 
+    /**
+     * Appends OFFSET
+     * 
+     * @param int $offset Offset
+     * @return self
+     */
     public function offset(int $offset) {
         $this->queryData['offset'] = $offset;
 
         return $this;
     }
 
+    /**
+     * Appends DELETE
+     * 
+     * @return self
+     */
     public function delete() {
         $this->queryType = 'delete';
         $this->currentState = self::STATE_DIRTY;
@@ -89,6 +129,12 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends UPDATE
+     * 
+     * @param string $tableName Table name
+     * @return self
+     */
     public function update(string $tableName) {
         $this->queryType = 'update';
         $this->queryData['table'] = $tableName;
@@ -97,6 +143,12 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends SET
+     * 
+     * @param array $values Values to be set
+     * @return self
+     */
     public function set(array $values) {
         if(!isset($this->queryData['values'])) {
             $this->queryData['values'] = $values;
@@ -107,6 +159,12 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends SET to NULL
+     * 
+     * @param array $values Values to be set to null
+     * @return self
+     */
     public function setNull(array $values) {
         $temp = [];
         foreach($values as $v) {
@@ -123,6 +181,13 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends INSERT
+     * 
+     * @param string $tableName Table name
+     * @param array $keys Table columns
+     * @return self
+     */
     public function insert(string $tableName, array $keys) {
         $this->queryType = 'insert';
         $this->queryData['table'] = $tableName;
@@ -132,13 +197,25 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends VALUES
+     * 
+     * @param array $values Values
+     * @return self
+     */
     public function values(array $values) {
         $this->queryData['values'] = $values;
 
         return $this;
     }
 
-    public function select(array$keys) {
+    /**
+     * Appends SELECT
+     * 
+     * @param array $keys Table columns
+     * @return self
+     */
+    public function select(array $keys) {
         $this->queryType = 'select';
         $this->queryData['keys'] = $keys;
         $this->currentState = self::STATE_DIRTY;
@@ -146,18 +223,37 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends FROM
+     * 
+     * @param string $tableName Table name
+     * @return self
+     */
     public function from(string $tableName) {
         $this->queryData['table'] = $tableName;
 
         return $this;
     }
 
+    /**
+     * Appends explicit WHERE condition
+     * 
+     * @param string $where Explicit WHERE condition
+     * @return self
+     */
     public function whereEx(string $where) {
         $this->queryData['where'] = $where;
 
         return $this;
     }
 
+    /**
+     * Appends WHERE condition
+     * 
+     * @param string $cond Condition
+     * @param array $values Condition parameter values
+     * @return self
+     */
     public function where(string $cond, array $values = []) {
         if(str_contains($cond, '?') && !empty($values)) {
             $count = count(explode('?', $cond));
@@ -187,6 +283,13 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends AND WHERE condition
+     * 
+     * @param string $cond Condition
+     * @param array $values Condition parameter values
+     * @return self
+     */
     public function andWhere(string $cond, array $values = []) {
         if(!array_key_exists('where', $this->queryData)) {
             $this->queryData['where'] = '';
@@ -224,6 +327,13 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends OR WHERE condition
+     * 
+     * @param string $cond Condition
+     * @param array $values Condition parameter values
+     * @return self
+     */
     public function orWhere(string $cond, array $values = []) {
         if(!array_key_exists('where', $this->queryData)) {
             $this->queryData['where'] = '';
@@ -261,18 +371,37 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends ORDER BY
+     * 
+     * @param string $key Ordering column
+     * @param string $order Ascending (ASC) or descending (DESC)
+     * @return self
+     */
     public function orderBy(string $key, string $order = 'ASC') {
         $this->queryData['order'] = ' ORDER BY `' . $key . '` ' . $order;
 
         return $this;
     }
 
+    /**
+     * Appends LIMIT
+     * 
+     * @param int $limit Limit
+     * @return self
+     */
     public function limit(int $limit) {
         $this->queryData['limit'] = $limit;
 
         return $this;
     }
 
+    /**
+     * Sets parameters
+     * 
+     * @param array $params Parameters
+     * @return self
+     */
     public function setParams(array $params) {
         foreach($params as $k => $v) {
             if($k[0] != ':') {
@@ -287,6 +416,12 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends left bracket(s)
+     * 
+     * @param int $count Bracket count
+     * @return self
+     */
     public function leftBracket(int $count = 1) {
         $this->openBrackets += $count;
 
@@ -301,6 +436,12 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Appends right bracket(s)
+     * 
+     * @param int $count Bracket count
+     * @return self
+     */
     public function rightBracket(int $count = 1) {
         $this->openBrackets -= $count;
 
@@ -315,6 +456,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Cleans the QueryBuilder
+     */
     public function clean() {
         $this->sql = '';
         $this->params = [];
@@ -327,12 +471,23 @@ class QueryBuilder
         $this->hasCustomSQL = false;
     }
 
+    /**
+     * Returns the SQL string
+     * 
+     * @return string SQL string
+     */
     public function getSQL() {
         $this->createSQLQuery();
 
         return $this->sql;
     }
 
+    /**
+     * Sets the SQL explicitly
+     * 
+     * @param string $sql SQL string
+     * @return self
+     */
     public function setSQL(string $sql) {
         $this->sql = $sql;
         $this->hasCustomSQL = true;
@@ -340,6 +495,11 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Executes the SQL string
+     * 
+     * @return self
+     */
     public function execute() {
         $useSafe = true;
 
@@ -380,10 +540,20 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Fetch the result of the SQL query as associative array
+     * 
+     * @return mixed Associative array
+     */
     public function fetchAssoc() {
         return $this->queryResult->fetch_assoc();
     }
 
+    /**
+     * Fetch all results of the SQL query
+     * 
+     * @return null|mixed Query result array or null
+     */
     public function fetchAll() {
         if($this->currentState != self::STATE_CLEAN) {
             return null;
@@ -392,6 +562,12 @@ class QueryBuilder
         return $this->queryResult;
     }
 
+    /**
+     * Fetch either a single line or a single column value
+     * 
+     * @param null|string $param If null a single line is returned and if a string is passed than the value of a column named as the string is returned
+     * @return null|mixed Null or result
+     */
     public function fetch(?string $param = null) {
         $result = null;
 
@@ -424,6 +600,11 @@ class QueryBuilder
         return $result;
     }
 
+    /**
+     * Creates SQL query
+     * 
+     * @param bool $useSafe True if safe method should be used or false if not
+     */
     private function createSQLQuery(bool $useSafe = false) {
         switch($this->queryType) {
             case 'select':
@@ -445,10 +626,6 @@ class QueryBuilder
             case 'delete':
                 $this->createDeleteSQLQuery();
                 break;
-
-            case 'update_null':
-                $this->createUpdateNullSQLQuery();
-                break;
         }
 
         $keys = [];
@@ -463,6 +640,9 @@ class QueryBuilder
         }
     }
 
+    /**
+     * Creates safe INSERT SQL query
+     */
     private function createInsertSafeSQLQuery() {
         $sql = 'INSERT INTO ' . $this->queryData['table'] . ' (';
 
@@ -491,28 +671,9 @@ class QueryBuilder
         $this->sql = $sql;
     }
 
-    private function createUpdateNullSQLQuery() {
-        $sql = 'UPDATE ' . $this->queryData['table'] . ' SET ';
-
-        $i = 0;
-        foreach($this->queryData['values'] as $key) {
-            if(($i + 1) == count($this->queryData['values'])) {
-                $sql .= $key . ' = NULL';
-            } else {
-                $sql .= $key . ' = NULL, ';
-            }
-        }
-
-        if(str_contains($this->queryData['where'], 'WHERE')) {
-            // explicit
-            $sql .= ' ' . $this->queryData['where'];
-        } else {
-            $sql .= ' WHERE ' . $this->queryData['where'];
-        }
-
-        $this->sql = $sql;
-    }
-
+    /**
+     * Creates DELETE SQL query
+     */
     private function createDeleteSQLQuery() {
         $sql = 'DELETE FROM ' . $this->queryData['table'];
 
@@ -525,6 +686,9 @@ class QueryBuilder
         $this->sql = $sql;
     }
 
+    /**
+     * Creates UPDATE SQL query
+     */
     private function createUpdateSQLQuery() {
         $sql = 'UPDATE ' . $this->queryData['table'] . ' SET ';
 
@@ -581,6 +745,9 @@ class QueryBuilder
         $this->sql = $sql;
     }
 
+    /**
+     * Creates SELECT SQL query
+     */
     private function createSelectSQLQuery() {
         $sql = 'SELECT ';
 
@@ -627,6 +794,9 @@ class QueryBuilder
         $this->sql = $sql;
     }
 
+    /**
+     * Logs an SQL string
+     */
     private function log() {
         if($this->logger !== NULL) {
             $this->logger->sql($this->sql, $this->callingMethod);
