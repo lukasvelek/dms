@@ -6,7 +6,19 @@ use DMS\Constants\DatetimeFormats;
 use DMS\Core\AppConfiguration;
 use DMS\Entities\User;
 
+/**
+ * Datetime format helper
+ * 
+ * @author Lukas Velek
+ */
 class DatetimeFormatHelper {
+    /**
+     * Formats datetime by user's default format
+     * 
+     * @param string $datetime Datetime
+     * @param User $user User instance
+     * @return string Formatted datetime
+     */
     public static function formatDateByUserDefaultFormat(string $datetime, User $user) {
         if($datetime == '-' || $datetime == '' || $datetime === NULL) {
             return $datetime;
@@ -18,9 +30,16 @@ class DatetimeFormatHelper {
             $format = $user->getDefaultUserDateTimeFormat();
         }
 
-        return date($format, strtotime($datetime));
+        return self::formatDateByFormat($datetime, $format);
     }
 
+    /**
+     * Formats datetime by given format
+     * 
+     * @param string $datetime Datetime
+     * @param string $format Datetime format
+     * @return string Formatted datetime
+     */
     public static function formatDateByFormat(string $datetime, string $format) {
         if($datetime == '-' || $datetime == '' || $datetime === NULL) {
             return $datetime;

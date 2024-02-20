@@ -7,6 +7,11 @@ use DMS\Core\Logger\Logger;
 use QueryBuilder\ExpressionBuilder;
 use QueryBuilder\QueryBuilder;
 
+/**
+ * Common model class
+ * 
+ * @author Lukas Velek
+ */
 abstract class AModel {
     public const VIEW = 'can_see';
     public const EDIT = 'can_edit';
@@ -32,16 +37,29 @@ abstract class AModel {
      * @param string $methodName Calling method name
      * @return QueryBuilder QueryBuilder instance
      */
-    protected function qb(string $methodName) : QueryBuilder {
+    protected function qb(string $methodName) {
         $qb = $this->db->createQueryBuilder();
         $qb->setCallingMethod($methodName);
         return $qb;
     }
 
+    /**
+     * Returns Expression Builder instance
+     * 
+     * @return ExpressionBuilder ExpressionBuilder instance
+     */
     protected function xb() {
         return new ExpressionBuilder();
     }
 
+    /**
+     * Updates existing database table entry
+     * 
+     * @param string $tableName Database table name
+     * @param int $id Database table entry ID
+     * @param array $data Database table data
+     * @return null|mixed Database query result
+     */
     protected function updateExisting(string $tableName, int $id, array $data) {
         $qb = $this->qb(__METHOD__);
 
@@ -53,6 +71,13 @@ abstract class AModel {
         return $qb->fetchAll();
     }
 
+    /**
+     * Returns last inserted row
+     * 
+     * @param string $tableName Database table name
+     * @param string $orderCol Orded column
+     * @param string $order Ordering order
+     */
     protected function getLastInsertedRow(string $tableName, string $orderCol = 'id', string $order = 'DESC') {
         $qb = $this->qb(__METHOD__);
 
@@ -89,10 +114,25 @@ abstract class AModel {
         return $qb->fetchAll();
     }
 
+    /**
+     * Delete database table entry by ID
+     * 
+     * @param int $id Database table entry ID
+     * @param string $tableName Database table name
+     * @return null|mixed Database query result
+     */
     protected function deleteById(int $id, string $tableName) {
         return $this->deleteByCol('id', $id, $tableName);
     }
 
+    /**
+     * Delete database table entry by column value
+     * 
+     * @param string $colName Database table column name
+     * @param string $colValue Database table column value
+     * @param string $tableName Database table name
+     * @return null|mixed Database query result
+     */
     protected function deleteByCol(string $colName, string $colValue, string $tableName) {
         $qb = $this->qb(__METHOD__);
 
@@ -104,18 +144,41 @@ abstract class AModel {
         return $qb->fetchAll();
     }
 
+    /**
+     * Begins a transaction
+     * 
+     * @return true
+     */
     public function beginTran() {
         return $this->db->beginTransaction();
     }
 
+    /**
+     * Commits a transaction
+     * 
+     * @return true
+     */
     public function commitTran() {
         return $this->db->commit();
     }
 
+    /**
+     * Rolls back a transaction
+     * 
+     * @return true
+     */
     public function rollbackTran() {
         return $this->db->rollback();
     }
 
+    /**
+     * Gets row count
+     * 
+     * @param string $tableName Database table name
+     * @param string $rowName Database table row name
+     * @param null|string $codition Condition or null
+     * @return int Row count
+     */
     public function getRowCount(string $tableName, string $rowName = 'id', ?string $condition = null) {
         $sql = "SELECT COUNT(`$rowName`) AS `count` FROM `$tableName`";
 
@@ -136,6 +199,16 @@ abstract class AModel {
         return $count;
     }
 
+    /**
+     * Gets first row with count with condition
+     * 
+     * @param int $count Count
+     * @param string $tableName Database table name
+     * @param array $cols Database table columns
+     * @param string $orderBy Order column
+     * @param string $condition Condition
+     * @return null|mixed Database query result or null
+     */
     public function getFirstRowWithCountWithCond(int $count, string $tableName, array $cols, string $orderBy = 'id', string $condition) {
         $sql = "SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY `$orderBy`) AS `row_num`";
 
@@ -170,6 +243,15 @@ abstract class AModel {
         }
     }
 
+    /**
+     * Gets first row with count
+     * 
+     * @param int $count Count
+     * @param string $tableName Database table name
+     * @param array $cols Database table columns
+     * @param string $orderBy Order column
+     * @return null|mixed Database query result or null
+     */
     public function getFirstRowWithCount(int $count, string $tableName, array $cols, string $orderBy = 'id') {
         $sql = "SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY `$orderBy`) AS `row_num`";
 
@@ -204,10 +286,24 @@ abstract class AModel {
         }
     }
 
+    /**
+     * Performs a database query and returns the result
+     * 
+     * @param string $sql SQL string
+     * @return mixed Database query result
+     */
     public function query(string $sql) {
         return $this->db->query($sql);
     }
 
+    /**
+     * Updates given columns to NULL
+     * 
+     * @param string $tableName Database table name
+     * @param int $id Row ID
+     * @param array $cols Database table columns
+     * @return null|mixed Result of SQL query
+     */
     public function updateToNull(string $tableName, int $id, array $cols) {
         $qb = $this->qb(__METHOD__);
 
