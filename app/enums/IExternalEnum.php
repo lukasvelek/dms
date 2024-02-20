@@ -2,6 +2,11 @@
 
 namespace DMS\Enums;
 
+/**
+ * External enum interface
+ * 
+ * @author Lukas Velek
+ */
 interface IExternalEnum {
     function getValues();
     function getValueByKey(string|int $key);

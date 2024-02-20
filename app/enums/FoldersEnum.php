@@ -4,9 +4,19 @@ namespace DMS\Enums;
 
 use DMS\Models\FolderModel;
 
+/**
+ * Folders external enum
+ * 
+ * @author LUkas Velek
+ */
 class FoldersEnum extends AEnum {
     private FolderModel $folderModel;
 
+    /**
+     * Class constructor
+     * 
+     * @param FolderModel $folderModel FolderModel isntance
+     */
     public function __construct(FolderModel $folderModel) {
         parent::__construct('FoldersEnum');
         $this->folderModel = $folderModel;
@@ -14,6 +24,9 @@ class FoldersEnum extends AEnum {
         $this->loadValues();
     }
 
+    /**
+     * Loads enum values
+     */
     private function loadValues() {
         $folders = $this->folderModel->getAllFolders();
 
