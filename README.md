@@ -13,7 +13,9 @@ It also enables users to manage metadata and their values.
 - updated backend database SQL query builder (v1.1 => v2.0)
 - updated documents grid loading speed (tested on a table with 8,000,000 entries)
 - updated document reporting system
+- updated code documentation
 - fixed bugs and potential bugs
+- fixed a bug where no flashmessage would display if the session has timed out
 
 ### v1.7
 - added support for readonly custom metadata
