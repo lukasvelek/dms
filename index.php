@@ -26,7 +26,7 @@ if(isset($_SESSION['id_current_user'])) {
         unset($_SESSION['session_end_date']);
         unset($_SESSION['last_login_hash']);
 
-        $app->flashMessage('You must login again.', 'error');
+        $app->flashMessage('Your session has been terminated. Please login again.', 'warn');
 
         if($app->currentUrl != $app::URL_LOGIN_PAGE) {
             $app->redirect($app::URL_LOGIN_PAGE);
@@ -51,6 +51,7 @@ if(isset($_SESSION['id_current_user'])) {
 
             if($loginHash === NULL) {
                 if($app->currentUrl != $app::URL_LOGIN_PAGE) {
+                    $app->flashMessage('Auto authentication failed, please log in again.', 'warn');
                     $app->redirect($app::URL_LOGIN_PAGE);
                 }
             }
@@ -71,6 +72,7 @@ if(isset($_SESSION['id_current_user'])) {
             }
         } else { // user has not been logged in yet
             if($app->currentUrl != $app::URL_LOGIN_PAGE) {
+                $app->flashMessage('You have to login in order to be use the DMS', 'warn');
                 $app->redirect($app::URL_LOGIN_PAGE);
             }
         }
@@ -78,6 +80,7 @@ if(isset($_SESSION['id_current_user'])) {
 } else {
     if(!isset($_SESSION['login_in_process'])) {
         if($app->currentUrl != $app::URL_LOGIN_PAGE && $app->currentUrl != 'AnonymModule:LoginPage:showFirstLoginForm') {
+            $app->flashMessage('You have to login in order to be use the DMS', 'warn');
             $app->redirect($app::URL_LOGIN_PAGE);
         }
     }
