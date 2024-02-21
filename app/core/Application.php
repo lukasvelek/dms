@@ -29,6 +29,7 @@ use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
+use DMS\Models\FileStorageModel;
 use DMS\Models\FilterModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
@@ -116,6 +117,7 @@ class Application {
     public RibbonRightsModel $ribbonRightsModel;
     public FilterModel $filterModel;
     public ArchiveModel $archiveModel;
+    public FileStorageModel $fileStorageModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -190,6 +192,7 @@ class Application {
         $this->ribbonRightsModel = new RibbonRightsModel($this->conn, $this->logger);
         $this->filterModel = new FilterModel($this->conn, $this->logger);
         $this->archiveModel = new ArchiveModel($this->conn, $this->logger);
+        $this->fileStorageModel = new FileStorageModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -210,7 +213,8 @@ class Application {
             'mailModel' => $this->mailModel,
             'ribbonModel' => $this->ribbonModel,
             'filterModel' => $this->filterModel,
-            'archiveModel' => $this->archiveModel
+            'archiveModel' => $this->archiveModel,
+            'fileStorageModel' => $this->fileStorageModel
         );
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -222,9 +226,13 @@ class Application {
         $sessionDestroyed = false;
         if($install) {
             $this->installDb($sessionDestroyed);
+
+            if(!is_dir(getcwd() . '\\files\\')) {
+                mkdir(getcwd() . '\\files\\');
+            }
         }
         
-        $this->fsManager = new FileStorageManager($this->baseDir . AppConfiguration::getFileDir(), $this->fileManager, $this->logger);
+        $this->fsManager = new FileStorageManager($this->fileManager, $this->logger, $this->fileStorageModel);
         $this->mailManager = new MailManager();
         
         $serviceManagerCacheManager = new CacheManager(AppConfiguration::getSerializeCache(), CacheCategories::SERVICE_CONFIG, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());

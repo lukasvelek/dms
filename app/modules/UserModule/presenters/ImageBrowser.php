@@ -25,7 +25,7 @@ class ImageBrowser extends APresenter {
             '$LINKS$' => []
         ];
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showSystem', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showSystem', '&larr;');
 
         $this->templateManager->fill($data, $template);
 
@@ -47,7 +47,7 @@ class ImageBrowser extends APresenter {
             '$SETTINGS_GRID$' => $this->internalCreateSingleImage($name)
         ];
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:ImageBrowser:showAll', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:ImageBrowser:showAll', '&larr;');
 
         $this->templateManager->fill($data, $template);
 

@@ -10,19 +10,17 @@ use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
-use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
-use DMS\Core\FileStorageManager;
 use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
-use DMS\Core\ServiceManager;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
+use DMS\Models\FileStorageModel;
 use DMS\Models\FilterModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
@@ -168,6 +166,7 @@ $mailModel = new MailModel($db, $logger);
 $filterModel = new FilterModel($db, $logger);
 $ribbonModel = new RibbonModel($db, $logger);
 $archiveModel = new ArchiveModel($db, $logger);
+$fileStorageModel = new FileStorageModel($db, $logger);
 
 $models = array(
     'userModel' => $userModel,
@@ -188,7 +187,8 @@ $models = array(
     'mailModel' => $mailModel,
     'ribbonModel' => $ribbonModel,
     'filterModel' => $filterModel,
-    'archiveModel' => $archiveModel
+    'archiveModel' => $archiveModel,
+    'fileStorageModel' => $fileStorageModel
 );
 
 if(isset($_SESSION['id_current_user'])) {

@@ -60,7 +60,7 @@ class QueryBuilder
      * 
      * @param string $column Column name
      * @param array $values Column allowed values
-     * @return self
+     * @return string SQL code
      */
     public function getColumnInValues(string $column, array $values) {
         $code = $column . ' IN (';

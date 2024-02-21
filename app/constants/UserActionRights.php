@@ -66,6 +66,8 @@ class UserActionRights {
     public const CLOSE_ARCHIVE = 'close_archive';
     public const EDIT_METADATA = 'edit_metadata';
     public const DELETE_DOCUMENT_REPORT_QUEUE_ENTRY = 'delete_document_report_queue_entry';
+    public const VIEW_FILE_STORAGE_LOCATIONS = 'view_file_storage_locations';
+    public const EDIT_FILE_STORAGE_LOCATIONS = 'edit_file_storage_locations';
 
     public static $all = array(
         self::CREATE_USER,
@@ -125,7 +127,9 @@ class UserActionRights {
         self::EDIT_ARCHIVE_ARCHIVE,
         self::CLOSE_ARCHIVE,
         self::EDIT_METADATA,
-        self::DELETE_DOCUMENT_REPORT_QUEUE_ENTRY
+        self::DELETE_DOCUMENT_REPORT_QUEUE_ENTRY,
+        self::VIEW_FILE_STORAGE_LOCATIONS,
+        self::EDIT_FILE_STORAGE_LOCATIONS
     );
 }
 

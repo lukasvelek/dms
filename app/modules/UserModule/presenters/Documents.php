@@ -718,6 +718,22 @@ class Documents extends APresenter {
             }
         }
 
+        $dbFSL = $app->fileStorageModel->getAllActiveFileStorageLocations(true);
+        
+        $fileStorageLocations = [];
+        foreach($dbFSL as $loc) {
+            $fsl = [
+                'value' => $loc->getPath(),
+                'text' => $loc->getName()
+            ];
+
+            if($loc->isDefault()) {
+                $fsl['selected'] = 'selected';
+            }
+
+            $fileStorageLocations[] = $fsl;
+        }
+
         $fb = FormBuilder::getTemporaryObject();
         
         $name = $fb->createInput()  ->setType('text')
@@ -758,6 +774,11 @@ class Documents extends APresenter {
             ->addElement($fb->createLabel()->setFor('file')
                                            ->setText('File'))
             ->addElement($fb->createInput()->setType('file')->setName('file'))
+
+            ->addElement($fb->createLabel()->setFor('file_storage_directory')
+                                           ->setText('File storage'))
+            ->addElement($fb->createSelect()->setName('file_storage_directory')
+                                            ->addOptionsBasedOnArray($fileStorageLocations))
 
             ->addElement($fb->createLabel()->setFor('shred_year')
                                            ->setText('Shred year'))
@@ -843,6 +864,7 @@ class Documents extends APresenter {
 
         $idGroup = $this->post('group');
         $idFolder = $this->post('folder');
+        $fileStorageDirectory = $this->post('file_storage_directory');
         
         $data['name'] = $this->post('name');
         $data['id_manager'] = $this->post('manager');
@@ -868,7 +890,8 @@ class Documents extends APresenter {
             'group',
             'folder',
             'shred_year',
-            'after_shred_action'
+            'after_shred_action',
+            'file_storage_directory'
         ]);
 
         $customMetadata = ArrayHelper::formatArrayData($_POST);
@@ -884,7 +907,7 @@ class Documents extends APresenter {
         $data = array_merge($data, $customMetadata);
 
         if(isset($data['file']) && !empty($data['file'])) {
-            $app->fsManager->uploadFile($_FILES['file'], $data['file']);
+            $app->fsManager->uploadFile($_FILES['file'], $data['file'], $fileStorageDirectory); // filepath is converted here
         }
         
         // CUSTOM OPERATION DEFINITION

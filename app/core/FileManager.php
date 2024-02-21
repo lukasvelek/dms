@@ -32,6 +32,20 @@ class FileManager {
     }
 
     /**
+     * Deletes a directory
+     * 
+     * @param string $dirpath Directory path
+     * @return bool True on success or false on failure
+     */
+    public function deleteDirectory(string $dirpath) {
+        if(!is_dir($dirpath)) {
+            return false;
+        }
+
+        return rmdir($dirpath);
+    }
+
+    /**
      * Creates a directory
      * 
      * @param string $dirpath New directory path
@@ -62,16 +76,16 @@ class FileManager {
      * @param string $dir Directory to search in
      * @param array $dirs Directories discovered
      */
-    public function readFoldersInFolder(string $dir, array &$dirs) {
+    public function readFoldersInFolder(string $dir, array &$dirs, bool $useSlash = true) {
         $contents = scandir($dir);
 
         unset($contents[0]);
         unset($contents[1]);
 
         foreach($contents as $c) {
-            if(is_dir($dir . $c . '/')) {
-                $dirs[] = $dir . $c . '/';
-                $this->readFoldersinFolder($dir . $c . '/', $dirs);
+            if(is_dir($dir . $c . ($useSlash ? '/' : '\\'))) {
+                $dirs[] = $dir . $c . ($useSlash ? '/' : '\\');
+                $this->readFoldersinFolder($dir . $c . ($useSlash ? '/' : '\\'), $dirs);
             }
         }
     }
