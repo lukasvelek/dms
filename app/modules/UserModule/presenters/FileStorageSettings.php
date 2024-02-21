@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\UserActionRights;
 use DMS\Entities\FileStorageLocation;
+use DMS\Helpers\GridDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
@@ -82,6 +83,67 @@ class FileStorageSettings extends APresenter {
         return $template;
     }
 
+    protected function setLocationAsDefault() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $id = $this->get('id');
+
+        $app->fileStorageModel->unsetAllLocationsAsDefault();
+        $app->fileStorageModel->setLocationAsDefault($id);
+
+        $app->flashMessage('Changed default file storage location');
+        $app->redirect('UserModule:FileStorageSettings:showLocations');
+    }
+
+    protected function removeLocation() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $id = $this->get('id');
+
+        $app->fileStorageModel->removeLocation($id);
+
+        $app->flashMessage('Deleted file storage location');
+        $app->redirect('UserModule:FileStorageSettings:showLocations');
+    }
+
+    protected function moveLocationUp() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'order']);
+
+        $id = $this->get('id');
+        $order = $this->get('order');
+
+        $newOrder = $order - 1;
+
+        $idNewOrder = $app->fileStorageModel->getLocationByOrder($newOrder)->getId();
+
+        $app->fileStorageModel->switchLocationOrder($id, $newOrder, $idNewOrder, $order);
+
+        $app->redirect('UserModule:FileStorageSettings:showLocations');
+    }
+
+    protected function moveLocationDown() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'order']);
+
+        $id = $this->get('id');
+        $order = $this->get('order');
+
+        $newOrder = $order + 1;
+
+        $idNewOrder = $app->fileStorageModel->getLocationByOrder($newOrder)->getId();
+
+        $app->fileStorageModel->switchLocationOrder($id, $newOrder, $idNewOrder, $order);
+
+        $app->redirect('UserModule:FileStorageSettings:showLocations');
+    }
+
     private function internalCreateNewLocationForm() {
         $fb = new FormBuilder();
 
@@ -112,15 +174,15 @@ class FileStorageSettings extends APresenter {
         $gb->addColumns(['order' => 'Order', 'name' => 'Name', 'path' => 'Path', 'isDefault' => 'Default', 'isActive' => 'Active']);
         $gb->addDataSource($locations);
         $gb->addOnColumnRender('isDefault', function(FileStorageLocation $loc) {
-            return $loc->isDefault() ? 'Yes' : 'No';
+            return GridDataHelper::renderBooleanValueWithColors($loc->isDefault(), 'Yes', 'No');
         });
         $gb->addOnColumnRender('isActive', function(FileStorageLocation $loc) {
-            return $loc->isActive() ? 'Yes' : 'No';
+            return GridDataHelper::renderBooleanValueWithColors($loc->isActive(), 'Yes', 'No');
         });
         $gb->addAction(function(FileStorageLocation $loc) use ($locationCount) {
             if($locationCount > 1) {
-                if($loc->getOrder() > 1) {
-                    return LinkBuilder::createAdvLink(['page' => 'UserModule:FileStorageSettings:moveLocationDown', 'id' => $loc->getId()], '&darr;');
+                if($loc->getOrder() < $locationCount) {
+                    return LinkBuilder::createAdvLink(['page' => 'UserModule:FileStorageSettings:moveLocationDown', 'id' => $loc->getId(), 'order' => $loc->getOrder()], '&darr;');
                 }
             } else {
                 return '-';
@@ -129,7 +191,7 @@ class FileStorageSettings extends APresenter {
         $gb->addAction(function(FileStorageLocation $loc) use ($locationCount) {
             if($locationCount > 1) {
                 if($loc->getOrder() > 1) {
-                    return LinkBuilder::createAdvLink(['page' => 'UserModule:FileStorageSettings:moveLocationUp', 'id' => $loc->getId()], '&uarr;');
+                    return LinkBuilder::createAdvLink(['page' => 'UserModule:FileStorageSettings:moveLocationUp', 'id' => $loc->getId(), 'order' => $loc->getOrder()], '&uarr;');
                 }
             } else {
                 return '-';

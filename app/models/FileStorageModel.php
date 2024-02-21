@@ -11,6 +11,45 @@ class FileStorageModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function switchLocationOrder(int $id1, int $order1, int $id2, int $order2) {
+        $result1 = $this->updateLocation($id1, ['`order`' => $order1]);
+        $result2 = $this->updateLocation($id2, ['`order`' => $order2]);
+
+        return $result1 && $result2;
+    }
+
+    public function getLocationByOrder(int $order) {
+        $qb = $this->composeCommonQuery(__METHOD__);
+
+        $qb ->where('`order` = ?', [$order])
+            ->execute();
+
+        return $this->createFileStorageLocationObjectFromDbRow($qb->fetch());
+    }
+
+    public function removeLocation(int $id) {
+        return $this->deleteById($id, 'file_storage_locations');
+    }
+
+    public function unsetAllLocationsAsDefault() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->update('file_storage_locations')
+            ->set(['is_default' => '0'])
+            ->where('is_default = 1')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function setLocationAsDefault(int $id) {
+        return $this->updateLocation($id, ['is_default' => '1']);
+    }
+
+    public function updateLocation(int $id, array $data) {
+        return $this->updateExisting('file_storage_locations', $id, $data);
+    }
+
     public function insertNewLocation(array $data) {
         return $this->insertNew($data, 'file_storage_locations');
     }
