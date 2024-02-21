@@ -26,7 +26,7 @@ if(isset($_SESSION['id_current_user'])) {
         unset($_SESSION['session_end_date']);
         unset($_SESSION['last_login_hash']);
 
-        $app->flashMessage('You must login again.', 'error');
+        $app->flashMessage('Your session has been terminated. Please login again.', 'warn');
 
         if($app->currentUrl != $app::URL_LOGIN_PAGE) {
             $app->redirect($app::URL_LOGIN_PAGE);
