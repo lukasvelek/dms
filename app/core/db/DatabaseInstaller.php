@@ -9,6 +9,7 @@ use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\FileStorageSystemLocations;
 use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
@@ -1711,14 +1712,16 @@ class DatabaseInstaller {
      */
     public function insertDefaultFileStorageLocations() {
         $cwd = getcwd();
+        $cwd = str_replace('\\', '\\\\', $cwd);
 
-        $cwd = str_replace('\\', '\\\\', $cwd) . '\\\\files\\\\';
-
-        $sql = "INSERT INTO `file_storage_locations` (`name`, `path`, `order`, `is_default`, `is_active`, `is_system`) VALUES ('FS_Main', '$cwd', '1', '1', '1', '1')";
-
-        $this->logger->sql($sql, __METHOD__);
-
-        $this->db->query($sql);
+        $order = 1;
+        foreach(FileStorageSystemLocations::$texts as $key => $val) {
+            $val = '\\' . $val . '\\';
+            $sql = "INSERT INTO `file_storage_locations` (`name`, `path`, `order`, `is_default`, `is_active`, `is_system`) VALUES ('$key', '$val', '$order', '1', '1', '1')";
+            $this->logger->sql($sql, __METHOD__);
+            $this->db->query($sql);
+            $order++;
+        }
 
         return true;
     }

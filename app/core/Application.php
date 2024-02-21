@@ -22,6 +22,7 @@ use DMS\Components\RibbonComponent;
 use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\FileStorageSystemLocations;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Core\Logger\Logger;
 use DMS\Core\FileManager;
@@ -227,8 +228,10 @@ class Application {
         if($install) {
             $this->installDb($sessionDestroyed);
 
-            if(!is_dir(getcwd() . '\\files\\')) {
-                mkdir(getcwd() . '\\files\\');
+            foreach(FileStorageSystemLocations::$texts as $k => $v) {
+                if(!is_dir(getcwd() . $v)) {
+                    mkdir(getcwd() . $v);
+                }
             }
         }
         
