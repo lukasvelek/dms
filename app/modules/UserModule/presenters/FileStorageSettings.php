@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\FileStorageTypes;
 use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
 use DMS\Core\Logger\LogCategoryEnum;
 use DMS\Entities\FileStorageLocation;
 use DMS\Helpers\GridDataHelper;
@@ -38,10 +39,12 @@ class FileStorageSettings extends APresenter {
     protected function processNewLocationForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['name', 'path']);
+        $app->flashMessageIfNotIsset(['name', 'path', 'absolute_path', 'type']);
 
         $name = $this->post('name');
         $path = $this->post('path');
+        $absolutePath = $this->post('absolute_path');
+        $type = $this->post('type');
 
         if(isset($_POST['active'])) {
             $active = '1';
@@ -226,12 +229,26 @@ class FileStorageSettings extends APresenter {
     private function internalCreateNewLocationForm() {
         $fb = new FormBuilder();
 
+        $storageTypes = [];
+        foreach(FileStorageTypes::$texts as $k => $v) {
+            $storageTypes[] = [
+                'value' => $k, 
+                'text' => $v
+            ];
+        }
+
         $fb ->setAction('?page=UserModule:FileStorageSettings:processNewLocationForm')->setMethod('POST')
             ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
-            ->addElement($fb->createInput()->setType('text')->setName('name')->require())
+            ->addElement($fb->createInput()->setType('text')->setName('name')->require()->setPlaceHolder('File storage 1'))
 
             ->addElement($fb->createLabel()->setText('Path')->setFor('path'))
-            ->addElement($fb->createInput()->setType('text')->setName('path')->require())
+            ->addElement($fb->createInput()->setType('text')->setName('path')->require()->setPlaceHolder('C:\\wwwroot\\' . (str_replace('/', '', AppConfiguration::getAbsoluteAppDir())) . '\\files\\'))
+
+            ->addElement($fb->createLabel()->setText('Absolute path')->setFor('absolute_path'))
+            ->addElement($fb->createInput()->setType('text')->setName('absolute_path')->require()->setPlaceHolder(AppConfiguration::getAbsoluteAppDir() . 'files/'))
+
+            ->addElement($fb->createLabel()->setText('Storage type')->setFor('type'))
+            ->addElement($fb->createSelect()->setName('type')->addOptionsBasedOnArray($storageTypes))
             
             ->addElement($fb->createLabel()->setText('Active'))
             ->addElement($fb->createInput()->setType('checkbox')->setName('active')->setSpecial('checked'))
