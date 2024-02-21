@@ -13,6 +13,7 @@ class FileStorageLocation extends AEntity {
     private bool $isDefault;
     private bool $isActive;
     private int $order;
+    private bool $isSystem;
 
     /**
      * Class constructor
@@ -23,7 +24,7 @@ class FileStorageLocation extends AEntity {
      * @param bool $isDefault Is location default
      * @param bool $isActive Is location active
      */
-    public function __construct(int $id, string $name, string $path, bool $isDefault, bool $isActive, int $order) {
+    public function __construct(int $id, string $name, string $path, bool $isDefault, bool $isActive, int $order, bool $isSystem) {
         parent::__construct($id, null, null);
 
         $this->name = $name;
@@ -31,6 +32,7 @@ class FileStorageLocation extends AEntity {
         $this->isDefault = $isDefault;
         $this->isActive = $isActive;
         $this->order = $order;
+        $this->isSystem = $isSystem;
     }
 
     /**
@@ -76,6 +78,15 @@ class FileStorageLocation extends AEntity {
      */
     public function getOrder() {
         return $this->order;
+    }
+
+    /**
+     * Returns whether the location is system-made or not
+     * 
+     * @return bool True if location is system-made or false if not
+     */
+    public function isSystem() {
+        return $this->isSystem;
     }
 }
 

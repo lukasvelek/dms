@@ -11,6 +11,15 @@ class FileStorageModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getLocationById(int $id) {
+        $qb = $this->composeCommonQuery(__METHOD__);
+
+        $qb ->where('`id` = ?', [$id])
+            ->execute();
+
+        return $this->createFileStorageLocationObjectFromDbRow($qb->fetch());
+    }
+
     public function switchLocationOrder(int $id1, int $order1, int $id2, int $order2) {
         $result1 = $this->updateLocation($id1, ['`order`' => $order1]);
         $result2 = $this->updateLocation($id2, ['`order`' => $order2]);
@@ -117,6 +126,7 @@ class FileStorageModel extends AModel {
         $isDefault = $row['is_default'];
         $isActive = $row['is_active'];
         $order = $row['order'];
+        $isSystem = $row['is_system'];
 
         if($isDefault == '1') {
             $isDefault = true;
@@ -130,7 +140,13 @@ class FileStorageModel extends AModel {
             $isActive = false;
         }
 
-        return new FileStorageLocation($id, $name, $path, $isDefault, $isActive, $order);
+        if($isSystem == '1') {
+            $isSystem = true;
+        } else {
+            $isSystem = false;
+        }
+
+        return new FileStorageLocation($id, $name, $path, $isDefault, $isActive, $order, $isSystem);
     }
 }
 

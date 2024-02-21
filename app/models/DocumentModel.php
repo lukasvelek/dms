@@ -15,6 +15,22 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentsForDirectory(string $path) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('documents')
+            ->where('file LIKE "?%"', [$path])
+            ->execute();
+
+        $documents = array();
+        while($row = $qb->fetchAssoc()) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+        
+        return $documents;
+    }
+
     public function insertDocumentReportQueueEntry(array $data) {
         return $this->insertNew($data, 'document_reports');
     }
