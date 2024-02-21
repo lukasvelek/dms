@@ -12,7 +12,6 @@ use DMS\Models\FileStorageModel;
  * @author Lukas Velek
  */
 class FileStorageManager {
-    private string $fileFolder;
     private FileManager $fm;
     private Logger $logger;
     private FileStorageModel $fsm;
@@ -34,8 +33,7 @@ class FileStorageManager {
      * @param FileManager $fm FileManager instance
      * @param Logger $logger Logger instance
      */
-    public function __construct(string $fileFolder, FileManager $fm, Logger $logger, FileStorageModel $fsm) {
-        $this->fileFolder = $fileFolder;
+    public function __construct(FileManager $fm, Logger $logger, FileStorageModel $fsm) {
         $this->fm = $fm;
         $this->logger = $logger;
         $this->fsm = $fsm;
@@ -145,19 +143,6 @@ class FileStorageManager {
         }
 
         return $fileObjects;
-    }
-
-    /**
-     * Gets all directories in the files folder
-     * 
-     * @return array Discovered directories
-     */
-    public function getDirectories() {
-        $dirs = [];
-
-        $this->fm->readFoldersInFolder($this->fileFolder, $dirs);
-
-        return $dirs;
     }
 
     /**

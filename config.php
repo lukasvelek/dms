@@ -29,13 +29,6 @@ $cfg['serialize_cache'] = true; // false does not work yet
 
 
 /**
- * FILE STORAGE CONFIGURATION
- */
-
-$cfg['file_dir'] = ''; // File upload directory location
-
-
-/**
  * GENERAL CONFIGURATION
  */
 

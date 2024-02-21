@@ -115,6 +115,8 @@ class FileStorageSettings extends APresenter {
             '$LINKS$' => [],
             '$FORM$' => $this->internalCreateRemoveLocationForm($location)
         ];
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:FileStorageSettings:showLocations', '&larr;');
         
         $this->fill($data, $template);
 

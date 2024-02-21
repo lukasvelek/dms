@@ -60,14 +60,6 @@ class AppConfiguration {
     }
 
     /**
-     * ----- FILE STORAGE -----
-     */
-
-    public static function getFileDir() {
-        return self::loadParam('file_dir');
-    }
-
-    /**
      * ----- SERVICE USER DEFINITION -----
      */
 

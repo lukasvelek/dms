@@ -232,7 +232,7 @@ class Application {
             }
         }
         
-        $this->fsManager = new FileStorageManager($this->baseDir . AppConfiguration::getFileDir(), $this->fileManager, $this->logger, $this->fileStorageModel);
+        $this->fsManager = new FileStorageManager($this->fileManager, $this->logger, $this->fileStorageModel);
         $this->mailManager = new MailManager();
         
         $serviceManagerCacheManager = new CacheManager(AppConfiguration::getSerializeCache(), CacheCategories::SERVICE_CONFIG, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());

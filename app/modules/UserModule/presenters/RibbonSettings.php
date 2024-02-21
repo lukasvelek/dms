@@ -545,8 +545,6 @@ class RibbonSettings extends APresenter {
             '$SETTINGS_GRID$' => $settingsGrid
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showDashboard', '<-');
-
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm'), 'New ribbon');
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewSplitterForm'), 'New splitter');

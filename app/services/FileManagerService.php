@@ -44,11 +44,12 @@ class FileManagerService extends AService {
             unlink($td);
         }
 
-        $dirs = $this->fsm->getDirectories();
+        // TODO
+        //$dirs = $this->fsm->getDirectories();
 
-        for($i = (count($dirs) - 1); $i >= 0; $i--) {
+        /*for($i = (count($dirs) - 1); $i >= 0; $i--) {
             rmdir($dirs[$i]);
-        }
+        }*/
 
         $this->stopService();
     }
