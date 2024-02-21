@@ -386,6 +386,14 @@ class DatabaseInstaller {
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'file_src' => 'VARCHAR(256) NULL'
+            ),
+            'file_storage_locations' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'path' => 'VARCHAR(256) NOT NULL',
+                'is_default' => 'INT(2) NOT NULL DEFAULT 0',
+                'is_active' => 'INT(2) NOT NULL DEFAULT 1',
+                'order' => 'INT(32) NOT NULL'
             )
         );
 

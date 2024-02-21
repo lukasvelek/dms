@@ -608,7 +608,11 @@ class Settings extends APresenter {
             $widgets[] = LinkBuilder::createLink('UserModule:DocumentGenerator:showForm', 'Document generator') . '<br>';
         }
 
-        $widgets[] = LinkBuilder::createLink('UserModule:ImageBrowser:showAll', 'Images');
+        $widgets[] = LinkBuilder::createLink('UserModule:ImageBrowser:showAll', 'Images') . '<br>';
+
+        if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_FILE_STORAGE_LOCATIONS)) {
+            $widgets[] = LinkBuilder::createLink('UserModule:FileStorageSettings:showLocations', 'File storage');
+        }
 
         $widgetsCode = '';
 

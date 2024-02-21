@@ -32,6 +32,14 @@ abstract class APresenter implements IPresenter {
         $this->actions = [];
     }
 
+    protected function fill(array $data, string &$subject) {
+        $this->templateManager->fill($data, $subject);
+    }
+
+    protected function loadTemplate(string $path) {
+        return $this->templateManager->loadTemplate($path);
+    }
+
     protected function get(string $key, bool $escape = true) {
         return FormDataHelper::get($key, $escape);
     }
