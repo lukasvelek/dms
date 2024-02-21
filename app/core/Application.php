@@ -68,7 +68,7 @@ class Application {
     public const URL_LOGOUT_PAGE = 'UserModule:UserLogout:logoutUser';
 
     public const SYSTEM_VERSION_MAJOR = 1;
-    public const SYSTEM_VERSION_MINOR = 8;
+    public const SYSTEM_VERSION_MINOR = 9;
     public const SYSTEM_VERSION_PATCH = 0;
     public const SYSTEM_VERSION_PATCH_DISPLAY = false;
 
