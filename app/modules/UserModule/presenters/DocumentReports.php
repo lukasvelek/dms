@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentReportStatus;
+use DMS\Constants\FileStorageTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Modules\APresenter;
@@ -107,7 +108,7 @@ class DocumentReports extends APresenter {
         });
         $gb->addAction(function(object $obj) {
             if($obj->getStatus() == DocumentReportStatus::FINISHED) {
-                return '<a class="general-link" href="' . AppConfiguration::getAbsoluteAppDir() . $obj->getFileSrc() . '">Download</a>';
+                return '<a class="general-link" href="' . $obj->getFileSrc() . '">Download</a>';
             } else {
                 return '-';
             }

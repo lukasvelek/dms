@@ -7,9 +7,11 @@ use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\FileStorageTypes;
 use DMS\Constants\MetadataInputType;
 use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
+use DMS\Core\FileStorageManager;
 
 /**
  * Component that generates document reports.
@@ -21,6 +23,7 @@ class DocumentReportGeneratorComponent extends AComponent {
     private FileManager $fm;
     private ExternalEnumComponent $eec;
     private CacheManager $ucm;
+    private FileStorageManager $fsm;
 
     /**
      * Class constructor
@@ -29,11 +32,12 @@ class DocumentReportGeneratorComponent extends AComponent {
      * @param FileManager $fm FileManager instance
      * @param ExternalEnumComponent $eec ExternalEnumComponent instance
      */
-    public function __construct(array $models, FileManager $fm, ExternalEnumComponent $eec) {
+    public function __construct(array $models, FileManager $fm, ExternalEnumComponent $eec, FileStorageManager $fsm) {
         $this->models = $models;
         $this->fm = $fm;
         $this->eec = $eec;
         $this->ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
+        $this->fsm = $fsm;
     }
 
     /**
@@ -234,18 +238,29 @@ class DocumentReportGeneratorComponent extends AComponent {
             $filename = $this->generateFilename($idUser);
         }
 
+        $reportStorageObj = $this->fsm->getDefaultLocationForStorageType(FileStorageTypes::DOCUMENT_REPORTS);
+
+        if($reportStorageObj === NULL) {
+            die('Report storage is null (DocumentReportGeneratorComponent::' . __METHOD__ . '())');
+            exit;
+        } else {
+            $reportStorage = $reportStorageObj->getPath();
+        }
+
         $defaultFilename = $filename;
         $i = 1;
-        while($this->fm->fileExists('cache/' . $filename)) {
+        while($this->fm->fileExists($reportStorage . $filename)) {
             $filename = explode('.', $defaultFilename)[0];
             $filename = $filename . ' (' . $i . ').csv';
             $i++;
         }
 
-        $writeResult = $this->fm->write('cache/' . $filename, $fileRow, false);
+        file_put_contents('__report.txt', var_export($reportStorage, true));
+
+        $writeResult = $this->fm->write($reportStorage . $filename, $fileRow, false);
 
         if($writeResult === TRUE) {
-            return 'cache/' . $filename;
+            return $reportStorageObj->getAbsolutePath() . $filename;
         } else {
             return false;
         }

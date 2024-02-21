@@ -127,6 +127,8 @@ class FileStorageModel extends AModel {
         $isActive = $row['is_active'];
         $order = $row['order'];
         $isSystem = $row['is_system'];
+        $type = $row['type'];
+        $absolutePath = $row['absolute_path'];
 
         if($isDefault == '1') {
             $isDefault = true;
@@ -146,7 +148,7 @@ class FileStorageModel extends AModel {
             $isSystem = false;
         }
 
-        return new FileStorageLocation($id, $name, $path, $isDefault, $isActive, $order, $isSystem);
+        return new FileStorageLocation($id, $name, $path, $isDefault, $isActive, $order, $isSystem, $type, $absolutePath);
     }
 }
 

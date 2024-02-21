@@ -2,6 +2,7 @@
 
 namespace DMS\Core;
 
+use DMS\Constants\FileStorageTypes;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\FileStorageFile;
 use DMS\Models\FileStorageModel;
@@ -37,6 +38,33 @@ class FileStorageManager {
         $this->fm = $fm;
         $this->logger = $logger;
         $this->fsm = $fsm;
+    }
+
+    /**
+     * Returns the default file storage location for given type
+     * 
+     * @param string $type Storage type
+     * @return FileStorageLocation Default file storage location for given type
+     */
+    public function getDefaultLocationForStorageType(string $type) {
+        $locations = $this->fsm->getAllActiveFileStorageLocations(true);
+
+        $filteredLocations = [];
+        foreach($locations as $location) {
+            if($location->getType() == $type) {
+                $filteredLocations[] = $location;
+            }
+        }
+
+        $defaultLocation = null;
+        foreach($filteredLocations as $loc) {
+            if($loc->isDefault() === TRUE) {
+                $defaultLocation = $loc;
+                break;
+            }
+        }
+
+        return $defaultLocation;
     }
 
     /**

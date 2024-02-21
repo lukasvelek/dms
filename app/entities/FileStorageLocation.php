@@ -14,6 +14,8 @@ class FileStorageLocation extends AEntity {
     private bool $isActive;
     private int $order;
     private bool $isSystem;
+    private string $type;
+    private string $absolutePath;
 
     /**
      * Class constructor
@@ -24,7 +26,7 @@ class FileStorageLocation extends AEntity {
      * @param bool $isDefault Is location default
      * @param bool $isActive Is location active
      */
-    public function __construct(int $id, string $name, string $path, bool $isDefault, bool $isActive, int $order, bool $isSystem) {
+    public function __construct(int $id, string $name, string $path, bool $isDefault, bool $isActive, int $order, bool $isSystem, string $type, string $absolutePath) {
         parent::__construct($id, null, null);
 
         $this->name = $name;
@@ -33,6 +35,8 @@ class FileStorageLocation extends AEntity {
         $this->isActive = $isActive;
         $this->order = $order;
         $this->isSystem = $isSystem;
+        $this->type = $type;
+        $this->absolutePath = $absolutePath;
     }
 
     /**
@@ -87,6 +91,24 @@ class FileStorageLocation extends AEntity {
      */
     public function isSystem() {
         return $this->isSystem;
+    }
+
+    /**
+     * Returns storage type
+     * 
+     * @return string Storage type
+     */
+    public function getType() {
+        return $this->type;
+    }
+
+    /**
+     * Returns absolute path
+     * 
+     * @return string Absolute path
+     */
+    public function getAbsolutePath() {
+        return $this->absolutePath;
     }
 }
 

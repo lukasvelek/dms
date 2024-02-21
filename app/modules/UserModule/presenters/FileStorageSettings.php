@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\FileStorageTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\Logger\LogCategoryEnum;
 use DMS\Entities\FileStorageLocation;
@@ -251,7 +252,7 @@ class FileStorageSettings extends APresenter {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['order' => 'Order', 'name' => 'Name', 'path' => 'Path', 'isDefault' => 'Default', 'isActive' => 'Active', 'freeSpace' => 'Free space']);
+        $gb->addColumns(['order' => 'Order', 'name' => 'Name', 'path' => 'Path', 'type' => 'Type', 'isDefault' => 'Default', 'isActive' => 'Active', 'freeSpace' => 'Free space']);
         $gb->addDataSource($locations);
         $gb->addOnColumnRender('isDefault', function(FileStorageLocation $loc) {
             return GridDataHelper::renderBooleanValueWithColors($loc->isDefault(), 'Yes', 'No');
@@ -261,6 +262,9 @@ class FileStorageSettings extends APresenter {
         });
         $gb->addOnColumnRender('freeSpace', function(FileStorageLocation $loc) use ($fsManager) {
             return $fsManager->getFreeSpaceLeft($loc->getPath());
+        });
+        $gb->addOnColumnRender('type', function(FileStorageLocation $loc) {
+            return FileStorageTypes::$texts[$loc->getType()];
         });
         $gb->addAction(function(FileStorageLocation $loc) use ($locationCount) {
             if($locationCount > 1) {

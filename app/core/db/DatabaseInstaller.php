@@ -397,7 +397,9 @@ class DatabaseInstaller {
                 'is_default' => 'INT(2) NOT NULL DEFAULT 0',
                 'is_active' => 'INT(2) NOT NULL DEFAULT 1',
                 'order' => 'INT(32) NOT NULL',
-                'is_system' => 'INT(2) NOT NULL DEFAULT 0'
+                'is_system' => 'INT(2) NOT NULL DEFAULT 0',
+                'type' => 'VARCHAR(256) NOT NULL',
+                'absolute_path' => 'VARCHAR(256) NOT NULL'
             )
         );
 
@@ -1715,9 +1717,11 @@ class DatabaseInstaller {
         $cwd = str_replace('\\', '\\\\', $cwd);
 
         $order = 1;
-        foreach(FileStorageSystemLocations::$texts as $key => $val) {
-            $val = '\\' . $val . '\\';
-            $sql = "INSERT INTO `file_storage_locations` (`name`, `path`, `order`, `is_default`, `is_active`, `is_system`) VALUES ('$key', '$val', '$order', '1', '1', '1')";
+        foreach(FileStorageSystemLocations::$texts as $key => $valArr) {
+            $val = $cwd . '\\' . $valArr['path'] . '\\';
+            $type = $valArr['type'];
+            $absPath = $valArr['absolute_path'];
+            $sql = "INSERT INTO `file_storage_locations` (`name`, `path`, `order`, `is_default`, `is_active`, `is_system`, `type`, `absolute_path`) VALUES ('$key', '$val', '$order', '1', '1', '1', '$type', '$absPath')";
             $this->logger->sql($sql, __METHOD__);
             $this->db->query($sql);
             $order++;

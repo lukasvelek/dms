@@ -7,6 +7,7 @@ use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\FileStorageTypes;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
@@ -727,7 +728,7 @@ class Documents extends APresenter {
                 'text' => $loc->getName()
             ];
 
-            if($loc->isDefault()) {
+            if($loc->isDefault() && $loc->getType() == FileStorageTypes::FILES) {
                 $fsl['selected'] = 'selected';
             }
 
