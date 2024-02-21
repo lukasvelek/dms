@@ -4,6 +4,9 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.9
+- fixed a bug where the document report limit would not show integer values but rather float values
+
 ### v1.8
 - added archive section
 - added background document report generator service
