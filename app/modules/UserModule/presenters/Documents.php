@@ -113,6 +113,8 @@ class Documents extends APresenter {
         $limit = $this->post('limit_range');
         $order = $this->post('order');
 
+        $limit = ceil($limit);
+
         $qb = $app->documentModel->composeQueryStandardDocuments(false);
 
         if($idFolder > 0) {
