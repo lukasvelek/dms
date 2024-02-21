@@ -3,6 +3,7 @@
 namespace DMS\Modules;
 
 use DMS\Core\TemplateManager;
+use DMS\Helpers\FormDataHelper;
 
 abstract class APresenter implements IPresenter {
     private string $name;
@@ -29,6 +30,14 @@ abstract class APresenter implements IPresenter {
         $this->templateManager = TemplateManager::getTemporaryObject();
 
         $this->actions = [];
+    }
+
+    protected function get(string $key, bool $escape = true) {
+        return FormDataHelper::get($key, $escape);
+    }
+
+    protected function post(string $key, bool $escape = true) {
+        return FormDataHelper::post($key, $escape);
     }
 
     public function getActions() {

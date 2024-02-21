@@ -1,6 +1,7 @@
 <?php
 
 use DMS\Authorizators\ActionAuthorizator;
+use DMS\Authorizators\ArchiveAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
@@ -10,11 +11,16 @@ use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
+use DMS\Constants\CacheCategories;
 use DMS\Core\AppConfiguration;
+use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
+use DMS\Core\FileStorageManager;
 use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
+use DMS\Core\ServiceManager;
+use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FilterModel;
@@ -161,9 +167,42 @@ $notificationModel = new NotificationModel($db, $logger);
 $mailModel = new MailModel($db, $logger);
 $filterModel = new FilterModel($db, $logger);
 $ribbonModel = new RibbonModel($db, $logger);
+$archiveModel = new ArchiveModel($db, $logger);
+
+$models = array(
+    'userModel' => $userModel,
+    'userRightModel' => $userRightModel,
+    'documentModel' => $documentModel,
+    'groupModel' => $groupModel,
+    'groupUserModel' => $groupUserModel,
+    'processModel' => $processModel,
+    'groupRightModel' => $groupRightModel,
+    'metadataModel' => $metadataModel,
+    'tableModel' => $tableModel,
+    'folderModel' => $folderModel,
+    'serviceModel' => $serviceModel,
+    'documentCommentModel' => $documentCommentModel,
+    'processCommentModel' => $processCommentModel,
+    'widgetModel' => $widgetModel,
+    'notificationModel' => $notificationModel,
+    'mailModel' => $mailModel,
+    'ribbonModel' => $ribbonModel,
+    'filterModel' => $filterModel,
+    'archiveModel' => $archiveModel
+);
 
 if(isset($_SESSION['id_current_user'])) {
-    $user = $userModel->getUserById($_SESSION['id_current_user']);
+    $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS, true);
+
+    $valFromCache = $ucm->loadUserByIdFromCache($_SESSION['id_current_user']);
+
+    if($valFromCache === NULL) {
+        $user = $userModel->getUserById($_SESSION['id_current_user']);
+        $ucm->saveUserToCache($user);
+    } else {
+        $user = $valFromCache;
+    }
+
 }
 
 $panelAuthorizator = new PanelAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
@@ -172,10 +211,10 @@ $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $gro
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
-$processComponent = new ProcessComponent($db, $logger, $processModel, $groupModel, $groupUserModel, $documentModel, $notificationComponent, $processCommentModel);
-$widgetComponent = new WidgetComponent($db, $logger, $documentModel, $processModel, $mailModel);
+$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
+$archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
 $documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 

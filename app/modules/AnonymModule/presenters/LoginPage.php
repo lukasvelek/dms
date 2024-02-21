@@ -108,7 +108,7 @@ class LoginPage extends APresenter {
 
         $authResult = $app->userAuthenticator->authUser($username, $password);
 
-        if($authResult != false) {
+        if($authResult !== FALSE) {
             $user = $app->userModel->getUserById($authResult);
 
             if(!in_array($user->getStatus(), array(UserStatus::ACTIVE))) {
@@ -116,21 +116,20 @@ class LoginPage extends APresenter {
                 $app->redirect('AnonymModule:LoginPage:showFirstLoginForm');
             }
 
+            $generatedHash = CypherManager::createCypher(64);
+
+            $app->userModel->insertLastLoginHashForIdUser($user->getId(), $generatedHash);
+            
+            $_SESSION['last_login_hash'] = $generatedHash;
             $_SESSION['id_current_user'] = $authResult;
             $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60))); // 1 day
 
             unset($_SESSION['login_in_process']);
 
             $app->redirect('UserModule:HomePage:showHomepage');
-            /*if(!is_null($user)) {
-                if(!is_null($user->getDefaultUserPageUrl())) {
-                    $app->redirect($user->getDefaultUserPageUrl());
-                } else {
-                    $app->redirect('UserModule:HomePage:showHomepage');
-                }
-            } else {
-                $app->redirect('UserModule:HomePage:showHomepage');
-            }*/
+        } else {
+            $app->flashMessage('You have entered wrong credentials. Please log in again.', 'warn');
+            $app->redirect('AnonymModule:LoginPage:showForm');
         }
     }
 

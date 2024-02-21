@@ -10,6 +10,42 @@ class RibbonRightsModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllEditableRibbonsForIdGroups(array $idGroups) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_ribbon'])
+            ->from('ribbon_group_rights')
+            ->where($qb->getColumnInValues('id_group', $idGroups))
+            ->andWhere('can_edit = 1')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getAllDeletableRibbonsForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_ribbon'])
+            ->from('ribbon_user_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('can_delete = 1')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getAllEditableRibbonsForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_ribbon'])
+            ->from('ribbon_user_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('can_edit = 1')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
     public function deleteAllRibonRightsForIdUser(int $idUser) {
         return $this->deleteByCol('id_user', $idUser, 'ribbon_user_rights');
     }
@@ -21,76 +57,58 @@ class RibbonRightsModel extends AModel {
     public function deleteAllGroupRibbonRights(int $idRibbon) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('ribbon_group_rights')
-                     ->where('id_ribbon=:id_ribbon')
-                     ->setParam(':id_ribbon', $idRibbon)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('ribbon_group_rights')
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function deleteAllUserRibbonRights(int $idRibbon) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('ribbon_user_rights')
-                     ->where('id_ribbon=:id_ribbon')
-                     ->setParam(':id_ribbon', $idRibbon)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('ribbon_user_rights')
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getRibbonRightsForIdGroup(int $idRibbon, int $idGroup) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('ribbon_group_rights')
-                  ->where('id_ribbon=:id_ribbon')
-                  ->andWhere('id_group=:id_group')
-                  ->setParams(array(
-                    ':id_ribbon' => $idRibbon,
-                    ':id_group' => $idGroup
-                  ))
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('ribbon_group_rights')
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->andWhere('id_group = ?', [$idGroup])
+            ->execute();
 
-        return $row;
+        return $qb->fetchAll();
     }
 
     public function getRibbonRightsForIdUser(int $idRibbon, int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('ribbon_user_rights')
-                  ->where('id_ribbon=:id_ribbon')
-                  ->andWhere('id_user=:id_user')
-                  ->setParams(array(
-                    ':id_ribbon' => $idRibbon,
-                    ':id_user' => $idUser
-                  ))
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('ribbon_user_rights')
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->andWhere('id_user = ?', [$idUser])
+            ->execute();
 
-        return $row;
+        return $qb->fetchAll();
     }
 
     public function updateGroupRights(int $idRibbon, int $idGroup, array $rights) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
+        $row = $qb->select(['*'])
                   ->from('ribbon_group_rights')
-                  ->where('id_ribbon=:id_ribbon')
-                  ->andWhere('id_group=:id_group')
-                  ->setParams(array(
-                    ':id_ribbon' => $idRibbon,
-                    ':id_group' => $idGroup
-                  ))
+                  ->where('id_ribbon = ?', [$idRibbon])
+                  ->andWhere('id_group = ?', [$idGroup])
                   ->execute()
-                  ->fetchSingle();
+                  ->fetch();
 
         if($row === FALSE || $row === NULL) {
             // insert new
@@ -100,32 +118,24 @@ class RibbonRightsModel extends AModel {
 
         // update
 
-        $qb = $this->updateExistingQb('ribbon_group_rights', $rights);
-        $qb ->where('id_ribbon=:id_ribbon')
-            ->andWhere('id_group=:id_group')
-            ->setParams(array(
-                ':id_ribbon' => $idRibbon,
-                ':id_group' => $idGroup
-            ));
+        $qb ->update('ribbon_group_rights')
+            ->set($rights)
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->andWhere('id_group = ?', [$idGroup])
+            ->execute();
 
-        $result = $qb->execute()->fetch();
-
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function updateUserRights(int $idRibbon, int $idUser, array $rights) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
+        $row = $qb->select(['*'])
                   ->from('ribbon_user_rights')
-                  ->where('id_ribbon=:id_ribbon')
-                  ->andWhere('id_user=:id_user')
-                  ->setParams(array(
-                    ':id_ribbon' => $idRibbon,
-                    ':id_user' => $idUser
-                  ))
+                  ->where('id_ribbon = ?', [$idRibbon])
+                  ->andWhere('id_user = ?', [$idUser])
                   ->execute()
-                  ->fetchSingle();
+                  ->fetch();
 
         if($row === FALSE || $row === NULL) {
             // insert new
@@ -135,43 +145,35 @@ class RibbonRightsModel extends AModel {
 
         // update
 
-        $qb = $this->updateExistingQb('ribbon_user_rights', $rights);
-        $qb ->where('id_ribbon=:id_ribbon')
-            ->andWhere('id_user=:id_user')
-            ->setParams(array(
-                ':id_ribbon' => $idRibbon,
-                ':id_user' => $idUser
-            ));
+        $qb ->update('ribbon_user_rights')
+            ->set($rights)
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->andWhere('id_user = ?', [$idUser])
+            ->execute();
 
-        $result = $qb->execute()->fetch();
-
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getGroupRibbonRightsForIdRibbon(int $idRibbon) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('ribbon_group_rights')
-                   ->where('id_ribbon=:id_ribbon')
-                   ->setParam(':id_ribbon', $idRibbon)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('ribbon_group_rights')
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->execute();
 
-        return $rows;
+        return $qb->fetchAll();
     }
 
     public function getUserRibbonRightsForIdRibbon(int $idRibbon) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('ribbon_user_rights')
-                   ->where('id_ribbon=:id_ribbon')
-                   ->setParam(':id_ribbon', $idRibbon)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('ribbon_user_rights')
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->execute();
 
-        return $rows;
+        return $qb->fetchAll();
     }
 
     public function insertAllGrantedRightsForUser(int $idRibbon, int $idUser) {
@@ -211,37 +213,33 @@ class RibbonRightsModel extends AModel {
     public function getRightValueForIdRibbonAndIdUser(int $idRibbon, int $idUser, string $colname) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb  ->select($colname)
-                    ->from('ribbon_user_rights')
-                    ->where('id_ribbon=:ribbon')
-                    ->andWhere('id_user=:user')
-                    ->setParams(array(
-                        ':ribbon' => $idRibbon,
-                        ':user' => $idUser
-                    ))
-                    ->execute()
-                    ->fetchSingle($colname)
-               ;
+        $qb ->select([$colname])
+            ->from('ribbon_user_rights')
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->andWhere('id_user = ?', [$idUser])
+            ->execute();
 
-        return $row ? true : false;
+        if($qb->fetch($colname) == '1') {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function getRightValueForIdRibbonAndIdGroup(int $idRibbon, int $idGroup, string $colname) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb  ->select($colname)
-                    ->from('ribbon_group_rights')
-                    ->where('id_ribbon=:ribbon')
-                    ->andWhere('id_group=:group')
-                    ->setParams(array(
-                        ':ribbon' => $idRibbon,
-                        ':group' => $idGroup
-                    ))
-                    ->execute()
-                    ->fetchSingle($colname)
-               ;
+        $qb ->select([$colname])
+            ->from('ribbon_group_rights')
+            ->where('id_ribbon = ?', [$idRibbon])
+            ->andWhere('id_group = ?', [$idGroup])
+            ->execute();
 
-        return $row ? true : false;
+        if($qb->fetch($colname) == '1') {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 

@@ -7,12 +7,14 @@ use DMS\Modules\IModule;
 use DMS\Core\DB\Database;
 use DMS\Authenticators\UserAuthenticator;
 use DMS\Authorizators\ActionAuthorizator;
+use DMS\Authorizators\ArchiveAuthorizator;
 use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Authorizators\RibbonAuthorizator;
+use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
@@ -24,6 +26,7 @@ use DMS\Constants\FlashMessageTypes;
 use DMS\Core\Logger\Logger;
 use DMS\Core\FileManager;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FilterModel;
@@ -47,6 +50,7 @@ use DMS\Modules\IPresenter;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Services\AService;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -64,14 +68,14 @@ class Application {
     public const URL_LOGOUT_PAGE = 'UserModule:UserLogout:logoutUser';
 
     public const SYSTEM_VERSION_MAJOR = 1;
-    public const SYSTEM_VERSION_MINOR = 7;
+    public const SYSTEM_VERSION_MINOR = 8;
     public const SYSTEM_VERSION_PATCH = 0;
     public const SYSTEM_VERSION_PATCH_DISPLAY = false;
 
-    public const SYSTEM_IS_BETA = false;
-    public const SYSTEM_DEBUG = false && self::SYSTEM_IS_BETA;
+    public const SYSTEM_IS_BETA = true;
+    public const SYSTEM_DEBUG = true && self::SYSTEM_IS_BETA;
     public const SYSTEM_VERSION = self::SYSTEM_VERSION_MAJOR . '.' . self::SYSTEM_VERSION_MINOR . (self::SYSTEM_VERSION_PATCH_DISPLAY ? ('.' . self::SYSTEM_VERSION_PATCH) : '') . (self::SYSTEM_IS_BETA ? '_beta' : '');
-    public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2023/01/17';
+    public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2024/02/21';
 
     //private array $cfg;
     public ?string $currentUrl;
@@ -111,6 +115,7 @@ class Application {
     public RibbonModel $ribbonModel;
     public RibbonRightsModel $ribbonRightsModel;
     public FilterModel $filterModel;
+    public ArchiveModel $archiveModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -119,6 +124,7 @@ class Application {
     public MetadataAuthorizator $metadataAuthorizator;
     public DocumentBulkActionAuthorizator $documentBulkActionAuthorizator;
     public RibbonAuthorizator $ribbonAuthorizator;
+    public ArchiveAuthorizator $archiveAuthorizator;
 
     public ProcessComponent $processComponent;
     public WidgetComponent $widgetComponent;
@@ -126,6 +132,7 @@ class Application {
     public NotificationComponent $notificationComponent;
     public ExternalEnumComponent $externalEnumComponent;
     public RibbonComponent $ribbonComponent;
+    public DocumentReportGeneratorComponent $documentReportGeneratorComponent;
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
@@ -146,7 +153,6 @@ class Application {
      * @param array $cfg The application configuration file contents
      */
     public function __construct(string $baseDir = '', bool $install = true) {
-        //$this->cfg = $cfg;
         $this->baseDir = $baseDir;
 
         $this->currentUrl = null;
@@ -183,6 +189,7 @@ class Application {
         $this->ribbonModel = new RibbonModel($this->conn, $this->logger);
         $this->ribbonRightsModel = new RibbonRightsModel($this->conn, $this->logger);
         $this->filterModel = new FilterModel($this->conn, $this->logger);
+        $this->archiveModel = new ArchiveModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -202,7 +209,8 @@ class Application {
             'notificationModel' => $this->notificationModel,
             'mailModel' => $this->mailModel,
             'ribbonModel' => $this->ribbonModel,
-            'filterModel' => $this->filterModel
+            'filterModel' => $this->filterModel,
+            'archiveModel' => $this->archiveModel
         );
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -222,24 +230,31 @@ class Application {
         $serviceManagerCacheManager = new CacheManager(AppConfiguration::getSerializeCache(), CacheCategories::SERVICE_CONFIG, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
         
         $this->notificationComponent = new NotificationComponent($this->conn, $this->logger, $this->notificationModel);
-        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->processModel, $this->groupModel, $this->groupUserModel, $this->documentModel, $this->notificationComponent, $this->processCommentModel);
-        $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel);
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->models, $this->notificationComponent);
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
         $this->ribbonComponent = new RibbonComponent($this->conn, $this->logger, $this->ribbonModel, $this->ribbonAuthorizator);
         
+        $this->archiveAuthorizator = new ArchiveAuthorizator($this->conn, $this->logger, $this->archiveModel, $this->user, $this->processComponent);
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel);
-
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
-
+        
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
-
+        $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager, $this->externalEnumComponent);
+        
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
+        
+        $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);
+        
         if($sessionDestroyed) {
             CacheManager::invalidateAllCache();
             $this->redirect(self::URL_LOGIN_PAGE);
+        }
+
+        if(AppConfiguration::getServiceAutoRun() && isset($_SESSION['id_current_user'])) {
+            $this->autoRunServices();
         }
     }
 
@@ -261,9 +276,7 @@ class Application {
         }
 
         if(!array_key_exists('id_ribbon', $newParams) && $url != self::URL_LOGIN_PAGE) {
-            if($this->currentIdRibbon != null) {
-                //$newParams['id_ribbon'] = $this->currentIdRibbon;
-            } else if(isset($_SESSION['id_current_ribbon'])) {
+            if(isset($_SESSION['id_current_ribbon'])) {
                 $newParams['id_ribbon'] = $this->currentIdRibbon;
             }
         }
@@ -294,6 +307,7 @@ class Application {
         $page .= $hashtag;
 
         header('Location: ' . $page);
+        die();
     }
 
     /**
@@ -311,19 +325,20 @@ class Application {
      * Renders the current page and saves it to the $pageContent variable
      */
     public function renderPage() {
-        // --- TOPPANEL ---
-
-        $toppanel = $this->renderToppanel();
-        $subpanel = $this->renderSubpanel();
-
-        // --- TOPPANEL ---
-
         if(is_null($this->currentUrl)) {
             die('Current URL is null!');
         }
 
-        // Module:Presenter:action
 
+        // --- PANELS ---
+
+        $toppanel = $this->renderToppanel();
+        $subpanel = $this->renderSubpanel();
+
+        // --- END OF PANELS ---
+
+        
+        // URL Link: Module:Presenter:action
         $parts = explode(':', $this->currentUrl);
         $module = $parts[0];
         $presenter = $parts[1];
@@ -362,6 +377,7 @@ class Application {
         // Load page body
         $pageBody = $module->currentPresenter->performAction($action);
 
+
         // --- PAGE CONTENT CREATION ---
 
         $this->pageContent = '';
@@ -380,11 +396,17 @@ class Application {
 
         // --- END OF PAGE CONTENT CREATION ---
 
+
         if(str_contains($action, 'show')) {
             $this->clearFlashMessage();
         }
     }
 
+    /**
+     * Renders a flash message
+     * 
+     * @return void
+     */
     public function renderFlashMessage() {
         if($this->flashMessage != null) {
             $this->pageContent .= $this->flashMessage;
@@ -401,7 +423,7 @@ class Application {
             $code .= '<div class="col-md">';
             $code .= $message;
             $code .= '</div>';
-            $code .= '<div class="col-md" id="right">';
+            $code .= '<div class="col-md-1" id="right">';
             $code .= '<a style="cursor: pointer" onclick="hideFlashMessage(\'' . $index . '\')">x</a>';
             $code .= '</div>';
             $code .= '</div>';
@@ -440,6 +462,11 @@ class Application {
         return $panel;
     }
 
+    /**
+     * Renders the subpanel
+     * 
+     * @return string HTML code of the subpanel
+     */
     public function renderSubpanel() {
         $panel = Panels::createSubpanel();
 
@@ -508,24 +535,11 @@ class Application {
      * 
      * @param bool $clearFromSession If the flash message should be removed entirely
      */
-    public function clearFlashMessage(bool $clearFromSession = true) {
+    public function clearFlashMessage() {
         $this->flashMessage = null;
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::FLASH_MESSAGES);
         $cm->invalidateCache();
-    }
-
-    /**
-     * Returns the grid size config parameter as defined in the config file
-     * 
-     * @return int Grid size
-     */
-    public function getGridSize() {
-        return AppConfiguration::getGridSize();
-    }
-
-    public function getGridUseAjax() {
-        return AppConfiguration::getGridUseAjax();
     }
 
     /**
@@ -621,6 +635,19 @@ class Application {
             file_put_contents('app/core/install', 'installed');
 
             $sessionDestroyed = session_destroy();
+        }
+    }
+
+    /**
+     * Automatically runs scheduled services
+     */
+    private function autoRunServices() {
+        foreach($this->serviceManager->services as $displayName => $service) {
+            $nextRunDate = $this->serviceManager->getNextRunDateForService($service->name);
+
+            if($nextRunDate !== NULL && time() > strtotime($nextRunDate)) {
+                $service->run();
+            }
         }
     }
 }

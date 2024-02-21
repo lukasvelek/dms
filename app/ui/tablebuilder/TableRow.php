@@ -2,6 +2,8 @@
 
 namespace DMS\UI\TableBuilder;
 
+use DMS\UI\IBuildable;
+
 /**
  * TableROw class represents a table row
  * 

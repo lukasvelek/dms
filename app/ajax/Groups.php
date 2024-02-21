@@ -1,8 +1,9 @@
 <?php
 
 use DMS\Constants\UserActionRights;
+use DMS\Entities\Group;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
 
@@ -29,105 +30,69 @@ function search() {
         $page = (int)(htmlspecialchars($_GET['page']));
     }
 
-    $tb = TableBuilder::getTemporaryObject();
+    $notDeletableIdGroups = array(1, 2);
 
-    $headers = array(
-        'Actions',
-        'Name',
-        'Code'
-    );
-
-    $headerRow = null;
-
-    $groups = [];
+    $groupCallback = null;
     if($gridUseFastLoad) {
         $page -= 1;
 
         $firstIdGroupOnPage = $groupModel->getFirstIdGroupOnAGridPage(($page * $gridSize));
 
-        $groups = $groupModel->getAllGroupsFromId($firstIdGroupOnPage, $gridSize);
+        $groupCallback = function() use ($groupModel, $firstIdGroupOnPage, $gridSize) {
+            return $groupModel->getAllGroupsFromId($firstIdGroupOnPage, $gridSize);
+        };
     } else {
-        $groups = $groupModel->getAllGroups($gridSize);
+        $groupCallback = function() use ($groupModel, $gridSize) {
+            return $groupModel->getAllGroups($gridSize);
+        };
     }
 
-    $notDeletableIdGroups = array(1, 2);
+    $canViewGroupUsers = $actionAuthorizator->checkActionRight(UserActionRights::VIEW_GROUP_USERS, null, false);
+    $canManagerGroupUsers = $actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false);
+    $canDeleteGroups = $actionAuthorizator->checkActionRight(UserActionRights::DELETE_GROUP, null, false);
 
-    if(empty($groups)) {
-        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-    } else {
-        foreach($groups as $group) {
-            $actionLinks = [];
+    $gb = new GridBuilder();
 
-            if($actionAuthorizator->checkActionRight(UserActionRights::VIEW_GROUP_USERS, null, false)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users');
-            } else {
-                $actionLinks[] = '-';
-            }
-
-            if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'actions'), 'Action rights');
-            } else {
-                $actionLinks[] = '-';
-            }
-
-            if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'bulk_actions'), 'Bulk action rights');
-            } else {
-                $actionLinks[] = '-';
-            }
-
-            if($actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS, null, false)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'panels'), 'Panel rights');
-            } else {
-                $actionLinks[] = '-';
-            }
-
-            if($actionAuthorizator->checkActionRight(UserActionRights::DELETE_GROUP, null, false) &&
-               !in_array($group->getId(), $notDeletableIdGroups)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteGroup', 'id' => $group->getId()), 'Delete');
-            } else {
-                $actionLinks[] = '-';
-            }
-
-            if(is_null($headerRow)) {
-                $row = $tb->createRow();
-
-                foreach($headers as $header) {
-                    $col = $tb->createCol()->setText($header)
-                                           ->setBold();
-
-                    if($header == 'Actions') {
-                        $col->setColspan(count($actionLinks));
-                    }
-
-                    $row->addCol($col);
-                }
-
-                $headerRow = $row;
-                
-                $tb->addRow($row);
-            }
-
-            $groupRow = $tb->createRow();
-
-            foreach($actionLinks as $actionLink) {
-                $groupRow->addCol($tb->createCol()->setText($actionLink));
-            }
-
-            $groupData = array(
-                $group->getName() ?? '-',
-                $group->getCode() ?? '-'
-            );
-
-            foreach($groupData as $gd) {
-                $groupRow->addCol($tb->createCol()->setText($gd));
-            }
-
-            $tb->addRow($groupRow);
+    $gb->addColumns(['name' => 'Name', 'code' => 'Code']);
+    $gb->addAction(function(Group $group) use ($canViewGroupUsers) {
+        if($canViewGroupUsers) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users');
+        } else {
+            return '-';
         }
-    }
+    });
+    $gb->addAction(function(Group $group) use ($canManagerGroupUsers) {
+        if($canManagerGroupUsers) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'actions'), 'Action rights');
+        } else {
+            return '-';
+        }
+    });
+    $gb->addAction(function(Group $group) use ($canManagerGroupUsers) {
+        if($canManagerGroupUsers) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'bulk_actions'), 'Bulk action rights');
+        } else {
+            return '-';
+        }
+    });
+    $gb->addAction(function(Group $group) use ($canManagerGroupUsers) {
+        if($canManagerGroupUsers) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'panels'), 'Panel rights');
+        } else {
+            return '-';
+        }
+    });
+    $gb->addAction(function(Group $group) use ($canDeleteGroups, $notDeletableIdGroups) {
+        if($canDeleteGroups &&
+           !in_array($group->getId(), $notDeletableIdGroups)) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteGroup', 'id' => $group->getId()), 'Delete');
+        } else {
+            return '-';
+        }
+    });
+    $gb->addDataSourceCallback($groupCallback);
 
-    echo $tb->build();
+    echo $gb->build();
 }
 
 ?>

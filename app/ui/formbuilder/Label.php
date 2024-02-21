@@ -2,6 +2,8 @@
 
 namespace DMS\UI\FormBuilder;
 
+use DMS\UI\IBuildable;
+
 /**
  * Label form element displays text to the user
  * 

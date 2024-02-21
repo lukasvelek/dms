@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Document after shredding action constants
+ * 
+ * @author Lukas Velek
+ */
 class DocumentAfterShredActions {
     public const DELETE = 'delete';
     public const SHOW_AS_SHREDDED = 'showAsShredded';

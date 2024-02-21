@@ -21,25 +21,22 @@ class MailModel extends AModel {
     public function getMailQueue() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('mail_queue')
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('mail_queue')
+            ->execute();
 
-        return $rows;
+        return $qb->fetchAll();
     }
 
     public function deleteFromQueue(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('mail_queue')
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('mail_queue')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 }
 

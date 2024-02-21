@@ -2,6 +2,8 @@
 
 namespace DMS\UI\FormBuilder;
 
+use DMS\UI\IBuildable;
+
 /**
  * Text area form element allows users to input long texts in forms,
  * 

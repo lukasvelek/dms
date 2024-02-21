@@ -13,6 +13,11 @@ use DMS\Models\DocumentModel;
 use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
 
+/**
+ * Shredding process component
+ * 
+ * @author Lukas Velek
+ */
 class ShreddingProcess implements IProcessComponent {
     private Process $process;
     private Document $document;
@@ -23,7 +28,22 @@ class ShreddingProcess implements IProcessComponent {
     private DocumentCommentModel $documentCommentModel;
     private ProcessCommentModel $processCommentModel;
 
-    public function __construct(int $idProcess, ProcessModel $processModel, DocumentModel $documentModel, ProcessComponent $processComponent, DocumentCommentModel $documentCommentModel, ProcessCommentModel $processCommentModel) {
+    /**
+     * Class constructor
+     * 
+     * @param int $idProcess Process ID
+     * @param ProcessModel $processModel ProcessModel instance
+     * @param DocumentModel $documentModel DocumentModel instance
+     * @param ProcessComponent $processComponent ProcessComponent instance
+     * @param DocumentCommentModel $documentCommentModel DocumentCommentModel instance
+     * @param ProcessCommentModel $processCommentModel ProcessCommentModel instance
+     */
+    public function __construct(int $idProcess, 
+                                ProcessModel $processModel,
+                                DocumentModel $documentModel,
+                                ProcessComponent $processComponent,
+                                DocumentCommentModel $documentCommentModel,
+                                ProcessCommentModel $processCommentModel) {
         $this->processModel = $processModel;
         $this->documentModel = $documentModel;
         $this->processComponent = $processComponent;
@@ -36,13 +56,22 @@ class ShreddingProcess implements IProcessComponent {
         $this->idAuthor = $this->process->getIdAuthor();
     }
 
+    /**
+     * This method performs the process actions.
+     * It ends the process, updates the document, performs the after shredding action and removes document sharings
+     * 
+     * @return true Returns true
+     */
     public function work() {
         $this->processComponent->endProcess($this->process->getId());
-        $this->documentModel->updateDocument($this->document->getId(), array(
-            'shredding_status' => DocumentShreddingStatus::SHREDDED,
-            'status' => DocumentStatus::SHREDDED
-        ));
-        $this->documentModel->nullIdOfficer($this->document->getId());
+
+        if($this->document->getAfterShredAction() !== DocumentAfterShredActions::TOTAL_DELETE) {
+            $this->documentModel->updateDocument($this->document->getId(), array(
+                'shredding_status' => DocumentShreddingStatus::SHREDDED,
+                'status' => DocumentStatus::SHREDDED
+            ));
+            $this->documentModel->nullIdOfficer($this->document->getId());
+        }
 
         switch($this->document->getAfterShredAction()) {
             case DocumentAfterShredActions::DELETE:
@@ -65,10 +94,21 @@ class ShreddingProcess implements IProcessComponent {
         return true;
     }
 
+    /**
+     * Returns the process workflow.
+     * This process has no workflow.
+     * 
+     * @return null
+     */
     public function getWorkflow() {
         return null;
     }
 
+    /**
+     * Returns the process' author ID
+     * 
+     * @return int Author ID
+     */
     public function getIdAuthor() {
         return $this->idAuthor;
     }

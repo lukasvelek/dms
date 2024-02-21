@@ -5,6 +5,7 @@ use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
+use DMS\Panels\Panels;
 
 session_start();
 
@@ -19,11 +20,13 @@ if(isset($_GET['page'])) {
 }
 
 if(isset($_SESSION['id_current_user'])) {
-    if(strtotime($_SESSION['session_end_date']) < time()) {
+    if(strtotime($_SESSION['session_end_date']) < time() ||
+       !isset($_SESSION['last_login_hash'])) {
         unset($_SESSION['id_current_user']);
         unset($_SESSION['session_end_date']);
+        unset($_SESSION['last_login_hash']);
 
-        $app->flashMessage('You have exceeded login time. Please log in again.', FlashMessageTypes::ERROR);
+        $app->flashMessage('Your session has been terminated. Please login again.', 'warn');
 
         if($app->currentUrl != $app::URL_LOGIN_PAGE) {
             $app->redirect($app::URL_LOGIN_PAGE);
@@ -43,11 +46,41 @@ if(isset($_SESSION['id_current_user'])) {
             $user = $cacheUser;
         }
 
-        $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
+        if(isset($_SESSION['last_login_hash'])) {
+            $loginHash = $app->userModel->getLastLoginHashForIdUser($_SESSION['id_current_user']);
+
+            if($loginHash === NULL) {
+                if($app->currentUrl != $app::URL_LOGIN_PAGE) {
+                    $app->flashMessage('Auto authentication failed, please log in again.', 'warn');
+                    $app->redirect($app::URL_LOGIN_PAGE);
+                }
+            }
+
+            if($_SESSION['last_login_hash'] == $loginHash) { // ok
+                $app->logger->info('Successfully authenticated user #' . $user->getId());
+                $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
+            } else { // hash mismatch
+                $app->logger->warn('Login hash mismatch for user #' . $user->getId() . '. Requesting relogin!');
+                $app->flashMessage('Auto authentication failed, please log in again.', 'warn');
+                unset($_SESSION['last_login_hash']);
+                unset($_SESSION['id_current_user']);
+                unset($_SESSION['session_end_date']);
+
+                if($app->currentUrl != $app::URL_LOGIN_PAGE) {
+                    $app->redirect($app::URL_LOGIN_PAGE);
+                }
+            }
+        } else { // user has not been logged in yet
+            if($app->currentUrl != $app::URL_LOGIN_PAGE) {
+                $app->flashMessage('You have to login in order to be use the DMS', 'warn');
+                $app->redirect($app::URL_LOGIN_PAGE);
+            }
+        }
     }
 } else {
     if(!isset($_SESSION['login_in_process'])) {
         if($app->currentUrl != $app::URL_LOGIN_PAGE && $app->currentUrl != 'AnonymModule:LoginPage:showFirstLoginForm') {
+            $app->flashMessage('You have to login in order to be use the DMS', 'warn');
             $app->redirect($app::URL_LOGIN_PAGE);
         }
     }
@@ -71,6 +104,15 @@ if(isset($_GET['id_ribbon']) && $_GET['id_ribbon'] != '') {
     $_SESSION['id_current_ribbon'] = $app->currentIdRibbon;
 } else if(isset($_SESSION['id_current_ribbon'])) {
     $app->currentIdRibbon = $_SESSION['id_current_ribbon'];
+}
+
+if($app->user !== NULL) {
+    $rcm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
+
+    if($rcm->loadRibbons() === NULL) {
+        // generate ribbons to cache
+        Panels::generateRibbons($app->ribbonAuthorizator, $app->ribbonModel, $app->user);
+    }
 }
 
 $app->loadPages();

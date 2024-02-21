@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\ArchiveType;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
@@ -12,12 +13,14 @@ use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
+use DMS\Entities\Document;
 use DMS\Entities\Folder;
+use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Documents extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -27,6 +30,26 @@ class Documents extends APresenter {
 
         $this->getActionNamesFromClass($this);
     }
+    
+    protected function processMoveToArchiveDocumentFormBulkAction() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['ids', 'archive_document'], true, ['page' => 'UserModule:Documents:showAll']);
+
+        $ids = $this->get('ids', false);
+        $archiveDocument = $this->post('archive_document');
+
+        if(!is_array($ids)) {
+            $ids = [$ids];
+        }
+
+        foreach($ids as $id) {
+            echo $app->documentModel->moveToArchiveDocument($id, $archiveDocument);
+        }
+
+        $app->flashMessage('Documents moved to selected archive document', 'success');
+        $app->redirect('UserModule:Documents:showAll');
+    }
 
     protected function showDocumentsCustomFilter() {
         global $app;
@@ -35,7 +58,7 @@ class Documents extends APresenter {
         
         $app->flashMessageIfNotIsset(array('id_filter'));
 
-        $idFilter = htmlspecialchars($_GET['id_filter']);
+        $idFilter = $this->get('id_filter');
         
         $data = array(
             '$PAGE_TITLE$' => 'Documents',
@@ -60,7 +83,7 @@ class Documents extends APresenter {
 
         $app->flashMessageIfNotIsset(['hash']);
 
-        $filename = 'cache/temp_' . htmlspecialchars($_GET['hash']) . '.csv';
+        $filename = 'cache/temp_' . $this->get('hash') . '.csv';
         $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
 
         copy($filename, $downloadFilename);
@@ -84,48 +107,30 @@ class Documents extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_folder', 'filter', 'limit_range', 'order', 'total_count']);
 
-        $idFolder = htmlspecialchars($_GET['id_folder']);
-        $totalCount = htmlspecialchars($_GET['total_count']);
-        $filter = htmlspecialchars($_POST['filter']);
-        $limit = htmlspecialchars($_POST['limit_range']);
-        $order = htmlspecialchars($_POST['order']);
-
-        $isCondition = false;
+        $idFolder = $this->get('id_folder');
+        $totalCount = $this->get('total_count');
+        $filter = $this->post('filter');
+        $limit = $this->post('limit_range');
+        $order = $this->post('order');
 
         $qb = $app->documentModel->composeQueryStandardDocuments(false);
 
         if($idFolder > 0) {
-            $qb->where('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
-            $isCondition = true;
+            $qb->where('id_folder = ?', [$idFolder]);
         }
 
         if(!is_numeric($filter)) {
             switch($filter) {
                 case 'shredded':
-                    if($isCondition) {
-                        $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
-                    } else {
-                        $qb->where('status=:status')->setParam(':status', DocumentStatus::SHREDDED);
-                        $isCondition = true;
-                    }
+                    $qb->andWhere('status = ?', [DocumentStatus::SHREDDED]);
                     break;
     
                 case 'waitingForArchivation':
-                    if($isCondition) {
-                        $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
-                    } else {
-                        $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
-                        $isCondition = true;
-                    }
+                    $qb->andWhere('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
                     break;
     
                 case 'archived':
-                    if($isCondition) {
-                        $qb->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
-                    } else {
-                        $qb->where('status=:status')->setParam(':status', DocumentStatus::ARCHIVED);
-                        $isCondition = true;
-                    }
+                    $qb->andWhere('status = ?', [DocumentStatus::ARCHIVED]);
                     break;
     
                 default:
@@ -157,30 +162,37 @@ class Documents extends APresenter {
         }
 
         $rows = null;
-        $app->logger->logFunction(function() use ($app, &$rows, $qb) {
-            $rows = $qb->execute()->fetch();
+        $app->logger->logFunction(function() use (&$rows, $qb) {
+            $rows = $qb->execute()->fetchAll();
         }, __METHOD__);
 
         if($rows === FALSE || $rows === NULL) {
             die('Error!');
         }
 
-        $fileRow = array(
-            'id;id_folder;name;date_created' . "\r\n"
-        );
+        if($rows->num_rows > 1000) {
+            // use background export
+            $data = [
+                'id_user' => $app->user->getId(),
+                'sql_string' => $qb->getSQL()
+            ];
 
-        $app->logger->logFunction(function() use ($app, $rows, &$fileRow) {
-            foreach($rows as $row) {
-                $fileRow[] = $row['id'] . ';' . ($row['id_folder'] ?? '-') . ';' . $row['name'] . ';' . $row['date_created'] . "\r\n";
-            }
-        }, __METHOD__);
+            $app->documentModel->insertDocumentReportQueueEntry($data);
+
+            $app->flashMessage('You requested to export more than 1000 entries. This operation will be done by background service. You will be able to find your export ' . LinkBuilder::createAdvLink(['page' => 'UserModule:DocumentReports:showAll'], 'here') . '.');
+            $app->redirect('UserModule:Documents:showAll');
+        }
 
         $hash = CypherManager::createCypher(32);
         $filename = 'temp_' . $hash . '.csv';
 
-        $app->fileManager->write('cache/' . $filename, $fileRow, false);
+        $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $filename);
 
-        $filename = 'cache/temp_' . $hash . '.csv';
+        if($result === FALSE) {
+            die('ERROR! Documents presenter: line 205');
+        }
+
+        $filename = $result;
         $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
 
         copy($filename, $downloadFilename);
@@ -192,7 +204,6 @@ class Documents extends APresenter {
         readfile($downloadFilename);
 
         unlink($filename);
-        unlink($downloadFilename);
     }
 
     protected function showReportForm() {
@@ -223,7 +234,7 @@ class Documents extends APresenter {
         }
         
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $documentGrid = '';
@@ -245,7 +256,7 @@ class Documents extends APresenter {
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => '',
-            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction' . (is_null($idFolder) ? ('&id_folder=' . $idFolder) : ''),
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
@@ -273,14 +284,14 @@ class Documents extends APresenter {
         }
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
             $folderName = $folder->getName();
             $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
         }
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $documentGrid = '';
@@ -289,11 +300,11 @@ class Documents extends APresenter {
         $filter = null;
 
         if(isset($_GET['filter'])) {
-            $filter = htmlspecialchars($_GET['filter']);
+            $filter = $this->get('filter');
         }
 
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter, $page, $app) {
-            if($app->getGridUseAjax()) {
+            if(AppConfiguration::getGridUseAjax()) {
                 $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $filter, $page);
             } else{
                 $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $filter, $page);
@@ -312,16 +323,13 @@ class Documents extends APresenter {
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => '',
-            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction' . (is_null($idFolder) ? ('&id_folder=' . $idFolder) : ''),
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
             '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
+            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder, 'showFiltered')
         );
-
-        //$this->subpanel = Panels::createDocumentsPanel();
-        //$this->drawSubpanel = true;
 
         $this->templateManager->fill($data, $template);
 
@@ -343,22 +351,27 @@ class Documents extends APresenter {
         }
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
-            $folder = $app->folderModel->getFolderById($idFolder);
-            $folderName = $folder->getName();
-            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+            $idFolder = $this->get('id_folder');
+
+            if($idFolder > -1) {
+                $folder = $app->folderModel->getFolderById($idFolder);
+                $folderName = $folder->getName();
+                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+            } else {
+                $idFolder = null;
+            }
         }
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $documentGrid = '';
         $folderList = '';
         
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $page, $app) {
-            if($app->getGridUseAjax()) {
-                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $page);
+            if(AppConfiguration::getGridUseAjax()) {
+                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, '', $page);
             } else{
                 $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $page);
             }
@@ -378,7 +391,7 @@ class Documents extends APresenter {
             '$PAGE_TITLE$' => 'Documents',
             '$DOCUMENT_GRID$' => $documentGrid,
             '$BULK_ACTION_CONTROLLER$' => '',
-            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction',
+            '$FORM_ACTION$' => '?page=UserModule:Documents:performBulkAction' . (is_null($idFolder) ? ('&id_folder=' . $idFolder) : ''),
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
@@ -401,278 +414,71 @@ class Documents extends APresenter {
         return $template;
     }
 
-    private function internalCreateStandardDocumentGrid(?int $idFolder, ?string $filter, int $page = 1, ?string $query = null) {
+    private function internalCreateStandardDocumentGrid(?int $idFolder, ?string $filter, int $page = 1) {
         global $app;
+
+        $documentModel = $app->documentModel;
+        $userModel = $app->userModel;
+        $folderModel = $app->folderModel;
 
         $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
         $fcm = CacheManager::getTemporaryObject(CacheCategories::FOLDERS);
 
-        if($query != null) {
-            $query = str_replace('_', '%', $query);
-
-            $tb = TableBuilder::getTemporaryObject();
-
-            $tb->showRowBorder();
-
-            $headers = array(
-                '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
-                'Actions',
-                'Name',
-                'Author',
-                'Status',
-                'Folder'
-            );
-
-            $headerRow = null;
-
-            if($idFolder == 'null') {
+        if($idFolder == 'null') {
             $idFolder = null;
-            }
+        }
 
-            $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($app->metadataModel->getMetadataByName('status', 'documents')->getId());
-            
-            $documents = $app->documentModel->getDocumentsForName($query, $idFolder, $filter);
-
-            if(empty($documents)) {
-                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-            } else {
-                foreach($documents as $document) {
-                    $actionLinks = [];
-
-                    if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION)) {
-                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
-                    } else {
-                        $actionLinks[] = '-';
-                    }
-
-                    if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT)) {
-                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
-                    } else {
-                        $actionLinks[] = '-';
-                    }
-
-                    $shared = false;
-
-                    if(!$shared && $app->actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
-                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
-                    } else {
-                        $actionLinks[] = '-';
-                    }
-
-                    if(is_null($headerRow)) {
-                        $row = $tb->createRow();
-
-                        foreach($headers as $header) {
-                            $col = $tb->createCol()->setText($header)
-                                            ->setBold();
-
-                            if($header == 'Actions') {
-                                $col->setColspan(count($actionLinks));
-                            }
-
-                            $row->addCol($col);
-                        }
-
-                        $headerRow = $row;
-
-                        $tb->addRow($row);
-                    }
-
-                    $docuRow = $tb->createRow();
-
-                    $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">'));
-
-                    foreach($actionLinks as $actionLink) {
-                        $docuRow->addCol($tb->createCol()->setText($actionLink));
-                    }
-
-                    $author = null;
-
-                    $cacheAuthor = $ucm->loadUserByIdFromCache($document->getIdAuthor());
-
-                    if(is_null($cacheAuthor)) {
-                        $author = $app->userModel->getUserById($document->getIdAuthor());
-                        $ucm->saveUserToCache($author);
-                    } else {
-                        $author = $cacheAuthor;
-                    }
-
-                    $docuRow->addCol($tb->createCol()->setText($document->getName()))
-                            ->addCol($tb->createCol()->setText($author->getFullname()))
-                    ;
-
-                    foreach($dbStatuses as $dbs) {
-                        if($dbs->getValue() == $document->getStatus()) {
-                            $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
-                        }
-                    }
-
-                    $folderName = '-';
-
-                    if(!is_null($document->getIdFolder())) {
-                        $folder = null;
-
-                        $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
-
-                        if(is_null($cacheFolder)) {
-                            $folder = $app->folderModel->getFolderById($document->getIdFolder());
-                            $fcm->saveFolderToCache($folder);
-                        } else {
-                            $folder = $cacheFolder;
-                            $folderName = $folder->getName();
-                        }
-
-                        $docuRow->addCol($tb->createCol()->setText($folderName));
-                    }else{
-                        $docuRow->addCol($tb->createCol()->setText('-'));
-                    }
-                    
-                    $tb->addRow($docuRow);
-                }
-            }
-
-            return $tb->build();
-        } else {
-            $tb = TableBuilder::getTemporaryObject();
-
-            $tb->showRowBorder();
-
-            $headers = array(
-                '<input type="checkbox" id="select-all" onchange="selectAllDocumentEntries()">',
-                'Actions',
-                'Name',
-                'Author',
-                'Status',
-                'Folder'
-            );
-        
-            $headerRow = null;
-        
-            if($idFolder == 'null') {
-                $idFolder = null;
-            }
-
-            $dbStatuses = $app->metadataModel->getAllValuesForIdMetadata($app->metadataModel->getMetadataByName('status', 'documents')->getId());
-
+        $dataSourceCallback = function() use ($documentModel, $idFolder, $filter, $page) {
             if(AppConfiguration::getGridUseFastLoad()) {
                 $page -= 1;
 
-                $firstIdDocumentOnPage = $app->documentModel->getFirstIdDocumentOnAGridPage(($page * $app->getGridSize()));
+                $firstIdDocumentOnPage = $documentModel->getFirstIdDocumentOnAGridPage(($page * AppConfiguration::getGridSize()));
 
-                $documents = $app->documentModel->getStandardDocumentsFromId($firstIdDocumentOnPage, $idFolder, $filter, $app->getGridSize());
+                return $documentModel->getStandardDocumentsFromId($firstIdDocumentOnPage, $idFolder, $filter, AppConfiguration::getGridSize());
             } else {
-                $documents = $app->documentModel->getStandardDocuments($idFolder, $filter, ($page * $app->getGridSize()));
+                return $documentModel->getStandardDocuments($idFolder, $filter, ($page * AppConfiguration::getGridSize()));
             }
-        
-            if(empty($documents)) {
-                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
+        };
+
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder']);
+        $gb->addOnColumnRender('idAuthor', function(Document $document) use ($ucm, $userModel) {
+            $user = $ucm->loadUserByIdFromCache($document->getIdAuthor());
+
+            if(is_null($user)) {
+                $user = $userModel->getUserById($document->getIdAuthor());
+
+                $ucm->saveUserToCache($user);
+            }
+
+            return $user->getFullname();
+        });
+        $gb->addOnColumnRender('idFolder', function(Document $document) use ($fcm, $folderModel) {
+            if(is_null($document->getIdFolder())) {
+                return '-';
             } else {
-                $skip = 0;
-                $maxSkip = ($page - 1) * $app->getGridSize();
+                $folder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
 
-                foreach($documents as $document) {
-                    if(!AppConfiguration::getGridUseFastLoad()) {
-                        if($skip < $maxSkip) {
-                            $skip++;
-                            continue;
-                        }
-                    }
+                if(is_null($folder)) {
+                    $folder = $folderModel->getFolderById($document->getIdFolder());
 
-                    $actionLinks = [];
-
-                    if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_DOCUMENT_INFORMATION, null, false)) {
-                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), 'Information');
-                    } else {
-                        $actionLinks[] = '-';
-                    }
-
-                    if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_DOCUMENT, null, false)) {
-                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()), 'Edit');
-                    } else {
-                        $actionLinks[] = '-';
-                    }
-
-                    $shared = false;
-
-                    if(!$shared && $app->actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false)) {
-                        $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()), 'Share');
-                    } else {
-                        $actionLinks[] = '-';
-                    }
-        
-                    if(is_null($headerRow)) {
-                        $row = $tb->createRow();
-        
-                        foreach($headers as $header) {
-                            $col = $tb->createCol()->setText($header)
-                                                ->setBold();
-        
-                            if($header == 'Actions') {
-                                $col->setColspan(count($actionLinks));
-                            }
-        
-                            $row->addCol($col);
-                        }
-        
-                        $headerRow = $row;
-        
-                        $tb->addRow($row);
-                    }
-        
-                    $docuRow = $tb->createRow();
-                    $docuRow->setId($document->getId());
-        
-                    $docuRow->addCol($tb->createCol()->setText('<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">'));
-                    
-                    foreach($actionLinks as $actionLink) {
-                        $docuRow->addCol($tb->createCol()->setText($actionLink));
-                    }
-
-                    $author = null;
-
-                    $cacheAuthor = $ucm->loadUserByIdFromCache($document->getIdAuthor());
-
-                    if(is_null($cacheAuthor)) {
-                        $author = $app->userModel->getUserById($document->getIdAuthor());
-                        $ucm->saveUserToCache($author);
-                    } else {
-                        $author = $cacheAuthor;
-                    }
-
-                    $docuRow->addCol($tb->createCol()->setText($document->getName()))
-                            ->addCol($tb->createCol()->setText($author->getFullname()))
-                    ;
-        
-                    foreach($dbStatuses as $dbs) {
-                        if($dbs->getValue() == $document->getStatus()) {
-                            $docuRow->addCol($tb->createCol()->setText($dbs->getName()));
-                        }
-                    }
-        
-                    $folderName = '-';
-
-                    if(!is_null($document->getIdFolder())) {
-                        $folder = null;
-
-                        $cacheFolder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
-
-                        if(is_null($cacheFolder)) {
-                            $folder = $app->folderModel->getFolderById($document->getIdFolder());
-                            $fcm->saveFolderToCache($folder);
-                        } else {
-                            $folder = $cacheFolder;
-                            $folderName = $folder->getName();
-                        }
-                    }
-        
-                    $docuRow->addCol($tb->createCol()->setText($folderName));
-                        
-                    $tb->addRow($docuRow);
+                    $fcm->saveFolderToCache($folder);
                 }
+
+                return $folder->getName();
             }
-        
-            return $tb->build();
-        }
+        });
+        $gb->addOnColumnRender('status', function(Document $document) {
+            return DocumentStatus::$texts[$document->getStatus()];
+        });
+        $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries()');
+        $gb->addRowCheckbox(function(Document $document) {
+            return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">';
+        });
+        $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
     }
 
     private function internalCreateStandardDocumentGridAjax(?int $idFolder, ?string $filter, int $page = 1) {
@@ -695,15 +501,25 @@ class Documents extends APresenter {
 
         $app->flashMessageIfNotIsset(['select']);
 
-        $ids = $_GET['select'];
-        $action = htmlspecialchars($_GET['action']);
+        $ids = $this->get('select', false);
+        $action = $this->get('action');
+        
+        $idFolder = -1;
+        if(isset($_GET['id_folder'])) {
+            $idFolder = $this->get('id_folder');
+        }
+
+        $filter = null;
+        if(isset($_GET['filter'])) {
+            $filter = $this->get('filter');
+        }
 
         if($action == '-') {
-            $app->redirect('UserModule:Documents:showAll');
+            $app->redirect('UserModule:Documents:showAll', ['id_folder' => $idFolder]);
         }
 
         if(method_exists($this, '_' . $action)) {
-            $this->{'_' . $action}($ids);
+            return $this->{'_' . $action}($ids, $idFolder, $filter);
         } else {
             die('Method does not exist!');
         }
@@ -717,7 +533,7 @@ class Documents extends APresenter {
         $idFolder = null;
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
         }
 
         $data = array(
@@ -870,6 +686,13 @@ class Documents extends APresenter {
                     $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
     
                     $options = [];
+
+                    $options[] = [
+                        'value' => 'null',
+                        'text' => '-'
+                    ];
+
+                    $hasDefault = false;
                     foreach($values as $v) {
                         $option = array(
                             'value' => $v->getValue(),
@@ -878,9 +701,14 @@ class Documents extends APresenter {
 
                         if($v->getIsDefault()) {
                             $option['selected'] = 'selected';
+                            $hasDefault = true;
                         }
                         
                         $options[] = $option;
+                    }
+
+                    if($hasDefault === FALSE) {
+                        $options[0]['selected'] = 'selected';
                     }
     
                     $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength(), 'readonly' => $cm->getIsReadonly());
@@ -889,14 +717,16 @@ class Documents extends APresenter {
         }
 
         $fb = FormBuilder::getTemporaryObject();
+        
+        $name = $fb->createInput()  ->setType('text')
+                                    ->setName('name')
+                                    ->require();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')->setEncType()
 
             ->addElement($fb->createLabel()->setText('Document name')
                                            ->setFor('name'))
-            ->addElement($fb->createInput()->setType('text')
-                                           ->setName('name')
-                                           ->require())
+            ->addElement($name)
 
             ->addElement($fb->createLabel()->setText('Manager')
                                            ->setFor('manager'))
@@ -1009,16 +839,16 @@ class Documents extends APresenter {
 
         $data = [];
 
-        $idGroup = htmlspecialchars($_POST['group']);
-        $idFolder = htmlspecialchars($_POST['folder']);
+        $idGroup = $this->post('group');
+        $idFolder = $this->post('folder');
         
-        $data['name'] = htmlspecialchars($_POST['name']);
-        $data['id_manager'] = htmlspecialchars($_POST['manager']);
-        $data['status'] = htmlspecialchars($_POST['status']);
-        $data['id_group'] = htmlspecialchars($idGroup);
+        $data['name'] = $this->post('name');
+        $data['id_manager'] = $this->post('manager');
+        $data['status'] = $this->post('status');
+        $data['id_group'] = $idGroup;
         $data['id_author'] = $app->user->getId();
-        $data['shred_year'] = htmlspecialchars($_POST['shred_year']);
-        $data['after_shred_action'] = htmlspecialchars($_POST['after_shred_action']);
+        $data['shred_year'] = $this->post('shred_year');
+        $data['after_shred_action'] = $this->post('after_shred_action');
         $data['shredding_status'] = DocumentShreddingStatus::NO_STATUS;
 
         if($idFolder != '-1') {
@@ -1029,21 +859,34 @@ class Documents extends APresenter {
             $data['file'] = $_FILES['file']['name'];
         }
 
-        unset($_POST['name']);
-        unset($_POST['manager']);
-        unset($_POST['status']);
-        unset($_POST['group']);
-        unset($_POST['folder']);
-        unset($_POST['shred_year']);
-        unset($_POST['after_shred_action']);
+        ArrayHelper::deleteKeysFromArray($_POST, [
+            'name',
+            'manager',
+            'status',
+            'group',
+            'folder',
+            'shred_year',
+            'after_shred_action'
+        ]);
 
-        $customMetadata = $_POST;
+        $customMetadata = ArrayHelper::formatArrayData($_POST);
 
+        $remove = [];
+        foreach($customMetadata as $key => $value) {
+            if($value == 'null') {
+                $remove[] = $key;
+            }
+        }
+
+        ArrayHelper::deleteKeysFromArray($customMetadata, $remove);
         $data = array_merge($data, $customMetadata);
 
         if(isset($data['file']) && !empty($data['file'])) {
             $app->fsManager->uploadFile($_FILES['file'], $data['file']);
         }
+        
+        // CUSTOM OPERATION DEFINITION
+        // END OF CUSTOM OPERATION DEFINITION
         
         $app->documentModel->insertNewDocument($data);
 
@@ -1078,7 +921,42 @@ class Documents extends APresenter {
         }
     }
 
-    private function _suggest_for_shredding(array $ids) {
+    private function _move_to_archive_document(array $ids, int $idFolder, ?string $filter) {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/new-document-form.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'Move document to archive document',
+            '$NEW_DOCUMENT_FORM$' => $this->internalCreateMoveToArchiveDocumentForm($ids, $idFolder)
+        ];
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    private function _move_from_archive_document(array $ids, int $idFolder, ?string $filter) {
+        global $app;
+
+        foreach($ids as $id) {
+            $app->documentModel->moveFromArchiveDocument($id);
+        }
+
+        $app->flashMessage('Documents moved from the archive document', 'success');
+
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
+    }
+
+    private function _suggest_for_shredding(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         foreach($ids as $id) {
@@ -1089,10 +967,19 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Process has started', 'success');
-        $app->redirect('UserModule:Documents:showAll');
+        
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
-    private function _delete_documents(array $ids) {
+    private function _delete_documents(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         foreach($ids as $id) {
@@ -1100,10 +987,19 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Process has started', 'success');
-        $app->redirect('UserModule:Documents:showAll');
+
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
-    private function _decline_archivation(array $ids) {
+    private function _decline_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
         
         foreach($ids as $id) {
@@ -1128,10 +1024,18 @@ class Documents extends APresenter {
             $app->flashMessage('Declined archivation for selected documents', 'success');
         }
 
-        $app->redirect('UserModule:Documents:showAll');
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
-    private function _approve_archivation(array $ids) {
+    private function _approve_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         foreach($ids as $id) {
@@ -1156,10 +1060,18 @@ class Documents extends APresenter {
             $app->flashMessage('Approved archivation for selected documents', 'success');
         }
 
-        $app->redirect('UserModule:Documents:showAll');
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
-    private function _archive(array $ids) {
+    private function _archive(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
         foreach($ids as $id) {
@@ -1184,7 +1096,15 @@ class Documents extends APresenter {
             $app->flashMessage('Archived selected documents', 'success');
         }
 
-        $app->redirect('UserModule:Documents:showAll');
+        if($filter !== NULL) {
+            $params = ['filter' => $filter];
+            if($idFolder > -1) {
+                $params['id_folder'] = $idFolder;
+            }
+            $app->redirect('UserModule:Documents:showFiltered', $params);
+        } else {
+            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+        }
     }
 
     private function internalCreateFolderList(?int $idFolder, ?string $filter) {
@@ -1212,7 +1132,7 @@ class Documents extends APresenter {
         }
         
         $list = array(
-            'null1' => '&nbsp;&nbsp;' . $createLink($link, 'Main folder (all files)', null, $filter) . '<br>',
+            'null1' => '&nbsp;&nbsp;' . $createLink($link, 'Main folder' . (AppConfiguration::getGridMainFolderHasAllComments() ? ' (all documents)' : ''), null, $filter) . '<br>',
             'null2' => '<hr>'
         );
         
@@ -1290,9 +1210,16 @@ class Documents extends APresenter {
                 $documentCount = $app->documentModel->getCountDocumentsSharedWithUser($app->user->getId());
                 break;
 
+            case 'showFiltered':
+                if(isset($_GET['filter'])) {
+                    $f = $this->get('filter');
+                    $documentCount = $app->documentModel->getDocumentCountForStatus($idFolder, $f);
+                }
+                break;
+
             default:
             case 'showAll':
-                $documentCount = $app->documentModel->getTotalDocumentCount();
+                $documentCount = $app->documentModel->getTotalDocumentCount($idFolder);
                 break;
         }
 
@@ -1333,29 +1260,31 @@ class Documents extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($documentCount <= ($page * $app->getGridSize())) {
+        if($documentCount <= ($page * AppConfiguration::getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($documentCount / $app->getGridSize()));
+        $lastPageLink .= '&grid_page=' . (ceil($documentCount / AppConfiguration::getGridSize()));
         $lastPageLink .= '"';
 
-        if($documentCount <= ($page * $app->getGridSize())) {
+        if($documentCount <= ($page * AppConfiguration::getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($documentCount > $app->getGridSize()) {
-            if($pageCheck * $app->getGridSize() >= $documentCount) {
-                $documentPageControl = (1 + ($page * $app->getGridSize()));
+        $documentPageControl = 'Total documents: ' . $documentCount . ' | ';
+
+        if($documentCount > AppConfiguration::getGridSize()) {
+            if($pageCheck * AppConfiguration::getGridSize() >= $documentCount) {
+                $documentPageControl .= (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $documentPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
+                $documentPageControl .= (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
             }
         } else {
-            $documentPageControl = $documentCount;
+            $documentPageControl = 'Total documents: ' .  $documentCount;
         }
 
         $documentPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
@@ -1369,7 +1298,7 @@ class Documents extends APresenter {
         $idFolder = 0;
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
         }
 
         $fb = FormBuilder::getTemporaryObject();
@@ -1436,6 +1365,42 @@ class Documents extends APresenter {
             ->addJSScript(ScriptLoader::loadJSScript('js/ReportForm.js'))
 
             ->addElement($fb->createSubmit('Generate'))
+        ;
+
+        return $fb->build();
+    }
+
+    private function internalCreateMoveToArchiveDocumentForm(array $ids, int $idFolder) {
+        global $app;
+
+        $archiveDocuments = $app->archiveModel->getAllAvailableArchiveEntitiesByType(ArchiveType::DOCUMENT);
+        $archiveDocumentsArr = [];
+        foreach($archiveDocuments as $ad) {
+            $archiveDocumentsArr[] = [
+                'value' => $ad->getId(),
+                'text' => $ad->getName()
+            ];
+        }
+
+        $urlIds = '&';
+        $i = 0;
+        foreach($ids as $id) {
+            if(($i + 1) == count($ids)) {
+                $urlIds .= 'ids=' . $id;
+            } else {
+                $urlIds .= 'ids=' . $id . '&';
+            }
+            $i++;
+        }
+
+        $fb = new FormBuilder();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:processMoveToArchiveDocumentFormBulkAction' . $urlIds . (($idFolder > -1) ? ('id_folder=' . $idFolder) : ''))
+            
+            ->addElement($fb->createLabel()->setText('Archive document')->setFor('archive_document'))
+            ->addElement($fb->createSelect()->setName('archive_document')->addOptionsBasedOnArray($archiveDocumentsArr))
+
+            ->addElement($fb->createSubmit('Move'))
         ;
 
         return $fb->build();

@@ -9,15 +9,16 @@ use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
-use DMS\Constnats\DatetimeFormats;
+use DMS\Constants\DatetimeFormats;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
+use DMS\Entities\EntityRight;
 use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Users extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -33,9 +34,9 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
-        $defaultUserPageUrl = htmlspecialchars($_POST['default_user_page_url']);
-        $defaultUserDatetimeFormat = htmlspecialchars($_POST['default_user_datetime_format']);
+        $id = $this->get('id');
+        $defaultUserPageUrl = $this->post('default_user_page_url');
+        $defaultUserDatetimeFormat = $this->post('default_user_datetime_format');
 
         $data = array('default_user_page_url' => $defaultUserPageUrl);
 
@@ -60,7 +61,7 @@ class Users extends APresenter {
             $id = $app->user->getId();
             $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
         } else {
-            $id = htmlspecialchars($_GET['id']);
+            $id = $this->get('id');
         }
 
         $user = $app->userModel->getUserById($id);
@@ -84,8 +85,7 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -109,8 +109,7 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -118,9 +117,9 @@ class Users extends APresenter {
             $app->redirect($app::URL_HOME_PAGE);
         }
 
-        $currentPassword = htmlspecialchars($_POST['current_password']);
-        $password1 = htmlspecialchars($_POST['password1']);
-        $password2 = htmlspecialchars($_POST['password2']);
+        $currentPassword = $this->post('current_password');
+        $password1 = $this->post('password1');
+        $password2 = $this->post('password2');
 
         if($app->userAuthenticator->authUser($user->getUsername(), $currentPassword) == $id) {
             // password check ok
@@ -158,7 +157,7 @@ class Users extends APresenter {
             $id = $app->user->getId();
             $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
         } else {
-            $id = htmlspecialchars($_GET['id']);
+            $id = $this->get('id');
         }
 
         $user = $app->userModel->getUserById($id);
@@ -211,7 +210,8 @@ class Users extends APresenter {
             $data['$LINKS$'][] = $forcePasswordChangeLink;
         }
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinKBuilder::createAdvLink(array('page' => 'UserModule:Users:showSettingsForm', 'id' => $id), 'Settings');
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showSettingsForm', 'id' => $id), 'Settings');
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentReports:showAll'), 'My document reports');
 
         $this->templateManager->fill($data, $template);
 
@@ -222,8 +222,7 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $data = array(
             'status' => UserStatus::PASSWORD_UPDATE_REQUIRED,
@@ -240,8 +239,7 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $data = array(
             'password_change_status' => UserPasswordChangeStatus::WARNING
@@ -257,10 +255,10 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
+        $id = $this->get('id');
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-new-entity-form.html');
 
-        $id = htmlspecialchars($_GET['id']);
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -282,33 +280,32 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id']);
-
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         
         $required = array('firstname', 'lastname', 'username');
         
         $data = [];
         foreach($required as $r) {
-            $data[$r] = htmlspecialchars($_POST[$r]);
+            $data[$r] = $this->post($r);
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
-            $data['email'] = htmlspecialchars($_POST['email']);
+            $data['email'] = $this->post('email');
         }
         if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
-            $data['address_street'] = htmlspecialchars($_POST['address_street']);
+            $data['address_street'] = $this->post('address_street');
         }
         if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
-            $data['address_house_number'] = htmlspecialchars($_POST['address_house_number']);
+            $data['address_house_number'] = $this->post('address_house_number');
         }
         if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
-            $data['address_city'] = htmlspecialchars($_POST['address_city']);
+            $data['address_city'] = $this->post('address_city');
         }
         if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
-            $data['address_zip_code'] = htmlspecialchars($_POST['address_zip_code']);
+            $data['address_zip_code'] = $this->post('address_zip_code');
         }
         if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
-            $data['address_country'] = htmlspecialchars($_POST['address_country']);
+            $data['address_country'] = $this->post('address_country');
         }
 
         $app->userModel->updateUser($id, $data);
@@ -328,8 +325,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'filter']);
 
-        $id = htmlspecialchars($_GET['id']);
-        $filter = htmlspecialchars($_GET['filter']);
+        $id = $this->get('id');
+        $filter = $this->get('filter');
         $user = $app->userModel->getUserById($id);
 
         if(is_null($user)) {
@@ -365,9 +362,8 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id_user', 'filter']);
-
-        $idUser = htmlspecialchars($_GET['id_user']);
-        $filter = htmlspecialchars($_GET['filter']);
+        $idUser = $this->get('id_user');
+        $filter = $this->get('filter');
 
         $allow = true;
 
@@ -426,9 +422,8 @@ class Users extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id_user', 'filter']);
-
-        $idUser = htmlspecialchars($_GET['id_user']);
-        $filter = htmlspecialchars($_GET['filter']);
+        $idUser = $this->get('id_user');
+        $filter = $this->get('filter');
 
         $allow = false;
 
@@ -488,8 +483,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkActionRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updateActionRight($idUser, $name, true);
@@ -510,8 +505,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkActionRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updateActionRight($idUser, $name, false);
@@ -532,8 +527,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updatePanelRight($idUser, $name, true);
@@ -554,8 +549,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updatePanelRight($idUser, $name, false);
@@ -576,8 +571,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkBulkActionRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updateBulkActionRight($idUser, $name, true);
@@ -598,8 +593,8 @@ class Users extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idUser = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idUser = $this->get('id');
 
         if($app->userRightModel->checkBulkActionRightExists($idUser, $name) === TRUE) {
             $app->userRightModel->updateBulkActionRight($idUser, $name, false);
@@ -618,133 +613,112 @@ class Users extends APresenter {
     private function internalCreateUserRightsGrid(int $idUser, string $filter) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $userRightModel = $app->userRightModel;
 
-        $tb->showRowBorder();
-
-        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('Actions')->setBold()->setColspan('2'))
-                                    ->addCol($tb->createCol()->setText('Status')->setBold())
-                                    ->addCol($tb->createCol()->setText('Right name')->setBold())
-                                    ->addCol($tb->createCol()->setText('Type')->setBold()))
-        ;
-
-        $rights = [];
-
-        switch($filter) {
-            case 'actions':
-                $defaultActionRights = UserActionRights::$all;
-                $actionRights = $app->userRightModel->getActionRightsForIdUser($idUser);
-
-                foreach($defaultActionRights as $dar)  {
-                    $rights[$dar] = array(
-                        'type' => 'action',
-                        'name' => $dar,
-                        'value' => 0
-                    );
-                }
-
-                foreach($actionRights as $name => $value) {
-                    if(array_key_exists($name, $rights)) {
-                        $rights[$name] = array(
-                            'type' => 'action',
-                            'name' => $name,
-                            'value' => $value
-                        );
+        $dataSourceCallback = function() use ($userRightModel, $filter, $idUser) {
+            $rights = [];
+            switch($filter) {
+                case 'actions':
+                    $defaultActionRights = UserActionRights::$all;
+                    $actionRights = $userRightModel->getActionRightsForIdUser($idUser);
+    
+                    foreach($defaultActionRights as $dar)  {
+                        $rights[$dar] = new EntityRight('action', $dar, false);
                     }
-                }
-
-                break;
-            case 'bulk_actions':
-                $defaultBulkActionRights = BulkActionRights::$all;
-                $bulkActionRights = $app->userRightModel->getBulkActionRightsForIdUser($idUser);
-
-                foreach($defaultBulkActionRights as $dbar) {
-                    $rights[$dbar] = array(
-                        'type' => 'bulk',
-                        'name' => $dbar,
-                        'value' => 0
-                    );
-                }
-
-                foreach($bulkActionRights as $name => $value) {
-                    if(array_key_exists($name, $rights)) {
-                        $rights[$name] = array(
-                            'type' => 'bulk',
-                            'name' => $name,
-                            'value' => $value
-                        );
+    
+                    foreach($actionRights as $name => $value) {
+                        if(array_key_exists($name, $rights)) {
+                            $rights[$name]->setValue(($value == '1'));
+                        }
                     }
-                }
-
-                break;
-            case 'panels':
-                $defaultPanelRights = PanelRights::$all;
-                $panelRights = $app->userRightModel->getPanelRightsForIdUser($idUser);
-
-                foreach($defaultPanelRights as $dpr) {
-                    $rights[$dpr] = array(
-                        'type' => 'panel',
-                        'name' => $dpr,
-                        'value' => 0
-                    );
-                }
-
-                foreach($panelRights as $name => $value) {
-                    if(array_key_exists($name, $rights)) {
-                        $rights[$name] = array(
-                            'type' => 'panel',
-                            'name' => $name,
-                            'value' => $value
-                        );
-                    }
-                }
-
-                break;
-        }
-
-        foreach($rights as $rightname => $right) {
-            $type = $right['type'];
-            $name = $right['name'];
-            $value = $right['value'];
-
-            $row = $tb->createRow()->setId($name);
-
-            $allowLink = '';
-            $denyLink = '';
-
-            switch($type) {
-                case 'action':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowActionRight', 'name' => $name, 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyActionRight', 'name' => $name, 'id' => $idUser), 'Deny');
+    
                     break;
-
-                case 'panel':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowPanelRight', 'name' => $name, 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyPanelRight', 'name' => $name, 'id' => $idUser), 'Deny');
+                
+                case 'bulk_actions':
+                    $defaultBulkActionRights = BulkActionRights::$all;
+                    $bulkActionRights = $userRightModel->getBulkActionRightsForIdUser($idUser);
+    
+                    foreach($defaultBulkActionRights as $dbar) {
+                        $rights[$dbar] = new EntityRight('bulk', $dbar, false);
+                    }
+            
+                    foreach($bulkActionRights as $name => $value) {
+                        if(array_key_exists($name, $rights)) {
+                            $rights[$name]->setValue(($value == '1'));
+                        }
+                    }
+    
                     break;
-
-                case 'bulk':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowBulkActionRight', 'name' => $name, 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyBulkActionRight', 'name' => $name, 'id' => $idUser), 'Deny');
+    
+                case 'panels':
+                    $defaultPanelRights = PanelRights::$all;
+                    $panelRights = $userRightModel->getPanelRightsForIdUser($idUser);
+    
+                    foreach($defaultPanelRights as $dpr) {
+                        $rights[$dpr] = new EntityRight('panel', $dpr, false);
+                    }
+    
+                    foreach($panelRights as $name => $value) {
+                        if(array_key_exists($name, $rights)) {
+                            $rights[$name]->setValue(($value == '1'));
+                        }
+                    }
+    
                     break;
             }
 
+            return $rights;
+        };
+
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['status' => 'Status', 'rightName' => 'Right name', 'type' => 'Type']);
+        $gb->addOnColumnRender('status', function(EntityRight $right) use ($idUser) {
             $allowedText = '<span style="color: green">Allowed</span>';
             $deniedText = '<span style="color: red">Denied</span>';
 
-            $row->addCol($tb->createCol()->setText($allowLink))
-                ->addCol($tb->createCol()->setText($denyLink))
-                ->addCol($tb->createCol()->setText($value ? $allowedText : $deniedText))
-                ->addCol($tb->createCol()->setText($name))
-                ->addCol($tb->createCol()->setText($type))
-            ;
+            if($right->getValue()) {
+                return $allowedText;
+            } else {
+                return $deniedText;
+            }
+        });
+        $gb->addOnColumnRender('rightName', function(EntityRight $right) {
+            return $right->getName();
+        });
+        $gb->addOnColumnRender('type', function(EntityRight $right) {
+            return $right->getType();
+        });
+        $gb->addAction(function(EntityRight $right) use ($idUser) {
+            $allowLink = '-';
+            $denyLink = '-';
 
-            $tb->addRow($row);
-        }
+            switch($right->getType()) {
+                case 'action':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
+                    break;
 
-        $table = $tb->build();
+                case 'panel':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
+                    break;
+    
+                case 'bulk':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowBulkActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyBulkActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
+                    break;
+            }
 
-        return $table;
+            if($right->getValue()) {
+                return $denyLink;
+            } else {
+                return $allowLink;
+            }
+        });
+        $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
     }
 
     private function internalCreateUserProfileGrid(int $idUser) {

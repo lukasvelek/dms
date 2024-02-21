@@ -7,10 +7,12 @@ use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\UserActionRights;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Document;
+use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -31,10 +33,10 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_document', 'user', 'date_from', 'date_to']);
 
-        $idDocument = htmlspecialchars($_GET['id_document']);
-        $idUser = htmlspecialchars($_POST['user']);
-        $dateFrom = htmlspecialchars($_POST['date_from']);
-        $dateTo = htmlspecialchars($_POST['date_to']);
+        $idDocument = $this->get('id_document');
+        $idUser = $this->post('user');
+        $dateFrom = $this->post('date_from');
+        $dateTo = $this->post('date_to');
         $idAuthor = $app->user->getId();
         $hash = CypherManager::createCypher(64);
 
@@ -61,7 +63,7 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $idDocument = htmlspecialchars($_GET['id']);
+        $idDocument = $this->get('id');
         $document = $app->documentModel->getDocumentById($idDocument);
 
         if(is_null($document)) {
@@ -86,8 +88,8 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_comment', 'id_document']);
 
-        $idComment = htmlspecialchars($_GET['id_comment']);
-        $idDocument = htmlspecialchars($_GET['id_document']);
+        $idComment = $this->get('id_comment');
+        $idDocument = $this->get('id_document');
 
         $app->documentCommentModel->deleteComment($idComment);
 
@@ -101,8 +103,8 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_comment', 'id_document']);
 
-        $idDocument = htmlspecialchars($_GET['id_document']);
-        $idComment = htmlspecialchars($_GET['id_comment']);
+        $idComment = $this->get('id_comment');
+        $idDocument = $this->get('id_document');
 
         $urlConfirm = array(
             'page' => 'UserModule:SingleDocument:deleteComment',
@@ -125,9 +127,9 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_comment', 'text']);
 
-        $idDocument = htmlspecialchars($_GET['id_document']);
+        $idDocument = $this->get('id_document');
         $idAuthor = $app->user->getId();
-        $text = htmlspecialchars($_POST['text']);
+        $text = $this->post('text');
 
         $data = array(
             'id_document' => $idDocument,
@@ -145,7 +147,7 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $document = $app->documentModel->getDocumentById($id);
 
         if(is_null($document)) {
@@ -183,7 +185,7 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $document  = $app->documentModel->getDocumentById($id);
 
         if(is_null($document)) {
@@ -208,17 +210,17 @@ class SingleDocument extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $data = [];
 
-        $idGroup = htmlspecialchars($_POST['group']);
-        $idFolder = htmlspecialchars($_POST['folder']);
+        $idGroup = $this->post('group');
+        $idFolder = $this->post('folder');
         
-        $data['name'] = htmlspecialchars($_POST['name']);
-        $data['id_manager'] = htmlspecialchars($_POST['manager']);
-        $data['status'] = htmlspecialchars($_POST['status']);
-        $data['id_group'] = htmlspecialchars($idGroup);
+        $data['name'] = $this->post('name');
+        $data['id_manager'] = $this->post('manager');
+        $data['status'] = $this->post('status');
+        $data['id_group'] = $idGroup;
 
         if($idFolder != '-1') {
             $data['id_folder'] = $idFolder;
@@ -230,8 +232,24 @@ class SingleDocument extends APresenter {
         unset($_POST['group']);
         unset($_POST['folder']);
 
-        $customMetadata = $_POST;
+        ArrayHelper::deleteKeysFromArray($_POST, [
+            'name',
+            'manager',
+            'status',
+            'group',
+            'folder'
+        ]);
 
+        $customMetadata = ArrayHelper::formatArrayData($_POST);
+
+        $remove = [];
+        foreach($customMetadata as $key => $value) {
+            if($value == 'null') {
+                $remove[] = $key;
+            }
+        }
+
+        ArrayHelper::deleteKeysFromArray($customMetadata, $remove);
         $data = array_merge($data, $customMetadata);
 
         $app->documentModel->updateDocument($id, $data);
@@ -356,41 +374,52 @@ class SingleDocument extends APresenter {
 
             if($cm->getInputType() == 'select_external') {
                 $name = $cm->getName();
-                    $text = $cm->getText();
-                    $values = $app->externalEnumComponent->getEnumByName($cm->getSelectExternalEnumName())->getValues();
+                $text = $cm->getText();
+                $values = $app->externalEnumComponent->getEnumByName($cm->getSelectExternalEnumName())->getValues();
 
-                    $options = [];
-                    foreach($values as $value => $vtext) {
-                        $option = array(
-                            'value' => $value,
-                            'text' => $vtext
-                        );
-
-                        if(!is_null($document->getMetadata($name))) {
-                            $option['selected'] = 'selected';
-                        }
-
-                        $options[] = $option;
+                $options = [];
+                foreach($values as $value => $vtext) {
+                    $option = array(
+                        'value' => $value,
+                        'text' => $vtext
+                    );
+                    if(!is_null($document->getMetadata($name)) && ($document->getMetadata($name) == $value)) {
+                        $option['selected'] = 'selected';
                     }
 
-                    $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());
+                    $options[] = $option;
+                }
+
+                $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => 'select', 'length' => $cm->getInputLength());
             } else {
                 $name = $cm->getName();
                 $text = $cm->getText();
                 $values = $app->metadataModel->getAllValuesForIdMetadata($cm->getId());
 
                 $options = [];
+
+                $options[] = [
+                    'value' => 'null',
+                    'text' => '-'
+                ];
+
+                $hasDefault = false;
                 foreach($values as $v) {
                     $option = array(
                         'value' => $v->getValue(),
                         'text' => $v->getName()
                     );
                 
-                    if(!is_null($document->getMetadata($name))) {
+                    if(!is_null($document->getMetadata($name)) && ($document->getMetadata($name) == $v->getValue())) {
                         $option['selected'] = 'selected';
+                        $hasDefault = true;
                     }
 
                     $options[] = $option;
+                }
+
+                if($hasDefault === FALSE) {
+                    $options[0]['selected'] = 'selected';
                 }
 
                 $metadata[$name] = array('text' => $text, 'options' => $options, 'type' => $cm->getInputType(), 'length' => $cm->getInputLength());
@@ -526,7 +555,11 @@ class SingleDocument extends APresenter {
             if($m->getInputType() == 'select_external') {
                 $mValues = $app->externalEnumComponent->getEnumByName($m->getSelectExternalEnumName())->getValues();
 
-                $data[$m->getText()] = $mValues[$v];
+                if($v === NULL) {
+                    $data[$m->getText()] = '-';
+                } else {
+                    $data[$m->getText()] = $mValues[$v];
+                }
             } else {
                 $mValues = $app->metadataModel->getAllValuesForIdMetadata($m->getId());
             
@@ -628,7 +661,7 @@ class SingleDocument extends APresenter {
     private function createUserLink(int $id) {
         global $app;
 
-        $ucm = new CacheManager(true, CacheCategories::USERS);
+        $ucm = new CacheManager(true, CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 
         $cacheUser = $ucm->loadUserByIdFromCache($id);
 

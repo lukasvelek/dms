@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Panel right constants
+ * 
+ * @author Lukas Velek
+ */
 class PanelRights {
     public const SETTINGS = 'settings';
     public const DOCUMENTS = 'documents';
@@ -13,7 +18,6 @@ class PanelRights {
     public const SETTINGS_FOLDERS = 'settings.folders';
     public const SETTINGS_SERVICES = 'settings.services';
     public const SETTINGS_DASHBOARD_WIDGETS = 'settings.dashboard_widgets';
-    //public const DOCUMENTS_ALL = 'documents.all';
     public const DOCUMENTS_NEW = 'documents.new';
     public const DOCUMENTS_WAITING_FOR_ARCHIVATION = 'documents.waiting_for_archivation';
 
@@ -28,7 +32,6 @@ class PanelRights {
         self::SETTINGS_FOLDERS,
         self::SETTINGS_SERVICES,
         self::SETTINGS_DASHBOARD_WIDGETS,
-        //self::DOCUMENTS_ALL,
         self::DOCUMENTS_NEW,
         self::DOCUMENTS_WAITING_FOR_ARCHIVATION
     );

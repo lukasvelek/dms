@@ -34,6 +34,86 @@ class MetadataAuthorizator extends AAuthorizator {
     }
 
     /**
+     * Returns IDs of metadata of which values can be edited by the given user
+     * 
+     * @param int $idUser User ID
+     * @return array Metadata IDs
+     */
+    public function getViewMetadataForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_metadata'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('view_values = 1')
+            ->execute();
+
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+
+        return $rows;
+    }
+
+    /**
+     * Returns IDs of metadata of which values can be edited by the given user
+     * 
+     * @param int $idUser User ID
+     * @return array Metadata IDs
+     */
+    public function getEditableMatadataValuesForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_metadata'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('edit_values = 1')
+            ->execute();
+
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+
+        return $rows;
+    }
+
+    /**
+     * Returns IDs of metadata that can be viewed by the given user
+     * 
+     * @param int $idUser User ID
+     * @return array Metadata IDs
+     */
+    public function getViewableMetadataForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_metadata'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('view = 1')
+            ->execute();
+
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+
+        return $rows;
+    }
+
+    /**
+     * Returns IDs of metadata that can be edited by the given user
+     * 
+     * @param int $idUser User ID
+     * @return array Metadata IDs
+     */
+    public function getEditableMetadataForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_metadata'])
+            ->from('user_metadata_rights')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('edit = 1')
+            ->execute();
+
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+
+        return $rows;
+    }
+
+    /**
      * Checks if user is allowed to view metadata
      * 
      * @param int $idUser User ID
@@ -150,16 +230,12 @@ class MetadataAuthorizator extends AAuthorizator {
                 return $valFromCache;
             }
 
-            $row = $qb->select('*')
+            $row = $qb->select(['*'])
                       ->from('user_metadata_rights')
-                      ->where('id_user=:id_user')
-                      ->andWhere('id_metadata=:id_metadata')
-                      ->setParams(array(
-                        ':id_user' => $idUser,
-                        ':id_metadata' => $idMetadata
-                      ))
+                      ->where('id_user = ?', [$idUser])
+                      ->andWhere('id_metadata = ?', [$idMetadata])
                       ->execute()
-                      ->fetchSingle();
+                      ->fetch();
 
             if(!is_null($row)) {
                 if(!array_key_exists($key, $row)) {
@@ -177,14 +253,10 @@ class MetadataAuthorizator extends AAuthorizator {
         } else {
             $row = $qb->select('*')
                       ->from('user_metadata_rights')
-                      ->where('id_user=:id_user')
-                      ->andWhere('id_metadata=:id_metadata')
-                      ->setParams(array(
-                        ':id_user' => $idUser,
-                        ':id_metadata' => $idMetadata
-                      ))
+                      ->where('id_user = ?', [$idUser])
+                      ->andWhere('id_metadata = ?', [$idMetadata])
                       ->execute()
-                      ->fetchSingle();
+                      ->fetch();
 
             $result = $row[$key];
         }

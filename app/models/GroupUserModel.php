@@ -28,18 +28,13 @@ class GroupUserModel extends AModel {
 
         $idGroup = $this->groupModel->getGroupByCode('ADMINISTRATORS')->getId();
 
-        $row = $qb->select('*')
-                  ->from('group_users')
-                  ->where('id_group=:id_group')
-                  ->andWhere('id_user=:id_user')
-                  ->setParams(array(
-                    ':id_group' => $idGroup,
-                    ':id_user' => $idUser
-                  ))
-                  ->execute()
-                  ->fetch();
+        $qb ->select(['*'])
+            ->from('group_users')
+            ->where('id_group = ?', [$idGroup])
+            ->andWhere('id_user = ?', [$idUser])
+            ->execute();
 
-        if(is_null($row)) {
+        if(is_null($qb->fetch())) {
             return false;
         } else {
             return true;
@@ -49,86 +44,57 @@ class GroupUserModel extends AModel {
     public function updateUserInGroup(int $idGroup, int $idUser, array $data) {
         $qb = $this->qb(__METHOD__);
 
-        $keys = [];
-        $params = [];
+        $qb ->update('group_users')
+            ->set($data)
+            ->where('id_group = ? AND id_user = ?', [$idGroup, $idUser])
+            ->execute();
 
-        foreach($data as $k => $v) {
-            $keys[$k] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
-
-        $params[':id_user'] = $idUser;
-        $params[':id_group'] = $idGroup;
-
-        $result = $qb->update('group_users')
-                     ->set($keys)
-                     ->where('id_user=:id_user')
-                     ->andWhere('id_group=:id_group')
-                     ->setParams($params)
-                     ->execute()
-                     ->fetch();
-
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function removeUserFromGroup(int $idGroup, int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('group_users')
-                     ->where('id_group=:id_group')
-                     ->andWhere('id_user=:id_user')
-                     ->setParams(array(
-                        ':id_user' => $idUser,
-                        ':id_group' => $idGroup
-                     ))
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('group_users')
+            ->where('id_group = ? AND id_user = ?', [$idGroup, $idUser])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function insertUserToGroup(int $idGroup, int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->insert('group_users', 'id_user', 'id_group')
-                     ->values(':id_user', ':id_group')
-                     ->setParams(array(
-                        ':id_user' => $idUser,
-                        ':id_group' => $idGroup
-                     ))
-                     ->execute()
-                     ->fetch();
+        $qb ->insert('group_users', ['id_user', 'id_group'])
+            ->values([$idUser, $idGroup])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getGroupUserByIdGroup(int $idGroup) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('group_users')
-                  ->where('id_group=:id_group')
-                  ->setParam(':id_group', $idGroup)
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('group_users')
+            ->where('id_group = ?', [$idGroup])
+            ->limit(1)
+            ->execute();
 
-        return $this->createGroupUserObjectFromDbRow($row);
+        return $this->createGroupUserObjectFromDbRow($qb->fetch());
     }
 
     public function getGroupUsersByGroupId(int $idGroup) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('group_users')
-                   ->where('id_group=:id_group')
-                   ->setParam(':id_group', $idGroup)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('group_users')
+            ->where('id_group = ?', [$idGroup])
+            ->execute();
 
         $groups = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $groups[] = $this->createGroupUserObjectFromDbRow($row);
         }
 
@@ -138,33 +104,28 @@ class GroupUserModel extends AModel {
     public function getGroupsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('group_users')
-                   ->where('id_user=:id_user')
-                   ->setParam(':id_user', $idUser)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('group_users')
+            ->where('id_user = ?', [$idUser])
+            ->execute();
 
         $groups = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $groups[] = $this->createGroupUserObjectFromDbRow($row);
         }
-
         return $groups;
     }
 
     public function getGroupsWhereIdUserIsManager(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('group_users')
-                   ->where('id_manager=:id_user')
-                   ->setParam(':id_user', $idUser)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('group_users')
+            ->where('id_manager = ?', [$idUser])
+            ->execute();
 
         $groups = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $groups[] = $this->createGroupUserObjectFromDbRow($row);
         }
 

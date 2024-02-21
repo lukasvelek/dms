@@ -1,7 +1,12 @@
 <?php
 
-namespace DMS\Constnats;
+namespace DMS\Constants;
 
+/**
+ * Datetime format constants
+ * 
+ * @author Lukas Velek
+ */
 class DatetimeFormats {
     public static $formats = array(
         'Y-m-d H:i:s',

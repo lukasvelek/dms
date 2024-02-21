@@ -2,6 +2,11 @@
 
 namespace DMS\Constants;
 
+/**
+ * Metadata input type constants
+ * 
+ * @author Lukas Velek
+ */
 class MetadataInputType {
     public const SELECT = 'select';
     public const TEXT = 'text';

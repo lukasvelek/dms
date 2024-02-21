@@ -11,6 +11,8 @@ use DMS\Models\ServiceModel;
 use DMS\Models\UserModel;
 
 class PasswordPolicyService extends AService {
+    private const SKIP_ADMIN = true;
+
     private UserModel $userModel;
     private GroupUserModel $groupUserModel;
 
@@ -53,8 +55,14 @@ class PasswordPolicyService extends AService {
         $warnings = 0;
         $forces = 0;
 
+        $skipUsers = ['service_user'];
+
+        if(self::SKIP_ADMIN) {
+            $skipUsers[] = 'admin';
+        }
+
         foreach($users as $user) {
-            if(in_array($user->getUsername(), array('serviceuser'))) {
+            if(in_array($user->getUsername(), $skipUsers)) {
                 continue;
             }
 

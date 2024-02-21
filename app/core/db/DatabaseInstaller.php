@@ -2,7 +2,8 @@
 
 namespace DMS\Core\DB;
 
-use DMS\Authenticators\UserAuthenticator;
+use DMS\Constants\ArchiveStatus;
+use DMS\Constants\ArchiveType;
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
@@ -11,11 +12,17 @@ use DMS\Constants\DocumentStatus;
 use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
+use DMS\Constants\Ribbons;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
 use DMS\Core\Logger\Logger;
 
+/**
+ * Database installation definition
+ * 
+ * @author Lukas Velek
+ */
 class DatabaseInstaller {
     private Database $db;
     private Logger $logger;
@@ -25,19 +32,26 @@ class DatabaseInstaller {
         'service_user'
     );
 
+    /**
+     * Class constructor
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     */
     public function __construct(Database $db, Logger $logger) {
         $this->db = $db;
         $this->logger = $logger;
     }
 
+    /**
+     * Installs the database
+     */
     public function install() {
         $this->createTables();
         $this->insertDefaultUsers();
         $this->insertDefaultGroups();
         $this->insertDefaultUserGroups();
         $this->insertDefaultMetadata();
-
-        //$this->updateDefaultUserPanelRights();
 
         $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
@@ -56,12 +70,21 @@ class DatabaseInstaller {
         $this->insertDefaultRibbonUserRights();
     }
 
+    /**
+     * Updates default user rights
+     */
     public function updateDefaultUserRights() {
         $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
+        $this->insertDefaultUserMetadataRights();
     }
 
+    /**
+     * Creates the database tables
+     * 
+     * @return true
+     */
     private function createTables() {
         $tables = array(
             'users' => array(
@@ -82,7 +105,8 @@ class DatabaseInstaller {
                 'password_change_status' => 'INT(2) NOT NULL DEFAULT 1',
                 'default_user_page_url' => 'VARCHAR(256) NULL',
                 'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
-                'default_user_datetime_format' => 'VARCHAR(256) NULL'
+                'default_user_datetime_format' => 'VARCHAR(256) NULL',
+                'last_login_hash' => 'VARCHAR(256) NULL'
             ),
             'user_panel_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -106,7 +130,10 @@ class DatabaseInstaller {
                 'shred_year' => 'VARCHAR(4) NOT NULL',
                 'after_shred_action' => 'VARCHAR(256) NOT NULL',
                 'shredding_status' => 'INT(32) NOT NULL',
-                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'id_archive_document' => 'INT(32) NULL',
+                'id_archive_box' => 'INT(32) NULL',
+                'id_archive_archive' => 'INT(32) NULL'
             ),
             'user_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -138,7 +165,8 @@ class DatabaseInstaller {
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'id_author' => 'INT(32) NOT NULL',
-                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'is_archive' => 'INT(2) NOT NULL DEFAULT 0'
             ),
             'user_action_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -297,7 +325,8 @@ class DatabaseInstaller {
                 'image' => 'VARCHAR(256) NULL',
                 'is_visible' => 'INT(2) NOT NULL DEFAULT 1',
                 'is_system' => 'INT(2) NOT NULL DEFAULT 1',
-                'page_url' => 'VARCHAR(256) NOT NULL'
+                'page_url' => 'VARCHAR(256) NOT NULL',
+                'ribbon_right' => 'INT(32) NOT NULL'
             ),
             'ribbon_user_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -327,6 +356,36 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user1' => 'INT(32) NOT NULL',
                 'id_user2' => 'INT(32) NOT NULL'
+            ),
+            'archive_documents' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'id_parent_archive_entity' => 'INT(32) NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1'
+            ),
+            'archive_boxes' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'id_parent_archive_entity' => 'INT(32) NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1'
+            ),
+            'archive_archives' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'id_parent_archive_entity' => 'INT(32) NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1'
+            ),
+            'document_reports' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'sql_string' => 'VARCHAR(32768) NOT NULL',
+                'id_user' => 'INT(32) NOT NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'file_src' => 'VARCHAR(256) NULL'
             )
         );
 
@@ -356,6 +415,11 @@ class DatabaseInstaller {
         return true;
     }
 
+    /**
+     * Inserts default users
+     * 
+     * @return true
+     */
     private function insertDefaultUsers() {
         $defaultUsersUsernames = array('service_user', 'admin');
         $insertUsers = array();
@@ -405,6 +469,11 @@ class DatabaseInstaller {
         return true;
     }
 
+    /**
+     * Inserts default groups
+     * 
+     * @return true
+     */
     private function insertDefaultGroups() {
         $defaultGroups = array(
             'ARCHMAN' => 'Archive Manager',
@@ -437,6 +506,11 @@ class DatabaseInstaller {
         return true;
     }
 
+    /**
+     * Inserts default users for groups
+     * 
+     * @return true
+     */
     private function insertDefaultUserGroups() {
         $groupCodes = array(
             'ADMINISTRATORS',
@@ -492,6 +566,11 @@ class DatabaseInstaller {
         return true;
     }
 
+    /**
+     * Inserts default group panel rights
+     * 
+     * @return true
+     */
     private function insertDefaultGroupPanelRights() {
         $idGroups = [];
         $panels = PanelRights::$all;
@@ -536,8 +615,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default user panel rights
+     * 
+     * @return true
+     */
     private function insertDefaultUserPanelRights() {
         $idUsers = [];
         $panels = PanelRights::$all;
@@ -593,8 +679,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default group bulk action rights
+     * 
+     * @return true
+     */
     private function insertDefaultGroupBulkActionRights() {
         $idGroups = [];
         $actions = BulkActionRights::$all;
@@ -638,8 +731,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default user bulk action rights
+     * 
+     * @return true
+     */
     private function insertDefaultUserBulkActionRights() {
         $idUsers = array();
         $actions = BulkActionRights::$all;
@@ -695,8 +795,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default group action rights
+     * 
+     * @return true
+     */
     private function insertDefaultGroupActionRights() {
         $idGroups = [];
         $actions = UserActionRights::$all;
@@ -738,8 +845,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default user action rights
+     * 
+     * @return true
+     */
     private function insertDefaultUserActionRights() {
         $idUsers = array();
         $actions = UserActionRights::$all;
@@ -795,8 +909,15 @@ class DatabaseInstaller {
                 $this->db->query($sql);
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default metadata
+     * 
+     * @return true
+     */
     public function insertDefaultMetadata() {
         $metadata = array(
             array(
@@ -810,6 +931,20 @@ class DatabaseInstaller {
                 'table_name' => 'documents',
                 'name' => 'status',
                 'text' => 'Status',
+                'input_type' => 'select',
+                'length' => '256'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'after_shred_action',
+                'text' => 'Action after shredding',
+                'input_type' => 'select',
+                'length' => '256'
+            ),
+            array(
+                'table_name' => 'documents',
+                'name' => 'shredding_status',
+                'text' => 'Shredding status',
                 'input_type' => 'select',
                 'length' => '256'
             ),
@@ -835,16 +970,16 @@ class DatabaseInstaller {
                 'length' => '256'
             ),
             array(
-                'table_name' => 'documents',
-                'name' => 'after_shred_action',
-                'text' => 'Action after shredding',
+                'table_name' => 'archive',
+                'name' => 'status',
+                'text' => 'Status',
                 'input_type' => 'select',
                 'length' => '256'
             ),
             array(
-                'table_name' => 'documents',
-                'name' => 'shredding_status',
-                'text' => 'Shredding status',
+                'table_name' => 'archive',
+                'name' => 'type',
+                'text' => 'Type',
                 'input_type' => 'select',
                 'length' => '256'
             )
@@ -928,6 +1063,20 @@ class DatabaseInstaller {
                     }
 
                     break;
+
+                case 'archive.status':
+                    foreach(ArchiveStatus::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
+
+                case 'archive.type':
+                    foreach(ArchiveType::$texts as $v => $n) {
+                        $values[$id][] = array('name' => $n, 'value' => $v);
+                    }
+
+                    break;
             }
 
             foreach($values as $id => $values) {
@@ -944,8 +1093,15 @@ class DatabaseInstaller {
                 }
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default user metadata rights
+     * 
+     * @return true
+     */
     public function insertDefaultUserMetadataRights() {
         $sql = "SELECT `id` FROM `users`";
 
@@ -983,8 +1139,15 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 
+    /**
+     * Inserts default group metadata rights
+     * 
+     * @return true
+     */
     public function insertDefaultGroupMetadataRights() {
         $sql = "SELECT `id` FROM `groups`";
         
@@ -1022,20 +1185,53 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 
+    /**
+     * Inserts default service config
+     * 
+     * @return true
+     */
     public function insertDefaultServiceConfig() {
         $serviceCfg = array(
             'LogRotateService' => array(
-                'files_keep_length' => '7'
+                'files_keep_length' => '7',
+                'service_run_period' => '7',
+                'archive_old_logs' => '1'
             ),
             'PasswordPolicyService' => array(
                 'password_change_period' => '30',
                 'password_change_force_administrators' => '0',
-                'password_change_force' => '0'
+                'password_change_force' => '0',
+                'service_run_period' => '30'
             ),
             'NotificationManagerService' => array(
-                'notification_keep_length' => '1'
+                'notification_keep_length' => '1',
+                'service_run_period' => '7',
+                'notification_keep_unseen_service_user' => '1'
+            ),
+            'CacheRotateService' => array(
+                'service_run_period' => '1'
+            ),
+            'FileManagerService' => array(
+                'service_run_period' => '30'
+            ),
+            'ShreddingSuggestionService' => array(
+                'service_run_period' => '30'
+            ),
+            'MailService' => array(
+                'service_run_period' => '1'
+            ),
+            'DocumentArchivationService' => array(
+                'service_run_period' => '7'
+            ),
+            'DeclinedDocumentRemoverService' => array(
+                'service_run_period' => '30'
+            ),
+            'DocumentReportGeneratorService' => array(
+                'service_run_period' => '1'
             )
         );
 
@@ -1052,14 +1248,22 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 
+    /**
+     * Inserts default ribbons
+     * 
+     * @return true
+     */
     public function insertDefaultRibbons() {
         $toppanelCodes = array(
             'home',
             'documents',
             'processes',
-            'settings'
+            'settings',
+            'archive'
         );
 
         $toppanelRibbons = array(
@@ -1069,7 +1273,8 @@ class DatabaseInstaller {
                 'image' => 'img/home.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:HomePage:showHomepage',
-                'is_system' => '1'
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_HOME
             ),
             array(
                 'name' => 'Documents',
@@ -1077,7 +1282,8 @@ class DatabaseInstaller {
                 'image' => 'img/documents.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Documents:showAll',
-                'is_system' => '1'
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_DOCUMENTS
             ),
             array(
                 'name' => 'Processes',
@@ -1085,7 +1291,17 @@ class DatabaseInstaller {
                 'image' => 'img/processes.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Processes:showAll',
-                'is_system' => '1'
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_PROCESSES
+            ),
+            array(
+                'name' => 'Archive',
+                'code' => 'archive',
+                'image' => 'img/archive.svg',
+                'is_visible' => '1',
+                'page_url' => '?page=UserModule:Archive:showDocuments',
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_ARCHIVE
             ),
             array(
                 'name' => 'Settings',
@@ -1093,7 +1309,8 @@ class DatabaseInstaller {
                 'image' => 'img/settings.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Settings:showDashboard',
-                'is_system' => '1'
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_SETTINGS
             )
         );
 
@@ -1149,28 +1366,32 @@ class DatabaseInstaller {
                     'code' => 'documents.all_documents',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Documents:showAll',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::DOCUMENTS_ALL_DOCUMENTS
                 ),
                 array(
                     'name' => 'Waiting for archivation',
                     'code' => 'documents.waiting_for_archivation',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Documents:showFiltered&filter=waitingForArchivation',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::DOCUMENTS_WAITING_FOR_ARCHIVATION
                 ),
                 array(
                     'name' => 'New documents',
                     'code' => 'documents.new_documents',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Documents:showFiltered&filter=new',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::DOCUMENTS_NEW_DOCUMENTS
                 ),
                 array(
                     'name' => 'SPLITTER',
                     'code' => 'documents.splitter',
                     'is_visible' => '1',
                     'page_url' => '#',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::DOCUMENTS_SPLITTER
                 )
             ),
             'processes' => array(
@@ -1179,21 +1400,24 @@ class DatabaseInstaller {
                     'code' => 'processes.started_by_me',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Processes:showAll&filter=startedByMe',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::PROCESSES_STARTED_BY_ME
                 ),
                 array(
                     'name' => 'Processes waiting for me',
                     'code' => 'processes.waiting_for_me',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Processes:showAll&filter=waitingForMe',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::PROCESSES_WAITING_FOR_ME
                 ),
                 array(
                     'name' => 'Finished processes',
                     'code' => 'processes.finished',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Processes:showAll&filter=finished',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::PROCESSES_FINISHED
                 )
             ),
             'settings' => array(
@@ -1203,7 +1427,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboard',
                     'image' => 'img/dashboard.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_DASHBOARD
                 ),
                 array(
                     'name' => 'Document folders',
@@ -1211,7 +1436,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showFolders',
                     'image' => 'img/folder.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_DOCUMENT_FOLDERS
                 ),
                 array(
                     'name' => 'Users',
@@ -1219,7 +1445,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showUsers',
                     'image' => 'img/users.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_USERS
                 ),
                 array(
                     'name' => 'Groups',
@@ -1227,7 +1454,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showGroups',
                     'image' => 'img/groups.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_GROUPS
                 ),
                 array(
                     'name' => 'Metadata',
@@ -1235,7 +1463,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showMetadata',
                     'image' => 'img/metadata.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_METADATA
                 ),
                 array(
                     'name' => 'System',
@@ -1243,7 +1472,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showSystem',
                     'image' => 'img/system.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_SYSTEM
                 ),
                 array(
                     'name' => 'Services',
@@ -1251,7 +1481,8 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showServices',
                     'image' => 'img/services.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_SERVICES
                 ),
                 array(
                     'name' => 'Dashboard widgets',
@@ -1259,14 +1490,43 @@ class DatabaseInstaller {
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboardWidgets',
                     'image' => 'img/dashboard-widgets.svg',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_DASHBOARD_WIDGETS
                 ),
                 array(
                     'name' => 'Ribbons',
                     'code' => 'settings.ribbons',
+                    'image' => 'img/ribbons.svg',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:RibbonSettings:showAll',
-                    'is_system' => '1'
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::SETTINGS_RIBBONS
+                )
+            ),
+            'archive' => array(
+                array(
+                    'name' => 'Documents',
+                    'code' => 'archive.documents',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Archive:showDocuments',
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::ARCHIVE_DOCUMENTS
+                ),
+                array(
+                    'name' => 'Boxes',
+                    'code' => 'archive.boxes',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Archive:showBoxes',
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::ARCHIVE_BOXES
+                ),
+                array(
+                    'name' => 'Archives',
+                    'code' => 'archive.archives',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Archive:showArchives',
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::ARCHIVE_ARCHIVES
                 )
             )
         );
@@ -1336,8 +1596,15 @@ class DatabaseInstaller {
                 $this->db->commit();
             }
         }
+
+        return true;
     }
 
+    /**
+     * Inserts default group ribbon rights
+     * 
+     * @return true
+     */
     public function insertDefaultRibbonGroupRights() {
         $sql = "SELECT `id` FROM `ribbons`";
 
@@ -1371,8 +1638,15 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 
+    /**
+     * Inserts default user ribbon rights
+     * 
+     * @return true
+     */
     public function insertDefaultRibbonUserRights() {
         $sql = "SELECT `id` FROM `ribbons`";
 
@@ -1415,6 +1689,8 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
     }
 }
 

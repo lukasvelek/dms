@@ -8,12 +8,12 @@ use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
-use DMS\Entities\User;
-use DMS\Helpers\ArrayStringHelper;
+use DMS\Entities\EntityRight;
+use DMS\Entities\GroupUser;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Groups extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -29,7 +29,7 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
         
-        $idGroup = htmlspecialchars($_GET['id']);
+        $idGroup = $this->get('id');
         $group = $app->groupModel->getGroupById($idGroup);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/groups/group-new-entity-form.html');
@@ -51,7 +51,7 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
         
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $group = $app->groupModel->getGroupById($id);
 
         $data = array(
@@ -72,8 +72,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'filter']);
 
-        $id = htmlspecialchars($_GET['id']);
-        $filter = htmlspecialchars($_GET['filter']);
+        $id = $this->get('id');
+        $filter = $this->get('filter');
         $group = $app->groupModel->getGroupById($id);
 
         $data = array(
@@ -92,8 +92,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkActionRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updateActionRight($idGroup, $name, true);
@@ -114,8 +114,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkActionRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updateActionRight($idGroup, $name, false);
@@ -136,8 +136,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updatePanelRight($idGroup, $name, true);
@@ -158,8 +158,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updatePanelRight($idGroup, $name, false);
@@ -180,8 +180,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkBulkActionRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updateBulkActionRight($idGroup, $name, true);
@@ -202,8 +202,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id', 'name']);
 
-        $name = htmlspecialchars($_GET['name']);
-        $idGroup = htmlspecialchars($_GET['id']);
+        $name = $this->get('name');
+        $idGroup = $this->get('id');
 
         if($app->groupRightModel->checkBulkActionRightExists($idGroup, $name) === TRUE) {
             $app->groupRightModel->updateBulkActionRight($idGroup, $name, false);
@@ -224,8 +224,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_group', 'user']);
 
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $idUser = htmlspecialchars($_POST['user']);
+        $idGroup = $this->get('id_group');
+        $idUser = $this->post('user');
 
         $app->groupUserModel->insertUserToGroup($idGroup, $idUser);
 
@@ -241,8 +241,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idGroup = $this->get('id_group');
+        $idUser = $this->get('id_user');
 
         $app->groupUserModel->removeUserFromGroup($idGroup, $idUser);
         
@@ -258,8 +258,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idGroup = $this->get('id_group');
+        $idUser = $this->get('id_user');
 
         $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
 
@@ -287,8 +287,8 @@ class Groups extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_group', 'id_user']);
 
-        $idGroup = htmlspecialchars($_GET['id_group']);
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idGroup = $this->get('id_group');
+        $idUser = $this->get('id_user');
 
         $app->groupUserModel->updateUserInGroup($idGroup, $idUser, array('is_manager' => '0'));
 
@@ -337,216 +337,178 @@ class Groups extends APresenter {
     private function internalCreateGroupRightsGrid(int $idGroup, string $filter) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $groupRightModel = $app->groupRightModel;
 
-        $tb->showRowBorder();
-
-        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('Actions')->setBold()->setColspan('2'))
-                                    ->addCol($tb->createCol()->setText('Status')->setBold())
-                                    ->addCol($tb->createCol()->setText('Right name')->setBold())
-                                    ->addCol($tb->createCol()->setText('Type')->setBold()))
-        ;
-
-        $rights = [];
-
-        switch($filter) {
-            case 'actions':
-                $defaultActionRights = UserActionRights::$all;
-                $actionRights = $app->groupRightModel->getActionRightsForIdGroup($idGroup);
-
-                foreach($defaultActionRights as $dar)  {
-                    $rights[$dar] = array(
-                        'type' => 'action',
-                        'name' => $dar,
-                        'value' => 0
-                    );
-                }
-
-                foreach($actionRights as $name => $value) {
-                    if(array_key_exists($name, $rights)) {
-                        $rights[$name] = array(
-                            'type' => 'action',
-                            'name' => $name,
-                            'value' => $value
-                        );
+        $dataSourceCallback = function() use ($groupRightModel, $filter, $idGroup) {
+            $rights = [];
+            switch($filter) {
+                case 'actions':
+                    $defaultActionRights = UserActionRights::$all;
+                    $actionRights = $groupRightModel->getActionRightsForIdGroup($idGroup);
+    
+                    foreach($defaultActionRights as $dar)  {
+                        $rights[$dar] = new EntityRight('action', $dar, false);
                     }
-                }
-
-                break;
+    
+                    foreach($actionRights as $name => $value) {
+                        if(array_key_exists($name, $rights)) {
+                            $rights[$name]->setValue(($value == '1'));
+                        }
+                    }
+    
+                    break;
+                
+                case 'bulk_actions':
+                    $defaultBulkActionRights = BulkActionRights::$all;
+                    $bulkActionRights = $groupRightModel->getBulkActionRightsForIdGroup($idGroup);
+    
+                    foreach($defaultBulkActionRights as $dbar) {
+                        $rights[$dbar] = new EntityRight('bulk', $dbar, false);
+                    }
             
-            case 'bulk_actions':
-                $defaultBulkActionRights = BulkActionRights::$all;
-                $bulkActionRights = $app->groupRightModel->getBulkActionRightsForIdGroup($idGroup);
-
-                foreach($defaultBulkActionRights as $dbar) {
-                    $rights[$dbar] = array(
-                        'type' => 'bulk',
-                        'name' => $dbar,
-                        'value' => 0
-                    );
-                }
-        
-                foreach($bulkActionRights as $name => $value) {
-                    if(array_key_exists($name, $rights)) {
-                        $rights[$name] = array(
-                            'type' => 'bulk',
-                            'name' => $name,
-                            'value' => $value
-                        );
+                    foreach($bulkActionRights as $name => $value) {
+                        if(array_key_exists($name, $rights)) {
+                            $rights[$name]->setValue(($value == '1'));
+                        }
                     }
-                }
-
-                break;
-
-            case 'panels':
-                $defaultPanelRights = PanelRights::$all;
-                $panelRights = $app->groupRightModel->getPanelRightsForIdGroup($idGroup);
-
-                foreach($defaultPanelRights as $dpr) {
-                    $rights[$dpr] = array(
-                        'type' => 'panel',
-                        'name' => $dpr,
-                        'value' => 0
-                    );
-                }
-
-                foreach($panelRights as $name => $value) {
-                    if(array_key_exists($name, $rights)) {
-                        $rights[$name] = array(
-                            'type' => 'panel',
-                            'name' => $name,
-                            'value' => $value
-                        );
+    
+                    break;
+    
+                case 'panels':
+                    $defaultPanelRights = PanelRights::$all;
+                    $panelRights = $groupRightModel->getPanelRightsForIdGroup($idGroup);
+    
+                    foreach($defaultPanelRights as $dpr) {
+                        $rights[$dpr] = new EntityRight('panel', $dpr, false);
                     }
-                }
-
-                break;
-        }
-
-        foreach($rights as $rightname => $right) {
-            $type = $right['type'];
-            $name = $right['name'];
-            $value = $right['value'];
-
-            $row = $tb->createRow()->setId($name);
-
-            $allowLink = '';
-            $denyLink = '';
-
-            switch($type) {
-                case 'action':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:allowActionRight', 'name' => $name, 'id' => $idGroup), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:denyActionRight', 'name' => $name, 'id' => $idGroup), 'Deny');
-                    break;
-
-                case 'panel':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:allowPanelRight', 'name' => $name, 'id' => $idGroup), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:denyPanelRight', 'name' => $name, 'id' => $idGroup), 'Deny');
-                    break;
-
-                case 'bulk':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:allowBulkActionRight', 'name' => $name, 'id' => $idGroup), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:denyBulkActionRight', 'name' => $name, 'id' => $idGroup), 'Deny');
+    
+                    foreach($panelRights as $name => $value) {
+                        if(array_key_exists($name, $rights)) {
+                            $rights[$name]->setValue(($value == '1'));
+                        }
+                    }
+    
                     break;
             }
 
+            return $rights;
+        };
+
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['status' => 'Status', 'rightName' => 'Right name', 'type' => 'Type']);
+        $gb->addOnColumnRender('status', function(EntityRight $right) use ($idGroup) {
             $allowedText = '<span style="color: green">Allowed</span>';
             $deniedText = '<span style="color: red">Denied</span>';
 
-            $row->addCol($tb->createCol()->setText($allowLink))
-                ->addCol($tb->createCol()->setText($denyLink))
-                ->addCol($tb->createCol()->setText($value ? $allowedText : $deniedText))
-                ->addCol($tb->createCol()->setText($name))
-                ->addCol($tb->createCol()->setText($type))
-            ;
+            if($right->getValue()) {
+                return $allowedText;
+            } else {
+                return $deniedText;
+            }
+        });
+        $gb->addOnColumnRender('rightName', function(EntityRight $right) {
+            return $right->getName();
+        });
+        $gb->addOnColumnRender('type', function(EntityRight $right) {
+            return $right->getType();
+        });
+        $gb->addAction(function(EntityRight $right) use ($idGroup) {
+            $allowLink = '-';
+            $denyLink = '-';
 
-            $tb->addRow($row);
-        }
+            switch($right->getType()) {
+                case 'action':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:allowActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:denyActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
+                    break;
 
-        $table = $tb->build();
+                case 'panel':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:allowPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:denyPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
+                    break;
+    
+                case 'bulk':
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:allowBulkActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:denyBulkActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
+                    break;
+            }
 
-        return $table;
+            if($right->getValue()) {
+                return $denyLink;
+            } else {
+                return $allowLink;
+            }
+        });
+        $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
     }
 
     private function internalCreateGroupGrid(int $idGroup) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $groupUserModel = $app->groupUserModel;
+        $userModel = $app->userModel;
+        $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
 
-        $headers = array(
-            'Actions',
-            'First name',
-            'Last name',
-            'User name',
-            'Status',
-            'Is manager'
-        );
+        $dataSourceCallback = function() use ($groupUserModel, $idGroup) {
+            return $groupUserModel->getGroupUsersByGroupId($idGroup);
+        };
 
-        $headerRow = null;
+        $gb = new GridBuilder();
 
-        $groupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
+        $gb->addColumns(['firstname' => 'Firstname', 'lastname' => 'Lastname', 'username' => 'Username', 'status' => 'Status', 'isManager' => 'Is manager']);
+        $gb->addOnColumnRender('firstname', function(GroupUser $gu) use ($userModel, $ucm) {
+            $user = $ucm->loadUserByIdFromCache($gu->getIdUser());
 
-        if(empty($groupUsers)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($groupUsers as $groupUser) {
-                $user = $app->userModel->getUserById($groupUser->getIdUser());
+            if(is_null($user)) {
+                $user = $userModel->getUserById($gu->getIdUser());
 
-                if($user === NULL) {
-                    $user = new User(0, date('Y-m-d H:i:s'), 'Deleted user', '', '', '', 1, null, null, null, null, null, null, 1, null, null, null);
-                }
-
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile')
-                );
-
-                if($groupUser->getIsManager()) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:unsetUserAsManager', 'id_group' => $idGroup, 'id_user' => $user->getId()), 'Unset as Manager');
-                } else {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:setUserAsManager', 'id_group' => $idGroup, 'id_user' => $user->getId()), 'Set as Manager');
-                }
-
-                if($idGroup != '2' && $user->getUsername() != 'admin') {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:removeUserFromGroup', 'id_group' => $idGroup, 'id_user' => $user->getId()), 'Remove');
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $userRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $userRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $userRow->addCol($tb->createCol()->setText($user->getFirstname()))
-                        ->addCol($tb->createCol()->setText($user->getLastname()))
-                        ->addCol($tb->createCol()->setText($user->getUsername()))
-                        ->addCol($tb->createCol()->setText(UserStatus::$texts[$user->getStatus()]))
-                        ->addCol($tb->createCol()->setText($groupUser->getIsManager() ? 'Yes' : 'No'))
-                ;
-
-                $tb->addRow($userRow);
+                $ucm->saveUserToCache($user);
             }
-        }
 
-        return $tb->build();
+            return $user->getFirstname();
+        });
+        $gb->addOnColumnRender('lastname', function(GroupUser $gu) use ($userModel, $ucm) {
+            $user = $ucm->loadUserByIdFromCache($gu->getIdUser());
+
+            if(is_null($user)) {
+                $user = $userModel->getUserById($gu->getIdUser());
+
+                $ucm->saveUserToCache($user);
+            }
+
+            return $user->getLastname();
+        });
+        $gb->addOnColumnRender('username', function(GroupUser $gu) use ($userModel, $ucm) {
+            $user = $ucm->loadUserByIdFromCache($gu->getIdUser());
+
+            if(is_null($user)) {
+                $user = $userModel->getUserById($gu->getIdUser());
+
+                $ucm->saveUserToCache($user);
+            }
+
+            return $user->getUsername();
+        });
+        $gb->addOnColumnRender('status', function(GroupUser $gu) use ($userModel, $ucm) {
+            $user = $ucm->loadUserByIdFromCache($gu->getIdUser());
+
+            if(is_null($user)) {
+                $user = $userModel->getUserById($gu->getIdUser());
+
+                $ucm->saveUserToCache($user);
+            }
+
+            return UserStatus::$texts[$user->getStatus()];
+        });
+        $gb->addOnColumnRender('isManager', function(GroupUser $gu) {
+            return $gu->getIsManager() ? 'Yes' : 'No';
+        });
+        $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
     }
 }
 

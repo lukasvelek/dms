@@ -2,10 +2,21 @@
 
 namespace DMS\Core;
 
+/**
+ * Manager responsible for files and work done with them
+ * 
+ * @author Lukas Velek
+ */
 class FileManager {
-    private string $logFolder;
-    private string $cacheFolder;
+    public string $logFolder;
+    public string $cacheFolder;
 
+    /**
+     * Class constructor
+     * 
+     * @param string $logFolder Log folder
+     * @param string $cacheFolder Cache folder
+     */
     public function __construct(string $logFolder, string $cacheFolder) {
         if(is_dir($logFolder) || $logFolder == '') {
             $this->logFolder = $logFolder;
@@ -17,6 +28,51 @@ class FileManager {
             $this->cacheFolder = $cacheFolder;
         } else {
             die('Cache folder does not exist!');
+        }
+    }
+
+    /**
+     * Creates a directory
+     * 
+     * @param string $dirpath New directory path
+     * @return bool True on success or false on failure
+     */
+    public function createDirectory(string $dirpath) {
+        if(is_dir($dirpath)) {
+           return false; 
+        }
+
+        return mkdir($dirpath, 0777, true);
+    }
+
+    /**
+     * Moves file to a directory
+     * 
+     * @param string $filepath File's current path
+     * @param string $newFilepath File's new path
+     * @return bool True on success or false on failure
+     */
+    public function moveFileToDirectory(string $filepath, string $newFilepath) {
+        return rename($filepath, $newFilepath);
+    }
+
+    /**
+     * Reads all folder in a folder recursively
+     * 
+     * @param string $dir Directory to search in
+     * @param array $dirs Directories discovered
+     */
+    public function readFoldersInFolder(string $dir, array &$dirs) {
+        $contents = scandir($dir);
+
+        unset($contents[0]);
+        unset($contents[1]);
+
+        foreach($contents as $c) {
+            if(is_dir($dir . $c . '/')) {
+                $dirs[] = $dir . $c . '/';
+                $this->readFoldersinFolder($dir . $c . '/', $dirs);
+            }
         }
     }
 
@@ -33,8 +89,8 @@ class FileManager {
         unset($contents[1]);
 
         foreach($contents as $c) {
-            if(is_file($c)) {
-                $this->readFilesInFolder($dir . '/' . $c, $files);
+            if(is_dir($dir . $c . '/')) {
+                $this->readFilesInFolder($dir . $c . '/', $files);
             } else {
                 $files[] = $dir . $c;
             }
@@ -151,10 +207,8 @@ class FileManager {
      * @return bool returns true if file was deleted and false if it does not exist
      */
     public function deleteFile(string $file) {
-        $fullfile = $this->cacheFolder . $file;
-
-        if($this->fileExists($fullfile)) {
-            unlink($fullfile);
+        if($this->fileExists($file)) {
+            unlink($file);
         } else {
             return false;
         }

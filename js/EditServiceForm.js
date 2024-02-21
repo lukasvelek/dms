@@ -142,3 +142,49 @@ if(document.getElementById('notification_keep_unseen_service_user_text_value') !
         }
     };
 }
+
+
+// SERVICE_RUN_PERIOD
+if(document.getElementById('service_run_period_text_value') != null && document.getElementById('service_run_period') != null) {
+    var service_run_period_text_value = document.getElementById('service_run_period_text_value');
+    var service_run_period_range = document.getElementById('service_run_period');
+
+    if(service_run_period_range.value == 1) {
+        service_run_period_text_value.innerHTML = service_run_period_range.value + " day";
+    } else {
+        service_run_period_text_value.innerHTML = service_run_period_range.value + " days";
+    }
+
+    service_run_period_range.oninput = function() {
+        if(service_run_period_range.value == 1) {
+            service_run_period_text_value.innerHTML = service_run_period_range.value + " day";
+        } else {
+            service_run_period_text_value.innerHTML = service_run_period_range.value + " days";
+        }
+    };
+}
+
+
+// NOTIFICATION_KEEP_UNSEEN_SERVICE_USER
+if(document.getElementById('archive_old_logs_text_value') != null && document.getElementById('archive_old_logs') != null) {
+    var archive_old_logs_text_value = document.getElementById('archive_old_logs_text_value');
+    var archive_old_logs = document.getElementById('archive_old_logs');
+
+    if(archive_old_logs.checked == 1) {
+        archive_old_logs_text_value.innerHTML = 'Archive';
+        archive_old_logs_text_value.style.color = 'green';
+    } else {
+        archive_old_logs_text_value.innerHTML = 'Delete';
+        archive_old_logs_text_value.style.color = 'red';
+    }
+
+    archive_old_logs.oninput = function() {
+        if(archive_old_logs.checked == 1) {
+            archive_old_logs_text_value.innerHTML = 'Archive';
+            archive_old_logs_text_value.style.color = 'green';
+        } else {
+            archive_old_logs_text_value.innerHTML = 'Delete';
+            archive_old_logs_text_value.style.color = 'red';
+        }
+    };
+}

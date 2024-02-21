@@ -10,19 +10,29 @@ class ServiceModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getIdServiceConfigForNameAndKey(string $name, string $key) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id'])
+            ->from('service_config')
+            ->where('name = ?', [$name])
+            ->andWhere('key = ?', [$key])
+            ->execute();
+
+        return $qb->fetch('id');
+    }
+
     public function getServiceLogLastEntryForServiceName(string $serviceName) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('service_log')
-                  ->where('name=:name')
-                  ->setParam(':name', $serviceName)
-                  ->orderBy('id', 'DESC')
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('service_log')
+            ->where('name = ?', [$serviceName])
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $row;
+        return $qb->fetch();
     }
 
     public function insertServiceLog(array $data) {
@@ -32,33 +42,25 @@ class ServiceModel extends AModel {
     public function updateService(string $name, string $key, string $value) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('service_config')
-                     ->set(array('value' => ':value'))
-                     ->where('name=:name')
-                     ->andWhere('key=:key')
-                     ->setParams(array(
-                        ':value' => $value,
-                        ':key' => $key,
-                        ':name' => $name
-                     ))
-                     ->execute()
-                     ->fetch();
+        $qb ->update('service_config')
+            ->set(['value' => $value])
+            ->where('name = ?', [$name])
+            ->andWhere('`key` = ?', [$key])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getConfigForServiceName(string $name) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('service_config')
-                   ->where('name=:name')
-                   ->setParam(':name', $name)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('service_config')
+            ->where('name = ?', [$name])
+            ->execute();
 
         $cfg = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $cfg[$row['key']] = $row['value'];
         }
 

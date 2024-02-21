@@ -74,7 +74,7 @@ class ActionAuthorizator extends AAuthorizator {
                 foreach($userGroups as $ug) {
                     $idGroup = $ug->getIdGroup();
 
-                    $dbGroupRights = $this->groupRightModel->getPanelRightsForIdGroup($idGroup);
+                    $dbGroupRights = $this->groupRightModel->getActionRightsForIdGroup($idGroup);
                 
                     foreach($dbGroupRights as $k => $v) {
                         if(array_key_exists($k, $groupRights)) {
@@ -115,7 +115,7 @@ class ActionAuthorizator extends AAuthorizator {
             foreach($userGroups as $ug) {
                 $idGroup = $ug->getIdGroup();
 
-                $dbGroupRights = $this->groupRightModel->getPanelRightsForIdGroup($idGroup);
+                $dbGroupRights = $this->groupRightModel->getActionRightsForIdGroup($idGroup);
                 
                 foreach($dbGroupRights as $k => $v) {
                     if(array_key_exists($k, $groupRights)) {

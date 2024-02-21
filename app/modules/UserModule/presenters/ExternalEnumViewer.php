@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -22,7 +23,7 @@ class ExternalEnumViewer extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'External enum list',
             '$VIEWER_GRID$' => $this->internalCreateList(),
-            '$LINKS$' => ''
+            '$LINKS$' => LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-')
         );
 
         $this->templateManager->fill($data, $template);
@@ -54,91 +55,63 @@ class ExternalEnumViewer extends APresenter {
     private function internalCreateValues(string $name) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $externalEnumComponent = $app->externalEnumComponent;
 
-        $values = $app->externalEnumComponent->getEnumByName($name)->getValues();
+        $dataSourceCallback = function() use ($externalEnumComponent, $name) {
+            $values = $externalEnumComponent->getEnumByName($name)->getValues();
 
-        $headers = array(
-            'Key',
-            'Value'
-        );
+            $arr = [];
+            foreach($values as $k => $v) {
+                $arr[] = new class($k, $v) {
+                    private $key;
+                    private $value;
 
-        $headerRow = null;
+                    function __construct($k, $v) {
+                        $this->key = $k;
+                        $this->value = $v;
+                    }
 
-        foreach($values as $k => $v) {
-            if(is_null($headerRow)) {
-                $row = $tb->createRow();
+                    function getKey() {
+                        return $this->key;
+                    }
 
-                foreach($headers as $header) {
-                    $col = $tb->createCol()->setText($header)->setBold();
-
-                    $row->addCol($col);
-                }
-
-                $tb->addRow($row);
-                $headerRow = $row;
+                    function getValue() {
+                        return $this->value;
+                    }
+                };
             }
 
-            $row = $tb->createRow();
+            return $arr;
+        };
 
-            $row->addCol($tb->createCol()->setText($k))
-                ->addCol($tb->createCol()->setText($v))
-            ;
+        $gb = new GridBuilder();
 
-            $tb->addRow($row);
-        }
+        $gb->addColumns(['key' => 'Key', 'value' => 'Value']);
+        $gb->addDataSourceCallback($dataSourceCallback);
 
-        return $tb->build();
+        return $gb->build();
     }
 
     private function internalCreateList() {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $externalEnumComponent = $app->externalEnumComponent;
 
-        $enums = $app->externalEnumComponent->getEnumsList();
+        $data = function() use ($externalEnumComponent) {
+            $enums = $externalEnumComponent->getEnumsList();
 
-        $headers = array(
-            'Actions',
-            'Name'
-        );
+            return $enums;
+        };
 
-        $headerRow = null;
+        $gb = new GridBuilder();
 
-        foreach($enums as $enum) {
-            $actionLinks = array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:ExternalEnumViewer:showValues', 'name' => $enum->getName()), 'Values')
-            );
+        $gb->addColumns(['name' => 'Name']);
+        $gb->addDataSourceCallback($data);
+        $gb->addAction(function($enum) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:ExternalEnumViewer:showValues', 'name' => $enum->getName()), 'Values');
+        });
 
-            if(is_null($headerRow)) {
-                $row = $tb->createRow();
-
-                foreach($headers as $header) {
-                    $col = $tb->createCol()->setText($header)->setBold();
-
-                    if($header == 'Actions') {
-                        $col->setColspan(count($actionLinks));
-                    }
-
-                    $row->addCol($col);
-                }
-
-                $tb->addRow($row);
-                $headerRow = $row;
-            }
-
-            $row = $tb->createRow();
-
-            foreach($actionLinks as $actionLink) {
-                $row->addCol($tb->createCol()->setText($actionLink));
-            }
-
-            $row->addCol($tb->createCol()->setText($enum->getName()));
-
-            $tb->addRow($row);
-        }
-
-        return $tb->build();
+        return $gb->build();
     }
 }
 

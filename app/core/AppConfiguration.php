@@ -2,6 +2,11 @@
 
 namespace DMS\Core;
 
+/**
+ * Application configuration
+ * 
+ * @author Lukas Velek
+ */
 class AppConfiguration {
     /**
      * ----- DB SERVER -----
@@ -120,6 +125,22 @@ class AppConfiguration {
 
     public static function getEnableRelogin() {
         return self::loadParam('enable_relogin');
+    }
+
+    public static function getFolderMaxNestLevel() {
+        return self::loadParam('folder_max_nest_level');
+    }
+
+    public static function getGridMainFolderHasAllComments() {
+        return self::loadParam('grid_main_folder_has_all_documents');
+    }
+
+    public static function getAbsoluteAppDir() {
+        return self::loadParam('absolute_app_dir');
+    }
+
+    public static function getServiceAutoRun() {
+        return self::loadParam('enable_service_auto_run');
     }
 
     /**

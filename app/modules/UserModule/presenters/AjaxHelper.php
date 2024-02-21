@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Helpers\FormDataHelper;
 use DMS\Modules\APresenter;
 
 class AjaxHelper extends APresenter {
@@ -19,9 +20,9 @@ class AjaxHelper extends APresenter {
 
         $app->flashMessageIfNotIsset(array('message', 'type', 'redirect'), false);
 
-        $message = htmlspecialchars($_GET['message']);
-        $type = htmlspecialchars($_GET['type']);
-        $redirect = htmlspecialchars($_GET['redirect']);
+        $message = FormDataHelper::get('message');
+        $type = FormDataHelper::get('type');
+        $redirect = FormDataHelper::get('redirect');
 
         $toUnset = ['message', 'type', 'redirect', 'page'];
 

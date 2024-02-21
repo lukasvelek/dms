@@ -2,8 +2,11 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\DocumentStatus;
 use DMS\Constants\WidgetLocations;
 use DMS\Modules\APresenter;
+use DMS\UI\GridBuilder\Grid;
+use DMS\UI\LinkBuilder;
 
 class HomePage extends APresenter {
     public const DRAW_TOPPANEL = true;

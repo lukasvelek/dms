@@ -2,10 +2,12 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Entities\MetadataValue;
+use DMS\Entities\User;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Metadata extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -21,8 +23,8 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata', 'id_metadata_value']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
-        $idMetadataValue = htmlspecialchars($_GET['id_metadata_value']);
+        $idMetadata = $this->get('id_metadata');
+        $idMetadataValue = $this->get('id_metadata_value');
 
         $hasDefault = $app->metadataModel->hasMetadataDefaultValue($idMetadata);
 
@@ -41,8 +43,8 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata', 'id_metadata_value']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
-        $idMetadataValue = htmlspecialchars($_GET['id_metadata_value']);
+        $idMetadata = $this->get('id_metadata');
+        $idMetadataValue = $this->get('id_metadata_value');
 
         $app->metadataModel->deleteMetadataValueByIdMetadataValue($idMetadataValue);
 
@@ -55,7 +57,7 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $idMetadata = htmlspecialchars($_GET['id']);
+        $idMetadata = $this->get('id');
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-grid.html');
@@ -90,7 +92,7 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
+        $idMetadata = $this->get('id_metadata');
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-new-entity-form.html');
 
@@ -112,9 +114,9 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata', 'name', 'value']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
-        $name = htmlspecialchars($_POST['name']);
-        $value = htmlspecialchars($_POST['value']);
+        $idMetadata = $this->get('id_metadata');
+        $name = $this->post('name');
+        $value = $this->post('value');
 
         $app->metadataModel->insertMetadataValueForIdMetadata($idMetadata, $name, $value);
 
@@ -128,7 +130,7 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
+        $idMetadata = $this->get('id_metadata');
         $metadata = $app->metadataModel->getMetadataById($idMetadata);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-rights-grid.html');
@@ -151,10 +153,10 @@ class Metadata extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_metadata', 'id_user', 'name', 'action']);
 
-        $idMetadata = htmlspecialchars($_GET['id_metadata']);
-        $idUser = htmlspecialchars($_GET['id_user']);
-        $name = htmlspecialchars($_GET['name']);
-        $action = htmlspecialchars($_GET['action']);
+        $idMetadata = $this->get('id_metadata');
+        $idUser = $this->get('id_user');
+        $name = $this->get('name');
+        $action = $this->get('action');
 
         switch($action) {
             case 'enable':
@@ -174,79 +176,73 @@ class Metadata extends APresenter {
     private function internalCreateRightsGrid(int $idMetadata) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
-
-        $headers = array(
-            'User',
-            'View',
-            'Edit',
-            'View values',
-            'Edit values'
-        );
-
-        $headerRow = null;
+        $userRightModel = $app->userRightModel;
 
         $users = $app->userModel->getAllUsers();
 
-        if(empty($users)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($users as $user) {
-                $idUser = $user->getId();
+        $dataSourceCallback = function() use ($users) {
+            return $users;
+        };
 
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
+        $enableLink = function (string $name, int $idUser) use ($idMetadata) {
+            $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'enable'), 'No', 'general-link', 'color: red');
+            return $link;
+        };
 
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
+        $disableLink = function (string $name, int $idUser) use ($idMetadata) {
+            $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'disable'), 'Yes', 'general-link', 'color: green');
+            return $link;
+        };
 
-                        $row->addCol($col);
-                    }
+        $gb = new GridBuilder();
 
-                    $headerRow = $row;
+        $gb->addColumns(['user' => 'User', 'view' => 'View', 'edit' => 'Edit', 'viewValues' => 'View values', 'editValues' => 'Edit values']);
+        $gb->addOnColumnRender('user', function(User $user) {
+            return $user->getFullname();
+        });
+        $gb->addOnColumnRender('view', function(User $user) use ($idMetadata, $enableLink, $disableLink, $userRightModel) {
+            $userRights = $userRightModel->getMetadataRights($user->getId(), $idMetadata);
 
-                    $tb->addRow($row);
-                }
-
-                $userRow = $tb->createRow();
-
-                $rights = $app->userRightModel->getMetadataRights($idUser, $idMetadata);
-
-                if(is_null($rights)) {
-                    $rights['view'] = '0';
-                    $rights['edit'] = '0';
-                    $rights['view_values'] = '0';
-                    $rights['edit_values'] = '0';
-                }
-
-                $enableLink = function (string $name) use ($idMetadata, $idUser) {
-                    $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'enable'), 'No', 'general-link', 'color: red');
-                    return $link;
-                };
-
-                $disableLink = function (string $name) use ($idMetadata, $idUser) {
-                    $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'disable'), 'Yes', 'general-link', 'color: green');
-                    return $link;
-                };
-
-                $data = array(
-                    $user->getFullname(),
-                    $rights['view'] ? $disableLink('view') : $enableLink('view'),
-                    $rights['edit'] ? $disableLink('edit') : $enableLink('edit'),
-                    $rights['view_values'] ? $disableLink('view_values') : $enableLink('view_values'),
-                    $rights['edit_values'] ? $disableLink('edit_values') : $enableLink('edit_values')
-                );
-
-                foreach($data as $d) {
-                    $userRow->addCol($tb->createCol()->setText($d));
-                }
-
-                $tb->addRow($userRow);
+            $right = 0;
+            if(!is_null($userRights)) {
+                $right = $userRights['view'];
             }
-        }
 
-        return $tb->build();
+            return $right ? $disableLink('view', $user->getId()) : $enableLink('view', $user->getId());
+        });
+        $gb->addOnColumnRender('edit', function(User $user) use ($idMetadata, $enableLink, $disableLink, $userRightModel) {
+            $userRights = $userRightModel->getMetadataRights($user->getId(), $idMetadata);
+
+            $right = 0;
+            if(!is_null($userRights)) {
+                $right = $userRights['edit'];
+            }
+
+            return $right ? $disableLink('edit', $user->getId()) : $enableLink('edit', $user->getId());
+        });
+        $gb->addOnColumnRender('viewValues', function(User $user) use ($idMetadata, $enableLink, $disableLink, $userRightModel) {
+            $userRights = $userRightModel->getMetadataRights($user->getId(), $idMetadata);
+
+            $right = 0;
+            if(!is_null($userRights)) {
+                $right = $userRights['view_values'];
+            }
+
+            return $right ? $disableLink('view_values', $user->getId()) : $enableLink('view_values', $user->getId());
+        });
+        $gb->addOnColumnRender('editValues', function(User $user) use ($idMetadata, $enableLink, $disableLink, $userRightModel) {
+            $userRights = $userRightModel->getMetadataRights($user->getId(), $idMetadata);
+
+            $right = 0;
+            if(!is_null($userRights)) {
+                $right = $userRights['edit_values'];
+            }
+
+            return $right ? $disableLink('edit_values', $user->getId()) : $enableLink('edit_values', $user->getId());
+        });
+        $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
     }
 
     private function internalCreateNewValueForm(int $idMetadata) {
@@ -269,107 +265,72 @@ class Metadata extends APresenter {
     private function internalCreateValuesGrid(int $id, bool $isSystem = false) {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $metadataModel = $app->metadataModel;
+        $externalEnumComponent = $app->externalEnumComponent;
+        $idUser = $app->user->getId();
 
-        $headers = array(
-            'Actions',
-            'Name',
-            'Value'
-        );
+        $dataSourceCallback = function() use ($metadataModel, $externalEnumComponent, $id) {
+            $metadata = $metadataModel->getMetadataById($id);
 
-        $headerRow = null;
+            if($metadata->getInputType() == 'select_external') {
+                $enum = $externalEnumComponent->getEnumByName($metadata->getSelectExternalEnumName());
 
-        $metadata = $app->metadataModel->getMetadataById($id);
+                $values = [];
 
-        if($metadata->getInputType() == 'select_external') {
-            $enum = $app->externalEnumComponent->getEnumByName($metadata->getSelectExternalEnumName());
+                foreach($enum->getValues() as $k => $v) {
+                    $values[] = new class($k, $v) {
+                        private string $key;
+                        private string $value;
 
-            if(empty($enum->getValues())) {
-                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-            } else {
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-    
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-    
-                        $row->addCol($col);
-                    }
-    
-                    $headerRow = $row;
-                
-                    $tb->addRow($row);
-                }
-
-                foreach($enum->getValues() as $name => $text) {
-                    $valueRow = $tb->createRow();
-
-                    $valueRow   ->addCol($tb->createCol()->setText('-'))
-                                ->addCol($tb->createCol()->setText($text))
-                                ->addCol($tb->createCol()->setText($name))
-                    ;
-
-                    $tb->addRow($valueRow);
-                }
-            }
-        } else {
-            $values = $app->metadataModel->getAllValuesForIdMetadata($id);
-
-            if(empty($values)) {
-                $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-            } else {
-                foreach($values as $v) {
-                    $actionLinks = array('new' => '-', 'set_as_default' => '-');
-                    
-                    if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $id) && !$isSystem) {
-                        $actionLinks['new'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Delete');
-
-                        if(!$v->getIsDefault()) {
-                            $actionLinks['set_as_default'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:setAsDefault', 'id_metadata' => $id, 'id_metadata_value' => $v->getId()), 'Set as default');
-                        }
-                    }
-
-                    if(is_null($headerRow)) {
-                        $row = $tb->createRow();
-
-                        foreach($headers as $header) {
-                            $col = $tb->createCol()->setText($header)
-                                                   ->setBold();
-
-                            if($header == 'Actions') {
-                                $col->setColspan(count($actionLinks));
-                            }
-
-                            $row->addCol($col);
+                        public function __construct(string $k, string $v) {
+                            $this->key = $k;
+                            $this->value = $v;
                         }
 
-                        $headerRow = $row;
-                    
-                        $tb->addRow($row);
-                    }
+                        public function getName() {
+                            return $this->value;
+                        }
 
-                    $valueRow = $tb->createRow();
+                        public function getValue() {
+                            return $this->key;
+                        }
+                    };
+                }
 
-                    foreach($actionLinks as $actionLink) {
-                        $valueRow->addCol($tb->createCol()->setText($actionLink));
-                    }
+                return $values;
+            } else {
+                $values = $metadataModel->getAllValuesForIdMetadata($id);
 
-                    $valueArray = array(
-                        $v->getName(),
-                        $v->getValue()
-                    );
+                return $values;
+            }
+        };
 
-                    foreach($valueArray as $va) {
-                        $valueRow->addCol($tb->createCol()->setText($va));
-                    }
+        $idsCanEditMetadataValues = $app->metadataAuthorizator->getEditableMatadataValuesForIdUser($idUser);
 
-                    $tb->addRow($valueRow);
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['name' => 'Name', 'value' => 'Value']);
+        $gb->addDataSourceCallback($dataSourceCallback);
+        $gb->addAction(function($value) use ($idsCanEditMetadataValues, $id, $isSystem) {
+            $actionLink = '-';
+            if($value instanceof MetadataValue) {
+                if(in_array($id, $idsCanEditMetadataValues) && !$isSystem) {
+                    $actionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Delete');
                 }
             }
-        }
+            return $actionLink;
+        });
+        $gb->addAction(function($value) use ($idsCanEditMetadataValues, $id, $isSystem) {
+            $actionLink = '-';
+            if($value instanceof MetadataValue) {
+                if(in_array($id, $idsCanEditMetadataValues) && !$isSystem && !$value->getIsDefault()) {
+                    $actionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:setAsDefault', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Set as default');
+                }
+            }
+            return $actionLink;
+        });
 
-        return $tb->build();
+        return $gb->build();
     }
 }
 

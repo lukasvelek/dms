@@ -2,6 +2,11 @@
 
 namespace DMS\Core;
 
+/**
+ * Allows using external scripts
+ * 
+ * @author Lukas Velek
+ */
 class ScriptLoader {
     /**
      * Method returns HTML code to have JS script loaded.
@@ -64,6 +69,13 @@ class ScriptLoader {
         return $code;
     }
 
+    /**
+     * Alerts a user with given text
+     * 
+     * @param string $text Alert text
+     * @param array $urlConfirm URL used to redirect the user
+     * @return string $code HTML code
+     */
     public static function alert(string $text, array $urlConfirm) {
         $url = '';
 

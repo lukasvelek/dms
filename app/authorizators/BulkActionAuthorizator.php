@@ -151,7 +151,6 @@ class BulkActionAuthorizator extends AAuthorizator {
         }
 
         return $result ? true : false;
-
     }
 }
 

@@ -13,14 +13,22 @@ use DMS\Constants\WidgetLocations;
 use DMS\Core\AppConfiguration;
 use DMS\Core\Application;
 use DMS\Core\CacheManager;
+use DMS\Core\DB\Database;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
+use DMS\Entities\Metadata;
+use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Models\DocumentModel;
+use DMS\Models\FolderModel;
+use DMS\Models\GroupModel;
+use DMS\Models\MailModel;
+use DMS\Models\UserModel;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class Settings extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -36,7 +44,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $notDeletableIdGroups = array(1, 2);
 
@@ -54,7 +62,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $user = $app->userModel->getUserById($id);
 
         $notDeletableIdUsers = array($app->user->getId(), AppConfiguration::getIdServiceUser());
@@ -82,12 +90,12 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_user', 'widget00', 'widget01', 'widget10', 'widget11']);
 
-        $idUser = htmlspecialchars($_GET['id_user']);
+        $idUser = $this->get('id_user');
 
-        $widget0_0 = htmlspecialchars($_POST['widget00']);
-        $widget0_1 = htmlspecialchars($_POST['widget01']);
-        $widget1_0 = htmlspecialchars($_POST['widget10']);
-        $widget1_1 = htmlspecialchars($_POST['widget11']);
+        $widget0_0 = $this->post('widget00');
+        $widget0_1 = $this->post('widget01');
+        $widget1_0 = $this->post('widget10');
+        $widget1_1 = $this->post('widget11');
 
         if($widget0_0 != '-') {
             if(is_null($app->widgetModel->getWidgetForIdUserAndLocation($idUser, WidgetLocations::HOME_DASHBOARD_WIDGET00))) {
@@ -143,9 +151,9 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['name']);
 
-        $name = htmlspecialchars($_GET['name']);
+        $name = $this->get('name');
         
-        $values = $_POST;
+        $values = ArrayHelper::formatArrayData($_POST);
 
         unset($values['name']);
         unset($values['description']);
@@ -168,6 +176,12 @@ class Settings extends APresenter {
             } else {
                 $values['notification_keep_unseen_service_user'] = '1';
             }
+        } else if($name == 'LogRotateService') {
+            if(!array_key_exists('archive_old_logs', $values)) {
+                $values['archive_old_logs'] = '0';
+            } else {
+                $values['archive_old_logs'] = '1';
+            }
         }
 
         foreach($values as $k => $v) {
@@ -189,12 +203,15 @@ class Settings extends APresenter {
         
         $app->flashMessageIfNotIsset(['name']);
         
-        $name = htmlspecialchars($_GET['name']);
+        $name = $this->get('name');
 
         $data = array(
             '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
-            '$FORM$' => $this->internalCreateEditServiceForm($name)
+            '$FORM$' => $this->internalCreateEditServiceForm($name),
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showServices', '<-');
 
         $this->templateManager->fill($data, $template);
 
@@ -228,7 +245,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['name']);
 
-        $name = htmlspecialchars($_GET['name']);
+        $name = $this->get('name');
 
         $urlConfirm = array(
             'page' => 'UserModule:Settings:runService',
@@ -249,7 +266,8 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['name']);
 
-        $name = htmlspecialchars($_GET['name']);
+        $name = $this->get('name');
+        $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
 
         foreach($app->serviceManager->services as $service) {
             if($service->name == $name) {
@@ -258,6 +276,8 @@ class Settings extends APresenter {
                 $app->logger->logFunction(function() use ($service) {
                     $service->run();
                 }, __METHOD__);
+
+                $cm->invalidateCache();
 
                 break;
             }
@@ -282,10 +302,10 @@ class Settings extends APresenter {
 
         $idFolder = null;
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
 
-            if((($folder->getNestLevel() + 1) < 6) && ($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER))) {
+            if((($folder->getNestLevel() + 1) < AppConfiguration::getFolderMaxNestLevel()) && ($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER))) {
                 $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showNewFolderForm', 'id_parent_folder' => $idFolder), 'New folder');
             } else {
                 $newEntityLink = '';
@@ -317,18 +337,18 @@ class Settings extends APresenter {
         return $template;
     }
 
-    protected function showNewFolderForm() {
+    protected function showEditFolderForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_folder']);
+        $idFolder = $this->get('id_folder');
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
-        $idParentFolder = null;
-
-        if(isset($_GET['id_parent_folder'])) {
-            $idParentFolder = htmlspecialchars($_GET['id_parent_folder']);
-        }
-
         $data = array(
-            '$PAGE_TITLE$' => 'New document folder form',
-            '$FORM$' => $this->internalCreateNewFolderForm($idParentFolder)
+            '$PAGE_TITLE$' => 'Edit document folder form',
+            '$FORM$' => $this->internalCreateEditFolderForm((int)($idFolder)),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
@@ -336,22 +356,44 @@ class Settings extends APresenter {
         return $template;
     }
 
-    protected function createNewFolder() {
+    protected function showNewFolderForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $idParentFolder = null;
+
+        if(isset($_GET['id_parent_folder'])) {
+            $idParentFolder = $this->get('id_parent_folder');
+        }
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New document folder form',
+            '$FORM$' => $this->internalCreateNewFolderForm($idParentFolder),
+            '$LINKS$' => []
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function processUpdateFolderForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['name', 'parent_folder']);
+        $app->flashMessageIfNotIsset(['name', 'parent_folder', 'id_folder']);
 
+        $idFolder = $this->get('id_folder');
+        
         $data = [];
 
-        $parentFolder = htmlspecialchars($_POST['parent_folder']);
+        $parentFolder = $this->post('parent_folder');
         $nestLevel = 0;
 
-        $data['name'] = htmlspecialchars($_POST['name']);
+        $data['name'] = $this->post('name');
 
         $create = true;
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = htmlspecialchars($_POST['description']);
+            $data['description'] = $this->post('description');
         }
 
         if($parentFolder == '-1') {
@@ -364,6 +406,55 @@ class Settings extends APresenter {
             $nestLevel = $nestLevelParentFolder->getNestLevel() + 1;
 
             if($nestLevel == 6) {
+                $create = false;
+            }
+        }
+
+        $data['nest_level'] = $nestLevel;
+
+        if($create == true) {
+            $app->folderModel->updateFolder($idFolder, $data);
+        }
+
+        $idFolder = $app->folderModel->getLastInsertedFolder()->getId();
+        
+        $app->logger->info('Inserted new folder #' . $idFolder, __METHOD__);
+
+        if($parentFolder != '-1') {
+            $app->redirect('UserModule:Settings:showFolders', array('id_folder' => $idFolder));
+        } else {
+            $app->redirect('UserModule:Settings:showFolders');
+        }
+    }
+
+    protected function createNewFolder() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['name', 'parent_folder']);
+
+        $data = [];
+
+        $parentFolder = $this->post('parent_folder');
+        $nestLevel = 0;
+
+        $data['name'] = $this->post('name');
+
+        $create = true;
+
+        if(isset($_POST['description']) && $_POST['description'] != '') {
+            $data['description'] = $this->post('description');
+        }
+
+        if($parentFolder == '-1') {
+            $parentFolder = null;
+        } else {
+            $data['id_parent_folder'] = $parentFolder;
+
+            $nestLevelParentFolder = $app->folderModel->getFolderById($parentFolder);
+
+            $nestLevel = $nestLevelParentFolder->getNestLevel() + 1;
+
+            if($nestLevel == AppConfiguration::getFolderMaxNestLevel()) {
                 $create = false;
             }
         }
@@ -415,17 +506,13 @@ class Settings extends APresenter {
         $page = 1;
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
         $usersGrid = '';
 
-        $app->logger->logFunction(function() use (&$usersGrid, $app, $page) {
-            if($app->getGridUseAjax()) {
-                $usersGrid = $this->internalCreateUsersGridAjax($page);
-            } else {
-                $usersGrid = $this->internalCreateUsersGrid();
-            }
+        $app->logger->logFunction(function() use (&$usersGrid, $page) {
+            $usersGrid = $this->internalCreateUsersGridAjax($page);
         }, __METHOD__);
 
         $data = array(
@@ -455,15 +542,11 @@ class Settings extends APresenter {
         $page = 1;
 
         if(isset($_GET['grid_page'])) {
-            $page = (int)(htmlspecialchars($_GET['grid_page']));
+            $page = (int)($this->get('grid_page'));
         }
 
-        $app->logger->logFunction(function() use (&$groupsGrid, $app, $page) {
-            if($app->getGridUseAjax()) {
-                $groupsGrid = $this->internalCreateGroupGridAjax($page);
-            } else {
-                $groupsGrid = $this->internalCreateGroupGrid();
-            }
+        $app->logger->logFunction(function() use (&$groupsGrid, $page) {
+            $groupsGrid = $this->internalCreateGroupGridAjax($page);
         }, __METHOD__);
 
         $data = array(
@@ -522,12 +605,27 @@ class Settings extends APresenter {
         }
 
         if(Application::SYSTEM_DEBUG && $app->actionAuthorizator->checkActionRight(UserActionRights::USE_DOCUMENT_GENERATOR)) {
-            $widgets[] = LinkBuilder::createLink('UserModule:DocumentGenerator:showForm', 'Document generator');
+            $widgets[] = LinkBuilder::createLink('UserModule:DocumentGenerator:showForm', 'Document generator') . '<br>';
+        }
+
+        $widgets[] = LinkBuilder::createLink('UserModule:ImageBrowser:showAll', 'Images');
+
+        $widgetsCode = '';
+
+        $x = 100;
+        foreach($widgets as $widget) {
+            $code = '<div id="subpanel" style="position: absolute; top: 15%; left: ' . $x . 'px; width: 250px; height: 100px;">';
+            $code .= $widget;
+            $code .= '</div>';
+
+            $widgetsCode .= $code;
+
+            $x += 260;
         }
 
         $data = array(
             '$PAGE_TITLE$' => 'System',
-            '$WIDGETS$' => $widgets
+            '$WIDGETS$' => $widgetsCode
         );
 
         $this->templateManager->fill($data, $template);
@@ -543,14 +641,33 @@ class Settings extends APresenter {
         $app->redirect('UserModule:Settings:showSystem');
     }
 
-    protected function showNewMetadataForm() {
+    protected function showEditMetadataForm() {
         global $app;
+
+        $app->flashMessageIfNotIsset(['id_metadata']);
+        $idMetadata = $this->get('id_metadata');
+        $metadata = $app->metadataModel->getMetadataById($idMetadata);
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
 
         $data = array(
             '$PAGE_TITLE$' => 'New metadata form',
-            '$FORM$' => $this->internalCreateNewMetadataForm()
+            '$FORM$' => $this->internalCreateEditMetadataForm($metadata),
+            '$LINKS$' => []
+        );
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showNewMetadataForm() {
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+
+        $data = array(
+            '$PAGE_TITLE$' => 'New metadata form',
+            '$FORM$' => $this->internalCreateNewMetadataForm(),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
@@ -563,7 +680,8 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New user form',
-            '$FORM$' => $this->internalCreateNewUserForm()
+            '$FORM$' => $this->internalCreateNewUserForm(),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
@@ -576,12 +694,34 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New group form',
-            '$FORM$' => $this->internalCreateNewGroupForm()
+            '$FORM$' => $this->internalCreateNewGroupForm(),
+            '$LINKS$' => []
         );
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function processEditMetadataForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['name', 'text', 'id_metadata']);
+
+        $idMetadata = $this->get('id_metadata');
+
+        $data = [];
+        $data['name'] = $this->post('name');
+        $data['text'] = $this->post('text');
+
+        if(isset($_POST['readonly'])) {
+            $data['is_readonly'] = '1';
+        }
+
+        $app->metadataModel->updateMetadata($idMetadata, $data);
+
+        $app->flashMessage('Saved metadata #'. $idMetadata, 'success');
+        $app->redirect('UserModule:Settings:showMetadata');
     }
 
     protected function createNewMetadata() {
@@ -591,22 +731,20 @@ class Settings extends APresenter {
 
         $data = [];
 
-        $name = htmlspecialchars($_POST['name']);
-        $tableName = htmlspecialchars($_POST['table_name']);
-        $length = htmlspecialchars($_POST['length']);
-        $inputType = htmlspecialchars($_POST['input_type']);
+        $data['name'] = $name = $this->post('name');
+        $data['table_name'] = $tableName = $this->post('table_name');
+        $length = $this->post('length');
+        $inputType = $this->post('input_type');
 
         if(isset($_POST['select_external_enum']) && $inputType == 'select_external') {
-            $data['select_external_enum_name'] = htmlspecialchars($_POST['select_external_enum']);
+            $data['select_external_enum_name'] = $this->post('select_external_enum');
         }
 
         if(isset($_POST['readonly'])) {
             $data['is_readonly'] = '1';
         }
 
-        $data['name'] = htmlspecialchars($_POST['name']);
-        $data['text'] = htmlspecialchars($_POST['text']);
-        $data['table_name'] = htmlspecialchars($_POST['table_name']);
+        $data['text'] = $this->post('text');
         $data['input_type'] = $inputType;
 
         if($inputType == 'boolean') {
@@ -650,7 +788,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $metadata = $app->metadataModel->getMetadataById($id);
 
         // delete table column
@@ -671,11 +809,11 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['name']);
 
-        $name = htmlspecialchars($_POST['name']);
+        $name = $this->post('name');
         $code = null;
 
         if(isset($_POST['code'])) {
-            $code = htmlspecialchars($_POST['code']);
+            $code = $this->post('code');
         }
 
         $app->groupModel->insertNewGroup($name, $code);
@@ -700,26 +838,26 @@ class Settings extends APresenter {
         $app->flashMessageIfNotIsset($required);
 
         foreach($required as $r) {
-            $data[$r] = htmlspecialchars($_POST[$r]);
+            $data[$r] = $this->post($r);
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
-            $data['email'] = htmlspecialchars($_POST['email']);
+            $data['email'] = $this->post('email');
         }
         if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
-            $data['address_street'] = htmlspecialchars($_POST['address_street']);
+            $data['address_street'] = $this->post('address_street');
         }
         if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
-            $data['address_house_number'] = htmlspecialchars($_POST['address_house_number']);
+            $data['address_house_number'] = $this->post('address_house_number');
         }
         if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
-            $data['address_city'] = htmlspecialchars($_POST['address_city']);
+            $data['address_city'] = $this->post('address_city');
         }
         if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
-            $data['address_zip_code'] = htmlspecialchars($_POST['address_zip_code']);
+            $data['address_zip_code'] = $this->post('address_zip_code');
         }
         if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
-            $data['address_country'] = htmlspecialchars($_POST['address_country']);
+            $data['address_country'] = $this->post('address_country');
         }
 
         $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
@@ -743,7 +881,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_folder']);
 
-        $id = htmlspecialchars($_GET['id_folder']);
+        $id = $this->get('id_folder');
 
         $urlConfirm = array(
             'page' => 'UserModule:Settings:deleteFolder',
@@ -764,7 +902,7 @@ class Settings extends APresenter {
 
         $app->flashMessageIfNotIsset(['id_folder']);
 
-        $idFolder = htmlspecialchars($_GET['id_folder']);
+        $idFolder = $this->get('id_folder');
         $folder = $app->folderModel->getFolderById($idFolder);
 
         $childFolders = [];
@@ -845,6 +983,26 @@ class Settings extends APresenter {
         return $form;
     }
 
+    private function internalCreateEditMetadataForm(Metadata $metadata) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Setttings:processEditMetadataForm&id_metadata=' . $metadata->getId())
+
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createInput()->setType('text')->setName('name')->setValue($metadata->getName())->disable()->require())
+
+            ->addElement($fb->createLabel()->setText('Text')->setFor('text'))
+            ->addElement($fb->createInput()->setType('text')->setName('text')->setValue($metadata->getText())->require())
+
+            ->addElement($fb->createLabel()->setFor('readonly')->setText('Readonly'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('readonly')->setSpecial($metadata->getIsReadonly() ? 'checked' : ''))
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        return $fb->build();
+    }
+
     private function internalCreateNewMetadataForm() {
         global $app;
 
@@ -919,165 +1077,11 @@ class Settings extends APresenter {
         return $code;
     }
 
-    private function internalCreateGroupGrid() {
-        global $app;
-
-        $tb = TableBuilder::getTemporaryObject();
-
-        $headers = array(
-            'Actions',
-            'Name',
-            'Code'
-        );
-
-        $headerRow = null;
-
-        $groups = $app->groupModel->getAllGroups();
-
-        if(empty($groups)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($groups as $group) {
-                $actionLinks = [];
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_GROUP_USERS)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $group->getId()), 'Users');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_GROUP_RIGHTS)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId()), 'Group rights');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-                
-                    $tb->addRow($row);
-                }
-
-                $groupRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $groupRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $groupData = array(
-                    $group->getName() ?? '-',
-                    $group->getCode() ?? '-'
-                );
-
-                foreach($groupData as $gd) {
-                    $groupRow->addCol($tb->createCol()->setText($gd));
-                }
-
-                $tb->addRow($groupRow);
-            }
-        }
-
-        return $tb->build();
-    }
-
     private function internalCreateUsersGridAjax(int $page = 1) {
         $code = '<script type="text/javascript">loadUsers("' . $page . '");</script>';
         $code .= '<table border="1"><img id="users-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
 
         return $code;
-    }
-
-    private function internalCreateUsersGrid() {
-        global $app;
-
-        $tb = TableBuilder::getTemporaryObject();
-
-        $headers = array(
-            'Actions',
-            'Firstname',
-            'Lastname',
-            'Username',
-            'Email',
-            'Status'
-        );
-
-        $headerRow = null;
-
-        $users = $app->userModel->getAllUsers();
-
-        if(empty($users)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($users as $user) {
-                $actionLinks = [];
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_USER_PROFILE)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $user->getId()), 'Profile');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS)) {
-                    $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId()), 'User rights');
-                } else {
-                    $actionLinks[] = '-';
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-                
-                    $tb->addRow($row);
-                }
-
-                $userRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $userRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $userData = array(
-                    $user->getFirstname() ?? '-',
-                    $user->getLastname() ?? '-',
-                    $user->getUsername() ?? '-',
-                    $user->getEmail() ?? '-',
-                    UserStatus::$texts[$user->getStatus()]
-                );
-
-                foreach($userData as $ud) {
-                    $userRow->addCol($tb->createCol()->setText($ud));
-                }
-
-                $tb->addRow($userRow);
-            }
-        }
-
-        return $tb->build();
     }
 
     private function internalDashboardCreateWidgets() {
@@ -1135,11 +1139,21 @@ class Settings extends APresenter {
     private function internalCreateCountWidget() {
         global $app;
 
-        $users = $app->userModel->getUserCount();
-        $groups = $app->groupModel->getGroupCount();
-        $documents = $app->documentModel->getTotalDocumentCount();
-        $folders = $app->folderModel->getFolderCount();
-        $emails = $app->mailModel->getMailInQueueCount();
+        $counts = $app->logger->logFunction(function(UserModel $userModel, GroupModel $groupModel, DocumentModel $documentModel, FolderModel $folderModel, MailModel $mailModel) {
+            $users = $userModel->getUserCount();
+            $groups = $groupModel->getGroupCount();
+            $documents = $documentModel->getTotalDocumentCount(null);
+            $folders = $folderModel->getFolderCount();
+            $emails = $mailModel->getMailInQueueCount();
+
+            return [
+                'users' => $users,
+                'groups' => $groups,
+                'documents' => $documents,
+                'folders' => $folders,
+                'emails' => $emails
+            ];
+        }, __METHOD__, [$app->userModel, $app->groupModel, $app->documentModel, $app->folderModel, $app->mailModel]);
 
         $code = '<div class="col-md">
                     <div class="row">
@@ -1149,11 +1163,11 @@ class Settings extends APresenter {
                     </div>
                     <div class="row">
                         <div class="col-md">
-                            <p><b>Total users: </b>' . $users . '</p>
-                            <p><b>Total groups: </b>' . $groups . '</p>
-                            <p><b>Total documents: </b>' . $documents . '</p>
-                            <p><b>Total folders: </b>' . $folders . '</p>
-                            <p><b>Total emails in queue: </b>' . $emails . '</p>
+                            <p><b>Total users: </b>' . $counts['users'] . '</p>
+                            <p><b>Total groups: </b>' . $counts['groups'] . '</p>
+                            <p><b>Total documents: </b>' . $counts['documents'] . '</p>
+                            <p><b>Total folders: </b>' . $counts['folders'] . '</p>
+                            <p><b>Total emails in queue: </b>' . $counts['emails'] . '</p>
                         </div>
                     </div>
                 </div>';
@@ -1164,157 +1178,166 @@ class Settings extends APresenter {
     private function internalCreateMetadataGrid() {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $metadataModel = $app->metadataModel;
+        $idUser = $app->user->getId();
 
-        $headers = array(
-            'Actions',
-            'Name',
-            'Text',
-            'Database table',
-            'Input type'
-        );
-        
-        $headerRow = null;
+        $canDeleteMetadata = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA);
+        $canEditMetadata = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA);
+        $canEditMetadataValues = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES);
+        $canEditUserMetadataRights = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER_METADATA_RIGHTS);
 
-        $metadata = $app->metadataModel->getAllMetadata();
+        $idsEditableMetadata = $app->metadataAuthorizator->getEditableMetadataForIdUser($idUser);
+        $idsMetadataViewMetadataValues = $app->metadataAuthorizator->getViewMetadataForIdUser($idUser);
+        $idsViewableMetadata = $app->metadataAuthorizator->getViewableMetadataForIdUser($idUser);
 
-        if(empty($metadata)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($metadata as $m) {
-                $actionLinks = array(
-                    'values' => '-',
-                    'delete' => '-',
-                    'edit_user_rights' => '-'
-                );
-
-                if(!$app->metadataAuthorizator->canUserViewMetadata($app->user->getId(), $m->getId())) continue;
-
-                if($app->metadataAuthorizator->canUserEditMetadata($app->user->getId(), $m->getId()) && !$m->getIsSystem() && $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA)) {
-                    $actionLinks['delete'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $m->getId()), 'Delete');
+        $data = function() use ($metadataModel, $idsViewableMetadata) {
+            $values = [];
+            foreach($metadataModel->getAllMetadata() as $m) {
+                if(in_array($m->getId(), $idsViewableMetadata)) {
+                    $values[] = $m;
                 }
-
-                if(($m->getInputType() == 'select' || $m->getInputType() == 'select_external') && $app->metadataAuthorizator->canUserViewMetadataValues($app->user->getId(), $m->getId()) && $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES)) {
-                    $actionLinks['values'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $m->getId()), 'Values');
-                }
-
-                if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER_METADATA_RIGHTS)) {
-                    $actionLinks['edit_user_rights'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showUserRights', 'id_metadata' => $m->getId()), 'User rights');
-                }
-
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
-
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
-
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
-
-                        $row->addCol($col);
-                    }
-
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $metaRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $metaRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $metaArray = array(
-                    $m->getName(),
-                    $m->getText(),
-                    $m->getTableName(),
-                    MetadataInputType::$texts[$m->getInputType()]
-                );
-
-                foreach($metaArray as $ma) {
-                    $metaRow->addCol($tb->createCol()->setText($ma));
-                }
-
-                $tb->addRow($metaRow);
             }
-        }
+            return $values;
+        };
 
-        return $tb->build();
+        $gb = new GridBuilder();
+        
+        $gb->addColumns(['name' => 'Name', 'text' => 'Text', 'dbTable' => 'Database table', 'inputType' => 'Input type']);
+        $gb->addDataSourceCallback($data);
+        $gb->addOnColumnRender('dbTable', function (\DMS\Entities\Metadata $metadata) {
+            return $metadata->getTableName();
+        });
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($idsEditableMetadata, $canDeleteMetadata) {
+            $link = '-';
+            if(in_array($metadata->getId(), $idsEditableMetadata) &&
+               $canDeleteMetadata &&
+               !$metadata->getIsSystem()) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $metadata->getId()), 'Delete');
+            }
+            return $link;
+        });
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($idsEditableMetadata, $canEditMetadata) {
+            $link = '-';
+            if(in_array($metadata->getId(), $idsEditableMetadata) &&
+               $canEditMetadata) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showEditMetadataForm', 'id_metadata' => $metadata->getId()), 'Edit');
+            }
+            return $link;
+        });
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($idsMetadataViewMetadataValues, $canEditMetadataValues) {
+            $link = '-';
+            if((in_array($metadata->getInputType(), ['select', 'select_external'])) &&
+               in_array($metadata->getId(), $idsMetadataViewMetadataValues) &&
+               $canEditMetadataValues) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $metadata->getId()), 'Values');
+            }
+            return $link;
+        });
+        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($canEditUserMetadataRights) {
+            $link = '-';
+            if($canEditUserMetadataRights) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showUserRights', 'id_metadata' => $metadata->getId()), 'User rights');
+            }
+            return $link;
+        });
+
+        return $gb->build();
     }
 
     private function internalCreateFolderGrid() {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $folderModel = $app->folderModel;
 
         $idFolder = null;
 
         if(isset($_GET['id_folder'])) {
-            $idFolder = htmlspecialchars($_GET['id_folder']);
+            $idFolder = $this->get('id_folder');
         }
 
-        $headers = array(
-            'Actions',
-            'Name',
-            'Description'
-        );
+        $data = function() use ($folderModel, $idFolder) {
+            return $folderModel->getFoldersForIdParentFolder($idFolder);
+        };
 
-        $headerRow = null;
+        $gb = new GridBuilder();
 
-        $folders = $app->folderModel->getFoldersForIdParentFolder($idFolder);
-        $cacheFolders = [];
+        $gb->addColumns(['name' => 'Name', 'description' => 'Description']);
+        $gb->addDataSourceCallback($data);
+        $gb->addAction(function(Folder $folder) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open');
+        });
+        $gb->addAction(function(Folder $folder) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showEditFolderForm', 'id_folder' => $folder->getId()), 'Edit');
+        });
+        $gb->addAction(function(Folder $folder) {
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete');
+        });
 
-        foreach($folders as $folder) {
-            $cacheFolders[$folder->getId()] = array('name' => $folder->getName(), 'description' => $folder->getDescription());
-        }
+        return $gb->build();
+    }
 
-        if(empty($folders)) {
-            $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText('No data found')));
-        } else {
-            foreach($folders as $folder) {
-                $actionLinks = array(
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open'),
-                    LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete')
-                );
+    private function internalCreateEditFolderForm(int $idFolder) {
+        global $app;
 
-                if(is_null($headerRow)) {
-                    $row = $tb->createRow();
+        $fb = FormBuilder::getTemporaryObject();
 
-                    foreach($headers as $header) {
-                        $col = $tb->createCol()->setText($header)
-                                               ->setBold();
+        $folder = null;
 
-                        if($header == 'Actions') {
-                            $col->setColspan(count($actionLinks));
-                        }
+        $foldersDb = [];
 
-                        $row->addCol($col);
-                    }
+        $app->logger->logFunction(function() use ($app, &$foldersDb) {
+            $foldersDb = $app->folderModel->getAllFolders();
+        }, __METHOD__);
 
-                    $headerRow = $row;
-
-                    $tb->addRow($row);
-                }
-
-                $folderRow = $tb->createRow();
-
-                foreach($actionLinks as $actionLink) {
-                    $folderRow->addCol($tb->createCol()->setText($actionLink));
-                }
-
-                $folderRow->addCol($tb->createCol()->setText($folder->getName()))
-                          ->addCol($tb->createCol()->setText($folder->getDescription() ?? '-'));
-
-                $tb->addRow($folderRow);
+        foreach($foldersDb as $fdb) {
+            if($fdb->getId() == $idFolder) {
+                $folder = $fdb;
             }
         }
 
-        return $tb->build();
-    }
+        if($folder === NULL) {
+            die('Folder does not exist!');
+        }
 
+        $foldersArr = array(array(
+            'value' => '-1',
+            'text' => 'None'
+        ));
+        foreach($foldersDb as $fdb) {
+            $temp = array(
+                'value' => $fdb->getId(),
+                'text' => $fdb->getName()
+            );
+
+            if(!is_null($folder->getIdParentFolder()) && ($fdb->getId() == $folder->getIdParentFolder())) {
+                $temp['selected'] = 'selected';
+            }
+
+            $foldersArr[] = $temp;
+        }
+
+        $textArea = $fb->createTextArea()->setName('description');
+        if($folder->getDescription() !== NULL) {
+            $textArea->setText($folder->getDescription());
+        }
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:processUpdateFolderForm&id_folder=' . $idFolder)
+
+            ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
+            ->addElement($fb->createInput()->setType('input')->setName('name')->setValue($folder->getName())->require())
+
+            ->addElement($fb->createLabel()->setFor('parent_folder')->setText('Parent folder'))
+            ->addElement($fb->createSelect()->setName('parent_folder')->addOptionsBasedOnArray($foldersArr))
+
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($textArea)
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        return $fb->build();
+    }
+    
     private function internalCreateNewFolderForm(?int $idParentFolder) {
         global $app;
 
@@ -1363,78 +1386,80 @@ class Settings extends APresenter {
     private function internalCreateServicesGrid() {
         global $app;
 
-        $tb = TableBuilder::getTemporaryObject();
+        $serviceManager = $app->serviceManager;
+        $user = $app->user;
 
-        $headers = array(
-            'Actions',
-            'System name',
-            'Name',
-            'Description',
-            'Last run date'
-        );
+        $data = function() use ($serviceManager, $user) {
+            $values = [];
+            foreach($serviceManager->services as $k => $v) {
+                $serviceLastRunDate = $serviceManager->getLastRunDateForService($v->name);
+                $serviceNextRunDate = $serviceManager->getNextRunDateForService($v->name);
 
-        $headerRow = null;
+                $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
+                $serviceNextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceNextRunDate, $user);
 
-        $services = $app->serviceManager->services;
+                $values[] = new class($v->name, $k, $v->description, $serviceLastRunDate, $serviceNextRunDate) {
+                    private $systemName;
+                    private $name;
+                    private $description;
+                    private $lastRunDate;
+                    private $nextRunDate;
 
-        foreach($services as $serviceName => $service) {
-            $actionLinks = [];
-
-            if($app->actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->name), 'Run');
-            } else {
-                $actionLinks[] = '-';
-            }
-
-            if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE)) {
-                $actionLinks[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->name), 'Edit');
-            } else {
-                $actionLinks[] = '-';
-            }
-
-            if(is_null($headerRow)) {
-                $row = $tb->createRow();
-
-                foreach($headers as $header) {
-                    $col = $tb->createCol()->setText($header)
-                                           ->setBold();
-
-                    if($header == 'Actions') {
-                        $col->setColspan(count($actionLinks));
+                    function __construct($systemName, $name, $description, $lastRunDate, $nextRunDate) {
+                        $this->systemName = $systemName;
+                        $this->name = $name;
+                        $this->description = $description;
+                        $this->lastRunDate = $lastRunDate;
+                        $this->nextRunDate = $nextRunDate;
                     }
 
-                    $row->addCol($col);
-                }
+                    function getSystemName() {
+                        return $this->systemName;
+                    }
 
-                $headerRow = $row;
+                    function getName() {
+                        return $this->name;
+                    }
 
-                $tb->addRow($row);
+                    function getDescription() {
+                        return $this->description;
+                    }
+
+                    function getLastRunDate() {
+                        return $this->lastRunDate;
+                    }
+
+                    function getNextRunDate() {
+                        return $this->nextRunDate;
+                    }
+                };
             }
+            return $values;
+        };
 
-            $serviceRow = $tb->createRow();
+        $canRunService = $app->actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE);
+        $canEditService = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE);
 
-            foreach($actionLinks as $actionLink) {
-                $serviceRow->addCol($tb->createCol()->setText($actionLink));
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['systemName' => 'System name', 'name' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
+        $gb->addDataSourceCallback($data);
+        $gb->addAction(function($service) use ($canRunService) {
+            $link = '-';
+            if($canRunService) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
-
-            $serviceLogEntry = $app->serviceModel->getServiceLogLastEntryForServiceName($service->name);
-            $serviceLastRunDate = '-';
-            
-            if($serviceLogEntry !== NULL) {
-                $serviceLastRunDate = $serviceLogEntry['date_created'];
-                $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $app->user);
+            return $link;
+        });
+        $gb->addAction(function($service) use ($canEditService) {
+            $link = '-';
+            if($canEditService) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->getSystemName()), 'Edit');
             }
+            return $link;
+        });
 
-            $serviceRow ->addCol($tb->createCol()->setText($service->name))
-                        ->addCol($tb->createCol()->setText($serviceName))
-                        ->addCol($tb->createCol()->setText($service->description))
-                        ->addCol($tb->createCol()->setText($serviceLastRunDate))
-            ;
-
-            $tb->addRow($serviceRow);
-        }
-
-        return $tb->build();
+        return $gb->build();
     }
 
     private function _getFolderCount(int &$count, Folder $folder) {
@@ -1547,6 +1572,30 @@ class Settings extends APresenter {
 
                     $fb->addElement($checkbox);
 
+                    break;
+
+                case ServiceMetadata::SERVICE_RUN_PERIOD:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="service_run_period_text_value">__VAL__</span>'))
+                    ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax('30')->setName($key)->setValue($value))
+                    ;
+
+                    break;
+
+                case ServiceMetadata::ARCHIVE_OLD_LOGS:
+                    $fb
+                    ->addElement($fb->createSpecial('<span id="archive_old_logs_text_value">__VAL__</span>'))
+                    ;
+
+                    $checkbox = $fb->createInput()->setType('checkbox')->setName($key);
+
+                    if($value == '1') {
+                        $checkbox->setSpecial('checked');
+                    }
+
+                    $fb->addElement($checkbox);
+
+                    break;
                     break;
             }
         }
@@ -1718,26 +1767,26 @@ class Settings extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($userCount <= ($page * $app->getGridSize())) {
+        if($userCount <= ($page * AppConfiguration::getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($userCount / $app->getGridSize()));
+        $lastPageLink .= '&grid_page=' . (ceil($userCount / AppConfiguration::getGridSize()));
         $lastPageLink .= '"';
         
-        if($userCount <= ($page * $app->getGridSize())) {
+        if($userCount <= ($page * AppConfiguration::getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($userCount > $app->getGridSize()) {
-            if($pageCheck * $app->getGridSize() >= $userCount) {
-                $userPageControl = (1 + ($page * $app->getGridSize()));
+        if($userCount > AppConfiguration::getGridSize()) {
+            if($pageCheck * AppConfiguration::getGridSize() >= $userCount) {
+                $userPageControl = (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $userPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
+                $userPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
             }
         } else {
             $userPageControl = $userCount;
@@ -1783,26 +1832,26 @@ class Settings extends APresenter {
         $nextPageLink .= '&grid_page=' . ($page + 1);
         $nextPageLink .= '"';
 
-        if($groupCount <= ($page * $app->getGridSize())) {
+        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
             $nextPageLink .= ' hidden';
         }
 
         $nextPageLink .= '>&gt;</a>';
 
-        $lastPageLink .= '&grid_page=' . (ceil($groupCount / $app->getGridSize()));
+        $lastPageLink .= '&grid_page=' . (ceil($groupCount / AppConfiguration::getGridSize()));
         $lastPageLink .= '"';
         
-        if($groupCount <= ($page * $app->getGridSize())) {
+        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
             $lastPageLink .= ' hidden';
         }
 
         $lastPageLink .= '>&gt;&gt;</a>';
 
-        if($groupCount > $app->getGridSize()) {
-            if($pageCheck * $app->getGridSize() >= $groupCount) {
-                $groupPageControl = (1 + ($page * $app->getGridSize()));
+        if($groupCount > AppConfiguration::getGridSize()) {
+            if($pageCheck * AppConfiguration::getGridSize() >= $groupCount) {
+                $groupPageControl = (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $groupPageControl = (1 + ($pageCheck * $app->getGridSize())) . '-' . ($app->getGridSize() + ($pageCheck * $app->getGridSize()));
+                $groupPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
             }
         } else {
             $groupPageControl = $groupCount;

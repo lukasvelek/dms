@@ -29,7 +29,7 @@ class SingleProcess extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $process = $app->processModel->getProcessById($id);
 
@@ -58,7 +58,7 @@ class SingleProcess extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $urlConfirm = array(
             'page' => 'UserModule:SingleProcess:finish',
@@ -80,7 +80,7 @@ class SingleProcess extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $urlConfirm = array(
             'page' => 'UserModule:SingleProcess:approve',
@@ -102,7 +102,7 @@ class SingleProcess extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $urlConfirm = array(
             'page' => 'UserModule:SingleProcess:decline',
@@ -124,7 +124,7 @@ class SingleProcess extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $app->processComponent->moveProcessToNextWorkflowUser($id);
 
@@ -138,7 +138,7 @@ class SingleProcess extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
 
         $app->processComponent->endProcess($id);
 
@@ -152,7 +152,7 @@ class SingleProcess extends APresenter {
 
         $app->flashMessageIfNotIsset(['id']);
 
-        $id = htmlspecialchars($_GET['id']);
+        $id = $this->get('id');
         $process = $app->processModel->getProcessById($id);
 
         if(is_null($process)) {
@@ -276,8 +276,8 @@ class SingleProcess extends APresenter {
 
         $currentOfficer = ${'workflow' . $process->getWorkflowStatus() . 'User'};
 
-        $document = $app->documentModel->getDocumentById($process->getIdDocument());
-        $documentLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), $document->getName());
+        /*$document = $app->documentModel->getDocumentById($process->getIdDocument());
+        $documentLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), $document->getName());*/
 
         $tb ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow 1')->setBold())
                                      ->addCol($tb->createCol()->setText($workflow1User)))
@@ -293,9 +293,22 @@ class SingleProcess extends APresenter {
                                      ->addCol($tb->createCol()->setText($currentOfficer)))
             ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Author')->setBold())
                                      ->addCol($tb->createCol()->setText($author)))
-            ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Document')->setBold())
-                                     ->addCol($tb->createCol()->setText($documentLink)))
+            ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Is archive')->setBold())
+                                     ->addCol($tb->createCol()->setText($process->isArchive() ? 'Yes' : 'No')))
         ;
+
+        if(!$process->isArchive()) {
+            $document = $app->documentModel->getDocumentById($process->getIdDocument());
+            $documentLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), $document->getName());
+
+            $tb ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Document')->setBold())
+                ->addCol($tb->createCol()->setText($documentLink)));
+        } else {
+            $archive = $app->archiveModel->getArchiveById($process->getIdDocument());
+
+            $tb ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Archive')->setBold())
+                ->addCol($tb->createCol()->setText($archive->getName())));
+        }
 
         $table = $tb->build();
         

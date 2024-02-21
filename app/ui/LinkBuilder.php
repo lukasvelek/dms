@@ -14,6 +14,7 @@ class LinkBuilder {
     private string $name;
     private string $style;
     private ?string $imgPath;
+    private ?int $imgWidth;
     
     /**
      * The default constructor that does nothing more than save passed arguments to the class variables.
@@ -24,12 +25,13 @@ class LinkBuilder {
      * @param string $style Link custom CSS style definition
      * @param null|string $imgPath Link image
      */
-    public function __construct(string $url, string $class, string $name, string $style = '', ?string $imgPath = NULL) {
+    public function __construct(string $url, string $class, string $name, string $style = '', ?string $imgPath = NULL, ?int $imgWidth = NULL) {
         $this->url = $url;
         $this->class = $class;
         $this->name = $name;
         $this->style = $style;
         $this->imgPath = $imgPath;
+        $this->imgWidth = $imgWidth;
     }
 
     /**
@@ -55,7 +57,7 @@ class LinkBuilder {
                 $template = str_replace('$STYLE$', $this->style, $template);
             }
         } else {
-            $template = $this->getImgTemplate();
+            $template = $this->getImgTemplate($this->imgWidth ?? 32);
 
             if($this->name != '') {
                 $this->name = ' ' . $this->name;
@@ -89,9 +91,9 @@ class LinkBuilder {
      * 
      * @return string HTML image link template
      */
-    private function getImgTemplate() {
-        $size = array('32', '32'); // width, height
-        return '<a class="$CLASS$" href="$URL$"><img src="$IMG_PATH$" width="' . $size[0] . '" height="' . $size[1] . '" loading="lazy">$NAME$</a>';
+    private function getImgTemplate(int $width) {
+        //$size = array($width, $width); // width, height
+        return '<a class="$CLASS$" href="$URL$"><img src="$IMG_PATH$" width="' . $width . 'px" height="' . $width . 'px" loading="lazy">$NAME$</a>';
     }
 
     /**
@@ -117,8 +119,8 @@ class LinkBuilder {
      * @param string $class Link CSS class
      * @return string HTML code
      */
-    public static function createImgAdvLink(array $urlParams, string $name, string $imgPath, string $class = 'general-link') {
-        $obj = new self(self::createURL($urlParams), $class, $name, '', $imgPath);
+    public static function createImgAdvLink(array $urlParams, string $name, string $imgPath, string $class = 'general-link', ?int $imgWidth = NULL) {
+        $obj = new self(self::createURL($urlParams), $class, $name, '', $imgPath, $imgWidth);
         return $obj->render();
     }
 

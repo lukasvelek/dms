@@ -5,6 +5,11 @@ namespace DMS\Core;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\FileStorageFile;
 
+/**
+ * Manager responsible for storing files
+ * 
+ * @author Lukas Velek
+ */
 class FileStorageManager {
     private string $fileFolder;
     private FileManager $fm;
@@ -20,6 +25,13 @@ class FileStorageManager {
         'csv'
     );
 
+    /**
+     * Class constructor
+     * 
+     * @param string $fileFolder Files folder
+     * @param FileManager $fm FileManager instance
+     * @param Logger $logger Logger instance
+     */
     public function __construct(string $fileFolder, FileManager $fm, Logger $logger) {
         $this->fileFolder = $fileFolder;
         $this->fm = $fm;
@@ -65,6 +77,19 @@ class FileStorageManager {
         }
 
         return $fileObjects;
+    }
+
+    /**
+     * Gets all directories in the files folder
+     * 
+     * @return array Discovered directories
+     */
+    public function getDirectories() {
+        $dirs = [];
+
+        $this->fm->readFoldersInFolder($this->fileFolder, $dirs);
+
+        return $dirs;
     }
 
     /**

@@ -15,28 +15,24 @@ class NotificationModel extends AModel {
     public function deleteNotificationById(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('notifications')
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('notifications')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getSeenNotifications() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('notifications')
-                   ->where('status=:status')
-                   ->setParam(':status', NotificationStatus::SEEN)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('notifications')
+            ->where('status = ?', [NotificationStatus::SEEN])
+            ->execute();
 
         $notifications = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $notifications[] = $this->createNotificationObjectFromDbRow($row);
         }
 
@@ -54,36 +50,26 @@ class NotificationModel extends AModel {
     public function updateStatus(int $id, int $status) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('notifications')
-                     ->set(array(
-                        'status' => ':status'
-                     ))
-                     ->where('id=:id')
-                     ->setParams(array(
-                        ':id' => $id,
-                        ':status' => $status
-                     ))
-                     ->execute()
-                     ->fetch();
+        $qb ->update('notifications')
+            ->set(['status' => $status])
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getNotificationsForUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('notifications')
-                   ->where('id_user=:id_user')
-                   ->andWhere('status=:status')
-                   ->orderBy('id', 'DESC')
-                   ->setParam(':id_user', $idUser)
-                   ->setParam(':status', NotificationStatus::UNSEEN)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('notifications')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('status = ?', [NotificationStatus::UNSEEN])
+            ->orderBy('id', 'DESC')
+            ->execute();
 
         $notifications = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $notifications[] = $this->createNotificationObjectFromDbRow($row);
         }
 

@@ -3,6 +3,7 @@
 namespace DMS\Models;
 
 use DMS\Constants\DocumentStatus;
+use DMS\Core\AppConfiguration;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
@@ -14,6 +15,153 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertDocumentReportQueueEntry(array $data) {
+        return $this->insertNew($data, 'document_reports');
+    }
+
+    public function updateDocumentReportQueueEntry(int $id, array $data) {
+        return $this->updateExisting('document_reports', $id, $data);
+    }
+
+    public function deleteDocumentReportQueueEntry(int $id) {
+        return $this->deleteById($id, 'document_reports');
+    }
+
+    public function getLastInsertedDocumentReportQueueEntryForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id'])
+            ->from('document_reports')
+            ->where('id_user = ?', [$idUser])
+            ->orderBy('date_updated', 'DESC')
+            ->limit(1)
+            ->execute();
+
+        return $qb->fetch('id');
+    }
+
+    public function getDocumentReportQueueEntriesForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('document_reports')
+            ->where('id_user = ?', [$idUser])
+            ->orderBy('date_updated', 'DESC')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getDocumentReportQueueEntriesForStatus(int $status) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('document_reports')
+            ->where('status = ?', [$status])
+            ->orderBy('date_updated', 'DESC')
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getDocumentReportQueueEntryById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('document_reports')
+            ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetch();
+    }
+
+    public function getDocumentCountForStatus(?int $idFolder, ?string $filter) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['COUNT(id) AS cnt'])
+            ->from('documents');
+
+        if($idFolder !== NULL) {
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
+        }
+
+        if($filter !== NULL) {
+            $this->addFilterCondition($filter, $qb);
+        }
+
+        return $qb ->execute()->fetch('cnt');
+    }
+
+    public function getStandardDocumentsWithOffset(?int $idFolder, int $limit, int $offset, ?string $filter = null) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('documents')
+            ->orderBy('date_updated', 'DESC')
+            ->limit($limit)
+            ->offset($offset);
+
+        if($idFolder !== NULL) {
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
+        }
+
+        if($filter !== NULL) {
+            $this->addFilterCondition($filter, $qb);
+        }
+
+        $qb ->execute();
+
+        $documents = array();
+        while($row = $qb->fetchAssoc()) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+    
+        return $documents;
+    }
+
+    public function getDocumentCountInArchiveDocument(int $idArchiveDocument) {
+        return $this->getRowCount('documents', 'id', 'WHERE `id_archive_document` = ' . $idArchiveDocument);
+    }
+
+    public function moveToArchiveDocument(int $id, int $idArchiveDocument) {
+        $data = ['id_archive_document' => $idArchiveDocument];
+
+        return $this->updateDocument($id, $data);
+    }
+
+    public function moveFromArchiveDocument(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->update('documents')
+            ->setNull(['id_archive_document'])
+            ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getDocumentForIdArchiveEntity(int $idArchiveEntity) {
+        $qb = $this->composeQueryStandardDocuments();
+
+        $qb ->andWhere('id_archive_document = ? OR id_archive_box = ? OR id_archive_archive = ?', [$idArchiveEntity, $idArchiveEntity, $idArchiveEntity])
+            ->execute();
+
+        $documents = array();
+        while($row = $qb->fetchAssoc()) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+
+        return $documents;
+    }
+
     public function getDocumentsBySQL(string $sql) {
         $result = $this->db->query($sql);
 
@@ -22,7 +170,7 @@ class DocumentModel extends AModel {
         }
 
         $documents = [];
-        foreach($result as $row) {
+        while($row = $result->fetch_assoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -32,16 +180,41 @@ class DocumentModel extends AModel {
     public function getAllDocumentsByStatus(int $status) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('status=:status')
-            ->setParam(':status', $status);
-
-        $rows = $qb->execute()->fetch();
+        $qb ->andWhere('status = ?', [$status])
+            ->execute();
 
         $documents = array();
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
+        return $documents;
+    }
+
+    public function getFirstIdDocumentInIdArchiveDocumentOnAGridPage(int $idArchiveDocument, int $gridPage) {
+        if($gridPage == 0) $gridPage = 1;
+        return $this->getFirstRowWithCountWithCond($gridPage, 'documents', ['id'], 'id', 'WHERE `id_archive_document` = ' . $idArchiveDocument);
+    }
+
+    public function getDocumentsInIdArchiveDocumentFromId(?int $idFrom, int $idArchiveDocument, int $limit) {
+        if(is_null($idFrom)) return [];
+
+        $qb = $this->composeQueryStandardDocuments();
+
+        if($idFrom == 1) {
+            $qb->andWhere('id >= ?', [$idFrom]);
+        } else {
+            $qb->andWhere('id > ?', [$idFrom]);
+        }
+        $qb ->andWhere('id_archive_document = ?', [$idArchiveDocument])
+            ->limit($limit)
+            ->execute();
+    
+        $documents = array();
+        while($row = $qb->fetchAssoc()) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+    
         return $documents;
     }
 
@@ -58,25 +231,29 @@ class DocumentModel extends AModel {
         $qb = $this->composeQueryStandardDocuments();
 
         if($idFrom == 1) {
-            $qb->explicit('AND `id` >= ' . $idFrom . ' ');
+            $qb->andWhere('id >= ?', [$idFrom]);
         } else {
-            $qb->explicit('AND `id` > ' . $idFrom . ' ');
+            $qb->andWhere('id > ?', [$idFrom]);
         }
 
         if($idFolder != null) {
-            $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
         }
 
         if($filter != null) {
             $this->addFilterCondition($filter, $qb);
         }
 
-        $qb->limit($limit);
-
-        $rows = $qb->execute()->fetch();
+        $qb ->orderBy('date_created', 'DESC')
+            ->limit($limit)
+            ->execute();
 
         $documents = array();
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -86,34 +263,41 @@ class DocumentModel extends AModel {
     public function getLastDocumentStatsEntry() {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('document_stats')
-                  ->orderBy('id', 'DESC')
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('document_stats')
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $row;
+        return $qb->fetch();
     }
 
     public function insertDocumentStatsEntry(array $data) {
         return $this->insertNew($data, 'document_stats');
     }
 
-    public function getTotalDocumentCount() {
-        return $this->getRowCount('documents');
+    public function getTotalDocumentCount(?int $idFolder) {
+        $cond = null;
+
+        if($idFolder !== NULL) {
+            $cond = 'WHERE id_folder = ' . $idFolder;
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $cond = 'WHERE id_folder IS NULL';
+            }
+        }
+        return $this->getRowCount('documents', 'id', $cond);
     }
 
     public function getAllDocumentIds() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('id')
-                   ->from('documents')
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['id'])
+            ->from('documents')
+            ->execute();
 
         $ids = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $ids[] = $row['id'];
         }
 
@@ -123,14 +307,12 @@ class DocumentModel extends AModel {
     public function removeDocumentSharingForIdDocument(int $idDocument) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('document_sharing')
-                     ->where('id_document=:id_document')
-                     ->setParam(':id_document', $idDocument)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('document_sharing')
+            ->where('id_document = ?', [$idDocument])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function deleteDocument(int $id, bool $keepInDb = true) {
@@ -138,44 +320,32 @@ class DocumentModel extends AModel {
 
         if($keepInDb) {
             $qb ->update('documents')
-                ->set(array(
-                    'is_deleted' => ':is_deleted',
-                    'status' => ':status',
-                    'date_updated' => ':date'
-                ))
-                ->setParams(array(
-                    ':status' => DocumentStatus::DELETED,
-                    ':is_deleted' => '1',
-                    ':date' => date(Database::DB_DATE_FORMAT)
-                ));
+                ->set([
+                    'status' => DocumentStatus::DELETED,
+                    'is_deleted' => '1',
+                    'date_updated' => date(Database::DB_DATE_FORMAT)
+                ]);
         } else {
             $qb ->delete()
                 ->from('documents');
         }
 
-        $result = $qb->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getDocumentSharingByIdDocumentAndIdUser(int $idUser, int $idDocument) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('document_sharing')
-                  ->where('id_user=:id_user')
-                  ->andWhere('id_document=:id_document')
-                  ->setParams(array(
-                   ':id_user' => $idUser,
-                   ':id_document' => $idDocument
-                  ))
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('document_sharing')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('id_document = ?', [$idDocument])
+            ->execute();
 
-        return $row;
+        return $qb->fetch();
     }
 
     public function getCountDocumentsSharedWithUser(int $idUser) {
@@ -185,18 +355,13 @@ class DocumentModel extends AModel {
     public function getDocumentSharingsSharedWithUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('document_sharing')
-                   ->where('id_user=:id_user')
-                   ->explicit(' AND ')
-                   ->leftBracket()
-                   ->explicit(' `date_from` < current_timestamp AND `date_to` > current_timestamp')
-                   ->rightBracket()
-                   ->setParam(':id_user', $idUser) 
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('document_sharing')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('(date_from < current_timestamp AND date_to > current_timestamp)')
+            ->execute();
 
-        return $rows;
+        return $qb->fetchAll();
     }
 
     public function getSharedDocumentsWithUser(int $idUser) {
@@ -208,19 +373,13 @@ class DocumentModel extends AModel {
             return [];
         }
 
-        $idDocuments = [];
-        foreach($documentSharings as $ds) {
-            $idDocuments[] = $ds['id_document'];
-        }
-
-        $rows = $qb->select('*')
-                   ->from('documents')
-                   ->inWhere('id', $idDocuments)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('documents')
+            ->where($qb->getColumnInValues('id', $documentSharings))
+            ->execute();
 
         $documents = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -234,20 +393,15 @@ class DocumentModel extends AModel {
     public function isDocumentSharedToUser(int $idUser, int $idDocument) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('document_sharing')
-                   ->where('id_user=:id_user')
-                   ->andWhere('id_document=:id_document')
-                   ->setParams(array(
-                    ':id_user' => $idUser,
-                    ':id_document' => $idDocument
-                   ))
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('document_sharing')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('id_document = ?', [$idDocument])
+            ->execute();
 
         $result = false;
 
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $dateFrom = $row['date_from'];
             $dateTo = $row['date_to'];
 
@@ -264,20 +418,18 @@ class DocumentModel extends AModel {
     public function removeDocumentSharing(int $idShare) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->delete()
-                     ->from('document_sharing')
-                     ->where('id=:id')
-                     ->setParam(':id', $idShare)
-                     ->execute()
-                     ->fetch();
+        $qb ->delete()
+            ->from('document_sharing')
+            ->where('id = ?', [$idShare])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getDocumentCountByStatus(int $status = 0) {
         $qb = $this->qb(__METHOD__);
 
-        $qb = $qb->selectCount('id', 'cnt')
+        $qb = $qb->select(['COUNT(id) AS cnt'])
                  ->from('documents');
 
         switch($status) {
@@ -285,33 +437,31 @@ class DocumentModel extends AModel {
                 break;
             
             default:
-                $qb->where('status=:status')
-                   ->setParam(':status', $status);
+                $qb->where('status = ?', [$status]);
 
                 break;
         }
 
-        $row = $qb->execute()
-                  ->fetchSingle('cnt');
+        $qb->execute();
 
-        return $row;
+        return $qb->fetch('cnt');
     }
 
     public function getFilteredDocumentsForName(string $name, ?int $idFolder, string $filter) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('name=:name', true)->setParam(':name', $name);
+        $qb ->andWhere('name LIKE \'%?%\'', [$name]);
 
         if(!is_null($idFolder)) {
-            $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
         }
 
         $this->addFilterCondition($filter, $qb);
 
-        $rows = $qb->execute()->fetch();
+        $qb->execute();
 
         $documents = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -321,22 +471,25 @@ class DocumentModel extends AModel {
     public function getDocumentsForName(string $name, ?int $idFolder, ?string $filter) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('name=:name', true)->setParam(':name', $name);
+        $qb ->andWhere('name LIKE \'%?%\'', [$name]);
 
         if($filter != null) {
             $this->addFilterCondition($filter, $qb);
         }
 
         if($idFolder != null) {
-            $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
         }
 
-        $qb->limit('20');
-
-        $rows = $qb->execute()->fetch();
+        $qb ->limit(25)
+            ->execute();
 
         $documents = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -346,15 +499,13 @@ class DocumentModel extends AModel {
     public function getDocumentsForFilename(string $filename) {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('documents')
-                   ->where('file=:file')
-                   ->setParam(':file', $filename)
-                   ->execute()
-                   ->fetch();
+        $qb ->select(['*'])
+            ->from('documents')
+            ->where('file = ?', [$filename])
+            ->execute();
 
         $documents = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -364,71 +515,53 @@ class DocumentModel extends AModel {
     public function nullIdFolder(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('documents')
-                     ->setNull(array('id_folder'))
-                     ->explicit(', `date_updated`=\'' . date(Database::DB_DATE_FORMAT) . '\'')
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->update('documents')
+            ->setNull(['id_folder'])
+            ->set(['date_updated' => date(Database::DB_DATE_FORMAT)])
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function nullIdOfficer(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('documents')
-                     ->setNull(array('id_officer'))
-                     ->explicit(', `date_updated`=\'' . date(Database::DB_DATE_FORMAT) . '\'')
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->update('documents')
+            //->setNull(array('id_officer'))
+            ->set([
+                'date_updated' => date(Database::DB_DATE_FORMAT),
+                'id_officer' => 'NULL'
+            ])
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function updateDocument(int $id, array $values) {
         $qb = $this->qb(__METHOD__);
 
-        $keys = [];
-        $params = [];
+        $values['date_updated'] = date(Database::DB_DATE_FORMAT);
 
-        foreach($values as $k => $v) {
-            $keys[$k] = ':' . $k;
-            $params[':' . $k] = $v;
-        }
+        $qb ->update('documents')
+            ->set($values)
+            ->where('id = ?', [$id])
+            ->execute()
+            ->fetch();
 
-        if(!array_key_exists('date_updated', $keys)) {
-            $keys['date_updated'] = ':date_updated';
-            $params[':date_updated'] = date(Database::DB_DATE_FORMAT);
-        }
-
-        $result = $qb->update('documents')
-                     ->set($keys)
-                     ->setParams($params)
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
-
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getAllDocuments() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select('*')
-                   ->from('documents')
-                   ->execute()
-                   ->fetch();
-
-        $qb = $qb->select('*')
-                 ->from('documents');
+        $qb ->select(['*'])
+            ->from('documents')
+            ->execute();
 
         $documents = [];
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -438,62 +571,53 @@ class DocumentModel extends AModel {
     public function getDocumentById(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('documents')
-                  ->where('id=:id')
-                  ->setParam(':id', $id)
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('documents')
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $this->createDocumentObjectFromDbRow($row);
+        return $this->createDocumentObjectFromDbRow($qb->fetch());
     }
 
     public function updateStatus(int $id, int $status) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('documents')
-                     ->set(array(
-                        'status' => ':status',
-                        'date_updated' => ':date'
-                     ))
-                     ->setParam(':status', $status)
-                     ->setParam(':date', date(Database::DB_DATE_FORMAT))
-                     ->where('id=:id')
-                     ->setParam(':id', $id)
-                     ->execute()
-                     ->fetch();
+        $qb ->update('documents')
+            ->set([
+                    'status' => $status,
+                    'date_updated' => date(Database::DB_DATE_FORMAT)
+            ])
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function getLastInsertedDocumentForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $row = $qb->select('*')
-                  ->from('documents')
-                  ->where('id_author=:id_user')
-                  ->setParam(':id_user', $idUser)
-                  ->orderBy('id', 'DESC')
-                  ->limit('1')
-                  ->execute()
-                  ->fetchSingle();
+        $qb ->select(['*'])
+            ->from('documents')
+            ->where('id_author = ?', [$idUser])
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->execute();
 
-        return $this->createDocumentObjectFromDbRow($row);
+        return $this->createDocumentObjectFromDbRow($qb->fetch());
     }
 
     public function updateOfficer(int $id, int $idOfficer) {
         $qb = $this->qb(__METHOD__);
 
-        $result = $qb->update('documents')
-                     ->set(array('id_officer' => ':id_officer', 'date_updated' => ':date'))
-                     ->where('id=:id')
-                     ->setParam(':id_officer', $idOfficer)
-                     ->setParam(':id', $id)
-                     ->setParam(':date', date(Database::DB_DATE_FORMAT))
-                     ->execute()
-                     ->fetch();
+        $qb ->update('documents')
+            ->set([
+                    'id_officer' => $idOfficer,
+                    'date_updated' => date(Database::DB_DATE_FORMAT)
+            ])
+            ->where('id = ?', [$id])
+            ->execute();
 
-        return $result;
+        return $qb->fetchAll();
     }
 
     public function insertNewDocument(array $data) {
@@ -504,10 +628,10 @@ class DocumentModel extends AModel {
         $qb = $this->composeQueryStandardDocuments();
         $this->addFilterCondition($filter, $qb);
 
-        $rows = $qb->execute()->fetch();
+        $qb->execute();
 
         $documents = array();
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -518,19 +642,22 @@ class DocumentModel extends AModel {
         $qb = $this->composeQueryStandardDocuments();
 
         if($idFolder != null) {
-            $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
         }
 
         if($filter != null) {
             $this->addFilterCondition($filter, $qb);
         }
 
-        $qb->limit($limit);
-
-        $rows = $qb->execute()->fetch();
+        $qb ->limit($limit)
+            ->execute();
 
         $documents = array();
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -540,12 +667,11 @@ class DocumentModel extends AModel {
     public function getStandardDocumentsInIdFolder(int $idFolder) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('id_folder=:id_folder')->setParam(':id_folder', $idFolder);
-
-        $rows = $qb->execute()->fetch();
+        $qb ->andWhere('id_folder = ?', [$idFolder])
+            ->execute();
 
         $documents = array();
-        foreach($rows as $row) {
+        while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
 
@@ -555,12 +681,11 @@ class DocumentModel extends AModel {
     public function composeQueryStandardDocuments(bool $ignoreDeleted = true) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select('*')
+        $qb ->select(['*'])
             ->from('documents');
 
         if($ignoreDeleted) {
-            $qb ->where('is_deleted=:deleted')
-                ->setParam(':deleted', '0');
+            $qb ->where('is_deleted = ?', ['0']);
         }
 
         return $qb;
@@ -587,6 +712,9 @@ class DocumentModel extends AModel {
         $afterShredAction = $row['after_shred_action'];
         $shreddingStatus = $row['shredding_status'];
         $dateUpdated = $row['date_updated'];
+        $idArchiveDocument = null;
+        $idArchiveBox = null;
+        $idArchiveArchive = null;
 
         if(isset($row['id_folder'])) {
             $idFolder = $row['id_folder'];
@@ -596,9 +724,21 @@ class DocumentModel extends AModel {
             $file = $row['file'];
         }
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'date_updated'));
+        if(isset($row['id_archive_document'])) {
+            $idArchiveDocument = $row['id_archive_document'];
+        }
 
-        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus, $dateUpdated);
+        if(isset($row['id_archive_box'])) {
+            $idArchiveBox = $row['id_archive_box'];
+        }
+
+        if(isset($row['id_archive_archive'])) {
+            $idArchiveArchive = $row['id_archive_archive'];
+        }
+
+        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'date_updated', 'id_archive_document', 'id_archive_box', 'id_archive_archive'));
+
+        $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus, $dateUpdated, $idArchiveDocument, $idArchiveBox, $idArchiveArchive);
         $document->setMetadata($row);
 
         return $document;
@@ -607,11 +747,11 @@ class DocumentModel extends AModel {
     private function addFilterCondition(string $filter, QueryBuilder &$qb) {
         switch($filter) {
             case 'waitingForArchivation':
-                $qb ->andWhere('status=:status')->setParam(':status', DocumentStatus::ARCHIVATION_APPROVED);
+                $qb ->andWhere('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
                 break;
 
             case 'new':
-                $qb ->andWhere('status=:status')->setParam(':status', DocumentStatus::NEW);
+                $qb ->andWhere('status = ?', [DocumentStatus::NEW]);
                 break;
         }
     }
