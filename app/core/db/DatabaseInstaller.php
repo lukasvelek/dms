@@ -400,6 +400,15 @@ class DatabaseInstaller {
                 'is_system' => 'INT(2) NOT NULL DEFAULT 0',
                 'type' => 'VARCHAR(256) NOT NULL',
                 'absolute_path' => 'VARCHAR(256) NOT NULL'
+            ),
+            'calendar_events' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'title' => 'VARCHAR(256) NOT NULL',
+                'color' => 'VARCHAR(256) NOT NULL',
+                'tag' => 'VARCHAR(256) NULL',
+                'date' => 'VARCHAR(256) NOT NULL',
+                'time' => 'VARCHAR(256) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 

@@ -14,6 +14,7 @@ use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Authorizators\RibbonAuthorizator;
+use DMS\Components\CalendarComponent;
 use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
@@ -28,6 +29,7 @@ use DMS\Core\Logger\Logger;
 use DMS\Core\FileManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\ArchiveModel;
+use DMS\Models\CalendarModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
@@ -119,6 +121,7 @@ class Application {
     public FilterModel $filterModel;
     public ArchiveModel $archiveModel;
     public FileStorageModel $fileStorageModel;
+    public CalendarModel $calendarModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -136,6 +139,7 @@ class Application {
     public ExternalEnumComponent $externalEnumComponent;
     public RibbonComponent $ribbonComponent;
     public DocumentReportGeneratorComponent $documentReportGeneratorComponent;
+    public CalendarComponent $calendarComponent;
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
@@ -194,6 +198,7 @@ class Application {
         $this->filterModel = new FilterModel($this->conn, $this->logger);
         $this->archiveModel = new ArchiveModel($this->conn, $this->logger);
         $this->fileStorageModel = new FileStorageModel($this->conn, $this->logger);
+        $this->calendarModel = new CalendarModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -215,7 +220,8 @@ class Application {
             'ribbonModel' => $this->ribbonModel,
             'filterModel' => $this->filterModel,
             'archiveModel' => $this->archiveModel,
-            'fileStorageModel' => $this->fileStorageModel
+            'fileStorageModel' => $this->fileStorageModel,
+            'calendarModel' => $this->calendarModel
         );
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -254,6 +260,7 @@ class Application {
         
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
         $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager, $this->externalEnumComponent, $this->fsManager);
+        $this->calendarComponent = new CalendarComponent($this->conn, $this->logger, $this->calendarModel);
         
         $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
         

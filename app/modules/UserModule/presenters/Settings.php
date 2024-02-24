@@ -611,8 +611,10 @@ class Settings extends APresenter {
         $widgets[] = LinkBuilder::createLink('UserModule:ImageBrowser:showAll', 'Images') . '<br>';
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_FILE_STORAGE_LOCATIONS)) {
-            $widgets[] = LinkBuilder::createLink('UserModule:FileStorageSettings:showLocations', 'File storage');
+            $widgets[] = LinkBuilder::createLink('UserModule:FileStorageSettings:showLocations', 'File storage') . '<br>';
         }
+
+        $widgets[] = LinkBuilder::createAdvLink(['page' => 'UserModule:Calendar:showEvents', 'tag' => 'system', 'year' => date('Y'), 'month' => date('m')], 'System event calendar');
 
         $widgetsCode = '';
 

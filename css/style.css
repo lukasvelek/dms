@@ -34,17 +34,23 @@ body {
     resize: vertical;
 }
 
-#table table {
+#table table, #calendar-table table {
     width: 100%;
 
     font-size: 16px;
 }
 
-#table tr {
+#table tr, #calendar-table tr {
     text-align: center;
 }
 
-#table .even {
+#calendar-table-td-date {
+    padding-bottom: 50px;
+
+    width: 14.3%;
+}
+
+#table .even, #calendar-table .even {
     background-color: lightgrey;
 }
 
