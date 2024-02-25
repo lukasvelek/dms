@@ -2,6 +2,9 @@
 
 namespace DMS\UI\CalendarBuilder;
 
+use DMS\Constants\CacheCategories;
+use DMS\Core\CacheManager;
+use DMS\Core\ServiceManager;
 use DMS\Entities\CalendarEventEntity;
 use DMS\UI\IBuildable;
 use DMS\UI\TableBuilder\TableBuilder;
@@ -142,6 +145,10 @@ class CalendarBuilder {
                 $isDate = false;
             } else {
                 for($j = 0; $j < 7; $j++) {
+                    if($daye > ($daysInMonth - 1 + $firstDayInMonth)) {
+                        continue;
+                    }
+                    
                     $col = $tb->createCol();
                     $col->setId('calendar-table-td-events');
 
@@ -149,22 +156,21 @@ class CalendarBuilder {
     
                     if($daye <= ($daysInMonth - 1 + $firstDayInMonth) && $daye >= $firstDayInMonth) {
                         $events = $this->getEventsForDate($realDayEvents, $this->month, $this->year);
-                        
+
                         foreach($events as $event) {
-                            $text .= '<div style="margin-bottom: 10px">';
+                            $color = $event->getColor();
+                            $cec = new CalendarEventColors();
+                            $fgColor = $cec->getColor($color);
+                            $bgColor = $cec->getBackgroundColorByForegroundColorKey($color);
+                            $text .= '<div id="calendar-table-td-single-event" style="color: ' . $fgColor . '; background-color: ' . $bgColor . '; padding: 2px; border-radius: 4px">';
                             $text .= $event->build();
                             $text .= '</div>';
                         }
 
                         $realDayEvents++;
                     }
-    
-                    if(($realDay - 1) == date('d') && $this->month == (int)date('m') && $this->year == (int)date('Y')) {
-                        $col->setBold();
-                    }
 
                     $col->setText($text);
-    
                     $row->addCol($col);
                     $daye++;
                 }

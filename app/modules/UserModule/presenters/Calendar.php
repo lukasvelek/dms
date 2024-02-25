@@ -2,6 +2,9 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\CacheCategories;
+use DMS\Core\CacheManager;
+use DMS\Entities\CalendarEventEntity;
 use DMS\Modules\APresenter;
 use DMS\UI\CalendarBuilder\CalendarEvent;
 
@@ -34,6 +37,17 @@ class Calendar extends APresenter {
         }
 
         $events = $app->calendarModel->getAllEventsForMonthAndYear($month, $year);
+
+        foreach($app->serviceManager->services as $name => $service) {
+            $scm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
+            $valFromCache = $scm->loadServiceEntry($service->name);
+
+            if($valFromCache !== NULL && !empty($valFromCache)) {
+                $date = explode(' ', $valFromCache['next_run_date'])[0];
+                $time = explode(' ', $valFromCache['next_run_date'])[1];
+                $events[] = new CalendarEventEntity(0, date('Y-m-d'), $service->name, 'RED', 'system', $date, $time);
+            }
+        }
 
         $calendar = $app->calendarComponent->getCalendarForDate($month, $year, [$tag]);
         $controller = $calendar->getController('UserModule:Calendar:showEvents');

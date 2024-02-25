@@ -47,9 +47,10 @@ class CalendarEventEntity extends AEntity implements IBuildable {
         $color = $cec->getColor($this->color);
         $bgColor = $cec->getBackgroundColorByForegroundColorKey($this->color);
 
-        $code = '<span style="color: ' . $color . '; background-color: ' . $bgColor . '; padding: 2px; border-radius: 4px">';
+        $code = '';
+        //$code .= '<span style="color: ' . $color . '; background-color: ' . $bgColor . '; padding: 2px; border-radius: 4px">';
         $code .= $this->title;
-        $code .= '</span>';
+        //$code .= '</span>';
 
         return $code;
     }

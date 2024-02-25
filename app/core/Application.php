@@ -54,7 +54,6 @@ use DMS\Modules\IPresenter;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
-use DMS\Services\AService;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.

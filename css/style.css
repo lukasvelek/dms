@@ -45,9 +45,14 @@ body {
 }
 
 #calendar-table-td-date {
-    padding-bottom: 50px;
+    padding-bottom: 25px;
 
     width: 14.28%;
+}
+
+#calendar-table-td-single-event {
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 #table .even, #calendar-table .even {
