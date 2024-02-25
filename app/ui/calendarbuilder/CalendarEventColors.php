@@ -2,10 +2,18 @@
 
 namespace DMS\UI\CalendarBuilder;
 
+/**
+ * Calendar event color definition
+ * 
+ * @author Lukas Velek
+ */
 class CalendarEventColors {
     private array $colors;
     private array $bgColors;
 
+    /**
+     * Class constructor
+     */
     public function __construct() {
         $v = '0.3';
 
@@ -34,10 +42,22 @@ class CalendarEventColors {
         ];
     }
 
+    /**
+     * Returns background color by foreground color
+     * 
+     * @param string $key Color key
+     * @return string Background color
+     */
     public function getBackgroundColorByForegroundColorKey(string $key) {
         return $this->bgColors[$key];
     }
 
+    /**
+     * Returns foreground color by color key
+     * 
+     * @param string $key Color key
+     * @return string Foreground color
+     */
     public function getColor(string $key) {
         return $this->colors[$key];
     }
