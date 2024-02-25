@@ -4,37 +4,60 @@ namespace DMS\UI\CalendarBuilder;
 
 use DMS\Entities\CalendarEventEntity;
 use DMS\UI\IBuildable;
+use DMS\UI\TableBuilder\TableBuilder;
 
 class CalendarBuilder {
-    private Calendar $calendar;
+    private int $month;
+    private int $year;
+
+    private array $events;
+    private array $allowedEventTags;
 
     public function __construct() {
-        $this->calendar = new Calendar();
+        $this->month = 1;
+        $this->year = 1970;
+        $this->events = [];
+        $this->allowedEventTags = [];
     }
 
     public function allowEventTags(array $tags) {
-        $this->calendar->allowEventTags($tags);
+        $this->allowedEventTags = array_merge($this->allowedEventTags, $tags);
         return $this;
     }
 
     public function setMonth(int $month) {
-        $this->calendar->setMonth($month);
+        $this->month = $month;
         return $this;
+    }
+
+    public function getMonth() {
+        return $this->month;
     }
 
     public function setYear(int $year) {
-        $this->calendar->setYear($year);
+        $this->year = $year;
         return $this;
     }
 
-    public function addEventObject(CalendarEventEntity $event) {
-        $this->calendar->addEvent($event);
-        return $this;
+    public function getYear() {
+        return $this->year;
     }
 
     public function addEventObjects(array $events) {
-        $this->calendar->addEvents($events);
+        $this->events = array_merge($this->events, $events);
         return $this;
+    }
+
+    public function getEventsForDate(int $day, int $month, int $year) {
+        $temp = [];
+
+        foreach($this->events as $event) {
+            if($event->getDate('Y-m-d') == date('Y-m-d', strtotime($year . '-' . $month . '-' . $day))) {
+                $temp[] = $event;
+            }
+        }
+
+        return $temp;
     }
 
     public function getController(string $baseCalendarHandler) {
@@ -55,15 +78,15 @@ class CalendarBuilder {
 
         $controller = '';
         
-        $backLink = $createLink($baseCalendarHandler, '&larr;', $this->calendar->getMonth() - 1, $this->calendar->getYear());
-        $forwardLink = $createLink($baseCalendarHandler, '&rarr;', $this->calendar->getMonth() + 1, $this->calendar->getYear());
+        $backLink = $createLink($baseCalendarHandler, '&larr;', $this->getMonth() - 1, $this->getYear());
+        $forwardLink = $createLink($baseCalendarHandler, '&rarr;', $this->getMonth() + 1, $this->getYear());
         $currentLink = $createLink($baseCalendarHandler, date('F Y'), date('m'), date('Y'));
         
-        if($this->calendar->getMonth() == 1) {
-            $backLink = $createLink($baseCalendarHandler, '&larr;', 12, $this->calendar->getYear() - 1);
+        if($this->getMonth() == 1) {
+            $backLink = $createLink($baseCalendarHandler, '&larr;', 12, $this->getYear() - 1);
         }
-        if($this->calendar->getMonth() == 12) {
-            $forwardLink = $createLink($baseCalendarHandler, '&rarr;s', 1, $this->calendar->getYear() + 1);
+        if($this->getMonth() == 12) {
+            $forwardLink = $createLink($baseCalendarHandler, '&rarr;s', 1, $this->getYear() + 1);
         }
 
         $controller = $backLink . '&nbsp;&nbsp;' . $currentLink . '&nbsp;&nbsp;' . $forwardLink;
@@ -72,7 +95,107 @@ class CalendarBuilder {
     }
 
     public function build() {
-        return $this->calendar->build();
+        $tb = TableBuilder::getTemporaryObject();
+
+        $monthAsWord = date('F', strtotime($this->year . '-' . $this->month . '-01'));
+
+        $tb->addRow($tb->createRow()->addCol($tb->createCol()->setText($monthAsWord . ' ' . $this->year)->setColspan('7')->setBold()));
+
+        $dayNameRow = $tb->createRow();
+        foreach(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $d) {
+            $dayNameRow->addCol($tb->createCol()->setText($d)->setBold());
+        }
+        $tb->addRow($dayNameRow);
+
+        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $this->month, $this->year);
+        $weeks = $daysInMonth / 7;
+        $firstDayInMonth = $this->getWeekdayNumberByWeekdayName(date('l', strtotime($this->year . '-' . $this->month . '-01')), false);
+
+        $day = 1;
+        $daye = 1;
+        $realDay = 1;
+        $realDayEvents = 1;
+        $isDate = true;
+        for($i = 0; $i < ($weeks * 2); $i++) {
+            $row = $tb->createRow();
+
+            if($isDate === TRUE) {
+                for($j = 0; $j < 7; $j++) {
+                    $col = $tb->createCol();
+                    $col->setId('calendar-table-td-date');
+    
+                    if($day <= ($daysInMonth - 1 + $firstDayInMonth) && $day >= $firstDayInMonth) {
+                        $col->setText($realDay);
+                        $realDay++;
+                    } else {
+                        $col->setText('');
+                    }
+    
+                    if(($realDay - 1) == date('d') && $this->month == (int)date('m') && $this->year == (int)date('Y')) {
+                        $col->setBold();
+                    }
+    
+                    $row->addCol($col);
+                    $day++;
+                }
+
+                $isDate = false;
+            } else {
+                for($j = 0; $j < 7; $j++) {
+                    $col = $tb->createCol();
+                    $col->setId('calendar-table-td-events');
+
+                    $text = '';
+    
+                    if($daye <= ($daysInMonth - 1 + $firstDayInMonth) && $daye >= $firstDayInMonth) {
+                        $events = $this->getEventsForDate($realDayEvents, $this->month, $this->year);
+                        
+                        foreach($events as $event) {
+                            $text .= '<div style="margin-bottom: 10px">';
+                            $text .= $event->build();
+                            $text .= '</div>';
+                        }
+
+                        $realDayEvents++;
+                    }
+    
+                    if(($realDay - 1) == date('d') && $this->month == (int)date('m') && $this->year == (int)date('Y')) {
+                        $col->setBold();
+                    }
+
+                    $col->setText($text);
+    
+                    $row->addCol($col);
+                    $daye++;
+                }
+
+                $isDate = true;
+            }
+
+            $tb->addRow($row);
+        }
+
+        return $tb->build();
+    }
+
+    private function getWeekdayNumberByWeekdayName(string $name, bool $startAtZero) {
+        $num = 0;
+
+        switch($name) {
+            case 'Monday': $num = 0; break;
+            case 'Tuesday': $num = 1; break;
+            case 'Wednesday': $num = 2; break;
+            case 'Thursday': $num = 3; break;
+            case 'Friday': $num = 4; break;
+            case 'Saturday': $num = 5; break;
+            case 'Sunday': $num = 6; break;
+        }
+
+        if($startAtZero === FALSE) {
+            return $num + 1;
+        }
+
+        return $num;
     }
 
     public static function getTemporaryObject() {

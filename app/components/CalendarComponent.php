@@ -20,10 +20,7 @@ class CalendarComponent extends AComponent {
         $calendar = $this->getCalendarForDate($month, $year, $tagsAllowed);
 
         $events = $this->calendarModel->getAllEventsForMonthAndYear((string)$month, (string)$year);
-
-        foreach($events as $event) {
-            $calendar->addEventObject($event);
-        }
+        $calendar->addEventObjects($events);
 
         return $calendar->build();
     }

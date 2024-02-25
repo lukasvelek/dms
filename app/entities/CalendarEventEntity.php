@@ -2,6 +2,7 @@
 
 namespace DMS\Entities;
 
+use DMS\UI\CalendarBuilder\CalendarEventColors;
 use DMS\UI\IBuildable;
 
 class CalendarEventEntity extends AEntity implements IBuildable {
@@ -42,7 +43,11 @@ class CalendarEventEntity extends AEntity implements IBuildable {
     }
 
     public function build() {
-        $code = '<span style="color: ' . $this->color . '">';
+        $cec = new CalendarEventColors();
+        $color = $cec->getColor($this->color);
+        $bgColor = $cec->getBackgroundColorByForegroundColorKey($this->color);
+
+        $code = '<span style="color: ' . $color . '; background-color: ' . $bgColor . '; padding: 2px; border-radius: 4px">';
         $code .= $this->title;
         $code .= '</span>';
 

@@ -33,9 +33,11 @@ class Calendar extends APresenter {
             $tag = $this->get('tag');
         }
 
+        $events = $app->calendarModel->getAllEventsForMonthAndYear($month, $year);
+
         $calendar = $app->calendarComponent->getCalendarForDate($month, $year, [$tag]);
         $controller = $calendar->getController('UserModule:Calendar:showEvents');
-        $calendar->addEventObjects($app->calendarModel->getAllEventsForMonthAndYear($month, $year));
+        $calendar->addEventObjects($events);
 
         $data = [
             '$CALENDAR$' => $calendar->build(),
