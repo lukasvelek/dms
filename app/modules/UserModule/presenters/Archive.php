@@ -8,11 +8,9 @@ use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
-use DMS\Helpers\FormDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\Widgets\HomeDashboard\DocumentStats;
 
 class Archive extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -32,7 +30,7 @@ class Archive extends APresenter {
         $action = $this->get('action');
 
         if($action == '-') {
-            $app->redirect('UserModule:Archive:showDocuments');
+            $app->redirect('Archive:showDocuments');
         }
 
         if(method_exists($this, '_' . $action)) {
@@ -69,7 +67,7 @@ class Archive extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_ARCHIVE_DOCUMENT)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewArchiveForm', 'New archive');
+            $data['$LINKS$'][] = LinkBuilder::createLink('Archive:showNewArchiveForm', 'New archive');
         }
 
         $this->templateManager->fill($data, $template);
@@ -104,7 +102,7 @@ class Archive extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_ARCHIVE_DOCUMENT)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewBoxForm', 'New box');
+            $data['$LINKS$'][] = LinkBuilder::createLink('Archive:showNewBoxForm', 'New box');
         }
 
         $this->templateManager->fill($data, $template);
@@ -139,7 +137,7 @@ class Archive extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_ARCHIVE_DOCUMENT)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewDocumentForm', 'New document');
+            $data['$LINKS$'][] = LinkBuilder::createLink('Archive:showNewDocumentForm', 'New document');
         }
 
         $this->templateManager->fill($data, $template);
@@ -206,9 +204,9 @@ class Archive extends APresenter {
 
         $app->flashMessage('Created new archive document', 'success');
         if($idRibbon == '') {
-            $app->redirect('UserModule:Archive:showDocuments');
+            $app->redirect('Archive:showDocuments');
         } else {
-            $app->redirect('UserModule:Archive:showDocuments', ['id_ribbon' => $idRibbon]);
+            $app->redirect('Archive:showDocuments', ['id_ribbon' => $idRibbon]);
         }
     }
 
@@ -232,9 +230,9 @@ class Archive extends APresenter {
 
         $app->flashMessage('Created new archive box', 'success');
         if($idRibbon == '') {
-            $app->redirect('UserModule:Archive:showBoxes');
+            $app->redirect('Archive:showBoxes');
         } else {
-            $app->redirect('UserModule:Archive:showBoxes', ['id_ribbon' => $idRibbon]);
+            $app->redirect('Archive:showBoxes', ['id_ribbon' => $idRibbon]);
         }
     }
 
@@ -258,9 +256,9 @@ class Archive extends APresenter {
 
         $app->flashMessage('Created new archive', 'success');
         if($idRibbon == '') {
-            $app->redirect('UserModule:Archive:showArchives');
+            $app->redirect('Archive:showArchives');
         } else {
-            $app->redirect('UserModule:Archive:showArchives', ['id_ribbon' => $idRibbon]);
+            $app->redirect('Archive:showArchives', ['id_ribbon' => $idRibbon]);
         }
     }
 
@@ -533,7 +531,7 @@ class Archive extends APresenter {
             }
 
             $app->flashMessage('Moved documents to the box', 'success');
-            $app->redirect('UserModule:Archive:showDocuments');
+            $app->redirect('Archive:showDocuments');
         } else {
             return $this->internalCreateMoveDocumentToBoxForm($ids);
         }
@@ -547,7 +545,7 @@ class Archive extends APresenter {
         }
 
         $app->flashMessage('Removed documents from the box', 'success');
-        $app->redirect('UserModule:Archive:showDocuments');
+        $app->redirect('Archive:showDocuments');
     }
 
     private function _move_box_to_archive(array $ids) {
@@ -561,7 +559,7 @@ class Archive extends APresenter {
             }
 
             $app->flashMessage('Moved boxes to archive', 'success');
-            $app->redirect('UserModule:Archive:showBoxes');
+            $app->redirect('Archive:showBoxes');
         } else {
             return $this->internalCreateMoveBoxToArchiveForm($ids);
         }
@@ -575,7 +573,7 @@ class Archive extends APresenter {
         }
 
         $app->flashMessage('Removed boxes from archive', 'success');
-        $app->redirect('UserModule:Archive:showBoxes');
+        $app->redirect('Archive:showBoxes');
     }
 
     private function _close_archive(array $ids) {
@@ -617,7 +615,7 @@ class Archive extends APresenter {
         $totalCount = $fileCount + $documentCount + $boxCount + $archiveCount;
 
         $app->flashMessage('Finished ' . $totalCount . ' entities');
-        $app->redirect('UserModule:Archive:showArchives');
+        $app->redirect('Archive:showArchives');
     }
 
     private function _suggest_for_shredding(array $ids) {
@@ -630,7 +628,7 @@ class Archive extends APresenter {
         }
 
         $app->flashMessage('Archives suggested for shredding', 'success');
-        $app->redirect('UserModule:Archive:showArchives');
+        $app->redirect('Archive:showArchives');
     }
 }
 
