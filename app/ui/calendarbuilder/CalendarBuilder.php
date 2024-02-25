@@ -14,33 +14,26 @@ class CalendarBuilder {
 
     public function allowEventTags(array $tags) {
         $this->calendar->allowEventTags($tags);
-
-        var_dump($tags);
-
         return $this;
     }
 
     public function setMonth(int $month) {
         $this->calendar->setMonth($month);
-
         return $this;
     }
 
     public function setYear(int $year) {
         $this->calendar->setYear($year);
-
         return $this;
     }
 
     public function addEventObject(CalendarEventEntity $event) {
         $this->calendar->addEvent($event);
-
         return $this;
     }
 
     public function addEventObjects(array $events) {
         $this->calendar->addEvents($events);
-
         return $this;
     }
 

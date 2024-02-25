@@ -33,32 +33,27 @@ class CalendarEvent implements IBuildable {
         $this->year = $year;
         $this->month = $month;
         $this->day = $day;
-
         return $this;
     }
 
     public function setTime(int $hour, int $minute) {
         $this->hour = $hour;
         $this->minute = $minute;
-
         return $this;
     }
 
     public function setTitle(string $title) {
         $this->title = $title;
-
         return $this;
     }
 
     public function setColor(string $color) {
         $this->color = $color;
-
         return $this;
     }
 
     public function setTag(?string $tag) {
         $this->tag = $tag;
-
         return $this;
     }
 
