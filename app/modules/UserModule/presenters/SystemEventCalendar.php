@@ -6,13 +6,12 @@ use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Entities\CalendarEventEntity;
 use DMS\Modules\APresenter;
-use DMS\UI\CalendarBuilder\CalendarEvent;
 
-class Calendar extends APresenter {
+class SystemEventCalendar extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
-        parent::__construct('Calendar');
+        parent::__construct('SystemEventCalendar', 'System event calendar');
 
         $this->getActionNamesFromClass($this);
     }
@@ -50,7 +49,7 @@ class Calendar extends APresenter {
         }
 
         $calendar = $app->calendarComponent->getCalendarForDate($month, $year, [$tag]);
-        $controller = $calendar->getController('UserModule:Calendar:showEvents');
+        $controller = $calendar->getController('UserModule:SystemEventCalendar:showEvents');
         $calendar->addEventObjects($events);
 
         $data = [

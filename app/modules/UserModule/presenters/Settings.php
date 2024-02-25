@@ -614,7 +614,7 @@ class Settings extends APresenter {
             $widgets[] = LinkBuilder::createLink('UserModule:FileStorageSettings:showLocations', 'File storage') . '<br>';
         }
 
-        $widgets[] = LinkBuilder::createAdvLink(['page' => 'UserModule:Calendar:showEvents', 'tag' => 'system', 'year' => date('Y'), 'month' => date('m')], 'System event calendar');
+        $widgets[] = LinkBuilder::createAdvLink(['page' => 'UserModule:SystemEventCalendar:showEvents', 'tag' => 'system', 'year' => date('Y'), 'month' => date('m')], 'System event calendar');
 
         $widgetsCode = '';
 
