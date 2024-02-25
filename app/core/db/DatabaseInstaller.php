@@ -406,7 +406,8 @@ class DatabaseInstaller {
                 'title' => 'VARCHAR(256) NOT NULL',
                 'color' => 'VARCHAR(256) NOT NULL',
                 'tag' => 'VARCHAR(256) NULL',
-                'date' => 'VARCHAR(256) NOT NULL',
+                'date_from' => 'VARCHAR(256) NOT NULL',
+                'date_to' => 'VARCHAR(256) NULL',
                 'time' => 'VARCHAR(256) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )

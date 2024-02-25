@@ -106,8 +106,15 @@ class CalendarBuilder {
         $temp = [];
 
         foreach($this->events as $event) {
-            if($event->getDate('Y-m-d') == date('Y-m-d', mktime(0, 0, 0, $month, $day, $year))) {
-                $temp[] = $event;
+            if($event->getDateTo('Y-m-d') === NULL) {
+                if($event->getDateFrom('Y-m-d') == date('Y-m-d', mktime(0, 0, 0, $month, $day, $year))) {
+                    $temp[] = $event;
+                }
+            } else {
+                if(strtotime($year . '-' . $month . '-' . $day) >= strtotime($event->getDateFrom('Y-m-d')) &&
+                   strtotime($year . '-' . $month . '-' . $day) <= strtotime($event->getDateTo('Y-m-d'))) {
+                    $temp[] = $event;
+                }
             }
         }
 
@@ -125,7 +132,7 @@ class CalendarBuilder {
             $m = date('m', strtotime($year . '-' . $month . '-01'));
             $y = date('Y', strtotime($year . '-' . $month . '-01'));
 
-            $link = '<a class="general-link" href="?page=' . $handler . '&year=' . $y . '&month=' . $m;
+            $link = '<a class="general-link-bigger" href="?page=' . $handler . '&year=' . $y . '&month=' . $m;
 
             if(!empty($tags)) {
                 if(count($tags) > 1) {
@@ -155,7 +162,9 @@ class CalendarBuilder {
             $forwardLink = $createLink($baseCalendarHandler, '&rarr;s', 1, $this->getYear() + 1, $this->allowedEventTags);
         }
 
-        $controller = $backLink . '&nbsp;&nbsp;' . $currentLink . '&nbsp;&nbsp;' . $forwardLink;
+        $spaces = '&nbsp;&nbsp;';
+
+        $controller = $backLink . $spaces . $currentLink . $spaces . $forwardLink;
 
         return $controller;
     }

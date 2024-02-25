@@ -2,23 +2,24 @@
 
 namespace DMS\Entities;
 
-use DMS\UI\CalendarBuilder\CalendarEventColors;
 use DMS\UI\IBuildable;
 
 class CalendarEventEntity extends AEntity implements IBuildable {
     private string $title;
     private string $color;
     private ?string $tag;
-    private string $date;
+    private string $dateFrom;
+    private ?string $dateTo;
     private string $time;
 
-    public function __construct(int $id, string $dateCreated, string $title, string $color, ?string $tag, string $date, string $time) {
+    public function __construct(int $id, string $dateCreated, string $title, string $color, ?string $tag, string $dateFrom, ?string $dateTo, string $time) {
         parent::__construct($id, $dateCreated, null);
 
         $this->title = $title;
         $this->color = $color;
         $this->tag = $tag;
-        $this->date = $date;
+        $this->dateFrom = $dateFrom;
+        $this->dateTo = $dateTo;
         $this->time = $time;
     }
 
@@ -34,8 +35,13 @@ class CalendarEventEntity extends AEntity implements IBuildable {
         return $this->tag;
     }
 
-    public function getDate(string $format = 'Y-m-d') {
-        return date($format, strtotime($this->date));
+    public function getDateFrom(string $format = 'Y-m-d') {
+        return date($format, strtotime($this->dateFrom));
+    }
+
+    public function getDateTo(string $format = 'Y-m-d') {
+        if($this->dateTo === NULL) return null;
+        return date($format, strtotime($this->dateTo));
     }
 
     public function getTime() {

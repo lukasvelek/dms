@@ -16,7 +16,23 @@ class CalendarModel extends AModel {
 
         $qb ->select(['*'])
             ->from('calendar_events')
-            ->where("`date` LIKE ?", [$year . '-' . $month . '-%'])
+            ->where("`date_from` LIKE ?", [$year . '-' . $month . '-%'])
+            ->execute();
+
+        $events = [];
+        while($row = $qb->fetchAssoc()) {
+            $events[] = $this->createCalendarEventObjectFromDbRow($row);
+        }
+
+        return $events;
+    }
+
+    public function getAllEventsBetweenDates(string $dateFrom, string $dateTo) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('calendar_events')
+            ->where('`date_from` BETWEEN ? AND ?', [$dateFrom, $dateTo])
             ->execute();
 
         $events = [];
@@ -40,15 +56,20 @@ class CalendarModel extends AModel {
         $dateCreated = $row['date_created'];
         $title = $row['title'];
         $color = $row['color'];
-        $date = $row['date'];
+        $dateFrom = $row['date_from'];
         $time = $row['time'];
         $tag = null;
+        $dateTo = null;
 
         if(isset($row['tag'])) {
             $tag = $row['tag'];
         }
 
-        return new CalendarEventEntity($id, $dateCreated, $title, $color, $tag, $date, $time);
+        if(isset($row['date_to'])) {
+            $dateTo = $row['date_to'];
+        }
+
+        return new CalendarEventEntity($id, $dateCreated, $title, $color, $tag, $dateFrom, $dateTo, $time);
     }
 }
 

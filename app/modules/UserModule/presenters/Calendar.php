@@ -45,7 +45,7 @@ class Calendar extends APresenter {
             if($valFromCache !== NULL && !empty($valFromCache)) {
                 $date = explode(' ', $valFromCache['next_run_date'])[0];
                 $time = explode(' ', $valFromCache['next_run_date'])[1];
-                $events[] = new CalendarEventEntity(0, date('Y-m-d'), $service->name, 'RED', 'system', $date, $time);
+                $events[] = new CalendarEventEntity(0, date('Y-m-d'), $service->name, 'RED', 'system', $date, null, $time);
             }
         }
 
@@ -55,7 +55,8 @@ class Calendar extends APresenter {
 
         $data = [
             '$CALENDAR$' => $calendar->build(),
-            '$CONTROLLER$' => $controller
+            '$CONTROLLER$' => $controller,
+            '$PAGE_TITLE$' => 'System event calendar'
         ];
 
         $this->fill($data, $template);
