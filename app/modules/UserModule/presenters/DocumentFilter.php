@@ -3,7 +3,11 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\DocumentRank;
+use DMS\Constants\DocumentShreddingStatus;
+use DMS\Constants\DocumentStatus;
 use DMS\Constants\FlashMessageTypes;
+use DMS\Constants\MetadataInputType;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Entities\DocumentFilter as EntitiesDocumentFilter;
@@ -11,7 +15,6 @@ use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class DocumentFilter extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -206,13 +209,99 @@ class DocumentFilter extends APresenter {
             $data['description'] = $this->post('description');
         }
 
-        if(isset($_POST['filter_sql'])) {
-            $data['filter_sql'] = $this->post('filter_sql');
+        $sql = "SELECT * FROM `documents`";
+
+        $metadata = [
+            'id_author',
+            'id_officer',
+            'id_manager',
+            'rank',
+            'status',
+            'shredding_status'
+        ];
+        $textMetadata = $metadata;
+
+        // append custom metadata
+        $dbMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
+        foreach($dbMetadata as $dbm) {
+            if($dbm->getIsSystem() == TRUE) continue;
+            if($dbm->getInputType() == MetadataInputType::SELECT_EXTERNAL) continue;
+
+            if($dbm->getInputType() != MetadataInputType::NUMBER) {
+                $textMetadata[] = $dbm->getName();
+            }
+
+            $metadata[] = $dbm->getName();
         }
 
-        if(isset($_POST['has_ordering'])) {
-            $data['has_ordering'] = '1';
+        $createCondition = function(string $column, string $value, string $operation) {
+            $op = '';
+            switch($operation) {
+                case 'equal':
+                    $op = '=';
+                    break;
+
+                case 'not_equal':
+                    $op = '<>';
+                    break;
+
+                case 'bigger':
+                    $op = '>';
+                    break;
+
+                case 'bigger_equal':
+                    $op = '>=';
+                    break;
+
+                case 'smaller':
+                    $op = '<';
+                    break;
+
+                case 'smaller_equal':
+                    $op = '<=';
+                    break;
+            }
+
+            $sql = '`' . $column . '` ' . $op . " '" . $value . "'";
+
+            return $sql;
+        };
+
+        $checkMetadata = [];
+        foreach($metadata as $md) {
+            $operation = $this->post($md . '_operation');
+            $value = $this->post($md);
+            $andor = '';
+
+            if(in_array($md, $textMetadata)) {
+                if(!in_array($md, ['equal', 'not_equal'])) {
+                    $operation = 'equal';
+                }
+            }
+
+            if(isset($_POST[$md . '_andor'])) {
+                $andor = strtoupper($this->post($md . '_andor'));
+            }
+
+            if($value != 'null') {
+                $checkMetadata[] = [
+                    'name' => $md,
+                    'operation' => $operation,
+                    'value' => $value,
+                    'andor' => $andor
+                ];
+            }
         }
+
+        if(count($checkMetadata) > 0) {
+            $sql .= ' WHERE ';
+        }
+
+        foreach($checkMetadata as $cm) {
+            $sql .= $createCondition($cm['name'], $cm['value'], $cm['operation']) . ' ' . $cm['andor'];
+        }
+
+        $data['filter_sql'] = $sql;
 
         $data['id_author'] = $app->user->getId();
 
@@ -237,6 +326,8 @@ class DocumentFilter extends APresenter {
     }
 
     private function internalCreateNewFilterForm() {
+        global $app;
+
         $fb = FormBuilder::getTemporaryObject();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:DocumentFilter:processNewFilterForm')
@@ -245,15 +336,137 @@ class DocumentFilter extends APresenter {
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
 
             ->addElement($fb->createLabel()->setText('Description')->setFor('description'))
-            ->addElement($fb->createTextArea()->setName('description'))
-            
-            ->addElement($fb->createLabel()->setText('SQL query ')->setFor('filter_sql'))
-            ->addElement($fb->createTextArea()->setName('filter_sql'))
+            ->addElement($fb->createTextArea()->setName('description'));
 
-            ->addElement($fb->createLabel()->setText('SQL query has ordering?')->setFor('has_ordering'))
-            ->addElement($fb->createInput()->setType('checkbox')->setName('has_ordering'))
-            
-            ->addElement($fb->createSubmit('Create filter'));
+        // default metadata
+        $operations = [
+            [
+                'value' => 'equal',
+                'text' => '='
+            ],
+            [
+                'value' => 'not_equal',
+                'text' => '!='
+            ],
+            [
+                'value' => 'bigger',
+                'text' => '>'
+            ],
+            [
+                'value' => 'bigger_equal',
+                'text' => '>='
+            ],
+            [
+                'value' => 'smaller',
+                'text' => '<'
+            ],
+            [
+                'value' => 'smaller_equal',
+                'text' => '<='
+            ]
+        ];
+
+        $dbUsers = $app->userModel->getAllUsersPresentInDocuments();
+        $users = [['value' => 'null', 'text' => '-', 'selected' => 'selected']];
+        foreach($dbUsers as $dbu) {
+            $users[] = [
+                'value' => $dbu->getId(),
+                'text' => $dbu->getFullname()
+            ];
+        }
+
+        foreach(['id_author' => 'Author', 'id_officer' => 'Current officer', 'id_manager' => 'Manager'] as $name => $text) {
+            $fb ->addElement($fb->createLabel()->setText($text)->setFor($name))
+                ->addElement($fb->createSelect()->setName($name . '_operation')->addOptionsBasedOnArray($operations))
+                ->addElement($fb->createSelect()->setName($name)->addOptionsBasedOnArray($users))
+            ;
+
+            $fb->addElement($fb->createSelect()->setName($name . '_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+        }
+
+        // rank, status, shredding status
+        $ranks = [['value' => 'null', 'text' => '-', 'selected' => 'selected']];
+        foreach(DocumentRank::$texts as $k => $v) {
+            $ranks[] = [
+                'value' => $k,
+                'text' => $v
+            ];
+        }
+
+        $statuses = [['value' => 'null', 'text' => '-', 'selected' => 'selected']];
+        foreach(DocumentStatus::$texts as $k => $v) {
+            $statuses[] = [
+                'value' => $k,
+                'text' => $v
+            ];
+        }
+        
+        $shreddingStatuses = [];
+        foreach(DocumentShreddingStatus::$texts as $k => $v) {
+            $tmp = [
+                'value' => $k,
+                'text' => $v
+            ];
+
+            if($v == '-') {
+                $tmp['selected'] = 'selected';
+            }
+
+            $shreddingStatuses[] = $tmp;
+        }
+
+        $fb ->addElement($fb->createLabel()->setText('Document rank')->setFor('rank'))
+            ->addElement($fb->createSelect()->setName('rank_operation')->addOptionsBasedOnArray($operations))
+            ->addElement($fb->createSelect()->setName('rank')->addOptionsBasedOnArray($ranks))
+        ;
+
+        $fb->addElement($fb->createSelect()->setName('rank_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+
+        $fb ->addElement($fb->createLabel()->setText('Document status')->setFor('status'))
+            ->addElement($fb->createSelect()->setName('status_operation')->addOptionsBasedOnArray($operations))
+            ->addElement($fb->createSelect()->setName('status')->addOptionsBasedOnArray($statuses))
+        ;
+
+        $fb->addElement($fb->createSelect()->setName('status_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+
+        $fb ->addElement($fb->createLabel()->setText('Document shredding status')->setFor('shredding_status'))
+            ->addElement($fb->createSelect()->setName('shredding_status_operation')->addOptionsBasedOnArray($operations))
+            ->addElement($fb->createSelect()->setName('shredding_status')->addOptionsBasedOnArray($shreddingStatuses))
+        ;
+
+        // custom metadata
+        $dbMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
+        $first = true;
+        $i = 0;
+        foreach($dbMetadata as $dbm) {
+            if($dbm->getIsSystem() == TRUE) continue;
+            if($dbm->getInputType() == MetadataInputType::SELECT_EXTERNAL) continue;
+
+            $dbValues = $app->metadataModel->getAllValuesForIdMetadata($dbm->getId());
+            $values = [['value' => 'null', 'text' => '-']];
+            foreach($dbValues as $dbv) {
+                $values[] = [
+                    'value' => $dbv->getValue(),
+                    'text' => $dbv->getName()
+                ];
+            }
+
+            if($first === TRUE) {
+                $fb->addElement($fb->createSelect()->setName('shredding_status_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+                $first = false;
+            }
+
+            $fb ->addElement($fb->createLabel()->setText($dbm->getText())->setFor($dbm->getName()))
+                ->addElement($fb->createSelect()->setName($dbm->getName() . '_operation')->addOptionsBasedOnArray($operations))
+                ->addElement($fb->createSelect()->setName($dbm->getName())->addOptionsBasedOnArray($values))
+            ;
+
+            if(($i + 1) < count($dbMetadata)) {
+                $fb->addElement($fb->createSelect()->setName($dbm->getName() . '_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+            }
+        }
+
+        $fb ->addElement($fb->createSubmit('Create'));
 
         return $fb->build();
     }

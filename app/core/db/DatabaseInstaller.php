@@ -249,7 +249,7 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_author' => 'INT(32) NOT NULL',
                 'id_document' => 'INT(32) NOT NULL',
-                'text' => 'VARCHAR(32768)',
+                'text' => 'TEXT',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'process_comments' => array(
@@ -279,7 +279,7 @@ class DatabaseInstaller {
             'notifications' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user' => 'INT(32) NOT NULL',
-                'text' => 'VARCHAR(32768) NOT NULL',
+                'text' => 'TEXT NOT NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'action' => 'VARCHAR(256) NOT NULL'
@@ -287,14 +287,14 @@ class DatabaseInstaller {
             'service_log' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'name' => 'VARCHAR(256) NOT NULL',
-                'text' => 'VARCHAR(32768) NOT NULL',
+                'text' => 'TEXT NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'mail_queue' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'recipient' => 'VARCHAR(256) NOT NULL',
                 'title' => 'VARCHAR(256) NOT NULL',
-                'body' => 'VARCHAR(32768) NOT NULL',
+                'body' => 'TEXT NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'password_reset_hashes' => array(
@@ -352,7 +352,7 @@ class DatabaseInstaller {
                 'id_author' => 'INT(32) NULL',
                 'name' => 'VARCHAR(256) NOT NULL',
                 'description' => 'VARCHAR(256) NULL',
-                'filter_sql' => 'VARCHAR(32768) NOT NULL',
+                'filter_sql' => 'TEXT NOT NULL',
                 'has_ordering' => 'INT(2) NOT NULL DEFAULT 0'
             ),
             'user_connections' => array(
@@ -383,7 +383,7 @@ class DatabaseInstaller {
             ),
             'document_reports' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'sql_string' => 'VARCHAR(32768) NOT NULL',
+                'sql_string' => 'TEXT NOT NULL',
                 'id_user' => 'INT(32) NOT NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',

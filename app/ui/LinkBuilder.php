@@ -172,7 +172,7 @@ class LinkBuilder {
 
         $i = 0;
         foreach($urlParams as $paramKey => $paramVal) {
-            if($paramKey == 'page') {
+            if($paramKey == 'page' && isset($_GET['page'])) {
                 $urlPage = htmlspecialchars($_GET['page']);
                 $urlPageParts = explode(':', $urlPage);
                 if($paramVal == ':') {

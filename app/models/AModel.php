@@ -84,9 +84,10 @@ abstract class AModel {
         $qb ->select(['*'])
             ->from($tableName)
             ->orderBy($orderCol, $order)
+            ->limit(1)
             ->execute();
         
-        return $qb->fetchAll();
+        return $qb->fetch();
     }
 
     /**

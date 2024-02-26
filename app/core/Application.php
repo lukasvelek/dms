@@ -284,22 +284,24 @@ class Application {
     public function redirect(string $url, array $params = array(), string $hashtag = '') {
         $page = '?';
 
-        $urlPage = htmlspecialchars($_GET['page']);
-        $urlPageParts = explode(':', $urlPage);
+        if(isset($_GET['page'])) {
+            $urlPage = htmlspecialchars($_GET['page']);
+            $urlPageParts = explode(':', $urlPage);
 
-        if($url == ':') {
-            $url = $urlPage;
-        } else {
-            $vals = explode(':', $url);
+            if($url == ':') {
+                $url = $urlPage;
+            } else {
+                $vals = explode(':', $url);
 
-            switch(count($vals)) {
-                case 1:
-                    $url = $urlPageParts[0] . ':' . $urlPageParts[1] . ':' . $url;
-                    break;
+                switch(count($vals)) {
+                    case 1:
+                        $url = $urlPageParts[0] . ':' . $urlPageParts[1] . ':' . $url;
+                        break;
             
-                case 2:
-                    $url = $urlPageParts[0] . ':' . $url;
-                    break;
+                    case 2:
+                        $url = $urlPageParts[0] . ':' . $url;
+                        break;
+                }
             }
         }
 
