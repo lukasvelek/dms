@@ -239,7 +239,7 @@ class CalendarBuilder {
                             $cec = new CalendarEventColors();
                             $fgColor = $cec->getColor($color);
                             $bgColor = $cec->getBackgroundColorByForegroundColorKey($color);
-                            $text .= '<div id="calendar-table-td-single-event" style="color: ' . $fgColor . '; background-color: ' . $bgColor . '; padding: 2px; border-radius: 4px">';
+                            $text .= '<div id="calendar-table-td-single-event" style="color: ' . $fgColor . '; background-color: ' . $bgColor . '; padding: 2px; border-radius: 4px; font-size: 14px">';
                             $text .= $event->build();
                             $text .= '</div>';
                         }
