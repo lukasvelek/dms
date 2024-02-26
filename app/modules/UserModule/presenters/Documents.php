@@ -1307,7 +1307,14 @@ class Documents extends APresenter {
             if($pageCheck * AppConfiguration::getGridSize() >= $documentCount) {
                 $documentPageControl .= (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $documentPageControl .= (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
+                $from = 1 + ($pageCheck * AppConfiguration::getGridSize());
+                $to = AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize());
+
+                if($to > $documentCount) {
+                    $to = $documentCount;
+                }
+
+                $documentPageControl .= $from . '-' . $to;
             }
         } else {
             $documentPageControl = 'Total documents: ' .  $documentCount;
