@@ -55,7 +55,9 @@ class FileStorageSettings extends APresenter {
         $data = [
             'name' => $name,
             'path' => $path,
-            'is_active' => $active
+            'is_active' => $active,
+            'type' => $type,
+            'absolute_path' => $absolutePath
         ];
 
         $lastOrder = $app->fileStorageModel->getLastLocationOrder();
