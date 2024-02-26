@@ -41,10 +41,18 @@ class RibbonModel extends AModel {
 
         $code = 'documents.custom_filter.%';
 
-        $qb ->andWhere('code LIKE "?"', [$code])
+        $qb ->andWhere('code LIKE ?', [$code])
             ->execute();
 
-        return Database::convertMysqliResultToArray($qb->fetchAll(), ['id']);
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $code = $row['code'];
+
+            $id = explode('.', $code)[2];
+            $ids[] = $id;
+        }
+
+        return $ids;
     }
 
     public function getRibbonForIdDocumentFilter(int $idFilter) {
