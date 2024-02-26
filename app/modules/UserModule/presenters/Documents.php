@@ -35,7 +35,7 @@ class Documents extends APresenter {
     protected function processMoveToArchiveDocumentFormBulkAction() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['ids', 'archive_document'], true, ['page' => 'UserModule:Documents:showAll']);
+        $app->flashMessageIfNotIsset(['ids', 'archive_document'], true, ['page' => 'showAll']);
 
         $ids = $this->get('ids', false);
         $archiveDocument = $this->post('archive_document');
@@ -49,7 +49,7 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Documents moved to selected archive document', 'success');
-        $app->redirect('UserModule:Documents:showAll');
+        $app->redirect('showAll');
     }
 
     protected function showDocumentsCustomFilter() {
@@ -69,7 +69,7 @@ class Documents extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
-            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+            $newEntityLink = LinkBuilder::createLink('showNewForm', 'New document');
         }
 
         $data['$LINKS$'][] = $newEntityLink;
@@ -183,7 +183,7 @@ class Documents extends APresenter {
             $app->documentModel->insertDocumentReportQueueEntry($data);
 
             $app->flashMessage('You requested to export more than 1000 entries. This operation will be done by background service. You will be able to find your export ' . LinkBuilder::createAdvLink(['page' => 'UserModule:DocumentReports:showAll'], 'here') . '.');
-            $app->redirect('UserModule:Documents:showAll');
+            $app->redirect('showAll');
         }
 
         $hash = CypherManager::createCypher(32);
@@ -233,7 +233,7 @@ class Documents extends APresenter {
         $page = 1;
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
-            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+            $newEntityLink = LinkBuilder::createLink('showNewForm', 'New document');
         }
         
         if(isset($_GET['grid_page'])) {
@@ -283,14 +283,14 @@ class Documents extends APresenter {
         $page = 1;
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
-            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+            $newEntityLink = LinkBuilder::createLink('showNewForm', 'New document');
         }
 
         if(isset($_GET['id_folder'])) {
             $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
             $folderName = $folder->getName();
-            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'id_folder' => $idFolder), 'New document');
         }
 
         if(isset($_GET['grid_page'])) {
@@ -350,7 +350,7 @@ class Documents extends APresenter {
         $page = 1;
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
-            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+            $newEntityLink = LinkBuilder::createLink('showNewForm', 'New document');
         }
 
         if(isset($_GET['id_folder'])) {
@@ -359,7 +359,7 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $folder = $app->folderModel->getFolderById($idFolder);
                 $folderName = $folder->getName();
-                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'id_folder' => $idFolder), 'New document');
             } else {
                 $idFolder = null;
             }
@@ -403,7 +403,7 @@ class Documents extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT)) {
-            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
         }
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTERS) ||
@@ -518,7 +518,7 @@ class Documents extends APresenter {
         }
 
         if($action == '-') {
-            $app->redirect('UserModule:Documents:showAll', ['id_folder' => $idFolder]);
+            $app->redirect('showAll', ['id_folder' => $idFolder]);
         }
 
         if(method_exists($this, '_' . $action)) {
@@ -938,7 +938,7 @@ class Documents extends APresenter {
 
         $app->flashMessage('Created new document', 'success');
         
-        $url = 'UserModule:Documents:showAll';
+        $url = 'showAll';
 
         if(isset($data['id_folder'])) {
             $app->redirect($url, array('id_folder' => $data['id_folder']));
@@ -976,9 +976,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -999,9 +999,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -1019,9 +1019,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -1055,9 +1055,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -1091,9 +1091,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -1127,9 +1127,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -1138,7 +1138,7 @@ class Documents extends APresenter {
 
         $createLink = function(string $action, string $text, ?int $idFolder, ?string $filter) {
             $url = array(
-                'page' => 'UserModule:Documents:' . $action
+                'page' => $action
             );
 
             if($idFolder != null) {
@@ -1172,7 +1172,7 @@ class Documents extends APresenter {
             $list['null3'] = '<hr>';
         }
 
-        $list['null4'] = '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showSharedWithMe', 'Documents shared with me');
+        $list['null4'] = '&nbsp;&nbsp;' . LinkBuilder::createLink('showSharedWithMe', 'Documents shared with me');
 
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }

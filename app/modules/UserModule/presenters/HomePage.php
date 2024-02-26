@@ -2,11 +2,8 @@
 
 namespace DMS\Modules\UserModule;
 
-use DMS\Constants\DocumentStatus;
 use DMS\Constants\WidgetLocations;
 use DMS\Modules\APresenter;
-use DMS\UI\GridBuilder\Grid;
-use DMS\UI\LinkBuilder;
 
 class HomePage extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -24,7 +21,7 @@ class HomePage extends APresenter {
         $processStats = $app->processModel->getLastProcessStatsEntry();
 
         if(is_null($documentStats) || is_null($processStats)) {
-            $app->redirect('UserModule:Widgets:updateAllStats');
+            $app->redirect('Widgets:updateAllStats');
         }
 
         $idUser = $app->user->getId();

@@ -57,7 +57,7 @@ class Groups extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Users in group <i>' . $group->getName() . '</i>',
             '$GROUP_GRID$' => $this->internalCreateGroupGrid($id),
-            '$NEW_ENTITY_LINK$' => '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showNewUserForm', 'id' => $id), 'Add user') . '</div></div>'
+            '$NEW_ENTITY_LINK$' => '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createAdvLink(array('page' => 'showNewUserForm', 'id' => $id), 'Add user') . '</div></div>'
         );
 
         $this->templateManager->fill($data, $template);
@@ -79,7 +79,7 @@ class Groups extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => '<i>' . $group->getName() . '</i> rights',
             '$GROUP_RIGHTS_GRID$' => $this->internalCreateGroupRightsGrid($id, $filter),
-            '$BACK_LINK$' => LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showGroups'), '<-')
+            '$BACK_LINK$' => LinkBuilder::createAdvLink(array('page' => 'Settings:showGroups'), '<-')
         );
 
         $this->templateManager->fill($data, $template);
@@ -106,7 +106,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'actions'), $name);
+        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'actions'), $name);
     }
 
     protected function denyActionRight() {
@@ -128,7 +128,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'actions'), $name);
+        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'actions'), $name);
     }
 
     protected function allowPanelRight() {
@@ -150,7 +150,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
+        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
     }
 
     protected function denyPanelRight() {
@@ -172,7 +172,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
+        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -194,7 +194,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'bulk_actions'), $name);
+        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'bulk_actions'), $name);
     }
 
     protected function denyBulkActionRight() {
@@ -216,7 +216,7 @@ class Groups extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Groups:showGroupRights', array('id' => $idGroup, 'filter' => 'bulk_actions'), $name);
+        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'bulk_actions'), $name);
     }
 
     protected function addUserToGroup() {
@@ -233,7 +233,7 @@ class Groups extends APresenter {
 
         CacheManager::invalidateAllCache();
         
-        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+        $app->redirect('showUsers', array('id' => $idGroup));
     }
 
     protected function removeUserFromGroup() {
@@ -250,7 +250,7 @@ class Groups extends APresenter {
 
         CacheManager::invalidateAllCache();
 
-        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+        $app->redirect('showUsers', array('id' => $idGroup));
     }
 
     protected function setUserAsManager() {
@@ -279,7 +279,7 @@ class Groups extends APresenter {
 
         $app->groupUserModel->updateUserInGroup($idGroup, $idUser, array('is_manager' => '1'));
 
-        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+        $app->redirect('showUsers', array('id' => $idGroup));
     }
 
     protected function unsetUserAsManager() {
@@ -294,7 +294,7 @@ class Groups extends APresenter {
 
         $app->logger->info('Unset user #' . $idUser . ' as the manager of group #' . $idGroup, __METHOD__);
 
-        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+        $app->redirect('showUsers', array('id' => $idGroup));
     }
 
     private function internalCreateNewUserForm(int $idGroup) {
@@ -419,18 +419,18 @@ class Groups extends APresenter {
 
             switch($right->getType()) {
                 case 'action':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:allowActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:denyActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
                     break;
 
                 case 'panel':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:allowPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:denyPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
                     break;
     
                 case 'bulk':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:allowBulkActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:denyBulkActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowBulkActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyBulkActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
                     break;
             }
 

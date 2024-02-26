@@ -26,7 +26,7 @@ class RibbonSettings extends APresenter {
     protected function showDropdownItems() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'showAll'));
 
         $id = $this->get('id');
         $ribbon = $app->ribbonModel->getRibbonById($id);
@@ -40,7 +40,7 @@ class RibbonSettings extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
-            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm', 'is_dropdown' => '1', 'id_parent_ribbon' => $ribbon->getId()), 'New ribbon item');
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'is_dropdown' => '1', 'id_parent_ribbon' => $ribbon->getId()), 'New ribbon item');
         }
 
         $this->templateManager->fill($data, $template);
@@ -51,7 +51,7 @@ class RibbonSettings extends APresenter {
     protected function deleteRibbon() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'showAll'));
         
         $id = $this->get('id');
         
@@ -84,13 +84,13 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessage('Ribbon and ribbon rights cache cleared');
 
-        $app->redirect('UserModule:RibbonSettings:showAll');
+        $app->redirect('showAll');
     }
 
     protected function revokeRibbonRightToGroup() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group', 'name'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group', 'name'), true, array('page' => 'showAll'));
 
         $idRibbon = $this->get('id_ribbon');
         $idGroup = $this->get('id_group');
@@ -101,13 +101,13 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
 
         $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon, 'success');
-        $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
+        $app->redirect('showEditGroupRightsForm', array('id' => $idRibbon));
     }
 
     protected function grantRibbonRightToGroup() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group', 'name'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group', 'name'), true, array('page' => 'showAll'));
 
         $idRibbon = $this->get('id_ribbon');
         $idGroup = $this->get('id_group');
@@ -118,13 +118,13 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
 
         $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon, 'success');
-        $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
+        $app->redirect('showEditGroupRightsForm', array('id' => $idRibbon));
     }
 
     protected function grantAllRibbonRightsToGroup() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group'), true, array('page' => 'showAll'));
 
         $idRibbon = $this->get('id_ribbon');
         $idGroup = $this->get('id_group');
@@ -138,13 +138,13 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
 
         $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon, 'success');
-        $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
+        $app->redirect('showEditGroupRightsForm', array('id' => $idRibbon));
     }
 
     protected function revokeAllRibbonRightsToGroup() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_group'), true, array('page' => 'showAll'));
 
         $idRibbon = $this->get('id_ribbon');
         $idGroup = $this->get('id_group');
@@ -158,7 +158,7 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, $rights);
 
         $app->flashMessage('Updated rights for group #' . $idGroup . ' and ribbon #' . $idRibbon, 'success');
-        $app->redirect('UserModule:RibbonSettings:showEditGroupRightsForm', array('id' => $idRibbon));
+        $app->redirect('showEditGroupRightsForm', array('id' => $idRibbon));
     }
 
     protected function revokeRibbonRightToUser() {
@@ -175,7 +175,7 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
 
         $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon, 'success');
-        $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
+        $app->redirect('showEditUserRightsForm', array('id' => $idRibbon));
     }
 
     protected function grantRibbonRightToUser() {
@@ -192,13 +192,13 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
 
         $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon, 'success');
-        $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
+        $app->redirect('showEditUserRightsForm', array('id' => $idRibbon));
     }
 
     protected function grantAllRibbonRightsToUser() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user'), true, array('page' => 'showAll'));
 
         $idRibbon = $this->get('id_ribbon');
         $idUser = $this->get('id_user');
@@ -212,13 +212,13 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
 
         $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon, 'success');
-        $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
+        $app->redirect('showEditUserRightsForm', array('id' => $idRibbon));
     }
 
     protected function revokeAllRibbonRightsToUser() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id_ribbon', 'id_user'), true, array('page' => 'showAll'));
 
         $idRibbon = $this->get('id_ribbon');
         $idUser = $this->get('id_user');
@@ -232,7 +232,7 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, $rights);
 
         $app->flashMessage('Updated rights for user #' . $idUser . ' and ribbon #' . $idRibbon, 'success');
-        $app->redirect('UserModule:RibbonSettings:showEditUserRightsForm', array('id' => $idRibbon));
+        $app->redirect('showEditUserRightsForm', array('id' => $idRibbon));
     }
 
     protected function showEditGroupRightsForm() {
@@ -240,7 +240,7 @@ class RibbonSettings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
-        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'showAll'));
         $id = $this->get('id');
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
@@ -267,7 +267,7 @@ class RibbonSettings extends APresenter {
             '$SETTINGS_GRID$' => $rightsGrid
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:RibbonSettings:showAll', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('showAll', '<-');
 
         $this->templateManager->fill($data, $template);
 
@@ -279,7 +279,7 @@ class RibbonSettings extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
 
-        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'showAll'));
         $id = $this->get('id');
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
@@ -306,7 +306,7 @@ class RibbonSettings extends APresenter {
             '$SETTINGS_GRID$' => $rightsGrid
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:RibbonSettings:showAll', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('showAll', '<-');
 
         $this->templateManager->fill($data, $template);
 
@@ -316,7 +316,7 @@ class RibbonSettings extends APresenter {
     protected function processEditForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id', 'name', 'code', 'page_url', 'parent'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id', 'name', 'code', 'page_url', 'parent'), true, array('page' => 'showAll'));
         $id = $this->get('id');
 
         $data = [];
@@ -346,13 +346,13 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessage('Successfully edited ribbon #' . $id);
 
-        $app->redirect('UserModule:RibbonSettings:showAll');
+        $app->redirect('showAll');
     }
 
     protected function showEditForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'UserModule:RibbonSettings:showAll'));
+        $app->flashMessageIfNotIsset(array('id'), true, array('page' => 'showAll'));
         $id = $this->get('id');
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
@@ -372,7 +372,7 @@ class RibbonSettings extends APresenter {
     protected function processNewForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('name', 'code', 'parent', 'page_url'), true, array('page' => 'UserModule:RibbonSettings:showNewForm'));
+        $app->flashMessageIfNotIsset(array('name', 'code', 'parent', 'page_url'), true, array('page' => 'showNewForm'));
 
         $data = [];
         $data['name'] = $this->post('name');
@@ -425,7 +425,7 @@ class RibbonSettings extends APresenter {
 
         $app->flashMessage('Created new ribbon', 'success');
 
-        $app->redirect('UserModule:RibbonSettings:showAll');
+        $app->redirect('showAll');
     }
 
     protected function processNewSplitterForm() {
@@ -460,7 +460,7 @@ class RibbonSettings extends APresenter {
         $app->ribbonRightsModel->insertAllGrantedRightsForUser($idRibbon, $app->user->getId());
 
         $app->flashMessage('Successfully created a new splitter', 'success');
-        $app->redirect('UserModule:RibbonSettings:showAll');
+        $app->redirect('showAll');
     }
 
     protected function showNewForm() {
@@ -525,7 +525,7 @@ class RibbonSettings extends APresenter {
         
         unset($rcm);
         
-        $app->redirect('UserModule:RibbonSettings:showAll');
+        $app->redirect('showAll');
     }
 
     protected function showAll() {
@@ -546,12 +546,12 @@ class RibbonSettings extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
-            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewForm'), 'New ribbon');
-            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showNewSplitterForm'), 'New splitter');
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showNewForm'), 'New ribbon');
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showNewSplitterForm'), 'New splitter');
         }
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBON_CACHE)) {
-            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:clearCache'), 'Clear cache');
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'clearCache'), 'Clear cache');
         }
 
         $this->templateManager->fill($data, $template);
@@ -593,7 +593,7 @@ class RibbonSettings extends APresenter {
             if(in_array($ribbon->getId(), $editableRibbons) &&
                $canUserEdit &&
                $ribbon->getName() != 'SPLITTER') {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
+                $link = LinkBuilder::createAdvLink(array('page' => 'showEditForm', 'id' => $ribbon->getId()), 'Edit');
             }
             return $link;
         });
@@ -603,7 +603,7 @@ class RibbonSettings extends APresenter {
                $canUserEdit &&
                $ribbon->getName() != 'SPLITTER') {
                 if($ribbon->isJS()) {
-                    $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showDropdownItems', 'id' => $ribbon->getId()), 'Edit dropdown items');
+                    $link = LinkBuilder::createAdvLink(array('page' => 'showDropdownItems', 'id' => $ribbon->getId()), 'Edit dropdown items');
                 }
             }
             return $link;
@@ -613,7 +613,7 @@ class RibbonSettings extends APresenter {
             if(in_array($ribbon->getId(), $deletableRibbons) &&
                $canUserDelete &&
                $ribbon->isSystem() === FALSE) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
+                $link = LinkBuilder::createAdvLink(array('page' => 'deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
             }
             return $link;
         });
@@ -621,7 +621,7 @@ class RibbonSettings extends APresenter {
             $link = '-';
             if($canUserEditRights &&
                $ribbon->getName() != 'SPLITTER') {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
+                $link = LinkBuilder::createAdvLink(array('page' => 'showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
             }
             return $link;
         });
@@ -629,7 +629,7 @@ class RibbonSettings extends APresenter {
             $link = '-';
             if($canUserEditRights &&
                $ribbon->getName() != 'SPLITTER') {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
+                $link = LinkBuilder::createAdvLink(array('page' => 'showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
             }
             return $link;
         });
@@ -977,7 +977,7 @@ class RibbonSettings extends APresenter {
             if($ribbonAuthorizator->checkRibbonEditable($idUser, $ribbon) &&
                $actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBONS) &&
                $ribbon->getName() != 'SPLITTER') {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditForm', 'id' => $ribbon->getId()), 'Edit');
+                $link = LinkBuilder::createAdvLink(array('page' => 'showEditForm', 'id' => $ribbon->getId()), 'Edit');
             }
             return $link;
         });
@@ -985,7 +985,7 @@ class RibbonSettings extends APresenter {
             $link = '-';
             if($ribbonAuthorizator->checkRibbonDeletable($idUser, $ribbon) &&
                $actionAuthorizator->checkActionRight(UserActionRights::DELETE_RIBBONS)) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
+                $link = LinkBuilder::createAdvLink(array('page' => 'deleteRibbon', 'id' => $ribbon->getId()), 'Delete');
             }
             return $link;
         });
@@ -993,7 +993,7 @@ class RibbonSettings extends APresenter {
             $link = '-';
             if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
                $ribbon->getName() != 'SPLITTER') {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
+                $link = LinkBuilder::createAdvLink(array('page' => 'showEditUserRightsForm', 'id' => $ribbon->getId()), 'Edit user rights');
             }
             return $link;
         });
@@ -1001,7 +1001,7 @@ class RibbonSettings extends APresenter {
             $link = '-';
             if($actionAuthorizator->checkActionRight(UserActionRights::EDIT_RIBBON_RIGHTS) &&
                $ribbon->getName() != 'SPLITTER') {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:RibbonSettings:showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
+                $link = LinkBuilder::createAdvLink(array('page' => 'showEditGroupRightsForm', 'id' => $ribbon->getId()), 'Edit group rights');
             }
             return $link;
         });

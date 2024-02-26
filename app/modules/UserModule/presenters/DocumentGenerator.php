@@ -20,7 +20,7 @@ class DocumentGenerator extends APresenter {
 
         if(!$app::SYSTEM_DEBUG) {
             $app->flashMessage('Debug is not enabled!', FlashMessageTypes::ERROR);
-            $app->redirect('UserModule:HomePage:showHomepage');
+            $app->redirect('HomePage:showHomepage');
         }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/document-generator.html');

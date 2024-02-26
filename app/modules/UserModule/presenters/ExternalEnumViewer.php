@@ -23,7 +23,7 @@ class ExternalEnumViewer extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'External enum list',
             '$VIEWER_GRID$' => $this->internalCreateList(),
-            '$LINKS$' => LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-')
+            '$LINKS$' => LinkBuilder::createLink('Settings:showMetadata', '<-')
         );
 
         $this->templateManager->fill($data, $template);
@@ -45,7 +45,7 @@ class ExternalEnumViewer extends APresenter {
             '$VIEWER_GRID$' => $this->internalCreateValues($name)
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:ExternalEnumViewer:showList', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('showList', '<-');
 
         $this->templateManager->fill($data, $template);
 
@@ -108,7 +108,7 @@ class ExternalEnumViewer extends APresenter {
         $gb->addColumns(['name' => 'Name']);
         $gb->addDataSourceCallback($data);
         $gb->addAction(function($enum) {
-            return LinkBuilder::createAdvLink(array('page' => 'UserModule:ExternalEnumViewer:showValues', 'name' => $enum->getName()), 'Values');
+            return LinkBuilder::createAdvLink(array('page' => 'showValues', 'name' => $enum->getName()), 'Values');
         });
 
         return $gb->build();
