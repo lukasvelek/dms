@@ -40,12 +40,13 @@ class FileStorageModel extends AModel {
         return $this->deleteById($id, 'file_storage_locations');
     }
 
-    public function unsetAllLocationsAsDefault() {
+    public function unsetAllLocationsAsDefault(string $type) {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('file_storage_locations')
             ->set(['is_default' => '0'])
             ->where('is_default = 1')
+            ->andWhere('type = ?', [$type])
             ->execute();
 
         return $qb->fetchAll();

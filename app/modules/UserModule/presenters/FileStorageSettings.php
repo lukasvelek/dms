@@ -95,11 +95,12 @@ class FileStorageSettings extends APresenter {
     protected function setLocationAsDefault() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['id']);
+        $app->flashMessageIfNotIsset(['id', 'type']);
 
         $id = $this->get('id');
+        $type = $this->get('type');
 
-        $app->fileStorageModel->unsetAllLocationsAsDefault();
+        $app->fileStorageModel->unsetAllLocationsAsDefault($type);
         $app->fileStorageModel->setLocationAsDefault($id);
 
         $app->flashMessage('Changed default file storage location');
@@ -312,7 +313,7 @@ class FileStorageSettings extends APresenter {
         });
         $gb->addAction(function(FileStorageLocation $loc) {
             if($loc->isDefault() === FALSE) {
-                return LinkBuilder::createAdvLink(['page' => 'setLocationAsDefault', 'id' => $loc->getId()], 'Set as default');
+                return LinkBuilder::createAdvLink(['page' => 'setLocationAsDefault', 'id' => $loc->getId(), 'type' => $loc->getType()], 'Set as default');
             } else {
                 return '-';
             }
