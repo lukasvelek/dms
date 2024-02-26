@@ -535,6 +535,11 @@ class SingleDocument extends APresenter {
         $dateCreated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateCreated, $app->user);
         $dateUpdated = $document->getDateUpdated();
         $dateUpdated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateUpdated, $app->user);
+        $form = 'Physical';
+
+        if($document->getFile() !== NULL) {
+            $form = 'Electronic';
+        }
 
         $data = array(
             'Name' => $document->getName(),
@@ -546,7 +551,8 @@ class SingleDocument extends APresenter {
             'Deleted?' => $document->getIsDeleted() ? 'Yes' : 'No',
             'Folder' => $folder,
             'Date created' => $dateCreated,
-            'Date updated' => $dateUpdated
+            'Date updated' => $dateUpdated,
+            'Form' => $form
         );
 
         foreach($document->getMetadata() as $k => $v) {

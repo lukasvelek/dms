@@ -217,7 +217,8 @@ class DocumentFilter extends APresenter {
             'id_manager',
             'rank',
             'status',
-            'shredding_status'
+            'shredding_status',
+            'document_form'
         ];
         $textMetadata = $metadata;
 
@@ -269,7 +270,11 @@ class DocumentFilter extends APresenter {
 
         $checkMetadata = [];
         foreach($metadata as $md) {
-            $operation = $this->post($md . '_operation');
+            $operation = '';
+            if(isset($_POST[$md . '_operation'])) {
+                $operation = $this->post($md . '_operation');
+            }
+
             $value = $this->post($md);
             $andor = '';
 
@@ -283,7 +288,7 @@ class DocumentFilter extends APresenter {
                 $andor = strtoupper($this->post($md . '_andor'));
             }
 
-            if($value != 'null') {
+            if($value != 'null' && ($md != 'shredding_status' && $value != '5')) {
                 $checkMetadata[] = [
                     'name' => $md,
                     'operation' => $operation,
@@ -298,7 +303,15 @@ class DocumentFilter extends APresenter {
         }
 
         foreach($checkMetadata as $cm) {
-            $sql .= $createCondition($cm['name'], $cm['value'], $cm['operation']) . ' ' . $cm['andor'];
+            if($cm['name'] == 'document_form') {
+                if($cm['value'] == 'IS NULL') {
+                    $sql .= "(`file` IS NULL OR `file` = '') " . $cm['andor'];
+                } else {
+                    $sql .= "(`file` IS NOT NULL AND `file` <> '') " . $cm['andor'];
+                }
+            } else {
+                $sql .= $createCondition($cm['name'], $cm['value'], $cm['operation']) . ' ' . $cm['andor'] . ' ';
+            }
         }
 
         $data['filter_sql'] = $sql;
@@ -432,6 +445,13 @@ class DocumentFilter extends APresenter {
         $fb ->addElement($fb->createLabel()->setText('Document shredding status')->setFor('shredding_status'))
             ->addElement($fb->createSelect()->setName('shredding_status_operation')->addOptionsBasedOnArray($operations))
             ->addElement($fb->createSelect()->setName('shredding_status')->addOptionsBasedOnArray($shreddingStatuses))
+        ;
+
+        $fb->addElement($fb->createSelect()->setName('shredding_status_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+
+        $fb ->addElement($fb->createLabel()->setText('Document form')->setFor('document_form'))
+            ->addElement($fb->createSelect()->setName('document_form_operation')->addOptionsBasedOnArray($operations)->disable())
+            ->addElement($fb->createSelect()->setName('document_form')->addOptionsBasedOnArray([['value' => 'null', 'text' => '-', 'selected' => 'selected'], ['value' => 'IS NULL', 'text' => 'Physical'], ['value' => 'IS NOT NULL', 'text' => 'Electronic']]))
         ;
 
         // custom metadata
