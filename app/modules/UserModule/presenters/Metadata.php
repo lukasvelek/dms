@@ -74,7 +74,7 @@ class Metadata extends APresenter {
         );
 
         $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value');
-        $backLink = LinkBuilder::createLink('Settings:showMetadata', '<-');
+        $backLink = LinkBuilder::createLink('Settings:showMetadata', '&larr;');
 
         if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $idMetadata) && !$metadata->getIsSystem() && ($metadata->getInputType() != 'select_external')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>';
@@ -96,7 +96,7 @@ class Metadata extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-new-entity-form.html');
 
-        $backLink = LinkBuilder::createLink('Settings:showMetadata', '<-');
+        $backLink = LinkBuilder::createLink('Settings:showMetadata', '&larr;');
 
         $data = array(
             '$PAGE_TITLE$' => 'New value form',
@@ -135,7 +135,7 @@ class Metadata extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-rights-grid.html');
 
-        $backLink = LinkBuilder::createLink('Settings:showMetadata', '<-');
+        $backLink = LinkBuilder::createLink('Settings:showMetadata', '&larr;');
 
         $data = array(
             '$PAGE_TITLE$' => 'Metadata <i>' . $metadata->getName() . '</i> user rights',

@@ -57,7 +57,7 @@ class SingleArchive extends APresenter {
             '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($id, $page, 'show' . ArchiveType::$texts[$archiveEntity->getType()] . 'Content')
         ];
 
-        $data['$LINKS$'][] = LinkBuilder::createLink($backLink, '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink($backLink, '&larr;');
 
         $this->templateManager->fill($data, $template);
 

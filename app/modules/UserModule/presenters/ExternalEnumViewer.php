@@ -23,7 +23,7 @@ class ExternalEnumViewer extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'External enum list',
             '$VIEWER_GRID$' => $this->internalCreateList(),
-            '$LINKS$' => LinkBuilder::createLink('Settings:showMetadata', '<-')
+            '$LINKS$' => LinkBuilder::createLink('Settings:showMetadata', '&larr;')
         );
 
         $this->templateManager->fill($data, $template);
@@ -45,7 +45,7 @@ class ExternalEnumViewer extends APresenter {
             '$VIEWER_GRID$' => $this->internalCreateValues($name)
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('showList', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('showList', '&larr;');
 
         $this->templateManager->fill($data, $template);
 

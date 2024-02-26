@@ -267,7 +267,7 @@ class RibbonSettings extends APresenter {
             '$SETTINGS_GRID$' => $rightsGrid
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('showAll', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('showAll', '&larr;');
 
         $this->templateManager->fill($data, $template);
 
@@ -306,7 +306,7 @@ class RibbonSettings extends APresenter {
             '$SETTINGS_GRID$' => $rightsGrid
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('showAll', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('showAll', '&larr;');
 
         $this->templateManager->fill($data, $template);
 

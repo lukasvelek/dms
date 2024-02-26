@@ -79,7 +79,7 @@ class Groups extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => '<i>' . $group->getName() . '</i> rights',
             '$GROUP_RIGHTS_GRID$' => $this->internalCreateGroupRightsGrid($id, $filter),
-            '$BACK_LINK$' => LinkBuilder::createAdvLink(array('page' => 'Settings:showGroups'), '<-')
+            '$BACK_LINK$' => LinkBuilder::createAdvLink(array('page' => 'Settings:showGroups'), '&larr;')
         );
 
         $this->templateManager->fill($data, $template);

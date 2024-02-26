@@ -49,7 +49,7 @@ class SystemEventCalendar extends APresenter {
         }
 
         $calendar = $app->calendarComponent->getCalendarForDate($month, $year, [$tag]);
-        $controller = $calendar->getController('showEvents');
+        $controller = $calendar->getController('UserModule:SystemEventCalendar:showEvents');
         $calendar->addEventObjects($events);
 
         $data = [

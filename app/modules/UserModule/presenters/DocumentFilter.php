@@ -112,7 +112,7 @@ class DocumentFilter extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Document filter #' . $idFilter . ' results',
             '$LINKS$' => array(
-                LinkBuilder::createAdvLink(array('page' => 'showFilters'), '<-')
+                LinkBuilder::createAdvLink(array('page' => 'showFilters'), '&larr;')
             ),
             '$FILTER_GRID$' => $this->internalCreateFilterResultsGrid($filter),
             '$BULK_ACTION_CONTROLLER$' => ''
@@ -136,7 +136,7 @@ class DocumentFilter extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Filter <i>' . $filter->getName() . '</i>',
             '$LINKS$' => array(
-                LinkBuilder::createLink('showFilters', '<-')
+                LinkBuilder::createLink('showFilters', '&larr;')
             ),
             '$FILTER_FORM$' => $this->internalCreateEditFilterForm($filter)
         );

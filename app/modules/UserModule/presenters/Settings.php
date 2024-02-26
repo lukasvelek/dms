@@ -216,7 +216,7 @@ class Settings extends APresenter {
             '$LINKS$' => []
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('showServices', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('showServices', '&larr;');
 
         $this->templateManager->fill($data, $template);
 
@@ -317,9 +317,9 @@ class Settings extends APresenter {
             }
 
             if($folder->getIdParentFolder() != NULL) {
-                $backLink = LinkBuilder::createAdvLink(array('page' => 'showFolders', 'id_folder' => $folder->getIdParentFolder()), '<-');
+                $backLink = LinkBuilder::createAdvLink(array('page' => 'showFolders', 'id_folder' => $folder->getIdParentFolder()), '&larr;');
             } else {
-                $backLink = LinkBuilder::createLink('showFolders', '<-');
+                $backLink = LinkBuilder::createLink('showFolders', '&larr;');
             }
 
             $pageTitle .= ' in <i>' . $folder->getName() . '</i>';
