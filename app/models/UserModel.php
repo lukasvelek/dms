@@ -11,6 +11,41 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllUsersPresentInDocuments() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_author', 'id_officer', 'id_manager'])
+            ->from('documents')
+            ->execute();
+
+        $docuUsers = [];
+        while($row = $qb->fetchAssoc()) {
+            if(!in_array($row['id_author'], $docuUsers)) {
+                $docuUsers[] = $row['id_author'];
+            }
+            if(!in_array($row['id_officer'], $docuUsers)) {
+                $docuUsers[] = $row['id_officer'];
+            }
+            if(!in_array($row['id_manager'], $docuUsers)) {
+                $docuUsers[] = $row['id_manager'];
+            }
+        }
+
+        $qb->clean();
+
+        $qb ->select(['*'])
+            ->from('users')
+            ->where($qb->getColumnInValues('id', $docuUsers))
+            ->execute();
+
+        $users = [];
+        while($row = $qb->fetchAssoc()) {
+            $users[] = $this->getUserObjectFromDbRow($row);
+        }
+
+        return $users;
+    }
+
     public function insertLastLoginHashForIdUser(int $id, string $hash) {
         $qb = $this->qb(__METHOD__);
 
