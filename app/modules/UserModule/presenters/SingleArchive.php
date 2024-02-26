@@ -19,7 +19,7 @@ class SingleArchive extends APresenter {
     protected function showContent() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['id', 'type'], true, ['page' => 'UserModule:Archive:showDocuments']);
+        $app->flashMessageIfNotIsset(['id', 'type'], true, ['page' => 'Archive:showDocuments']);
 
         $id = $this->get('id');
         $type = $this->get('type');
@@ -29,17 +29,17 @@ class SingleArchive extends APresenter {
         switch($type) {
             case ArchiveType::DOCUMENT:
                 $archiveEntity = $app->archiveModel->getDocumentById($id);
-                $backLink = 'UserModule:Archive:showDocuments';
+                $backLink = 'Archive:showDocuments';
                 break;
             
             case ArchiveType::BOX:
                 $archiveEntity = $app->archiveModel->getBoxById($id);
-                $backLink = 'UserModule:Archive:showBoxes';
+                $backLink = 'Archive:showBoxes';
                 break;
 
             case ArchiveType::ARCHIVE:
                 $archiveEntity = $app->archiveModel->getArchiveById($id);
-                $backLink = 'UserModule:Archive:showArchives';
+                $backLink = 'Archive:showArchives';
                 break;
         }
 
@@ -57,7 +57,7 @@ class SingleArchive extends APresenter {
             '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($id, $page, 'show' . ArchiveType::$texts[$archiveEntity->getType()] . 'Content')
         ];
 
-        $data['$LINKS$'][] = LinkBuilder::createLink($backLink, '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink($backLink, '&larr;');
 
         $this->templateManager->fill($data, $template);
 

@@ -26,7 +26,6 @@ class DocumentReports extends APresenter {
 
         $idUser = $app->user->getId();
         $documentModel = $app->documentModel;
-        $actionAuthorizator = $app->actionAuthorizator;
 
         $dataCallback = function() use ($idUser, $documentModel) {
             $rows = $documentModel->getDocumentReportQueueEntriesForIdUser($idUser);
@@ -116,7 +115,7 @@ class DocumentReports extends APresenter {
         $gb->addAction(function(object $obj) use ($canDeleteDocumentReportQueueEntry) {
             if($canDeleteDocumentReportQueueEntry &&
                 in_array($obj->getStatus(), [DocumentReportStatus::FINISHED, DocumentReportStatus::IN_PROGRESS])) {
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:DocumentReports:deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
+                return LinkBuilder::createAdvLink(['page' => 'deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
             } else {
                 return '-';
             }
@@ -150,7 +149,7 @@ class DocumentReports extends APresenter {
         $app->documentModel->deleteDocumentReportQueueEntry($id);
 
         $app->flashMessage('Deleted generated document report.');
-        $app->redirect('UserModule:DocumentReports:showAll');
+        $app->redirect('showAll');
     }
 }
 

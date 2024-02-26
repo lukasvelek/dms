@@ -35,7 +35,7 @@ class Metadata extends APresenter {
         }
 
         $app->flashMessage('Successfully set default metadata value', 'success');
-        $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
+        $app->redirect('showValues', array('id' => $idMetadata));
     }
 
     protected function deleteValue() {
@@ -49,7 +49,7 @@ class Metadata extends APresenter {
         $app->metadataModel->deleteMetadataValueByIdMetadataValue($idMetadataValue);
 
         $app->flashMessage('Deleted metadata value for metadata #' . $idMetadata, 'warning');
-        $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
+        $app->redirect('showValues', array('id' => $idMetadata));
     }
 
     protected function showValues() {
@@ -73,8 +73,8 @@ class Metadata extends APresenter {
             '$METADATA_GRID$' => $metadataValues
         );
 
-        $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value');
-        $backLink = LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-');
+        $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewValueForm', 'id_metadata' => $idMetadata), 'Create new value');
+        $backLink = LinkBuilder::createLink('Settings:showMetadata', '&larr;');
 
         if($app->metadataAuthorizator->canUserEditMetadataValues($app->user->getId(), $idMetadata) && !$metadata->getIsSystem() && ($metadata->getInputType() != 'select_external')) {
             $data['$NEW_ENTITY_LINK$'] = '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>';
@@ -96,7 +96,7 @@ class Metadata extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-new-entity-form.html');
 
-        $backLink = LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-');
+        $backLink = LinkBuilder::createLink('Settings:showMetadata', '&larr;');
 
         $data = array(
             '$PAGE_TITLE$' => 'New value form',
@@ -122,7 +122,7 @@ class Metadata extends APresenter {
 
         $app->logger->info('Created new value for metadata #' . $idMetadata, __METHOD__);
 
-        $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
+        $app->redirect('showValues', array('id' => $idMetadata));
     }
 
     protected function showUserRights() {
@@ -135,7 +135,7 @@ class Metadata extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/metadata/metadata-rights-grid.html');
 
-        $backLink = LinkBuilder::createLink('UserModule:Settings:showMetadata', '<-');
+        $backLink = LinkBuilder::createLink('Settings:showMetadata', '&larr;');
 
         $data = array(
             '$PAGE_TITLE$' => 'Metadata <i>' . $metadata->getName() . '</i> user rights',
@@ -170,7 +170,7 @@ class Metadata extends APresenter {
 
         $app->logger->info('Updated metadata right for user #' . $idUser . ' and metadata #' . $idMetadata, __METHOD__);
 
-        $app->redirect('UserModule:Metadata:showUserRights', array('id_metadata' => $idMetadata));
+        $app->redirect('showUserRights', array('id_metadata' => $idMetadata));
     }
 
     private function internalCreateRightsGrid(int $idMetadata) {
@@ -185,12 +185,12 @@ class Metadata extends APresenter {
         };
 
         $enableLink = function (string $name, int $idUser) use ($idMetadata) {
-            $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'enable'), 'No', 'general-link', 'color: red');
+            $link = LinkBuilder::createAdvLink(array('page' => 'updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'enable'), 'No', 'general-link', 'color: red');
             return $link;
         };
 
         $disableLink = function (string $name, int $idUser) use ($idMetadata) {
-            $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'disable'), 'Yes', 'general-link', 'color: green');
+            $link = LinkBuilder::createAdvLink(array('page' => 'updateRight', 'id_metadata' => $idMetadata, 'name' => $name, 'id_user' => $idUser, 'action' => 'disable'), 'Yes', 'general-link', 'color: green');
             return $link;
         };
 
@@ -315,7 +315,7 @@ class Metadata extends APresenter {
             $actionLink = '-';
             if($value instanceof MetadataValue) {
                 if(in_array($id, $idsCanEditMetadataValues) && !$isSystem) {
-                    $actionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Delete');
+                    $actionLink = LinkBuilder::createAdvLink(array('page' => 'deleteValue', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Delete');
                 }
             }
             return $actionLink;
@@ -324,7 +324,7 @@ class Metadata extends APresenter {
             $actionLink = '-';
             if($value instanceof MetadataValue) {
                 if(in_array($id, $idsCanEditMetadataValues) && !$isSystem && !$value->getIsDefault()) {
-                    $actionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:setAsDefault', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Set as default');
+                    $actionLink = LinkBuilder::createAdvLink(array('page' => 'setAsDefault', 'id_metadata' => $id, 'id_metadata_value' => $value->getId()), 'Set as default');
                 }
             }
             return $actionLink;

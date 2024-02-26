@@ -284,6 +284,25 @@ class Application {
     public function redirect(string $url, array $params = array(), string $hashtag = '') {
         $page = '?';
 
+        $urlPage = htmlspecialchars($_GET['page']);
+        $urlPageParts = explode(':', $urlPage);
+
+        if($url == ':') {
+            $url = $urlPage;
+        } else {
+            $vals = explode(':', $url);
+
+            switch(count($vals)) {
+                case 1:
+                    $url = $urlPageParts[0] . ':' . $urlPageParts[1] . ':' . $url;
+                    break;
+            
+                case 2:
+                    $url = $urlPageParts[0] . ':' . $url;
+                    break;
+            }
+        }
+
         $newParams = array('page' => $url);
 
         foreach($params as $k => $v) {

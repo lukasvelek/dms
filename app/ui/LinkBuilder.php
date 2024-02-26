@@ -92,7 +92,6 @@ class LinkBuilder {
      * @return string HTML image link template
      */
     private function getImgTemplate(int $width) {
-        //$size = array($width, $width); // width, height
         return '<a class="$CLASS$" href="$URL$"><img src="$IMG_PATH$" width="' . $width . 'px" height="' . $width . 'px" loading="lazy">$NAME$</a>';
     }
 
@@ -148,10 +147,6 @@ class LinkBuilder {
                 }  
             }
 
-            /*if(isset($_GET['id_ribbon'])) {
-                $link .= '&id_ribbon=' . $_GET['id_ribbon'];
-            }*/
-
             $obj = new self($link, $class, $name);
         }
 
@@ -177,6 +172,28 @@ class LinkBuilder {
 
         $i = 0;
         foreach($urlParams as $paramKey => $paramVal) {
+            if($paramKey == 'page') {
+                $urlPage = htmlspecialchars($_GET['page']);
+                $urlPageParts = explode(':', $urlPage);
+                if($paramVal == ':') {
+                    $paramVal = $urlPage;
+                } else {
+                    $vals = explode(':', $paramVal);
+
+                    switch(count($vals)) {
+                        case 1:
+                            // only action
+                            $paramVal = $urlPageParts[0] . ':' . $urlPageParts[1] . ':' . $paramVal;
+                            break;
+
+                        case 2:
+                            // presenter & action
+                            $paramVal = $urlPageParts[0] . ':' . $paramVal;
+                            break;
+                    }   
+                }
+            }
+
             if(($i + 1) == count($urlParams)) {
                 $url .= $paramKey . '=' . $paramVal;
             } else {

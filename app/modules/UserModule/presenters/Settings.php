@@ -13,7 +13,6 @@ use DMS\Constants\WidgetLocations;
 use DMS\Core\AppConfiguration;
 use DMS\Core\Application;
 use DMS\Core\CacheManager;
-use DMS\Core\DB\Database;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Entities\Metadata;
@@ -54,7 +53,13 @@ class Settings extends APresenter {
             $app->groupRightModel->removeAllGroupRightsForIdGroup($id);
             $app->groupUserModel->removeAllGroupUsersForIdGroup($id);
             $app->ribbonRightsModel->deleteAllRibbonRightsForIdGroup($id);
+
+            $app->flashMessage('Successfully removed group #' . $id, 'success');
+        } else {
+            $app->flashMessage('Could not remove user #' . $id, 'error');
         }
+
+        $app->redirect('showGroups');
     }
 
     protected function deleteUser() {
@@ -82,7 +87,7 @@ class Settings extends APresenter {
             $app->flashMessage('Could not remove user #' . $id, 'error');
         }
 
-        $app->redirect('UserModule:Settings:showUsers');
+        $app->redirect('showUsers');
     }
 
     protected function updateDashboardWidgets() {
@@ -130,7 +135,7 @@ class Settings extends APresenter {
         }
 
         $app->flashMessage('Successfully updated widgets.', 'success');
-        $app->redirect('UserModule:Settings:showDashboardWidgets');
+        $app->redirect('showDashboardWidgets');
     }
 
     protected function showDashboardWidgets() {
@@ -193,7 +198,7 @@ class Settings extends APresenter {
 
         $app->logger->info('Updated configuration for service \'' . $name . '\'', __METHOD__);
 
-        $app->redirect('UserModule:Settings:showServices');
+        $app->redirect('showServices');
     }
 
     protected function editServiceForm() {
@@ -211,7 +216,7 @@ class Settings extends APresenter {
             '$LINKS$' => []
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showServices', '<-');
+        $data['$LINKS$'][] = LinkBuilder::createLink('showServices', '&larr;');
 
         $this->templateManager->fill($data, $template);
 
@@ -283,7 +288,7 @@ class Settings extends APresenter {
             }
         }
 
-        $app->redirect('UserModule:Settings:showServices');
+        $app->redirect('showServices');
     }
 
     protected function showFolders() {
@@ -294,7 +299,7 @@ class Settings extends APresenter {
         $newEntityLink = '';
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER)) {
-            $newEntityLink = LinkBuilder::createLink('UserModule:Settings:showNewFolderForm', 'New folder');
+            $newEntityLink = LinkBuilder::createLink('showNewFolderForm', 'New folder');
         }
 
         $backLink = '';
@@ -306,15 +311,15 @@ class Settings extends APresenter {
             $folder = $app->folderModel->getFolderById($idFolder);
 
             if((($folder->getNestLevel() + 1) < AppConfiguration::getFolderMaxNestLevel()) && ($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT_FOLDER))) {
-                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showNewFolderForm', 'id_parent_folder' => $idFolder), 'New folder');
+                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewFolderForm', 'id_parent_folder' => $idFolder), 'New folder');
             } else {
                 $newEntityLink = '';
             }
 
             if($folder->getIdParentFolder() != NULL) {
-                $backLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getIdParentFolder()), '<-');
+                $backLink = LinkBuilder::createAdvLink(array('page' => 'showFolders', 'id_folder' => $folder->getIdParentFolder()), '&larr;');
             } else {
-                $backLink = LinkBuilder::createLink('UserModule:Settings:showFolders', '<-');
+                $backLink = LinkBuilder::createLink('showFolders', '&larr;');
             }
 
             $pageTitle .= ' in <i>' . $folder->getName() . '</i>';
@@ -421,9 +426,9 @@ class Settings extends APresenter {
         $app->logger->info('Inserted new folder #' . $idFolder, __METHOD__);
 
         if($parentFolder != '-1') {
-            $app->redirect('UserModule:Settings:showFolders', array('id_folder' => $idFolder));
+            $app->redirect('showFolders', array('id_folder' => $idFolder));
         } else {
-            $app->redirect('UserModule:Settings:showFolders');
+            $app->redirect('showFolders');
         }
     }
 
@@ -470,9 +475,9 @@ class Settings extends APresenter {
         $app->logger->info('Inserted new folder #' . $idFolder, __METHOD__);
 
         if($parentFolder != '-1') {
-            $app->redirect('UserModule:Settings:showFolders', array('id_folder' => $idFolder));
+            $app->redirect('showFolders', array('id_folder' => $idFolder));
         } else {
-            $app->redirect('UserModule:Settings:showFolders');
+            $app->redirect('showFolders');
         }
     }
 
@@ -524,7 +529,7 @@ class Settings extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight('create_user')) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewUserForm', 'New user');
+            $data['$LINKS$'][] = LinkBuilder::createLink('showNewUserForm', 'New user');
         }
 
         $this->templateManager->fill($data, $template);
@@ -558,7 +563,7 @@ class Settings extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewGroupForm', 'New group');
+            $data['$LINKS$'][] = LinkBuilder::createLink('showNewGroupForm', 'New group');
         }
 
         $this->templateManager->fill($data, $template);
@@ -582,10 +587,10 @@ class Settings extends APresenter {
             '$SETTINGS_GRID$' => $metadataGrid
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:ExternalEnumViewer:showList', 'External enums') . '&nbsp;&nbsp;';
+        $data['$LINKS$'][] = LinkBuilder::createLink('ExternalEnumViewer:showList', 'External enums') . '&nbsp;&nbsp;';
 
         if($app->actionAuthorizator->checkActionRight('create_metadata')) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Settings:showNewMetadataForm', 'New metadata');
+            $data['$LINKS$'][] = LinkBuilder::createLink('showNewMetadataForm', 'New metadata');
         }
 
         $this->templateManager->fill($data, $template);
@@ -601,20 +606,20 @@ class Settings extends APresenter {
         $widgets = [];
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::UPDATE_DEFAULT_USER_RIGHTS)) {
-            $widgets[] = LinkBuilder::createLink('UserModule:Settings:updateDefaultUserRights', 'Update default user rights') . '<br>';
+            $widgets[] = LinkBuilder::createLink('updateDefaultUserRights', 'Update default user rights') . '<br>';
         }
 
         if(Application::SYSTEM_DEBUG && $app->actionAuthorizator->checkActionRight(UserActionRights::USE_DOCUMENT_GENERATOR)) {
-            $widgets[] = LinkBuilder::createLink('UserModule:DocumentGenerator:showForm', 'Document generator') . '<br>';
+            $widgets[] = LinkBuilder::createLink('DocumentGenerator:showForm', 'Document generator') . '<br>';
         }
 
-        $widgets[] = LinkBuilder::createLink('UserModule:ImageBrowser:showAll', 'Images') . '<br>';
+        $widgets[] = LinkBuilder::createLink('ImageBrowser:showAll', 'Images') . '<br>';
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::VIEW_FILE_STORAGE_LOCATIONS)) {
-            $widgets[] = LinkBuilder::createLink('UserModule:FileStorageSettings:showLocations', 'File storage') . '<br>';
+            $widgets[] = LinkBuilder::createLink('FileStorageSettings:showLocations', 'File storage') . '<br>';
         }
 
-        $widgets[] = LinkBuilder::createAdvLink(['page' => 'UserModule:SystemEventCalendar:showEvents', 'tag' => 'system', 'year' => date('Y'), 'month' => date('m')], 'System event calendar');
+        $widgets[] = LinkBuilder::createAdvLink(['page' => 'SystemEventCalendar:showEvents', 'tag' => 'system', 'year' => date('Y'), 'month' => date('m')], 'System event calendar');
 
         $widgetsCode = '';
 
@@ -644,7 +649,7 @@ class Settings extends APresenter {
 
         $app->getConn()->installer->updateDefaultUserRights();
 
-        $app->redirect('UserModule:Settings:showSystem');
+        $app->redirect('showSystem');
     }
 
     protected function showEditMetadataForm() {
@@ -727,7 +732,7 @@ class Settings extends APresenter {
         $app->metadataModel->updateMetadata($idMetadata, $data);
 
         $app->flashMessage('Saved metadata #'. $idMetadata, 'success');
-        $app->redirect('UserModule:Settings:showMetadata');
+        $app->redirect('showMetadata');
     }
 
     protected function createNewMetadata() {
@@ -783,9 +788,9 @@ class Settings extends APresenter {
         $app->logger->info('Enabled right \'edit_values\' for metadata #' . $idMetadata, __METHOD__);
 
         if($inputType == 'select') {
-            $app->redirect('UserModule:Metadata:showValues', array('id' => $idMetadata));
+            $app->redirect('Metadata:showValues', array('id' => $idMetadata));
         } else {
-            $app->redirect('UserModule:Settings:showMetadata');
+            $app->redirect('showMetadata');
         }
     }
 
@@ -807,7 +812,7 @@ class Settings extends APresenter {
 
         $app->logger->info('Deleted metadata #' . $id, __METHOD__);
 
-        $app->redirect('UserModule:Settings:showMetadata');
+        $app->redirect('showMetadata');
     }
 
     protected function createNewGroup() {
@@ -831,7 +836,7 @@ class Settings extends APresenter {
         $app->groupRightModel->insertPanelRightsForIdGroup($idGroup);
         $app->groupRightModel->insertBulkActionRightsForIdGroup($idGroup);
 
-        $app->redirect('UserModule:Groups:showUsers', array('id' => $idGroup));
+        $app->redirect('Groups:showUsers', array('id' => $idGroup));
     }
 
     protected function createNewUser() {
@@ -879,7 +884,7 @@ class Settings extends APresenter {
         $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
         $app->userRightModel->insertMetadataRightsForIdUser($idUser, $app->metadataModel->getAllMetadata());
 
-        $app->redirect('UserModule:Users:showProfile', array('id' => $idUser));
+        $app->redirect('Users:showProfile', array('id' => $idUser));
     }
 
     protected function askToDeleteFolder() {
@@ -928,7 +933,7 @@ class Settings extends APresenter {
             $app->logger->info('Deleted folder #' . $cf->getId(), __METHOD__);
         }
 
-        $app->redirect('UserModule:Settings:showFolders');
+        $app->redirect('showFolders');
     }
 
     private function internalCreateNewGroupForm() {
@@ -1218,7 +1223,7 @@ class Settings extends APresenter {
             if(in_array($metadata->getId(), $idsEditableMetadata) &&
                $canDeleteMetadata &&
                !$metadata->getIsSystem()) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:deleteMetadata', 'id' => $metadata->getId()), 'Delete');
+                $link = LinkBuilder::createAdvLink(array('page' => 'deleteMetadata', 'id' => $metadata->getId()), 'Delete');
             }
             return $link;
         });
@@ -1226,7 +1231,7 @@ class Settings extends APresenter {
             $link = '-';
             if(in_array($metadata->getId(), $idsEditableMetadata) &&
                $canEditMetadata) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showEditMetadataForm', 'id_metadata' => $metadata->getId()), 'Edit');
+                $link = LinkBuilder::createAdvLink(array('page' => 'showEditMetadataForm', 'id_metadata' => $metadata->getId()), 'Edit');
             }
             return $link;
         });
@@ -1235,14 +1240,14 @@ class Settings extends APresenter {
             if((in_array($metadata->getInputType(), ['select', 'select_external'])) &&
                in_array($metadata->getId(), $idsMetadataViewMetadataValues) &&
                $canEditMetadataValues) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showValues', 'id' => $metadata->getId()), 'Values');
+                $link = LinkBuilder::createAdvLink(array('page' => 'Metadata:showValues', 'id' => $metadata->getId()), 'Values');
             }
             return $link;
         });
         $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($canEditUserMetadataRights) {
             $link = '-';
             if($canEditUserMetadataRights) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Metadata:showUserRights', 'id_metadata' => $metadata->getId()), 'User rights');
+                $link = LinkBuilder::createAdvLink(array('page' => 'Metadata:showUserRights', 'id_metadata' => $metadata->getId()), 'User rights');
             }
             return $link;
         });
@@ -1270,13 +1275,13 @@ class Settings extends APresenter {
         $gb->addColumns(['name' => 'Name', 'description' => 'Description']);
         $gb->addDataSourceCallback($data);
         $gb->addAction(function(Folder $folder) {
-            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id_folder' => $folder->getId()), 'Open');
+            return LinkBuilder::createAdvLink(array('page' => 'showFolders', 'id_folder' => $folder->getId()), 'Open');
         });
         $gb->addAction(function(Folder $folder) {
-            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showEditFolderForm', 'id_folder' => $folder->getId()), 'Edit');
+            return LinkBuilder::createAdvLink(array('page' => 'showEditFolderForm', 'id_folder' => $folder->getId()), 'Edit');
         });
         $gb->addAction(function(Folder $folder) {
-            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete');
+            return LinkBuilder::createAdvLink(array('page' => 'askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete');
         });
 
         return $gb->build();
@@ -1453,14 +1458,14 @@ class Settings extends APresenter {
         $gb->addAction(function($service) use ($canRunService) {
             $link = '-';
             if($canRunService) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:askToRunService', 'name' => $service->getSystemName()), 'Run');
+                $link = LinkBuilder::createAdvLink(array('page' => 'askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
             return $link;
         });
         $gb->addAction(function($service) use ($canEditService) {
             $link = '-';
             if($canEditService) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:editServiceForm', 'name' => $service->getSystemName()), 'Edit');
+                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceForm', 'name' => $service->getSystemName()), 'Edit');
             }
             return $link;
         });

@@ -45,7 +45,7 @@ class DocumentFilter extends APresenter {
         unset($rcm, $rucm, $rgcm);
 
         $app->flashMessage('Successfully unpinned selected filter', 'success');
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function pinFilter() {
@@ -83,20 +83,20 @@ class DocumentFilter extends APresenter {
         unset($rcm, $rucm, $rgcm);
 
         $app->flashMessage('Successfully pinned selected filter', 'success');
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function deleteFilter() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'showFilters'));
 
         $idFilter = $this->get('id_filter');
 
         $app->filterModel->deleteDocumentFilter($idFilter);
         
         $app->flashMessage('Document filter #' . $idFilter . ' deleted', 'success');
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function showFilterResults() {
@@ -104,7 +104,7 @@ class DocumentFilter extends APresenter {
 
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-grid.html');
 
-        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'showFilters'));
 
         $idFilter = $this->get('id_filter');
         $filter = $app->filterModel->getDocumentFilterById($idFilter);
@@ -112,7 +112,7 @@ class DocumentFilter extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Document filter #' . $idFilter . ' results',
             '$LINKS$' => array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilters'), '<-')
+                LinkBuilder::createAdvLink(array('page' => 'showFilters'), '&larr;')
             ),
             '$FILTER_GRID$' => $this->internalCreateFilterResultsGrid($filter),
             '$BULK_ACTION_CONTROLLER$' => ''
@@ -128,7 +128,7 @@ class DocumentFilter extends APresenter {
 
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-form.html');
 
-        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'showFilters'));
 
         $idFilter = $this->get('id_filter');
         $filter = $app->filterModel->getDocumentFilterById($idFilter);
@@ -136,7 +136,7 @@ class DocumentFilter extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Filter <i>' . $filter->getName() . '</i>',
             '$LINKS$' => array(
-                LinkBuilder::createLink('UserModule:DocumentFilter:showFilters', '<-')
+                LinkBuilder::createLink('showFilters', '&larr;')
             ),
             '$FILTER_FORM$' => $this->internalCreateEditFilterForm($filter)
         );
@@ -159,7 +159,7 @@ class DocumentFilter extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_FILTER)) {
-            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showNewFilterForm'), 'New filter');
+            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'showNewFilterForm'), 'New filter');
         }
 
         $this->templateManager->fill($data, $template);
@@ -170,7 +170,7 @@ class DocumentFilter extends APresenter {
     protected function processEditFilterForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('name', 'id_filter'), true, array('page' => 'UserModule:DocumentFilter:showNewFilterForm'));
+        $app->flashMessageIfNotIsset(array('name', 'id_filter'), true, array('page' => 'showNewFilterForm'));
         $idFilter = $this->get('id_filter');
 
         $data = [];
@@ -191,13 +191,13 @@ class DocumentFilter extends APresenter {
         $app->filterModel->updateDocumentFilter($data, $idFilter);
 
         $app->flashMessage('Filter #' . $idFilter . ' updated successfully', FlashMessageTypes::SUCCESS);
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function processNewFilterForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('name'), true, array('page' => 'UserModule:DocumentFilter:showNewFilterForm'));
+        $app->flashMessageIfNotIsset(array('name'), true, array('page' => 'showNewFilterForm'));
 
         $data = [];
         $data['name'] = $this->post('name');
@@ -219,7 +219,7 @@ class DocumentFilter extends APresenter {
         $app->filterModel->insertNewDocumentFilter($data);
 
         $app->flashMessage('Filter created successfully', FlashMessageTypes::SUCCESS);
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function showNewFilterForm() {
@@ -307,40 +307,40 @@ class DocumentFilter extends APresenter {
         $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $canSeeOtherUsersFilterResults, $canSeeSystemFilterResults) {
             if(!is_null($filter->getIdAuthor())) {
                 if($filter->getIdAuthor() == $user->getId()) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                    return LinkBuilder::createAdvLink(array('page' => 'showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                 } else {
                     if($canSeeOtherUsersFilterResults) {
-                        return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                        return LinkBuilder::createAdvLink(array('page' => 'showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                     }
                 }
             } else {
                 if($canSeeSystemFilterResults) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                    return LinkBuilder::createAdvLink(array('page' => 'showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                 }
             }
         });
         $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $canEditOtherUsersFilters, $canEditSystemFilter) {
             if(!is_null($filter->getIdAuthor())) {
                 if($filter->getIdAuthor() == $user->getId()) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                    return LinkBuilder::createAdvLink(array('page' => 'showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                 } else {
                     if($canEditOtherUsersFilters) {
-                        return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                        return LinkBuilder::createAdvLink(array('page' => 'showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                     }
                 }
             } else {
                 if($canEditSystemFilter) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                    return LinkBuilder::createAdvLink(array('page' => 'showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                 }
             }
         });
         $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $canSeeOtherUsersFilterResults) {
             if(!is_null($filter->getIdAuthor())) {
                 if($filter->getIdAuthor() == $user->getId()) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
+                    return LinkBuilder::createAdvLink(array('page' => 'deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
                 } else {
                     if($canSeeOtherUsersFilterResults) {
-                        return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
+                        return LinkBuilder::createAdvLink(array('page' => 'deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
                     }
                 }
             } else {
@@ -349,9 +349,9 @@ class DocumentFilter extends APresenter {
         });
         $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($idPinnedFilters) {
             if(in_array($filter->getId(), $idPinnedFilters)) {
-                return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:unpinFilter', 'id_filter' => $filter->getId()), 'Unpin');
+                return LinkBuilder::createAdvLink(array('page' => 'unpinFilter', 'id_filter' => $filter->getId()), 'Unpin');
             } else {
-                return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:pinFilter', 'id_filter' => $filter->getId()), 'Pin');
+                return LinkBuilder::createAdvLink(array('page' => 'pinFilter', 'id_filter' => $filter->getId()), 'Pin');
             }
         });
         $gb->addDataSourceCallback($dataSourceCallback);

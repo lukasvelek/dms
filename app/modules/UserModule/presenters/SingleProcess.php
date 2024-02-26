@@ -130,7 +130,7 @@ class SingleProcess extends APresenter {
 
         $app->logger->info('User #' . $app->user->getId() . ' approved process #' . $id, __METHOD__);
 
-        $app->redirect('UserModule:SingleProcess:showProcess', array('id' => $id));
+        $app->redirect('showProcess', array('id' => $id));
     }
 
     protected function decline() {
@@ -144,7 +144,7 @@ class SingleProcess extends APresenter {
 
         $app->logger->info('User #' . $app->user->getId() . ' declined process #' . $id, __METHOD__);
 
-        $app->redirect('UserModule:SingleProcess:showProcess', array('id' => $id));
+        $app->redirect('showProcess', array('id' => $id));
     }
 
     protected function finish() {
@@ -174,7 +174,7 @@ class SingleProcess extends APresenter {
 
         $app->logger->info('User #' . $app->user->getId() . ' finished process #' . $id, __METHOD__);
 
-        $app->redirect('UserModule:Processes:showAll');
+        $app->redirect('Processes:showAll');
     }
 
     private function internalCreateProcessInfoTable(Process $process) {
@@ -183,7 +183,7 @@ class SingleProcess extends APresenter {
         $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
 
         $link = function(int $id, string $name) {
-            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $id), $name);
+            return LinkBuilder::createAdvLink(array('page' => 'Users:showProfile', 'id' => $id), $name);
         };
 
         $tb = TableBuilder::getTemporaryObject();
@@ -276,9 +276,6 @@ class SingleProcess extends APresenter {
 
         $currentOfficer = ${'workflow' . $process->getWorkflowStatus() . 'User'};
 
-        /*$document = $app->documentModel->getDocumentById($process->getIdDocument());
-        $documentLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), $document->getName());*/
-
         $tb ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow 1')->setBold())
                                      ->addCol($tb->createCol()->setText($workflow1User)))
             ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Workflow 2')->setBold())
@@ -299,7 +296,7 @@ class SingleProcess extends APresenter {
 
         if(!$process->isArchive()) {
             $document = $app->documentModel->getDocumentById($process->getIdDocument());
-            $documentLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()), $document->getName());
+            $documentLink = LinkBuilder::createAdvLink(array('page' => 'SingleDocument:showInfo', 'id' => $document->getId()), $document->getName());
 
             $tb ->addRow($tb->createRow()->addCol($tb->createCol()->setText('Document')->setBold())
                 ->addCol($tb->createCol()->setText($documentLink)));
@@ -333,11 +330,11 @@ class SingleProcess extends APresenter {
 
                     if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
                         // is last
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:finish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'finish', 'id' => $process->getId()), ProcessTypes::$texts[$process->getType()]);
                     } else {
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:approve', 'id' => $process->getId()), 'Approve');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'approve', 'id' => $process->getId()), 'Approve');
                         $actions[] = '<br>';
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:decline', 'id' => $process->getId()), 'Decline');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'decline', 'id' => $process->getId()), 'Decline');
                     }
                 }
 
@@ -346,11 +343,11 @@ class SingleProcess extends APresenter {
             case ProcessTypes::SHREDDING:
                 if($idCurrentUser == ($process->getWorkflowStep($process->getWorkflowStatus() - 1))) {
                     if($process->getWorkflowStep($process->getWorkflowStatus()) == null) {
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:finish', 'id' => $process->getId()), 'Shred document');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'finish', 'id' => $process->getId()), 'Shred document');
                     } else {
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:approve', 'id' => $process->getId()), 'Approve');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'approve', 'id' => $process->getId()), 'Approve');
                         $actions[] = '<br>';
-                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'UserModule:SingleProcess:decline', 'id' => $process->getId()), 'Decline');
+                        $actions[] = LinkBuilder::createAdvLink(array('page' => 'decline', 'id' => $process->getId()), 'Decline');
                     }
                 }
 

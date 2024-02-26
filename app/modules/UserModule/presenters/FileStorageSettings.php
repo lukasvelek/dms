@@ -67,7 +67,7 @@ class FileStorageSettings extends APresenter {
         $app->fileManager->createDirectory($path);
 
         $app->flashMessage('Created new location', 'success');
-        $app->redirect('UserModule:FileStorageSettings:showLocations');
+        $app->redirect('showLocations');
     }
 
     protected function showLocations() {
@@ -82,7 +82,7 @@ class FileStorageSettings extends APresenter {
         ];
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_FILE_STORAGE_LOCATIONS)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:FileStorageSettings:showNewLocationForm', 'New location');
+            $data['$LINKS$'][] = LinkBuilder::createLink('showNewLocationForm', 'New location');
         }
 
         $this->templateManager->fill($data, $template);
@@ -101,7 +101,7 @@ class FileStorageSettings extends APresenter {
         $app->fileStorageModel->setLocationAsDefault($id);
 
         $app->flashMessage('Changed default file storage location');
-        $app->redirect('UserModule:FileStorageSettings:showLocations');
+        $app->redirect('showLocations');
     }
 
     protected function showRemoveLocationForm() {
@@ -120,7 +120,7 @@ class FileStorageSettings extends APresenter {
             '$FORM$' => $this->internalCreateRemoveLocationForm($location)
         ];
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:FileStorageSettings:showLocations', '&larr;');
+        $data['$LINKS$'][] = LinkBuilder::createLink('showLocations', '&larr;');
         
         $this->fill($data, $template);
 
@@ -189,7 +189,7 @@ class FileStorageSettings extends APresenter {
         }
 
         $app->flashMessage('Sucessfully removed file storage location', 'success');
-        $app->redirect('UserModule:FileStorageSettings:showLocations');
+        $app->redirect('showLocations');
     }
 
     protected function moveLocationUp() {
@@ -206,7 +206,7 @@ class FileStorageSettings extends APresenter {
 
         $app->fileStorageModel->switchLocationOrder($id, $newOrder, $idNewOrder, $order);
 
-        $app->redirect('UserModule:FileStorageSettings:showLocations');
+        $app->redirect('showLocations');
     }
 
     protected function moveLocationDown() {
@@ -223,7 +223,7 @@ class FileStorageSettings extends APresenter {
 
         $app->fileStorageModel->switchLocationOrder($id, $newOrder, $idNewOrder, $order);
 
-        $app->redirect('UserModule:FileStorageSettings:showLocations');
+        $app->redirect('showLocations');
     }
 
     private function internalCreateNewLocationForm() {
@@ -286,7 +286,7 @@ class FileStorageSettings extends APresenter {
         $gb->addAction(function(FileStorageLocation $loc) use ($locationCount) {
             if($locationCount > 1) {
                 if($loc->getOrder() < $locationCount) {
-                    return LinkBuilder::createAdvLink(['page' => 'UserModule:FileStorageSettings:moveLocationDown', 'id' => $loc->getId(), 'order' => $loc->getOrder()], '&darr;');
+                    return LinkBuilder::createAdvLink(['page' => 'moveLocationDown', 'id' => $loc->getId(), 'order' => $loc->getOrder()], '&darr;');
                 }
             } else {
                 return '-';
@@ -295,7 +295,7 @@ class FileStorageSettings extends APresenter {
         $gb->addAction(function(FileStorageLocation $loc) use ($locationCount) {
             if($locationCount > 1) {
                 if($loc->getOrder() > 1) {
-                    return LinkBuilder::createAdvLink(['page' => 'UserModule:FileStorageSettings:moveLocationUp', 'id' => $loc->getId(), 'order' => $loc->getOrder()], '&uarr;');
+                    return LinkBuilder::createAdvLink(['page' => 'moveLocationUp', 'id' => $loc->getId(), 'order' => $loc->getOrder()], '&uarr;');
                 }
             } else {
                 return '-';
@@ -303,14 +303,14 @@ class FileStorageSettings extends APresenter {
         });
         $gb->addAction(function(FileStorageLocation $loc) use ($locationCount) {
             if($locationCount > 1 && $loc->isSystem() === FALSE) {
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:FileStorageSettings:showRemoveLocationForm', 'id' => $loc->getId()], 'Remove');
+                return LinkBuilder::createAdvLink(['page' => 'showRemoveLocationForm', 'id' => $loc->getId()], 'Remove');
             } else {
                 return '-';
             }
         });
         $gb->addAction(function(FileStorageLocation $loc) {
             if($loc->isDefault() === FALSE) {
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:FileStorageSettings:setLocationAsDefault', 'id' => $loc->getId()], 'Set as default');
+                return LinkBuilder::createAdvLink(['page' => 'setLocationAsDefault', 'id' => $loc->getId()], 'Set as default');
             } else {
                 return '-';
             }
