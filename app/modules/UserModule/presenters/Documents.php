@@ -404,74 +404,7 @@ class Documents extends APresenter {
 
         return $template;
     }
-
-    private function internalCreateStandardDocumentGrid(?int $idFolder, ?string $filter, int $page = 1) {
-        global $app;
-
-        $documentModel = $app->documentModel;
-        $userModel = $app->userModel;
-        $folderModel = $app->folderModel;
-
-        $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
-        $fcm = CacheManager::getTemporaryObject(CacheCategories::FOLDERS);
-
-        if($idFolder == 'null') {
-            $idFolder = null;
-        }
-
-        $dataSourceCallback = function() use ($documentModel, $idFolder, $filter, $page) {
-            if(AppConfiguration::getGridUseFastLoad()) {
-                $page -= 1;
-
-                $firstIdDocumentOnPage = $documentModel->getFirstIdDocumentOnAGridPage(($page * AppConfiguration::getGridSize()));
-
-                return $documentModel->getStandardDocumentsFromId($firstIdDocumentOnPage, $idFolder, $filter, AppConfiguration::getGridSize());
-            } else {
-                return $documentModel->getStandardDocuments($idFolder, $filter, ($page * AppConfiguration::getGridSize()));
-            }
-        };
-
-        $gb = new GridBuilder();
-
-        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder']);
-        $gb->addOnColumnRender('idAuthor', function(Document $document) use ($ucm, $userModel) {
-            $user = $ucm->loadUserByIdFromCache($document->getIdAuthor());
-
-            if(is_null($user)) {
-                $user = $userModel->getUserById($document->getIdAuthor());
-
-                $ucm->saveUserToCache($user);
-            }
-
-            return $user->getFullname();
-        });
-        $gb->addOnColumnRender('idFolder', function(Document $document) use ($fcm, $folderModel) {
-            if(is_null($document->getIdFolder())) {
-                return '-';
-            } else {
-                $folder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
-
-                if(is_null($folder)) {
-                    $folder = $folderModel->getFolderById($document->getIdFolder());
-
-                    $fcm->saveFolderToCache($folder);
-                }
-
-                return $folder->getName();
-            }
-        });
-        $gb->addOnColumnRender('status', function(Document $document) {
-            return DocumentStatus::$texts[$document->getStatus()];
-        });
-        $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries()');
-        $gb->addRowCheckbox(function(Document $document) {
-            return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">';
-        });
-        $gb->addDataSourceCallback($dataSourceCallback);
-
-        return $gb->build();
-    }
-
+    
     private function internalCreateStandardDocumentGridAjax(?int $idFolder, ?string $filter, int $page = 1) {
         $code = '<script type="text/javascript">';
 

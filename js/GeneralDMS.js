@@ -755,3 +755,35 @@ async function loadArchiveEntityContent(_id, _page, _type) {
         $('#grid-loading').hide();
     });
 }
+
+async function loadMetadata(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Metadata.php',
+        type: 'GET',
+        data: {
+            action: "getMetadata",
+            page: _page
+        }
+    })
+    .done(function(data) {
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
+    });
+}

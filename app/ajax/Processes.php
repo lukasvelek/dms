@@ -347,7 +347,7 @@ function _createGridPageControls(int $page, string $filter) {
     }
     $lastPageLink .= '>&gt;&gt;</button>';
 
-    $pageControl = 'Total documents: ' . $totalCount . ' | ';
+    $pageControl = 'Total count: ' . $totalCount . ' | ';
     if($totalCount > AppConfiguration::getGridSize()) {
         if($pageCheck * AppConfiguration::getGridSize() >= $totalCount) {
             $pageControl .= (1 + ($page * AppConfiguration::getGridSize()));
@@ -362,7 +362,7 @@ function _createGridPageControls(int $page, string $filter) {
             $pageControl .= $from . '-' . $to;
         }
     } else {
-        $pageControl = 'Total documents: ' . $totalCount;
+        $pageControl = 'Total count: ' . $totalCount;
     }
     $pageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
 

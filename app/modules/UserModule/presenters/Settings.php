@@ -573,12 +573,12 @@ class Settings extends APresenter {
     protected function showMetadata() {
         global $app;
 
-        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid.html');
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-grid-bottom-links.html');
 
         $metadataGrid = '';
 
         $app->logger->logFunction(function() use (&$metadataGrid) {
-            $metadataGrid = $this->internalCreateMetadataGrid();
+            $metadataGrid = $this->internalCreateMetadataGrid(1);
         }, __METHOD__);
 
         $data = array(
@@ -1185,73 +1185,10 @@ class Settings extends APresenter {
         return $code;
     }
 
-    private function internalCreateMetadataGrid() {
-        global $app;
-
-        $metadataModel = $app->metadataModel;
-        $idUser = $app->user->getId();
-
-        $canDeleteMetadata = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_METADATA);
-        $canEditMetadata = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA);
-        $canEditMetadataValues = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_METADATA_VALUES);
-        $canEditUserMetadataRights = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER_METADATA_RIGHTS);
-
-        $idsEditableMetadata = $app->metadataAuthorizator->getEditableMetadataForIdUser($idUser);
-        $idsMetadataViewMetadataValues = $app->metadataAuthorizator->getViewMetadataForIdUser($idUser);
-        $idsViewableMetadata = $app->metadataAuthorizator->getViewableMetadataForIdUser($idUser);
-
-        $data = function() use ($metadataModel, $idsViewableMetadata) {
-            $values = [];
-            foreach($metadataModel->getAllMetadata() as $m) {
-                if(in_array($m->getId(), $idsViewableMetadata)) {
-                    $values[] = $m;
-                }
-            }
-            return $values;
-        };
-
-        $gb = new GridBuilder();
-        
-        $gb->addColumns(['name' => 'Name', 'text' => 'Text', 'dbTable' => 'Database table', 'inputType' => 'Input type']);
-        $gb->addDataSourceCallback($data);
-        $gb->addOnColumnRender('dbTable', function (\DMS\Entities\Metadata $metadata) {
-            return $metadata->getTableName();
-        });
-        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($idsEditableMetadata, $canDeleteMetadata) {
-            $link = '-';
-            if(in_array($metadata->getId(), $idsEditableMetadata) &&
-               $canDeleteMetadata &&
-               !$metadata->getIsSystem()) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'deleteMetadata', 'id' => $metadata->getId()), 'Delete');
-            }
-            return $link;
-        });
-        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($idsEditableMetadata, $canEditMetadata) {
-            $link = '-';
-            if(in_array($metadata->getId(), $idsEditableMetadata) &&
-               $canEditMetadata) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'showEditMetadataForm', 'id_metadata' => $metadata->getId()), 'Edit');
-            }
-            return $link;
-        });
-        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($idsMetadataViewMetadataValues, $canEditMetadataValues) {
-            $link = '-';
-            if((in_array($metadata->getInputType(), ['select', 'select_external'])) &&
-               in_array($metadata->getId(), $idsMetadataViewMetadataValues) &&
-               $canEditMetadataValues) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'Metadata:showValues', 'id' => $metadata->getId()), 'Values');
-            }
-            return $link;
-        });
-        $gb->addAction(function(\DMS\Entities\Metadata $metadata) use ($canEditUserMetadataRights) {
-            $link = '-';
-            if($canEditUserMetadataRights) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'Metadata:showUserRights', 'id_metadata' => $metadata->getId()), 'User rights');
-            }
-            return $link;
-        });
-
-        return $gb->build();
+    private function internalCreateMetadataGrid(int $page) {
+        $code = '<script type="text/javascript">loadMetadata("' . $page . '");</script>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
+        return $code;
     }
 
     private function internalCreateFolderGrid() {
