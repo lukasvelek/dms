@@ -306,7 +306,7 @@ async function loadDocumentsSearchFilter(query, id_folder, _filter) {
     });
 }
 
-async function loadDocumentsFilter(id_folder, _filter) {
+async function loadDocumentsFilter(id_folder, _filter, _page) {
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -315,16 +315,19 @@ async function loadDocumentsFilter(id_folder, _filter) {
         data: {
             idFolder: id_folder,
             filter: _filter,
-            action: "search"
+            action: "search",
+            page: _page
         }
     })
     .done(function(data) {
-        $('table').html(data);
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
         $('#documents-loading').hide();
     });
 }
 
-async function loadDocumentsSearch(query, id_folder) {
+async function loadDocumentsSearch(query, id_folder, _page) {
     if(query.length < 3 && query.length > 0) {
         return;
     } else if(query.length == 0) {
@@ -341,11 +344,14 @@ async function loadDocumentsSearch(query, id_folder) {
         data: {
             q: query,
             idFolder: id_folder,
-            action: "search"
+            action: "search",
+            page: _page
         }
     })
     .done(function(data) {
-        $('table').html(data);
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
         $('#documents-loading').hide();
     });
 }
@@ -363,7 +369,9 @@ async function loadDocuments(id_folder, _page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
         $('#documents-loading').hide();
     });
 }

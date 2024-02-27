@@ -91,6 +91,14 @@ class DocumentModel extends AModel {
         return $qb->fetch();
     }
 
+    public function getDocumentCountForCustomSQL(string $sql) {
+        $qb = $this->qb(__METHOD__);
+        $qb->setSQL($sql);
+        $qb->execute();
+
+        return count($qb->fetchAll());
+    }
+
     public function getDocumentCountForStatus(?int $idFolder, ?string $filter) {
         $qb = $this->qb(__METHOD__);
 
@@ -484,14 +492,10 @@ class DocumentModel extends AModel {
         return $documents;
     }
 
-    public function getDocumentsForName(string $name, ?int $idFolder, ?string $filter) {
+    public function getDocumentsForName(string $name, ?int $idFolder, ?string $filter, int $limit, int $offset) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('name LIKE \'%?%\'', [$name]);
-
-        if($filter != null) {
-            $this->addFilterCondition($filter, $qb);
-        }
+        $qb ->andWhere('name LIKE \'%?%\'', [$name], false);
 
         if($idFolder != null) {
             $qb ->andWhere('id_folder = ?', [$idFolder]);
@@ -500,8 +504,17 @@ class DocumentModel extends AModel {
                 $qb ->andWhere('id_folder IS NULL');
             }
         }
+        
+        if($limit >= 0) {
+            $qb ->limit($limit)
+                ->offset($offset);
+        }
 
-        $qb ->limit(25)
+        if($filter != null) {
+            $this->addFilterCondition($filter, $qb);
+        }
+        
+        $qb ->orderBy('date_created', 'DESC')
             ->execute();
 
         $documents = [];

@@ -330,8 +330,8 @@ class Documents extends APresenter {
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder, 'showFiltered')
+            '$SEARCH_FIELD$' => $searchField/*,
+            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder, 'showFiltered')*/
         );
 
         $this->templateManager->fill($data, $template);
@@ -398,8 +398,7 @@ class Documents extends APresenter {
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
+            '$SEARCH_FIELD$' => $searchField
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT)) {
