@@ -98,9 +98,9 @@ function _createGridPageControls(int $page) {
     $pageControl = '';
 
     $firstPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="loadGroups(\'';
-    $previousPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="loadGroups(\'';
-    $nextPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="loadGroups(\'';
-    $lastPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="loadGroups(\'';
+    $previousPageLink = '<button id="grid-previous-page-control-btn" type="button" onclick="loadGroups(\'';
+    $nextPageLink = '<button id="grid-next-page-control-btn" type="button" onclick="loadGroups(\'';
+    $lastPageLink = '<button id="grid-last-page-control-btn" type="button" onclick="loadGroups(\'';
 
     $pageCheck = $page - 1;
 
@@ -122,6 +122,7 @@ function _createGridPageControls(int $page) {
     $previousPageLink .= '>&lt;</button>';
 
     $nextPageLink .= ($page + 1) . '\')';
+    $nextPageLink .= '"';
     if($groupCount < ($page * AppConfiguration::getGridSize())) {
         $nextPageLink .= ' hidden';
     }

@@ -96,7 +96,7 @@ class DocumentModel extends AModel {
         $qb->setSQL($sql);
         $qb->execute();
 
-        return count($qb->fetchAll());
+        return $qb->fetchAll()->num_rows;
     }
 
     public function getDocumentCountForStatus(?int $idFolder, ?string $filter) {
@@ -512,7 +512,7 @@ class DocumentModel extends AModel {
         $qb ->orderBy('date_created', 'DESC')
             ->execute();
 
-        return count($qb->fetchAll());
+        return $qb->fetchAll()->num_rows;
     }
 
     public function getDocumentsForName(string $name, ?int $idFolder, ?string $filter, int $limit, int $offset) {
@@ -580,7 +580,6 @@ class DocumentModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('documents')
-            //->setNull(array('id_officer'))
             ->set([
                 'date_updated' => date(Database::DB_DATE_FORMAT),
                 'id_officer' => 'NULL'

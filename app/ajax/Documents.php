@@ -296,7 +296,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $gridUseFastLoad, $actionAuthorizator, $user;
+    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user;
 
     $returnArray = [];
 
