@@ -11,6 +11,23 @@ class GroupModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getGroupsWithOffset(int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('groups')
+            ->limit($limit)
+            ->offset($offset)
+            ->execute();
+
+        $groups = [];
+        while($row = $qb->fetchAssoc()) {
+            $groups[] = $this->createGroupObjectFromDbRow($row);
+        }
+    
+        return $groups;
+    }
+
     public function deleteGroupById(int $id) {
         return $this->deleteById($id, 'groups');
     }

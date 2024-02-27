@@ -60,8 +60,7 @@ class Processes extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Processes',
             '$PROCESS_PANEL$' => '',
-            '$PROCESS_GRID$' => $processGrid,
-            '$PROCESS_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $filter)
+            '$PROCESS_GRID$' => $processGrid
         );
 
         $this->templateManager->fill($data, $template);

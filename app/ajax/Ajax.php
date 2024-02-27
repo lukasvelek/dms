@@ -224,6 +224,5 @@ $documentRepository = new DocumentRepository($db, $logger, $documentModel, $docu
 $mailManager = new MailManager();
 
 $gridSize = AppConfiguration::getGridSize();
-$gridUseFastLoad = AppConfiguration::getGridUseFastLoad();
 
 ?>

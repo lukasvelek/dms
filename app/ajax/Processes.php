@@ -9,7 +9,6 @@ use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
 
@@ -151,6 +150,8 @@ function search() {
     $filter = 'waitingForMe';
     $page = 1;
 
+    $returnArray = [];
+
     if(is_null($user)) {
         echo 'User is null';
         return;
@@ -166,64 +167,28 @@ function search() {
         $page = (int)(htmlspecialchars($_POST['page']));
     }
 
-    $dataSourceCallback = null;
+    $page -= 1;
 
     switch($filter) {
         case 'startedByMe':
-            if($gridUseFastLoad) {
-                $page -= 1;
-
-                $firstIdProcessOnPage = $processModel->getFirstIdProcessOnAGridPage(($page * $gridSize));
-
-                $dataSourceCallback = function() use ($processModel, $idUser, $firstIdProcessOnPage, $gridSize) {
-                    return $processModel->getProcessesWhereIdUserIsAuthorFromId($firstIdProcessOnPage, $idUser, $gridSize);
-                };
-            } else {
-                $dataSourceCallback = function() use ($processModel, $idUser, $page, $gridSize) {
-                    return $processModel->getProcessesWhereIdUserIsAuthor($idUser, ($page * $gridSize));
-                };
-            }
+            $processes = $processModel->getProcessesWhereUserIsAuthorWithOffset($idUser, $gridSize, ($page * $gridSize));
 
             break;
 
         case 'waitingForMe':
-            if($gridUseFastLoad) {
-                $page -= 1;
-
-                $firstIdProcessOnPage = $processModel->getFirstIdProcessOnAGridPage(($page * $gridSize));
-
-                $dataSourceCallback = function() use ($processModel, $idUser, $gridSize, $firstIdProcessOnPage) {
-                    return $processModel->getProcessesWithIdUserFromId($firstIdProcessOnPage, $idUser, $gridSize);
-                };
-            } else {
-                $dataSourceCallback = function() use ($processModel, $idUser, $page, $gridSize) {
-                    return $processModel->getProcessesWithIdUser($idUser, ($page * $gridSize));
-                };
-            }
+            $processes = $processModel->getProcessesWithUserWithOffset($idUser, $gridSize, ($page * $gridSize));
 
             break;
 
         case 'finished':
-            if($gridUseFastLoad) {
-                $page -= 1;
-
-                $firstIdProcessOnPage = $processModel->getFirstIdProcessOnAGridPage(($page * $gridSize));
-
-                $dataSourceCallback = function() use ($processModel, $idUser, $firstIdProcessOnPage, $gridSize) {
-                    return $processModel->getFinishedProcessesWithIdUserFromId($firstIdProcessOnPage, $idUser, $gridSize);
-                };
-            } else {
-                $dataSourceCallback = function() use ($processModel, $idUser, $page, $gridSize) {
-                    return $processModel->getFinishedProcessesWithIdUser($idUser, ($page * $gridSize));
-                };
-            }
+            $processes = $processModel->getFinishedProcessesWithUserWithOffset($idUser, $gridSize, ($page * $gridSize));
 
             break;
     }
 
     $gb = new GridBuilder();
 
-    $gb->addColumns(['type' => 'Name', 'workflow1' => 'Workflow 1', 'workflow2' => 'Workflow 2', 'workflow3' => 'Workflow 3', 'workflow4' => 'Workflow 4', 'workflowStatus' => 'Workflow status', 'currentOfficer' => 'Current officer']);
+    $gb->addColumns(['id' => 'ID', 'type' => 'Name', 'workflow1' => 'Workflow 1', 'workflow2' => 'Workflow 2', 'workflow3' => 'Workflow 3', 'workflow4' => 'Workflow 4', 'workflowStatus' => 'Workflow status', 'currentOfficer' => 'Current officer']);
     $gb->addOnColumnRender('type', function(Process $process) {
         return ProcessTypes::$texts[$process->getType()];
     });
@@ -307,9 +272,101 @@ function search() {
     $gb->addAction(function(Process $process) {
         return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleProcess:showProcess', 'id' => $process->getId()], 'Open');
     });
-    $gb->addDataSourceCallback($dataSourceCallback);
+    $gb->addDataSource($processes);
 
-    echo $gb->build();
+    $returnArray['grid'] = $gb->build();
+    $returnArray['controls'] = _createGridPageControls($page + 1, $filter);
+
+    return json_encode($returnArray);
+}
+
+function _createGridPageControls(int $page, string $filter) {
+    global $processModel, $user;
+
+    if($user === NULL) {
+        return;
+    }
+
+    $idUser = $user->getId();
+
+    $totalCount = 0;
+    switch($filter) {
+        case 'startedByMe':
+            $totalCount = $processModel->getProcessesWhereUserIsAuthorCount($idUser);
+
+            break;
+
+        case 'waitingForMe':
+            $totalCount = $processModel->getProcessesWithUserCount($idUser);
+
+            break;
+
+        case 'finished':
+            $totalCount = $processModel->getFinishedProcessesWithUserCount($idUser);
+
+            break;
+    }
+
+    $pageControl = '';
+
+    $firstPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="loadProcesses(\'';
+    $previousPageLink = '<button id="grid-previous-page-control-btn" type="button" onclick="loadProcesses(\'';
+    $nextPageLink = '<button id="grid-next-page-control-btn" type="button" onclick="loadProcesses(\'';
+    $lastPageLink = '<button id="grid-last-page-control-btn" type="button" onclick="loadProcesses(\'';
+
+    $pageCheck = $page - 1;
+
+    $firstPageLink .= '1\')"';
+    if($page == 1 || $totalCount <= AppConfiguration::getGridSize()) {
+        $firstPageLink .= ' hidden';
+    }
+    $firstPageLink .= '>&lt;&lt;</button>';
+
+    if($page >= 2) {
+        $previousPageLink .= ($page - 1) . '\')';
+    } else {
+        $previousPageLink .= '1\')';
+    }
+    $previousPageLink .= '"';
+    if($page == 1 || $totalCount <= AppConfiguration::getGridSize()) {
+        $previousPageLink .= ' hidden';
+    }
+    $previousPageLink .= '>&lt;</button>';
+
+    $nextPageLink .= ($page + 1) . '\')';
+    $nextPageLink .= '"';
+    if($totalCount <= ($page * AppConfiguration::getGridSize())) {
+        $nextPageLink .= ' hidden';
+    }
+    $nextPageLink .= '>&gt;</button>';
+
+    $lastPageLink .= ceil($totalCount / AppConfiguration::getGridSize()) . '\')';
+    $lastPageLink .= '"';
+    if($totalCount <= ($page * AppConfiguration::getGridSize())) {
+        $lastPageLink .= ' hidden';
+    }
+    $lastPageLink .= '>&gt;&gt;</button>';
+
+    $pageControl = 'Total documents: ' . $totalCount . ' | ';
+    if($totalCount > AppConfiguration::getGridSize()) {
+        if($pageCheck * AppConfiguration::getGridSize() >= $totalCount) {
+            $pageControl .= (1 + ($page * AppConfiguration::getGridSize()));
+        } else {
+            $from = 1 + ($pageCheck * AppConfiguration::getGridSize());
+            $to = AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize());
+
+            if($to > $totalCount) {
+                $to = $totalCount;
+            }
+
+            $pageControl .= $from . '-' . $to;
+        }
+    } else {
+        $pageControl = 'Total documents: ' . $totalCount;
+    }
+    $pageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
+
+    return $pageControl;
 }
 
 exit;

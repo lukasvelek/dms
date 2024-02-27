@@ -312,15 +312,15 @@ function search() {
 
     $filter = null;
     $page = 1;
-
+    
     if(isset($_POST['filter'])) {
         $filter = htmlspecialchars($_POST['filter']);
     }
-
+    
     if(isset($_POST['page'])) {
         $page = (int)(htmlspecialchars($_POST['page']));
     }
-
+    
     if(isset($_POST['q'])) {
         $query = htmlspecialchars($_POST['q']);
 
@@ -328,14 +328,7 @@ function search() {
 
         $canShareDocuments = $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false);
 
-        $getDocumentsCallback = function(bool $useLimit = true) use ($documentModel, $query, $idFolder, $filter, $page, $gridSize) {
-            if($useLimit === FALSE) {
-                $limit = -1;
-            } else {
-                $limit = $gridSize;
-            }
-            return $documentModel->getDocumentsForName($query, $idFolder, $filter, $limit, (($page - 1) * $gridSize));
-        };
+        $documents = $documentModel->getDocumentsForName($query, $idFolder, $filter, $gridSize, (($page - 1) * $gridSize));
 
         $gb = new GridBuilder();
 
@@ -392,25 +385,12 @@ function search() {
         $gb->addRowCheckbox(function(Document $document) {
             return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')">';
         });
-        $gb->addDataSourceCallback(function() use ($getDocumentsCallback) {
-            return $getDocumentsCallback();
-        });
+        $gb->addDataSource($documents);
 
         $returnArray['grid'] = $gb->build();
-        $returnArray['controls'] = _createGridPageControls($page, $filter, $idFolder, 'search', count($getDocumentsCallback(false)), $query);;
+        $returnArray['controls'] = _createGridPageControls($page, $filter, $idFolder, 'search', $query);
     } else {
-        $dataSourceCallback = null;
-        if($gridUseFastLoad) {
-            $page -= 1;
-
-            $dataSourceCallback = function() use ($documentModel, $idFolder, $page, $gridSize, $filter) {
-                return $documentModel->getStandardDocumentsWithOffset($idFolder, $gridSize, ($page * $gridSize), $filter);
-            };
-        } else {
-            $dataSourceCallback = function() use ($documentModel, $idFolder, $filter, $page, $gridSize) {
-                return $documentModel->getStandardDocuments($idFolder, $filter, ($page * $gridSize));
-            };
-        }
+        $documents = $documentModel->getStandardDocumentsWithOffset($idFolder, $gridSize, (($page - 1) * $gridSize), $filter);
 
         $canShareDocuments = $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false);
 
@@ -473,10 +453,10 @@ function search() {
         $gb->addRowCheckbox(function(Document $document) use ($filter) {
             return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')">';
         });
-        $gb->addDataSourceCallback($dataSourceCallback);
+        $gb->addDataSource($documents);
 
         $returnArray['grid'] = $gb->build();
-        $returnArray['controls'] = _createGridPageControls($page + 1, $filter, $idFolder);
+        $returnArray['controls'] = _createGridPageControls($page, $filter, $idFolder, 'showAll', count($documents));
     }
 
     echo json_encode($returnArray);
@@ -728,7 +708,7 @@ function documentsCustomFilter() {
 
 // PRIVATE METHODS
 
-function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, string $action = 'showAll', ?int $count = null, ?string $query = null) {
+function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, string $action = 'showAll', ?string $query = null) {
     global $documentModel, $user;
     $documentCount = 0;
 
@@ -750,7 +730,7 @@ function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, 
             break;
 
         case 'search':
-            $documentCount = $count;
+            $documentCount = $documentModel->getDocumentsForNameCount($query, $idFolder, $filter);
             break;
 
         default:
@@ -833,11 +813,9 @@ function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, 
         $pageCheck = $page - 1;
 
         $firstPageLink .= '"';
-
         if($page == 1 || $documentCount <= AppConfiguration::getGridSize()) {
             $firstPageLink .= ' hidden';
         }
-
         $firstPageLink .= '>&lt;&lt;</button>';
 
         if($page >= 2) {
@@ -845,7 +823,6 @@ function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, 
         } else {
             $previousPageLink .= '\'1\')';
         }
-
 
         $previousPageLink .= '"';
 

@@ -524,8 +524,7 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'Users',
             '$NEW_ENTITY_LINK$' => '',
             '$SETTINGS_GRID$' => $usersGrid,
-            '$LINKS$' => [],
-            '$PAGE_CONTROL$' => $this->internalCreateUserGridPageControl($page)
+            '$LINKS$' => []
         );
 
         if($app->actionAuthorizator->checkActionRight('create_user')) {
@@ -1083,14 +1082,14 @@ class Settings extends APresenter {
 
     private function internalCreateGroupGridAjax(int $page = 1) {
         $code = '<script type="text/javascript">loadGroups("' . $page . '");</script>';
-        $code .= '<table border="1"><img id="groups-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
     }
 
     private function internalCreateUsersGridAjax(int $page = 1) {
         $code = '<script type="text/javascript">loadUsers("' . $page . '");</script>';
-        $code .= '<table border="1"><img id="users-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
     }

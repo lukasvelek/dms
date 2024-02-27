@@ -11,6 +11,23 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getUsersWithOffset(int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('users')
+            ->limit($limit)
+            ->offset($offset)
+            ->execute();
+
+        $users = [];
+        while($row = $qb->fetchAssoc()) {
+            $users[] = $this->getUserObjectFromDbRow($row);
+        }
+    
+        return $users;
+    }
+
     public function getAllUsersPresentInDocuments() {
         $qb = $this->qb(__METHOD__);
 

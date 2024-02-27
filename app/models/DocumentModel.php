@@ -492,6 +492,29 @@ class DocumentModel extends AModel {
         return $documents;
     }
 
+    public function getDocumentsForNameCount(string $name, ?int $idFolder, ?string $filter) {
+        $qb = $this->composeQueryStandardDocuments();
+
+        $qb ->andWhere('name LIKE \'%?%\'', [$name], false);
+
+        if($idFolder != null) {
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
+        }
+
+        if($filter != null) {
+            $this->addFilterCondition($filter, $qb);
+        }
+        
+        $qb ->orderBy('date_created', 'DESC')
+            ->execute();
+
+        return count($qb->fetchAll());
+    }
+
     public function getDocumentsForName(string $name, ?int $idFolder, ?string $filter, int $limit, int $offset) {
         $qb = $this->composeQueryStandardDocuments();
 

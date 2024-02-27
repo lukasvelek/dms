@@ -288,7 +288,7 @@ async function reloadDocumentComments(id_document, can_delete) {
 async function loadDocumentsSearchFilter(query, id_folder, _filter) {
     await sleep(general_sleep_length);
 
-    $('#documents-loading').show();
+    $('#grid-loading').show();
 
     $.ajax({
         url: 'app/ajax/Documents.php',
@@ -302,12 +302,12 @@ async function loadDocumentsSearchFilter(query, id_folder, _filter) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
 async function loadDocumentsFilter(id_folder, _filter, _page) {
-    $('#documents-loading').show();
+    $('#grid-loading').show();
 
     await sleep(general_sleep_length);
 
@@ -325,7 +325,7 @@ async function loadDocumentsFilter(id_folder, _filter, _page) {
         const obj = JSON.parse(data);
         $('table').html(obj.grid);
         $('#page_control').html(obj.controls);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
@@ -336,7 +336,7 @@ async function loadDocumentsSearch(query, id_folder, _page) {
         await loadDocuments(id_folder);
     }
     
-    $('#documents-loading').show();
+    $('#grid-loading').show();
     
     await sleep(general_sleep_length);
 
@@ -354,12 +354,12 @@ async function loadDocumentsSearch(query, id_folder, _page) {
         const obj = JSON.parse(data);
         $('table').html(obj.grid);
         $('#page_control').html(obj.controls);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
 async function loadDocuments(id_folder, _page) {
-    $('#documents-loading').show();
+    $('#grid-loading').show();
 
     $('#grid-first-page-control-btn').prop('disabled', true);
     $('#grid-previous-page-control-btn').prop('disabled', true);
@@ -387,7 +387,7 @@ async function loadDocuments(id_folder, _page) {
         $('#grid-next-page-control-btn').prop('disabled', false);
         $('#grid-last-page-control-btn').prop('disabled', false);
 
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
@@ -417,11 +417,18 @@ async function loadDocumentsSharedWithMe(_page) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
 async function loadProcesses(_page, _filter = 'waitingForMe') {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -434,7 +441,15 @@ async function loadProcesses(_page, _filter = 'waitingForMe') {
         }
     })
     .done(function(data) {
-        $('table').html(data);
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
         $('#processes-loading').hide();
     });
 }
@@ -507,7 +522,6 @@ async function reloadProcessComments(id_process, can_delete) {
 }
 
 function hideFlashMessage(index) {
-    //sessionStorage.removeItem('flash_message');
     $('#flash-message-' + index).hide();
 }
 
@@ -545,13 +559,11 @@ async function generateDocuments(_is_debug) {
         }
     })
     .done(function(data) {
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
 
         if(_id_folder != "0") {
-            //location.replace("?page=UserModule:Documents:showAll&id_folder=" + _id_folder);
             location.replace('?page=UserModule:AjaxHelper:flashMessage&id_folder=' + _id_folder + '&message=Documents%20have%20been%20generated&type=info&redirect=UserModule:Documents:showAll');
         } else {
-            //location.replace("?page=UserModule:Documents:showAll");
             location.replace('?page=UserModule:AjaxHelper:flashMessage&message=Documents%20have%20been%20generated&type=info&redirect=UserModule:Documents:showAll');
         }
     });
@@ -570,11 +582,18 @@ async function loadDocumentsCustomFilter(_idFilter) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
 async function loadUsers(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -586,12 +605,27 @@ async function loadUsers(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#users-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid)
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
     });
 }
 
 async function loadGroups(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -603,8 +637,16 @@ async function loadGroups(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#groups-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
     });
 }
 
@@ -657,7 +699,7 @@ async function loadArchiveDocuments(_page) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
@@ -674,7 +716,7 @@ async function loadArchiveBoxes(_page) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
@@ -691,7 +733,7 @@ async function loadArchiveArchives(_page) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
@@ -710,6 +752,6 @@ async function loadArchiveEntityContent(_id, _page, _type) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }

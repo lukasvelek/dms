@@ -226,7 +226,7 @@ div[id^="dropdownmenu-ribbon-"] {
     width: 35px;
 }
 
-#documents-loading {
+#grid-loading {
     position: fixed;
 
     top: 50%;

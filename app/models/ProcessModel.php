@@ -14,6 +14,159 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getFinishedProcessesWithUserCount(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('processes')
+            ->where('WHERE ' . $this->xb()
+                                    ->lb()
+                                        ->where('status = ?', [ProcessStatus::FINISHED])
+                                    ->rb()
+                                    ->and()
+                                    ->lb()
+                                        ->where('workflow1 = ?', [$idUser])
+                                        ->orWhere('workflow2 = ?', [$idUser])
+                                        ->orWhere('workflow3 = ?', [$idUser])
+                                        ->orWhere('workflow4 = ?', [$idUser])
+                                    ->rb()
+                                    ->build())
+            ->execute();
+
+        return $qb->fetchAll()->num_rows;
+    }
+
+    public function getProcessesWithUserCount(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('processes')
+            ->where('WHERE ' . $this->xb()
+                                    ->lb()
+                                        ->where('status <> ?', [ProcessStatus::FINISHED])
+                                    ->rb()
+                                    ->and()
+                                    ->lb()
+                                        ->where('workflow1 = ?', [$idUser])
+                                        ->orWhere('workflow2 = ?', [$idUser])
+                                        ->orWhere('workflow3 = ?', [$idUser])
+                                        ->orWhere('workflow4 = ?', [$idUser])
+                                    ->rb()
+                                    ->build())
+            ->execute();
+                        
+        return $qb->fetchAll()->num_rows;
+    }
+
+    public function getProcessesWhereUserIsAuthorCount(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('processes')
+            ->where('WHERE ' . $this->xb()
+                                    ->lb()
+                                        ->where('status = ?', [ProcessStatus::FINISHED])
+                                    ->rb()
+                                    ->and()
+                                    ->lb()
+                                        ->where('workflow1 = ?', [$idUser])
+                                        ->orWhere('workflow2 = ?', [$idUser])
+                                        ->orWhere('workflow3 = ?', [$idUser])
+                                        ->orWhere('workflow4 = ?', [$idUser])
+                                    ->rb()
+                                    ->build())
+            ->execute();
+
+        return $qb->fetchAll()->num_rows;
+    }
+
+    public function getFinishedProcessesWithUserWithOffset(int $idUser, int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('processes')
+            ->where('WHERE ' . $this->xb()
+                                    ->lb()
+                                        ->where('status = ?', [ProcessStatus::FINISHED])
+                                    ->rb()
+                                    ->and()
+                                    ->lb()
+                                        ->where('workflow1 = ?', [$idUser])
+                                        ->orWhere('workflow2 = ?', [$idUser])
+                                        ->orWhere('workflow3 = ?', [$idUser])
+                                        ->orWhere('workflow4 = ?', [$idUser])
+                                    ->rb()
+                                    ->build())
+            ->limit($limit)
+            ->offset($offset)
+            ->execute();
+
+        $processes = [];
+        while($row = $qb->fetchAssoc()) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+
+        return $processes;
+    }
+
+    public function getProcessesWithUserWithOffset(int $idUser, int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('processes')
+            ->where('WHERE ' . $this->xb()
+                                    ->lb()
+                                        ->where('status <> ?', [ProcessStatus::FINISHED])
+                                    ->rb()
+                                    ->and()
+                                    ->lb()
+                                        ->where('workflow1 = ?', [$idUser])
+                                        ->orWhere('workflow2 = ?', [$idUser])
+                                        ->orWhere('workflow3 = ?', [$idUser])
+                                        ->orWhere('workflow4 = ?', [$idUser])
+                                    ->rb()
+                                    ->build())
+            ->limit($limit)
+            ->offset($offset)
+            ->execute();
+                        
+        $processes = [];
+        while($row = $qb->fetchAssoc()) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+                            
+        return $processes;
+    }
+
+    public function getProcessesWhereUserIsAuthorWithOffset(int $idUser, int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('processes')
+            ->where('WHERE ' . $this->xb()
+                                    ->lb()
+                                        ->where('status = ?', [ProcessStatus::FINISHED])
+                                    ->rb()
+                                    ->and()
+                                    ->lb()
+                                        ->where('workflow1 = ?', [$idUser])
+                                        ->orWhere('workflow2 = ?', [$idUser])
+                                        ->orWhere('workflow3 = ?', [$idUser])
+                                        ->orWhere('workflow4 = ?', [$idUser])
+                                    ->rb()
+                                    ->build())
+            ->limit($limit)
+            ->offset($offset)
+            ->execute();
+
+        $processes = [];
+        while($row = $qb->fetchAssoc()) {
+            $processes[] = $this->createProcessObjectFromDbRow($row);
+        }
+    
+        return $processes;
+    }
+
     public function getCountProcessesWaitingForUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 

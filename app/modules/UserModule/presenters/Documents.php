@@ -307,11 +307,7 @@ class Documents extends APresenter {
         }
 
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter, $page, $app) {
-            if(AppConfiguration::getGridUseAjax()) {
-                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $filter, $page);
-            } else{
-                $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $filter, $page);
-            }
+            $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $filter, $page);
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder, $filter) {
@@ -330,8 +326,7 @@ class Documents extends APresenter {
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField/*,
-            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder, 'showFiltered')*/
+            '$SEARCH_FIELD$' => $searchField
         );
 
         $this->templateManager->fill($data, $template);
@@ -373,11 +368,7 @@ class Documents extends APresenter {
         $folderList = '';
         
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $page, $app) {
-            if(AppConfiguration::getGridUseAjax()) {
-                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, '', $page);
-            } else{
-                $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $page);
-            }
+            $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, '', $page);
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder) {
@@ -491,7 +482,7 @@ class Documents extends APresenter {
         }
 
         $code .= '</script>';
-        $code .= '<div id="documents-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
     }

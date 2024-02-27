@@ -56,9 +56,7 @@ $cfg['mail_login_password'] = ''; // Mail server login password
  * GRID (UI) CONFIGURATION
  */
 
-$cfg['grid_size'] = '25'; // grid size (number of rows)
-$cfg['grid_use_fast_load'] = true; // grid fast load usage (useful with lots of documents)
-$cfg['grid_use_ajax'] = true; // grid ajax usage (generally useful)
+$cfg['grid_size'] = 25; // grid size (number of rows)
 $cfg['grid_main_folder_has_all_documents'] = true; // true if grid main folder contains all documents within all folders, false if it only displays documents located in main folder
 
 
