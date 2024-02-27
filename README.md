@@ -5,6 +5,19 @@ It also enables users to manage metadata and their values.
 
 ## Changelog
 ### v1.9
+- added calendar support
+- added ajax grid page controls
+    - now switching between grid pages is done using ajax, so it does not refresh the application
+- implemented calendar to view scheduled services
+- updated file storage
+    - now there can be several file storages
+    - also two types of file storage are introduced
+        - storage for files
+        - storage for generated reports
+- updated link generator
+- updated code documentation
+- updated document filter
+- fixed bugs and potential bugs
 - fixed a bug where the document report limit would not show integer values but rather float values
 
 ### v1.8
