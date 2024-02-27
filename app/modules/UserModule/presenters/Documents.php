@@ -386,8 +386,6 @@ class Documents extends APresenter {
 
         $searchField = '
             <input type="text" id="q" placeholder="Search" oninput="loadDocumentsSearch(this.value, \'' . ($idFolder ?? 'null') . '\');">
-            <!--<script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
-            <script type="text/javascript" src="js/DocumentAjaxBulkActions.js"></script>-->
         ';
 
         $data = array(
@@ -493,7 +491,7 @@ class Documents extends APresenter {
         }
 
         $code .= '</script>';
-        $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+        $code .= '<div id="documents-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
     }

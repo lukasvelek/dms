@@ -307,6 +307,8 @@ async function loadDocumentsSearchFilter(query, id_folder, _filter) {
 }
 
 async function loadDocumentsFilter(id_folder, _filter, _page) {
+    $('#documents-loading').show();
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -333,10 +335,10 @@ async function loadDocumentsSearch(query, id_folder, _page) {
     } else if(query.length == 0) {
         await loadDocuments(id_folder);
     }
-
-    await sleep(general_sleep_length);
-
+    
     $('#documents-loading').show();
+    
+    await sleep(general_sleep_length);
 
     $.ajax({
         url: 'app/ajax/Documents.php',
@@ -357,6 +359,13 @@ async function loadDocumentsSearch(query, id_folder, _page) {
 }
 
 async function loadDocuments(id_folder, _page) {
+    $('#documents-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -372,6 +381,12 @@ async function loadDocuments(id_folder, _page) {
         const obj = JSON.parse(data);
         $('table').html(obj.grid);
         $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
         $('#documents-loading').hide();
     });
 }

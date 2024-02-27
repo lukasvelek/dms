@@ -761,10 +761,10 @@ function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, 
 
         $documentPageControl = '';
 
-        $firstPageLink = '<button type="button" onclick="';
-        $previousPageLink = '<button type="button" onclick="';
-        $nextPageLink = '<button type="button" onclick="';
-        $lastPageLink = '<button type="button" onclick="';
+        $firstPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="';
+        $previousPageLink = '<button id="grid-previous-page-control-btn" type="button" onclick="';
+        $nextPageLink = '<button id="grid-next-page-control-btn" type="button" onclick="';
+        $lastPageLink = '<button id="grid-last-page-control-btn" type="button" onclick="';
 
         if($action == 'search') {
             $firstPageLink .= 'loadDocumentsSearch(\'' . $query . '\', \'';
