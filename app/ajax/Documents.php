@@ -463,7 +463,7 @@ function search() {
 }
 
 function searchDocumentsSharedWithMe() {
-    global $documentModel, $folderModel, $user, $userModel, $metadataModel, $ucm, $fcm;
+    global $documentModel, $folderModel, $user, $userModel, $ucm, $fcm;
 
     if(is_null($user)) {
         return '';
@@ -812,42 +812,46 @@ function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, 
 
         $pageCheck = $page - 1;
 
+        // FIRST PAGE LINK
         $firstPageLink .= '"';
-        if($page == 1 || $documentCount <= AppConfiguration::getGridSize()) {
-            $firstPageLink .= ' hidden';
-        }
+        /*if($page == 1 || $documentCount <= AppConfiguration::getGridSize()) {
+            $firstPageLink .= " disabled";
+        }*/
         $firstPageLink .= '>&lt;&lt;</button>';
 
+
+        // PREVIOUS PAGE LINK
         if($page >= 2) {
             $previousPageLink .= '\'' . ($page - 1) . '\')';
         } else {
             $previousPageLink .= '\'1\')';
         }
-
         $previousPageLink .= '"';
-
-        if($page == 1 || $documentCount <= AppConfiguration::getGridSize()) {
-            $previousPageLink .= ' hidden';
-        }
-
+        /*if($page == 1 || $documentCount <= AppConfiguration::getGridSize()) {
+            $previousPageLink .= ' disabled';
+        }*/
         $previousPageLink .= '>&lt;</button>';
 
-        $nextPageLink .= '\'' . ($page + 1) . '\')';
-        $nextPageLink .= '"';
-
-        if($documentCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' hidden';
+        
+        // NEXT PAGE LINK
+        if($page < ceil($documentCount / AppConfiguration::getGridSize())) {
+            $nextPageLink .= '\'' . ($page + 1) . '\')';
+        } else {
+            $nextPageLink .= '\'' . ceil($documentCount / AppConfiguration::getGridSize()) . '\')';
         }
-
+        $nextPageLink .= '"';
+        /*if($documentCount <= ($page * AppConfiguration::getGridSize())) {
+            $nextPageLink .= ' disabled';
+        }*/
         $nextPageLink .= '>&gt;</button>';
 
+
+        // LAST PAGE LINK
         $lastPageLink .= '\'' . ceil($documentCount / AppConfiguration::getGridSize()) . '\')';
         $lastPageLink .= '"';
-
-        if($documentCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' hidden';
-        }
-
+        /*if($documentCount <= ($page * AppConfiguration::getGridSize())) {
+            $lastPageLink .= ' disabled';
+        }*/
         $lastPageLink .= '>&gt;&gt;</button>';
 
         $documentPageControl = 'Total count: ' . $documentCount . ' | ';

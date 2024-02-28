@@ -218,7 +218,7 @@ div[id^="dropdownmenu-ribbon-"] {
     backdrop-filter: blur(5px);
 }
 
-#grid-page-control-btn {
+#grid-first-page-control-btn, #grid-previous-page-control-btn, #grid-next-page-control-btn, #grid-last-page-control-btn {
     border: 1px solid black;
 
     border-radius: 5px;

@@ -3,7 +3,6 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\ArchiveType;
-use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
@@ -11,16 +10,13 @@ use DMS\Constants\FileStorageTypes;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
-use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
-use DMS\Entities\Document;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
-use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
 class Documents extends APresenter {
