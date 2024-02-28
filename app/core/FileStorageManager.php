@@ -220,9 +220,9 @@ class FileStorageManager {
 
                 $ok = false;
             }
+            
+            $filePath = $targetFile;
         }
-
-        $filePath = $targetFile;
 
         return $ok;
     }

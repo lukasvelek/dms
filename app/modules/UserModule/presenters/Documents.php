@@ -824,8 +824,14 @@ class Documents extends APresenter {
         ArrayHelper::deleteKeysFromArray($customMetadata, $remove);
         $data = array_merge($data, $customMetadata);
 
+        $fileUpload = true;
         if(isset($data['file']) && !empty($data['file'])) {
-            $app->fsManager->uploadFile($_FILES['file'], $data['file'], $fileStorageDirectory); // filepath is converted here
+            $fileUpload = $app->fsManager->uploadFile($_FILES['file'], $data['file'], $fileStorageDirectory); // filepath is converted here
+        }
+
+        if($fileUpload !== TRUE) {
+            $app->flashMessage('File you selected has unsupported extension!', 'error');
+            $app->redirect('showAll');
         }
         
         // CUSTOM OPERATION DEFINITION
