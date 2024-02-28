@@ -53,8 +53,7 @@ class SingleArchive extends APresenter {
         $data = [
             '$PAGE_TITLE$' => ArchiveType::$texts[$archiveEntity->getType()] . ' content',
             '$LINKS$' => [],
-            '$CONTENT_GRID$' => $this->internalCreateContentGrid($id, $page, $type),
-            '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($id, $page, 'show' . ArchiveType::$texts[$archiveEntity->getType()] . 'Content')
+            '$CONTENT_GRID$' => $this->internalCreateContentGrid($id, $page, $type)
         ];
 
         $data['$LINKS$'][] = LinkBuilder::createLink($backLink, '&larr;');
@@ -68,82 +67,9 @@ class SingleArchive extends APresenter {
         $code = '<script type="text/javascript">';
         $code .= 'loadArchiveEntityContent("' . $id . '", "' . $page . '", "' . $type . '");';
         $code .= '</script>';
-        $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
-    }
-
-    private function internalCreateGridPageControl(int $id, int $page, string $action) {
-        global $app;
-
-        $entityCount = 0;
-        $link = 'showContent';
-
-        switch($action) {
-            case 'showDocumentContent':
-                $entityCount = $app->documentModel->getDocumentCountInArchiveDocument($id);
-                $link .= '&id=' . $id;
-                break;
-        }
-
-        $pageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:SingleArchive:' . $link;
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:SingleArchive:' . $link;
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:SingleArchive:' . $link;
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:SingleArchive:' . $link;
-
-        $pageCheck = $page - 1;
-
-        $firstPageLink .= '"';
-
-        if($page == 1) {
-            $firstPageLink .= ' hidden';
-        }
-
-        $firstPageLink .= '>&lt;&lt;</a>';
-
-        if($page > 2) {
-            $previousPageLink .= '&grid_page=' . ($page - 1);
-        }
-        $previousPageLink .= '"';
-
-        if($page == 1) {
-            $previousPageLink .= ' hidden';
-        }
-
-        $previousPageLink .= '>&lt;</a>';
-
-        $nextPageLink .= '&grid_page=' . ($page + 1);
-        $nextPageLink .= '"';
-
-        if($entityCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' hidden';
-        }
-
-        $nextPageLink .= '>&gt;</a>';
-
-        $lastPageLink .= '&grid_page=' . (ceil($entityCount / AppConfiguration::getGridSize()));
-        $lastPageLink .= '"';
-
-        if($entityCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' hidden';
-        }
-
-        $lastPageLink .= '>&gt;&gt;</a>';
-
-        if($entityCount > AppConfiguration::getGridSize()) {
-            if($pageCheck * AppConfiguration::getGridSize() >= $entityCount) {
-                $pageControl = (1 + ($page * AppConfiguration::getGridSize()));
-            } else {
-                $pageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
-            }
-        } else {
-            $pageControl = $entityCount;
-        }
-
-        $pageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
-
-        return $pageControl;
     }
 }
 

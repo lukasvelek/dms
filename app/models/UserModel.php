@@ -92,38 +92,6 @@ class UserModel extends AModel {
     public function deleteUserById(int $id) {
         $this->deleteById($id, 'users');
     }
-    
-    public function getAllUsersFromId(?int $idFrom, int $limit) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('users');
-
-        if($idFrom == 1) {
-            $qb->andWhere('id >= ?', [$idFrom]);
-        } else {
-            $qb->andWhere('id > ?', [$idFrom]);
-        }
-
-        $qb ->limit($limit)
-            ->execute();
-
-        $users = [];
-        while($row = $qb->fetchAssoc()) {
-            $users[] = $this->getUserObjectFromDbRow($row);
-        }
-
-        return $users;
-    }
-
-    public function getFirstIdUserOnAGridPage(int $gridPage) {
-        if($gridPage == 0) $gridPage = 1;
-        return $this->getFirstRowWithCount($gridPage, 'users', ['id']);
-    }
 
     public function removeConnectionForTwoUsers(int $idUser1, int $idUser2) {
         $qb = $this->qb(__METHOD__);

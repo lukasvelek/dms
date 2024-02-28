@@ -687,6 +687,13 @@ async function hideDropdownMenu(_parentRibbonId, _ribbonId) {
 }
 
 async function loadArchiveDocuments(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -698,12 +705,27 @@ async function loadArchiveDocuments(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
         $('#grid-loading').hide();
     });
 }
 
 async function loadArchiveBoxes(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -715,12 +737,28 @@ async function loadArchiveBoxes(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+
         $('#grid-loading').hide();
     });
 }
 
 async function loadArchiveArchives(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -732,12 +770,27 @@ async function loadArchiveArchives(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+
         $('#grid-loading').hide();
     });
 }
 
 async function loadArchiveEntityContent(_id, _page, _type) {
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -751,7 +804,15 @@ async function loadArchiveEntityContent(_id, _page, _type) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
         $('#grid-loading').hide();
     });
 }
