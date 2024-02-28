@@ -5,7 +5,6 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\FileStorageTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
-use DMS\Core\Logger\LogCategoryEnum;
 use DMS\Entities\FileStorageLocation;
 use DMS\Helpers\GridDataHelper;
 use DMS\Modules\APresenter;
@@ -263,7 +262,7 @@ class FileStorageSettings extends APresenter {
     }
 
     private function internalCreateLocationsGrid() {
-        global $app;
+        /*global $app;
 
         $fsManager = $app->fsManager;
 
@@ -272,7 +271,7 @@ class FileStorageSettings extends APresenter {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['order' => 'Order', 'name' => 'Name', 'path' => 'Path', 'type' => 'Type', 'isDefault' => 'Default', 'isActive' => 'Active', 'freeSpace' => 'Free space']);
+        $gb->addColumns(['order' => 'Order', 'name' => 'Name', 'path' => 'Path', 'type' => 'Type', 'isDefault' => 'Default', 'isActive' => 'Active', 'freeSpace' => 'Free space', 'fileCount' => 'Files stored']);
         $gb->addDataSource($locations);
         $gb->addOnColumnRender('isDefault', function(FileStorageLocation $loc) {
             return GridDataHelper::renderBooleanValueWithColors($loc->isDefault(), 'Yes', 'No');
@@ -285,6 +284,9 @@ class FileStorageSettings extends APresenter {
         });
         $gb->addOnColumnRender('type', function(FileStorageLocation $loc) {
             return FileStorageTypes::$texts[$loc->getType()];
+        });
+        $gb->addOnColumnRender('fileCount', function(FileStorageLocation $loc) use ($fsManager) {
+            return count($fsManager->getStoredFilesInDirectory($loc->getPath()));
         });
         $gb->addAction(function(FileStorageLocation $loc) use ($locationCount) {
             if($locationCount > 1) {
@@ -319,7 +321,11 @@ class FileStorageSettings extends APresenter {
             }
         });
 
-        return $gb->build();
+        return $gb->build();*/
+
+        $code = '<script type="text/javascript">loadFileStorageLocations()</script>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
+        return $code;
     }
 
     private function internalCreateRemoveLocationForm(FileStorageLocation $location) {

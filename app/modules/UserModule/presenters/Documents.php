@@ -1313,7 +1313,7 @@ class Documents extends APresenter {
 
             ->addElement($fb->createLabel()->setText('Limit')->setFor('limit_range'))
             ->addElement($fb->createLabel()->setText('')->setId('limit_text'))
-            ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax(($count + 1))->setName('limit_range')->setStep($step)->setValue(($count / 2)))
+            ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax(($count + 1))->setName('limit_range')->setStep($step)->setValue((ceil($count / 2))))
 
             ->addElement($fb->createLabel()->setText('Order')->setFor('order'))
             ->addElement($fb->createSelect()->setName('order')->addOptionsBasedOnArray($orderArray))

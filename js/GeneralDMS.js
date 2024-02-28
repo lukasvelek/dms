@@ -848,3 +848,23 @@ async function loadMetadata(_page) {
         $('#grid-loading').hide();
     });
 }
+
+async function loadFileStorageLocations() {
+    $('#grid-loading').show();
+
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/FileStorageSettings.php',
+        type: 'GET',
+        data: {
+            action: 'getLocationsGrid'
+        }
+    })
+    .done(function(data) {
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+
+        $('#grid-loading').hide();
+    });
+}
