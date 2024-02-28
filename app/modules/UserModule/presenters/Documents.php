@@ -830,7 +830,7 @@ class Documents extends APresenter {
         }
 
         if($fileUpload !== TRUE) {
-            $app->flashMessage('File you selected has unsupported extension!', 'error');
+            $app->flashMessage('The file you selected has unsupported extension!', 'error');
             $app->redirect('showAll');
         }
         
