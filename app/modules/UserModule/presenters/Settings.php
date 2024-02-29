@@ -1409,17 +1409,6 @@ class Settings extends APresenter {
         return $gb->build();
     }
 
-    private function _getFolderCount(int &$count, Folder $folder) {
-        global $app;
-
-        $childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
-        $count += count($childFolders);
-        
-        foreach($childFolders as $cf) {
-            $this->_getFolderCount($count, $cf);
-        }
-    }
-
     private function _getChildFolderList(array &$list, Folder $folder) {
         global $app;
 
