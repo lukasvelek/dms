@@ -55,10 +55,6 @@ class AppConfiguration {
         return self::loadParam('cache_dir');
     }
 
-    public static function getSerializeCache() {
-        return self::loadParam('serialize_cache');
-    }
-
     /**
      * ----- SERVICE USER DEFINITION -----
      */

@@ -25,7 +25,6 @@ $cfg['log_stopwatch'] = 0; // 0 - no log, 1 - log all
  */
 
 $cfg['cache_dir'] = ''; // Cache directory location
-$cfg['serialize_cache'] = true; // false does not work yet
 
 
 /**

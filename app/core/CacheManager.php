@@ -23,10 +23,10 @@ class CacheManager {
      * @param bool $serialize True if cache should be serialized and false if not
      * @param string $category Cache category
      */
-    public function __construct(bool $serialize, string $category, string $logdir, string $cachedir) {
+    public function __construct(string $category, string $logdir, string $cachedir) {
         $this->fm = new FileManager($logdir, $cachedir);
 
-        $this->serialize = $serialize;
+        $this->serialize = true;
         $this->category = $category;
     }
 
@@ -727,9 +727,9 @@ class CacheManager {
      */
     public static function getTemporaryObject(string $category, bool $isAjax = false) {
         if($isAjax) {
-            return new self(AppConfiguration::getSerializeCache(), $category, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
+            return new self($category, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
         } else {
-            return new self(AppConfiguration::getSerializeCache(), $category, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
+            return new self($category, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
         }
     }
 
@@ -738,7 +738,7 @@ class CacheManager {
      */
     public static function invalidateAllCache() {
         foreach(CacheCategories::$all as $cc) {
-            $cm = new self(AppConfiguration::getSerializeCache(), $cc, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
+            $cm = new self($cc, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 
             $cm->invalidateCache();
         }
