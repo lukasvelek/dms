@@ -16,8 +16,8 @@ use DMS\UI\LinkBuilder;
 require_once('Ajax.php');
 require_once('AjaxCommonMethods.php');
 
-$ucm = new CacheManager(true, CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
-$fcm = new CacheManager(true, CacheCategories::FOLDERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
+$ucm = new CacheManager(CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
+$fcm = new CacheManager(CacheCategories::FOLDERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
 
 $action = null;
 

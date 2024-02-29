@@ -667,7 +667,7 @@ class SingleDocument extends APresenter {
     private function createUserLink(int $id) {
         global $app;
 
-        $ucm = new CacheManager(true, CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
+        $ucm = new CacheManager(CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 
         $cacheUser = $ucm->loadUserByIdFromCache($id);
 

@@ -32,7 +32,7 @@ if(isset($_SESSION['id_current_user'])) {
             $app->redirect($app::URL_LOGIN_PAGE);
         }
     } else {
-        $ucm = new CacheManager(true, CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
+        $ucm = new CacheManager(CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 
         $user = null;
 
