@@ -18,8 +18,10 @@ It also enables users to manage metadata and their values.
 - updated link generator
 - updated code documentation
 - updated document filter
+- updated FileManagerService service
 - fixed bugs and potential bugs
 - fixed a bug where the document report limit would not show integer values but rather float values
+- fixed ajax slowdown (AJAX JS sleep constant update: 250ms -> 0ms)
 
 ### v1.8
 - added archive section
