@@ -814,9 +814,6 @@ function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, 
 
         // FIRST PAGE LINK
         $firstPageLink .= '"';
-        /*if($page == 1 || $documentCount <= AppConfiguration::getGridSize()) {
-            $firstPageLink .= " disabled";
-        }*/
         $firstPageLink .= '>&lt;&lt;</button>';
 
 
@@ -827,31 +824,28 @@ function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, 
             $previousPageLink .= '\'1\')';
         }
         $previousPageLink .= '"';
-        /*if($page == 1 || $documentCount <= AppConfiguration::getGridSize()) {
-            $previousPageLink .= ' disabled';
-        }*/
         $previousPageLink .= '>&lt;</button>';
 
         
         // NEXT PAGE LINK
         if($page < ceil($documentCount / AppConfiguration::getGridSize())) {
             $nextPageLink .= '\'' . ($page + 1) . '\')';
+        } else if($documentCount == 0) {
+            $nextPageLink .= '\'1\')';
         } else {
             $nextPageLink .= '\'' . ceil($documentCount / AppConfiguration::getGridSize()) . '\')';
         }
         $nextPageLink .= '"';
-        /*if($documentCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' disabled';
-        }*/
         $nextPageLink .= '>&gt;</button>';
 
 
         // LAST PAGE LINK
-        $lastPageLink .= '\'' . ceil($documentCount / AppConfiguration::getGridSize()) . '\')';
+        if($documentCount == 0) {
+            $lastPageLink .= '\'1\')';
+        } else {
+            $lastPageLink .= '\'' . ceil($documentCount / AppConfiguration::getGridSize()) . '\')';
+        }
         $lastPageLink .= '"';
-        /*if($documentCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' disabled';
-        }*/
         $lastPageLink .= '>&gt;&gt;</button>';
 
         $documentPageControl = 'Total count: ' . $documentCount . ' | ';

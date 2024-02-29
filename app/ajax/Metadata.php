@@ -103,17 +103,14 @@ function _createGridPageControls(int $page, array $idsViewable) {
 
     $pageControl = '';
 
-    $firstPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="loadGroups(\'';
-    $previousPageLink = '<button id="grid-previous-page-control-btn" type="button" onclick="loadGroups(\'';
-    $nextPageLink = '<button id="grid-next-page-control-btn" type="button" onclick="loadGroups(\'';
-    $lastPageLink = '<button id="grid-last-page-control-btn" type="button" onclick="loadGroups(\'';
+    $firstPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="loadMetadata(\'';
+    $previousPageLink = '<button id="grid-previous-page-control-btn" type="button" onclick="loadMetadata(\'';
+    $nextPageLink = '<button id="grid-next-page-control-btn" type="button" onclick="loadMetadata(\'';
+    $lastPageLink = '<button id="grid-last-page-control-btn" type="button" onclick="loadMetadata(\'';
 
     $pageCheck = $page - 1;
 
     $firstPageLink .= '1\')"';
-    if($page == 1 || $totalCount <= AppConfiguration::getGridSize()) {
-        $firstPageLink .= ' hidden';
-    }
     $firstPageLink .= '>&lt;&lt;</button>';
 
     if($page >= 2) {
@@ -122,23 +119,24 @@ function _createGridPageControls(int $page, array $idsViewable) {
         $previousPageLink .= '1\')';
     }
     $previousPageLink .= '"';
-    if($page == 1 || $totalCount <= AppConfiguration::getGridSize()) {
-        $previousPageLink .= ' hidden';
-    }
     $previousPageLink .= '>&lt;</button>';
 
-    $nextPageLink .= ($page + 1) . '\')';
-    $nextPageLink .= '"';
-    if($totalCount < ($page * AppConfiguration::getGridSize())) {
-        $nextPageLink .= ' hidden';
+    if($page < ceil($totalCount / AppConfiguration::getGridSize())) {
+        $nextPageLink .= ($page + 1) . '\')';
+    } else if($totalCount == 0) {
+        $nextPageLink .= '1\')';
+    } else {
+        $nextPageLink .= ceil($totalCount / AppConfiguration::getGridSize()) . '\')';
     }
+    $nextPageLink .= '"';
     $nextPageLink .= '>&gt;</button>';
 
-    $lastPageLink .= ceil($totalCount / AppConfiguration::getGridSize()) . '\')';
-    $lastPageLink .= '"';
-    if($totalCount <= ($page * AppConfiguration::getGridSize())) {
-        $lastPageLink .= ' hidden';
+    if($totalCount == 0) {
+        $lastPageLink .= '1\')';
+    } else {
+        $lastPageLink .= ceil($totalCount / AppConfiguration::getGridSize()) . '\')';
     }
+    $lastPageLink .= '"';
     $lastPageLink .= '>&gt;&gt;</button>';
 
     $pageControl = 'Total count: ' . $totalCount . ' | ';
