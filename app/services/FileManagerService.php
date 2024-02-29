@@ -2,6 +2,7 @@
 
 namespace DMS\Services;
 
+use DMS\Constants\DocumentReportStatus;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\FileStorageManager;
@@ -81,12 +82,14 @@ class FileManagerService extends AService {
             $files = $this->fsm->getStoredFilesInDirectory($drsd);
 
             foreach($files as $file) {
+                if($advancedLogging) $this->log('Found file "' . $file->getFullname() . '"', __METHOD__);
                 if(mb_strpos($file->getName(), 'temp_')) {
                     $filesToDelete[] = $file->getFullname();
+                    $this->documentModel->deleteDocumentReportQueueEntryByFilename($file->getName(), true);
                 } else {
                     $timestampCreated = filemtime($file->getFullname());
                     if($advancedLogging === TRUE) $this->log('Found file for generated document report "' . $file->getName() . '" with date: ' . date('Y-m-d H:i:s', $timestampCreated), __METHOD__);
-                    if(((AppConfiguration::getDocumentReportKeepLength() * 24 * 60 * 60) + time()) >= $timestampCreated) {
+                    if(((AppConfiguration::getDocumentReportKeepLength() * 24 * 60 * 60) + $timestampCreated) < time()) {
                         if($advancedLogging === TRUE) $this->log('File "' . $file->getName() . '" is too old. Deleting...', __METHOD__);
                         $filesToDelete[] = $file->getFullname();
                     }
@@ -96,6 +99,17 @@ class FileManagerService extends AService {
 
         foreach($filesToDelete as $ftd) {
             unlink($ftd);
+        }
+
+        $this->log('Checking generated document report entries in the database', __METHOD__);
+
+        $documentReportDbEntries = $this->documentModel->getDocumentReportQueueEntriesForStatus(DocumentReportStatus::FINISHED);
+
+        foreach($documentReportDbEntries as $entry) {
+            if(!$this->fsm->fm->fileExists($entry['file_src'])) {
+                $this->log('Deleting entry #' . $entry['id'], __METHOD__);
+                $this->documentModel->deleteDocumentReportQueueEntry($entry['id']);
+            }
         }
 
         // END OF DOCUMENT REPORTS

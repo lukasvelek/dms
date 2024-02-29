@@ -15,6 +15,21 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteDocumentReportQueueEntryByFilename(string $filename, bool $like = false) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->delete()
+            ->from('document_reports');
+
+        if($like === TRUE) {
+            $qb->where('file_src LIKE \'?\'', [$filename]);
+        } else {
+            $qb->where('file_src = ?', [$filename]);
+        }
+
+        return $qb->fetch();
+    }
+
     public function getDocumentsForDirectory(string $path) {
         $qb = $this->qb(__METHOD__);
 
