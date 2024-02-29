@@ -23,7 +23,7 @@ class FileManagerService extends AService {
     }
 
     public function run() {
-        $advancedLogging = true;
+        $advancedLogging = AppConfiguration::getIsDebug();
         $this->startService();
 
         // FILES
