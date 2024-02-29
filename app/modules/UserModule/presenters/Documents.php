@@ -347,7 +347,7 @@ class Documents extends APresenter {
         if(isset($_GET['id_folder'])) {
             $idFolder = $this->get('id_folder');
 
-            if($idFolder > -1) {
+            if($idFolder > 0) {
                 $folder = $app->folderModel->getFolderById($idFolder);
                 $folderName = $folder->getName();
                 $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'id_folder' => $idFolder), 'New document');

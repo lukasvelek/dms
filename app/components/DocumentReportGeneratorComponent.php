@@ -255,8 +255,6 @@ class DocumentReportGeneratorComponent extends AComponent {
             $i++;
         }
 
-        file_put_contents('__report.txt', var_export($reportStorage, true));
-
         $writeResult = $this->fm->write($reportStorage . $filename, $fileRow, false);
 
         if($writeResult === TRUE) {

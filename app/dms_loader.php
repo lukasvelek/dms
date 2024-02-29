@@ -76,7 +76,7 @@ function sortDependencies(array &$dependencies) {
         $filenameArr = explode('\\', $dependency);
         $filename = $filenameArr[count($filenameArr) - 1];
 
-        if($filename[0] == 'A') {
+        if($filename[0] == 'A' && ctype_upper($filename[1])) {
             $abstractClasses[] = $dependency;
         } else if($filename[0] == 'I' && ctype_upper($filename[1])) {
             $interfaces[] = $dependency;
