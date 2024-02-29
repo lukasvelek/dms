@@ -60,15 +60,12 @@ class Panels {
         }
 
         if(!is_null($app->user)) {
-            //$data['$USER_NOTIFICATIONS_LINK$'] = '<img src="img/notifications.svg" width="32" height="32" loading="lazy"><span class="toppanel-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications (0)</span>';
             $data['$USER_NOTIFICATIONS_LINK$'] = '<span class="toppanel-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications (0)</span>';
-            //$data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user.svg');
             $data['$USER_PROFILE_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'toppanel-link');
-            //$data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', 'Logout', 'img/logout.svg');
             $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createLink('UserModule:UserLogout:logoutUser', 'Logout', 'toppanel-link');
 
             if(AppConfiguration::getEnableRelogin() && $app->actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN)) {
-                $data['$USER_RELOGIN_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showConnectedUsers'), 'Relogin');
+                $data['$USER_RELOGIN_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showConnectedUsers'), 'Relogin', 'toppanel-link');
             } else {
                 $data['$USER_RELOGIN_LINK$'] = '';
             }
