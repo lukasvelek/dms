@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\FlashMessageTypes;
+use DMS\Core\AppConfiguration;
 use DMS\Core\Application;
 use DMS\Modules\APresenter;
 
@@ -18,7 +19,7 @@ class DocumentGenerator extends APresenter {
     protected function showForm() {
         global $app;
 
-        if(!$app::SYSTEM_DEBUG) {
+        if(!AppConfiguration::getIsDebug()) {
             $app->flashMessage('Debug is not enabled!', FlashMessageTypes::ERROR);
             $app->redirect('HomePage:showHomepage');
         }
@@ -27,7 +28,7 @@ class DocumentGenerator extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Document generator',
-            '$PAGE_CONTENT$' => $this->internalCreateForm(Application::SYSTEM_DEBUG)
+            '$PAGE_CONTENT$' => $this->internalCreateForm(AppConfiguration::getIsDebug())
         );
 
         $this->templateManager->fill($data, $template);

@@ -37,6 +37,7 @@ $cfg['enable_relogin'] = true; // true if relogging in as other (connected) user
 $cfg['folder_max_nest_level'] = 10; // how many levels of nesting do folders allow (max recommended is 10)
 $cfg['absolute_app_dir'] = ''; // the absolute server path to the app root (etc /dms/)
 $cfg['enable_service_auto_run'] = true; // true if services can be run automatically, false if not
+$cfg['is_debug'] = false; // true if debug is activated, false if not
 
 
 /**

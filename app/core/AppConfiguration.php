@@ -123,6 +123,10 @@ class AppConfiguration {
         return self::loadParam('enable_service_auto_run');
     }
 
+    public static function getIsDebug() {
+        return self::loadParam('is_debug');
+    }
+
     /**
      * ----- PRIVATE METHODS -----
      */

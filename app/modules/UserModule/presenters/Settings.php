@@ -608,7 +608,7 @@ class Settings extends APresenter {
             $widgets[] = LinkBuilder::createLink('updateDefaultUserRights', 'Update default user rights') . '<br>';
         }
 
-        if(Application::SYSTEM_DEBUG && $app->actionAuthorizator->checkActionRight(UserActionRights::USE_DOCUMENT_GENERATOR)) {
+        if(AppConfiguration::getIsDebug() && $app->actionAuthorizator->checkActionRight(UserActionRights::USE_DOCUMENT_GENERATOR)) {
             $widgets[] = LinkBuilder::createLink('DocumentGenerator:showForm', 'Document generator') . '<br>';
         }
 
@@ -1121,7 +1121,7 @@ class Settings extends APresenter {
         global $app;
 
         $systemVersion = $app::SYSTEM_VERSION;
-        $systemIsDebugEnabled = $app::SYSTEM_DEBUG ? 'Enabled' : 'Disabled';
+        $systemIsDebugEnabled = AppConfiguration::getIsDebug() ? 'Enabled' : 'Disabled';
         $systemBuildDate = $app::SYSTEM_BUILD_DATE;
 
         if(!$app::SYSTEM_IS_BETA) {
