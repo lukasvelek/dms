@@ -26,6 +26,7 @@ class DocumentReports extends APresenter {
 
         $idUser = $app->user->getId();
         $documentModel = $app->documentModel;
+        $fileManager = $app->fileManager;
 
         $dataCallback = function() use ($idUser, $documentModel) {
             $rows = $documentModel->getDocumentReportQueueEntriesForIdUser($idUser);
@@ -105,8 +106,8 @@ class DocumentReports extends APresenter {
         $gb->addOnColumnRender('status', function(object $obj) {
             return DocumentReportStatus::$texts[$obj->getStatus()];
         });
-        $gb->addAction(function(object $obj) {
-            if($obj->getStatus() == DocumentReportStatus::FINISHED) {
+        $gb->addAction(function(object $obj) use ($fileManager) {
+            if($obj->getStatus() == DocumentReportStatus::FINISHED && $fileManager->fileExists($obj->getFileSrc())) {
                 return '<a class="general-link" href="' . $obj->getFileSrc() . '">Download</a>';
             } else {
                 return '-';

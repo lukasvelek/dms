@@ -258,7 +258,9 @@ class DocumentReportGeneratorComponent extends AComponent {
         $writeResult = $this->fm->write($reportStorage . $filename, $fileRow, false);
 
         if($writeResult === TRUE) {
-            return $reportStorageObj->getAbsolutePath() . $filename;
+            $path = $reportStorageObj->getPath();
+            $path = str_replace('\\', '\\\\', $path);
+            return $path . $filename;
         } else {
             return false;
         }

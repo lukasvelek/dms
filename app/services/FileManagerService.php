@@ -75,41 +75,50 @@ class FileManagerService extends AService {
 
         $this->log('Checking document reports', __METHOD__);
 
-        $documentReportStorageDirectories = $this->fsm->getStorageDirectories('document_reports');
-
         $filesToDelete = [];
-        foreach($documentReportStorageDirectories as $drsd) {
-            $files = $this->fsm->getStoredFilesInDirectory($drsd);
-
-            foreach($files as $file) {
-                if($advancedLogging) $this->log('Found file "' . $file->getFullname() . '"', __METHOD__);
-                if(mb_strpos($file->getName(), 'temp_')) {
-                    $filesToDelete[] = $file->getFullname();
-                    $this->documentModel->deleteDocumentReportQueueEntryByFilename($file->getName(), true);
-                } else {
-                    $timestampCreated = filemtime($file->getFullname());
-                    if($advancedLogging === TRUE) $this->log('Found file for generated document report "' . $file->getName() . '" with date: ' . date('Y-m-d H:i:s', $timestampCreated), __METHOD__);
-                    if(((AppConfiguration::getDocumentReportKeepLength() * 24 * 60 * 60) + $timestampCreated) < time()) {
-                        if($advancedLogging === TRUE) $this->log('File "' . $file->getName() . '" is too old. Deleting...', __METHOD__);
-                        $filesToDelete[] = $file->getFullname();
-                    }
-                }
-            }
-        }
-
-        foreach($filesToDelete as $ftd) {
-            unlink($ftd);
-        }
-
-        $this->log('Checking generated document report entries in the database', __METHOD__);
+        $existingFiles = [];
 
         $documentReportDbEntries = $this->documentModel->getDocumentReportQueueEntriesForStatus(DocumentReportStatus::FINISHED);
 
         foreach($documentReportDbEntries as $entry) {
             if(!$this->fsm->fm->fileExists($entry['file_src'])) {
                 $this->log('Deleting entry #' . $entry['id'], __METHOD__);
+                $filesToDelete[] = $entry['file_src'];
                 $this->documentModel->deleteDocumentReportQueueEntry($entry['id']);
+            } else {
+                $existingFiles[] = $entry['file_src'];
             }
+        }
+
+        $documentReportStorageDirectories = $this->fsm->getStorageDirectories('document_reports');
+
+        foreach($documentReportStorageDirectories as $drsd) {
+            $files = $this->fsm->getStoredFilesInDirectory($drsd);
+
+            foreach($files as $file) {
+                if($advancedLogging) $this->log('Found file "' . $file->getFullname() . '"', __METHOD__);
+                if(mb_strpos($file->getName(), 'temp_')) {
+                    if(!in_array($file->getFullname(), $filesToDelete)) {
+                        $filesToDelete[] = $file->getFullname();
+                    }
+                    $this->documentModel->deleteDocumentReportQueueEntryByFilename($file->getName(), true);
+                } else {
+                    $timestampCreated = filemtime($file->getFullname());
+                    if($advancedLogging === TRUE) $this->log('Found file for generated document report "' . $file->getName() . '" with date: ' . date('Y-m-d H:i:s', $timestampCreated), __METHOD__);
+                    if(((AppConfiguration::getDocumentReportKeepLength() * 24 * 60 * 60) + $timestampCreated) < time() || !in_array($file->getFullname(), $existingFiles)) {
+                        if($advancedLogging === TRUE) $this->log('File "' . $file->getName() . '" is too old. Deleting...', __METHOD__);
+                        if(!in_array($file->getFullname(), $filesToDelete)) {
+                            $filesToDelete[] = $file->getFullname();
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->log('Found ' . count($filesToDelete) . ' generated document report files to be deleted', __METHOD__);
+
+        foreach($filesToDelete as $ftd) {
+            unlink($ftd);
         }
 
         // END OF DOCUMENT REPORTS
