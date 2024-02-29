@@ -8,6 +8,7 @@ It also enables users to manage metadata and their values.
 - added calendar support
 - added ajax grid page controls
     - now switching between grid pages is done using ajax, so it does not refresh the application
+- added current user subpanel
 - implemented calendar to view scheduled services
 - updated file storage
     - now there can be several file storages
