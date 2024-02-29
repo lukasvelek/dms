@@ -546,7 +546,7 @@ class RibbonSettings extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
-            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showNewForm'), 'New ribbon');
+            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'showNewForm'), 'New ribbon');
             $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showNewSplitterForm'), 'New splitter');
         }
 

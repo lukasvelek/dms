@@ -57,9 +57,8 @@ class Users extends APresenter {
 
         $id = null;
 
-        if(!$app->isset('id')) {
+        if(!$app->isset('id') || ($app->isset('id') && $this->get('id') == 'current_user')) {
             $id = $app->user->getId();
-            $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
         } else {
             $id = $this->get('id');
         }
@@ -153,9 +152,8 @@ class Users extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-profile-grid.html');
 
-        if(!$app->isset('id')) {
+        if(!$app->isset('id') || ($app->isset('id') && $this->get('id') == 'current_user')) {
             $id = $app->user->getId();
-            $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
         } else {
             $id = $this->get('id');
         }
@@ -210,8 +208,8 @@ class Users extends APresenter {
             $data['$LINKS$'][] = $forcePasswordChangeLink;
         }
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showSettingsForm', 'id' => $id), 'Settings');
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'DocumentReports:showAll'), 'My document reports');
+        /*$data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showSettingsForm', 'id' => $id), 'Settings');
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'DocumentReports:showAll'), 'My document reports');*/
 
         $this->templateManager->fill($data, $template);
 

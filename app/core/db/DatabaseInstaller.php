@@ -1287,14 +1287,14 @@ class DatabaseInstaller {
             'documents',
             'processes',
             'settings',
-            'archive'
+            'archive',
+            'current_user'
         );
 
         $toppanelRibbons = array(
             array(
                 'name' => 'Home',
                 'code' => 'home',
-                /*'image' => 'img/home.svg',*/
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:HomePage:showHomepage',
                 'is_system' => '1',
@@ -1303,7 +1303,6 @@ class DatabaseInstaller {
             array(
                 'name' => 'Documents',
                 'code' => 'documents',
-                /*'image' => 'img/documents.svg',*/
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Documents:showAll',
                 'is_system' => '1',
@@ -1312,7 +1311,6 @@ class DatabaseInstaller {
             array(
                 'name' => 'Processes',
                 'code' => 'processes',
-                /*'image' => 'img/processes.svg',*/
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Processes:showAll',
                 'is_system' => '1',
@@ -1321,7 +1319,6 @@ class DatabaseInstaller {
             array(
                 'name' => 'Archive',
                 'code' => 'archive',
-                /*'image' => 'img/archive.svg',*/
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Archive:showDocuments',
                 'is_system' => '1',
@@ -1330,11 +1327,18 @@ class DatabaseInstaller {
             array(
                 'name' => 'Settings',
                 'code' => 'settings',
-                /*'image' => 'img/settings.svg',*/
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Settings:showDashboard',
                 'is_system' => '1',
                 'ribbon_right' => Ribbons::ROOT_SETTINGS
+            ),
+            array(
+                'name' => 'Current user',
+                'code' => 'current_user',
+                'is_visible' => '0',
+                'page_url' => '?page=UserModule:Users:showProfile',
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_CURRENT_USER
             )
         );
 
@@ -1450,7 +1454,6 @@ class DatabaseInstaller {
                     'code' => 'settings.dashboard',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboard',
-                    /*'image' => 'img/dashboard.svg',*/
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_DASHBOARD
                 ),
@@ -1459,7 +1462,6 @@ class DatabaseInstaller {
                     'code' => 'settings.document_folders',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showFolders',
-                    /*'image' => 'img/folder.svg',*/
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_DOCUMENT_FOLDERS
                 ),
@@ -1468,7 +1470,6 @@ class DatabaseInstaller {
                     'code' => 'settings.users',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showUsers',
-                    /*'image' => 'img/users.svg',*/
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_USERS
                 ),
@@ -1477,7 +1478,6 @@ class DatabaseInstaller {
                     'code' => 'settings.groups',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showGroups',
-                    /*'image' => 'img/groups.svg',*/
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_GROUPS
                 ),
@@ -1486,7 +1486,6 @@ class DatabaseInstaller {
                     'code' => 'settings.metadata',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showMetadata',
-                    /*'image' => 'img/metadata.svg',*/
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_METADATA
                 ),
@@ -1495,7 +1494,6 @@ class DatabaseInstaller {
                     'code' => 'settings.system',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showSystem',
-                    /*'image' => 'img/system.svg',*/
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_SYSTEM
                 ),
@@ -1504,7 +1502,6 @@ class DatabaseInstaller {
                     'code' => 'settings.services',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showServices',
-                    /*'image' => 'img/services.svg',*/
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_SERVICES
                 ),
@@ -1513,14 +1510,12 @@ class DatabaseInstaller {
                     'code' => 'settings.dashboard_widgets',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboardWidgets',
-                    /*'image' => 'img/dashboard-widgets.svg',*/
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_DASHBOARD_WIDGETS
                 ),
                 array(
                     'name' => 'Ribbons',
                     'code' => 'settings.ribbons',
-                    /*'image' => 'img/ribbons.svg',*/
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:RibbonSettings:showAll',
                     'is_system' => '1',
@@ -1551,6 +1546,24 @@ class DatabaseInstaller {
                     'page_url' => '?page=UserModule:Archive:showArchives',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::ARCHIVE_ARCHIVES
+                )
+            ),
+            'current_user' => array(
+                array(
+                    'name' => 'Settings',
+                    'code' => 'current_user.settings',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Users:showSettingsForm&id=current_user',
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::CURRENT_USER_SETTINGS
+                ),
+                array(
+                    'name' => 'My document reports',
+                    'code' => 'current_user.document_reports',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:DocumentReports:showAll&id=current_user',
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::CURRENT_USER_DOCUMENT_REPORTS
                 )
             )
         );
