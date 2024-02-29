@@ -450,7 +450,7 @@ async function loadProcesses(_page, _filter = 'waitingForMe') {
         $('#grid-next-page-control-btn').prop('disabled', false);
         $('#grid-last-page-control-btn').prop('disabled', false);
 
-        $('#processes-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 

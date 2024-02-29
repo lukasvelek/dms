@@ -164,7 +164,7 @@ class Processes extends APresenter {
             <script type="text/javascript">
             loadProcesses("' . $page . '", "' . $filter . '");
             </script>
-            <table border="1"><img id="processes-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+            <table border="1"><img id="grid-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
         ';
     }
 
