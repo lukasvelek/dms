@@ -2,7 +2,7 @@ function sleep(ms) {
     return new Promise(r => setTimeout(r, ms));
 }
 
-const general_sleep_length = 250;
+const general_sleep_length = 0;
 
 $(window).on("load", function() {
     $("#cover").remove();

@@ -13,7 +13,7 @@ use DMS\Models\FileStorageModel;
  * @author Lukas Velek
  */
 class FileStorageManager {
-    private FileManager $fm;
+    public FileManager $fm;
     private Logger $logger;
     private FileStorageModel $fsm;
 
@@ -142,10 +142,10 @@ class FileStorageManager {
      * 
      * @return array<FileStorageFile> array of stored files
      */
-    public function getStoredFiles() {
+    public function getStoredFiles(string $type = 'files') {
         $files = [];
 
-        $directories = $this->getStorageDirectories();
+        $directories = $this->getStorageDirectories($type);
 
         foreach($directories as $dir) {
             $this->fm->readFilesInFolder($dir, $files);
@@ -232,8 +232,14 @@ class FileStorageManager {
      * 
      * @return array Array of file storage directory paths
      */
-    private function getStorageDirectories() {
-        $locations = $this->fsm->getAllActiveFileStorageLocations();
+    public function getStorageDirectories(string $type) {
+        if($type == 'files') {
+            $locations = $this->fsm->getAllActiveFileOnlyStorageLocations();
+        } else if($type == 'document_reports') {
+            $locations = $this->fsm->getAllActiveDocumentReportStorageLocations();
+        } else {
+            $locations = $this->fsm->getAllActiveFileStorageLocations();
+        }
 
         $dirs = [];
         foreach($locations as $loc) {

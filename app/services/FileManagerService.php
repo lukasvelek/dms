@@ -2,8 +2,8 @@
 
 namespace DMS\Services;
 
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
-use DMS\Core\FileManager;
 use DMS\Core\FileStorageManager;
 use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentModel;
@@ -25,7 +25,11 @@ class FileManagerService extends AService {
     public function run() {
         $this->startService();
 
-        $storedFiles = $this->fsm->getStoredFiles();
+        // FILES
+
+        $this->log('Checking document files', __METHOD__);
+
+        $storedFiles = $this->fsm->getStoredFiles('files');
         
         $toDelete = [];
         foreach($storedFiles as $sf) {
@@ -38,18 +42,60 @@ class FileManagerService extends AService {
             }
         }
 
-        $this->log('Found ' . count($toDelete) . ' files, that are not used, to delete', __METHOD__);
+        $this->log('Found ' . count($toDelete) . ' not used files from documents to delete', __METHOD__);
 
         foreach($toDelete as $td) {
             unlink($td);
         }
 
-        // TODO
-        //$dirs = $this->fsm->getDirectories();
+        $storageDirectories = $this->fsm->getStorageDirectories('files');
 
-        /*for($i = (count($dirs) - 1); $i >= 0; $i--) {
-            rmdir($dirs[$i]);
-        }*/
+        $dirs = [];
+        foreach($storageDirectories as $sd) {
+            $this->fsm->fm->readFoldersInFolder($sd, $dirs);
+        }
+
+        $toDelete = [];
+        foreach($dirs as $dir) {
+            $files = [];
+            $this->fsm->fm->readFilesInFolder($dir, $files);
+
+            if(empty($files)) {
+                $this->fsm->fm->deleteDirectory($dir);
+            }
+        }
+
+        // END OF FILES
+
+
+
+        // DOCUMENT REPORTS
+
+        $this->log('Checking document reports', __METHOD__);
+
+        $documentReportStorageDirectories = $this->fsm->getStorageDirectories('document_reports');
+
+        $filesToDelete = [];
+        foreach($documentReportStorageDirectories as $drsd) {
+            $files = $this->fsm->getStoredFilesInDirectory($drsd);
+
+            foreach($files as $file) {
+                if(mb_strpos($file->getName(), 'temp_')) {
+                    $filesToDelete[] = $file->getFullname();
+                } else {
+                    $timestampCreated = filemtime($file->getFullname());
+                    if(((AppConfiguration::getDocumentReportKeepLength() * 24 * 60 * 60) + time()) >= $timestampCreated) {
+                        $filesToDelete[] = $file->getFullname();
+                    }
+                }
+            }
+        }
+
+        foreach($filesToDelete as $ftd) {
+            unlink($ftd);
+        }
+
+        // END OF DOCUMENT REPORTS
 
         $this->stopService();
     }

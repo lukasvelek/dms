@@ -76,6 +76,44 @@ class FileStorageModel extends AModel {
         return $qb->fetch('order');
     }
 
+    public function getAllActiveFileOnlyStorageLocations(bool $order = false) {
+        $qb = $this->composeCommonQuery(__METHOD__)
+            ->where('is_active = 1')
+            ->andWhere('type = ?', ['files']);
+
+        if($order === TRUE) {
+            $qb->orderBy('order');
+        }
+
+        $qb->execute();
+
+        $locations = [];
+        while($row = $qb->fetchAssoc()) {
+            $locations[] = $this->createFileStorageLocationObjectFromDbRow($row);
+        }
+
+        return $locations;
+    }
+
+    public function getAllActiveDocumentReportStorageLocations(bool $order = false) {
+        $qb = $this->composeCommonQuery(__METHOD__)
+            ->where('is_active = 1')
+            ->andWhere('type = ?', ['document_reports']);
+
+        if($order === TRUE) {
+            $qb->orderBy('order');
+        }
+
+        $qb->execute();
+
+        $locations = [];
+        while($row = $qb->fetchAssoc()) {
+            $locations[] = $this->createFileStorageLocationObjectFromDbRow($row);
+        }
+
+        return $locations;
+    }
+    
     public function getAllActiveFileStorageLocations(bool $order = false) {
         $qb = $this->composeCommonQuery(__METHOD__)
             ->where('is_active = 1');

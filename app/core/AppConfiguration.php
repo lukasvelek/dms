@@ -127,6 +127,10 @@ class AppConfiguration {
         return self::loadParam('is_debug');
     }
 
+    public static function getDocumentReportKeepLength() {
+        return self::loadParam('document_report_keep_length');
+    }
+
     /**
      * ----- PRIVATE METHODS -----
      */

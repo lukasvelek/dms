@@ -6,10 +6,8 @@ use DMS\Constants\FileStorageTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Entities\FileStorageLocation;
-use DMS\Helpers\GridDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
-use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
 class FileStorageSettings extends APresenter {
@@ -85,6 +83,8 @@ class FileStorageSettings extends APresenter {
         if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_FILE_STORAGE_LOCATIONS)) {
             $data['$LINKS$'][] = LinkBuilder::createLink('showNewLocationForm', 'New location');
         }
+
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createLink(':', 'Refresh');
 
         $this->templateManager->fill($data, $template);
 
