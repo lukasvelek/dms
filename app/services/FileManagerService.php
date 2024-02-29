@@ -23,6 +23,7 @@ class FileManagerService extends AService {
     }
 
     public function run() {
+        $advancedLogging = true;
         $this->startService();
 
         // FILES
@@ -84,7 +85,9 @@ class FileManagerService extends AService {
                     $filesToDelete[] = $file->getFullname();
                 } else {
                     $timestampCreated = filemtime($file->getFullname());
+                    if($advancedLogging === TRUE) $this->log('Found file for generated document report "' . $file->getName() . '" with date: ' . date('Y-m-d H:i:s', $timestampCreated), __METHOD__);
                     if(((AppConfiguration::getDocumentReportKeepLength() * 24 * 60 * 60) + time()) >= $timestampCreated) {
+                        if($advancedLogging === TRUE) $this->log('File "' . $file->getName() . '" is too old. Deleting...', __METHOD__);
                         $filesToDelete[] = $file->getFullname();
                     }
                 }

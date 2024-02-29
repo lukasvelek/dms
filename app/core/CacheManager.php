@@ -13,8 +13,10 @@ use DMS\Entities\User;
  * @author Lukas Velek
  */
 class CacheManager {
+    private const SERIALIZE = true;
+    private const ADVANCED_CACHE_PROTECTION = true;
+
     private FileManager $fm;
-    private bool $serialize;
     private string $category;
     
     /**
@@ -26,7 +28,6 @@ class CacheManager {
     public function __construct(string $category, string $logdir, string $cachedir) {
         $this->fm = new FileManager($logdir, $cachedir);
 
-        $this->serialize = true;
         $this->category = $category;
     }
 
@@ -697,8 +698,12 @@ class CacheManager {
             return false;
         }
 
-        if($this->serialize) {
-            $data = unserialize($data);
+        if(self::SERIALIZE) {
+            if(self::ADVANCED_CACHE_PROTECTION) {
+                $data = unserialize(base64_decode($data));
+            } else {
+                $data = unserialize($data);
+            }
         }
 
         return $data;
@@ -712,8 +717,12 @@ class CacheManager {
     private function saveToCache(array $data) {
         $filename = $this->createFilename();
 
-        if($this->serialize) {
-            $data = serialize($data);
+        if(self::SERIALIZE) {
+            if(self::ADVANCED_CACHE_PROTECTION) {
+                $data = base64_encode(serialize($data));
+            } else {
+                $data = serialize($data);
+            }
         }
 
         $this->fm->writeCache($filename, $data);
