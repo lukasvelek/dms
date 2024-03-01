@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Components\DocumentReports\ADocumentReport;
 use DMS\Constants\ArchiveType;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
@@ -102,13 +103,14 @@ class Documents extends APresenter {
     protected function generateReport() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['id_folder', 'filter', 'limit_range', 'order', 'total_count']);
+        $app->flashMessageIfNotIsset(['id_folder', 'filter', 'limit_range', 'order', 'total_count', 'file_format']);
 
         $idFolder = $this->get('id_folder');
         $totalCount = $this->get('total_count');
         $filter = $this->post('filter');
         $limit = $this->post('limit_range');
         $order = $this->post('order');
+        $fileFormat = $this->post('file_format');
 
         $limit = ceil($limit);
 
@@ -173,7 +175,8 @@ class Documents extends APresenter {
             // use background export
             $data = [
                 'id_user' => $app->user->getId(),
-                'sql_string' => $qb->getSQL()
+                'sql_string' => $qb->getSQL(),
+                'file_format' => $fileFormat
             ];
 
             $app->documentModel->insertDocumentReportQueueEntry($data);
@@ -185,13 +188,13 @@ class Documents extends APresenter {
         $hash = CypherManager::createCypher(32);
         $filename = 'temp_' . $hash . '.csv';
 
-        $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $filename);
+        $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $fileFormat, $filename);
 
         if($result === FALSE) {
-            die('ERROR! Documents presenter: line 205');
+            die('ERROR! Documents presenter method '. __METHOD__);
         }
 
-        $filename = $result;
+        $filename = $result['file_src'];
         $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
 
         copy($filename, $downloadFilename);
@@ -203,6 +206,8 @@ class Documents extends APresenter {
         readfile($downloadFilename);
 
         unlink($filename);
+
+        return;
     }
 
     protected function showReportForm() {
@@ -284,9 +289,11 @@ class Documents extends APresenter {
 
         if(isset($_GET['id_folder'])) {
             $idFolder = $this->get('id_folder');
-            $folder = $app->folderModel->getFolderById($idFolder);
-            $folderName = $folder->getName();
-            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'id_folder' => $idFolder), 'New document');
+            if($idFolder > 0) {
+                $folder = $app->folderModel->getFolderById($idFolder);
+                $folderName = $folder->getName();
+                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'id_folder' => $idFolder), 'New document');
+            }
         }
 
         if(isset($_GET['grid_page'])) {
@@ -1305,6 +1312,15 @@ class Documents extends APresenter {
             $step = $count / 20;
         }
 
+        $extensions = ADocumentReport::SUPPORTED_EXTENSIONS;
+        $extensionArray = [];
+        foreach($extensions as $extCode => $extName) {
+            $extensionArray[] = [
+                'value' => $extCode,
+                'text' => $extName
+            ];
+        }
+
         $fb
             ->setMethod('POST')->setAction('?page=UserModule:Documents:generateReport&id_folder=' . $idFolder . '&total_count=' . $count)
 
@@ -1317,6 +1333,9 @@ class Documents extends APresenter {
 
             ->addElement($fb->createLabel()->setText('Order')->setFor('order'))
             ->addElement($fb->createSelect()->setName('order')->addOptionsBasedOnArray($orderArray))
+
+            ->addElement($fb->createLabel()->setText('File format')->setFor('file_format'))
+            ->addElement($fb->createSelect()->setName('file_format')->addOptionsBasedOnArray($extensionArray))
 
             ->addJSScript(ScriptLoader::loadJSScript('js/ReportForm.js'))
 

@@ -37,7 +37,7 @@ class DocumentReports extends APresenter {
                 if(isset($row['file_src'])) {
                     $fileSrc = $row['file_src'];
                 }
-                $entry = new class($row['id'], $row['id_user'], $row['date_created'], $row['date_updated'], $row['status'], $row['sql_string'], $fileSrc) {
+                $entry = new class($row['id'], $row['id_user'], $row['date_created'], $row['date_updated'], $row['status'], $row['sql_string'], $fileSrc, $row['file_name'], $row['id_file_storage_location']) {
                     private int $id;
                     private int $idUser;
                     private string $dateCreated;
@@ -45,8 +45,10 @@ class DocumentReports extends APresenter {
                     private int $status;
                     private string $sqlString;
                     private ?string $fileSrc;
+                    private ?string $filename;
+                    private ?int $idFileStorageLocation;
 
-                    public function __construct(int $id, int $idUser, string $dateCreated, string $dateUpdated, int $status, string $sqlString, ?string $fileSrc) {
+                    public function __construct(int $id, int $idUser, string $dateCreated, string $dateUpdated, int $status, string $sqlString, ?string $fileSrc, ?string $filename, ?int $idFileStorageLocation) {
                         $this->id = $id;
                         $this->idUser = $idUser;
                         $this->dateCreated = $dateCreated;
@@ -54,6 +56,8 @@ class DocumentReports extends APresenter {
                         $this->status = $status;
                         $this->sqlString = $sqlString;
                         $this->fileSrc = $fileSrc;
+                        $this->filename = $filename;
+                        $this->idFileStorageLocation = $idFileStorageLocation;
                     }
 
                     public function getId() {
@@ -83,6 +87,14 @@ class DocumentReports extends APresenter {
                     public function getFileSrc() {
                         return $this->fileSrc;
                     }
+
+                    public function getFilename() {
+                        return $this->filename;
+                    }
+
+                    public function getIdFileStorageLocation() {
+                        return $this->idFileStorageLocation;
+                    }
                 };
 
                 $entries[] = $entry;
@@ -92,6 +104,8 @@ class DocumentReports extends APresenter {
         };
 
         $canDeleteDocumentReportQueueEntry = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_DOCUMENT_REPORT_QUEUE_ENTRY);
+        
+        $fileStorageModel = $app->fileStorageModel;
 
         $gb = new GridBuilder();
 
@@ -106,9 +120,16 @@ class DocumentReports extends APresenter {
         $gb->addOnColumnRender('status', function(object $obj) {
             return DocumentReportStatus::$texts[$obj->getStatus()];
         });
-        $gb->addAction(function(object $obj) use ($fileManager) {
-            if($obj->getStatus() == DocumentReportStatus::FINISHED && $fileManager->fileExists($obj->getFileSrc())) {
-                return '<a class="general-link" href="' . $obj->getFileSrc() . '">Download</a>';
+        $gb->addAction(function(object $obj) use ($fileManager, $fileStorageModel) {
+            if($obj->getStatus() == DocumentReportStatus::FINISHED) {
+                $location = $fileStorageModel->getLocationById($obj->getIdFileStorageLocation());
+                $realServerPath = $location->getPath() . $obj->getFilename();
+
+                if($fileManager->fileExists($realServerPath)) {
+                    return '<a class="general-link" href="' . $obj->getFileSrc() . '">Download</a>';
+                } else {
+                    return '-';
+                }
             } else {
                 return '-';
             }
