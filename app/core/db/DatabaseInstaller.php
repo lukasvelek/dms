@@ -410,6 +410,12 @@ class DatabaseInstaller {
                 'date_to' => 'VARCHAR(256) NULL',
                 'time' => 'VARCHAR(256) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'db_transaction_log' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_calling_user' => 'INT(32) NULL',
+                'time_taken' => 'VARCHAR(256) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 

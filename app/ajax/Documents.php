@@ -572,6 +572,8 @@ function generateDocuments() {
         exit;
     }
 
+    $documentModel->beginTran();
+
     $inserted = 0;
     while($inserted < $count) {
         $data = array(
@@ -599,6 +601,9 @@ function generateDocuments() {
         }
     }
 
+    $documentModel->commitTran();
+    $documentModel->beginTran();
+
     if($inserted < $count) {
         for($i = 0; $i < ($count - $inserted); $i++) {
             $data = array(
@@ -622,6 +627,8 @@ function generateDocuments() {
             $documentModel->insertNewDocument($data);
         }
     }
+
+    $documentModel->commitTran();
 
     if($id_folder == '0') {
         $id_folder = null;
