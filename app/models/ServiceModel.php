@@ -11,15 +11,64 @@ class ServiceModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateService(int $id, array $data) {
+        return $this->updateExisting('services', $id, $data);
+    }
+
+    public function getServiceById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('services')
+            ->where('id = ?', [$id])
+            ->execute();
+
+        return $this->createServiceObjectFromDbRow($qb->fetch());
+    }
+
+    public function insertNewService(array $data) {
+        return $this->insertNew($data, 'services');
+    }
+
     public function getAllServicesOrderedByLastRunDate() {
         $sql = "SELECT services.*, service_log.* FROM services JOIN service_log ON services.system_name = service_log.name ORDER BY service_log.date_created DESC";
+        $this->logger->sql($sql, __METHOD__);
 
         $rows = $this->db->query($sql);
 
         $services = [];
+        $serviceNames = [];
         foreach($rows as $row) {
             $services[] = $this->createServiceObjectFromDbRow($row);
+            $serviceNames[] = $row['system_name'];
         }
+
+        $qb = $this->qb(__METHOD__);
+
+        $xb = $this->xb();
+
+        $i = 0;
+        foreach($serviceNames as $sn) {
+            $xb ->lb()
+                    ->where('system_name <> ?', [$sn])
+                ->rb();
+
+            if(($i + 1) != count($serviceNames)) {
+                $xb->and();
+            }
+
+            $i++;
+        }
+        
+        $qb ->select(['*'])
+            ->from('services')
+            ->where($xb->build())
+            ->execute();
+
+        while($row = $qb->fetchAssoc()) {
+            $services[] = $this->createServiceObjectFromDbRow($row);
+        }
+
         return $services;
     }
 
@@ -55,7 +104,7 @@ class ServiceModel extends AModel {
         return $this->insertNew($data, 'service_log');
     }
 
-    public function updateService(string $name, string $key, string $value) {
+    public function updateServiceConfig(string $name, string $key, string $value) {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('service_config')

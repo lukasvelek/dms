@@ -192,7 +192,7 @@ class Settings extends APresenter {
         }
 
         foreach($values as $k => $v) {
-            $app->serviceModel->updateService($name, $k, $v);
+            $app->serviceModel->updateServiceConfig($name, $k, $v);
         }
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_CONFIG);
@@ -213,8 +213,31 @@ class Settings extends APresenter {
         $name = $this->get('name');
 
         $data = array(
-            '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
+            '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i> config',
             '$FORM$' => $this->internalCreateEditServiceForm($name),
+            '$LINKS$' => []
+        );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('showServices', '&larr;');
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function editServiceServiceForm() {
+        global $app;
+        
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+        
+        $app->flashMessageIfNotIsset(['id']);
+        
+        $id = $this->get('id');
+        $service = $app->serviceModel->getServiceById($id);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Edit service <i>' . $service->getDisplayName() . '</i>',
+            '$FORM$' => $this->internalCreateEditServiceServiceForm($service),
             '$LINKS$' => []
         );
 
@@ -249,6 +272,67 @@ class Settings extends APresenter {
         return $template;
     }
 
+    protected function showNewServiceForm() {
+        $template = $this->loadTemplate(__DIR__ . '/templates/settings/settings-new-entity-form.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'New service',
+            '$LINKS$' => [],
+            '$FORM$' => $this->internalCreateNewServiceForm()
+        ];
+
+        $this->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function processNewServiceForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['system_name', 'display_name', 'description']);
+
+        $data = [
+            'system_name' => $this->post('system_name'),
+            'display_name' => $this->post('display_name'),
+            'description' => $this->post('description'),
+            'is_system' => '0'
+        ];
+
+        if(isset($_POST['is_enabled'])) {
+            $data['is_enabled'] = '1';
+        } else {
+            $data['is_enabled'] = '0';
+        }
+
+        $app->serviceModel->insertNewService($data);
+        $app->logger->info('Inserted new service ' . $this->post('system_name'), __METHOD__);
+
+        $app->flashMessage('New service created', 'success');
+        $app->redirect('showServices');
+    }
+
+    protected function processEditServiceForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'system_name', 'display_name', 'description']);
+
+        $data = [
+            'system_name' => $this->post('system_name'),
+            'display_name' => $this->post('display_name'),
+            'description' => $this->post('description')
+        ];
+
+        if(isset($_POST['is_enabled'])) {
+            $data['is_enabled'] = '1';
+        } else {
+            $data['is_enabled'] = '0';
+        }
+
+        $app->serviceModel->updateService($this->get('id'), $data);
+        $app->flashMessage('Service ' . $data['system_name'] . ' updated', 'success');
+        $app->redirect('showServices');
+    }
+
     protected function askToRunService() {
         global $app;
 
@@ -278,8 +362,13 @@ class Settings extends APresenter {
         $name = $this->get('name');
         $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
 
-        foreach($app->serviceManager->services as $service) {
-            if($service->name == $name) {
+        if(!array_key_exists($name, $app->serviceManager->services)) {
+            $app->flashMessage('Service \'' . $name . '\' (class \\DMS\\Services\\' . $name . ') not found!', 'error');
+            $app->redirect('showServices');
+        }
+
+        foreach($app->serviceManager->services as $serviceName => $service) {
+            if($serviceName == $name) {
                 $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
 
                 $app->logger->logFunction(function() use ($service) {
@@ -1374,7 +1463,14 @@ class Settings extends APresenter {
         $gb->addAction(function(ServiceEntity $service) use ($canEditService) {
             $link = '-';
             if($canEditService) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceForm', 'name' => $service->getSystemName()), 'Edit');
+                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceForm', 'name' => $service->getSystemName()), 'Edit config');
+            }
+            return $link;
+        });
+        $gb->addAction(function(ServiceEntity $service) use ($canEditService) {
+            $link = '-';
+            if($canEditService) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceServiceForm', 'id' => $service->getId()), 'Edit service');
             }
             return $link;
         });
@@ -1401,6 +1497,36 @@ class Settings extends APresenter {
         foreach($childFolders as $cf) {
             $this->_getChildFolderList($list, $cf);
         }
+    }
+
+    private function internalCreateEditServiceServiceForm(ServiceEntity $service) {
+        global $app;
+
+        $fb = new FormBuilder();
+
+        $enabledCheckbox = $fb->createInput()->setType('checkbox')->setName('is_enabled');
+
+        if($service->isEnabled()) {
+            $enabledCheckbox->setSpecial('checked');
+        }
+
+        $fb ->setAction('?page=UserModule:Settings:processEditServiceForm&id=' . $service->getId())->setMethod('POST')
+            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
+            ->addElement($fb->createInput()->setType('text')->setName('system_name')->require()->setValue($service->getSystemName()))
+
+            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name'))
+            ->addElement($fb->createInput()->setType('text')->setName('display_name')->require()->setValue($service->getDisplayName()))
+
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createInput()->setType('text')->setName('description')->require()->setValue($service->getDescription()))
+
+            ->addElement($fb->createLabel()->setFor('is_enabled')->setText('Enable'))
+            ->addElement($enabledCheckbox)
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        return $fb->build();
     }
     
     private function internalCreateEditServiceForm(string $name) {
@@ -1776,6 +1902,28 @@ class Settings extends APresenter {
         $groupPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
 
         return $groupPageControl;
+    }
+
+    private function internalCreateNewServiceForm() {
+        $fb = new FormBuilder();
+
+        $fb ->setAction('?page=UserModule:Settings:processNewServiceForm')->setMethod('POST')
+            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
+            ->addElement($fb->createInput()->setType('text')->setName('system_name')->require())
+
+            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name'))
+            ->addElement($fb->createInput()->setType('text')->setName('display_name')->require())
+
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createInput()->setType('text')->setName('description')->require())
+
+            ->addElement($fb->createLabel()->setFor('is_enabled')->setText('Enable'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('is_enabled')->setSpecial('checked'))
+
+            ->addElement($fb->createSubmit('Create'))
+        ;
+
+        return $fb->build();
     }
 }
 
