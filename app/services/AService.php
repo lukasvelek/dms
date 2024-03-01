@@ -14,13 +14,11 @@ use DMS\Models\ServiceModel;
  * @version 1.0
  */
 abstract class AService implements IServiceRunnable {
-    public string $name;
-    public string $description;
-    
     protected Logger $logger;
     protected ServiceModel $serviceModel;
     protected CacheManager $cm;
     protected array $scfg;
+    public string $name;
 
     /**
      * The AService constructor is used to define common instances and values.
@@ -31,12 +29,11 @@ abstract class AService implements IServiceRunnable {
      * @param ServiceModel $serviceModel ServiceModel instance
      * @param CacheManager $cm CacheManager instance
      */
-    protected function __construct(string $name, string $description, Logger $logger, ServiceModel $serviceModel, CacheManager $cm) {
-        $this->name = $name;
-        $this->description = $description;
+    protected function __construct(string $name, Logger $logger, ServiceModel $serviceModel, CacheManager $cm) {
         $this->logger = $logger;
         $this->serviceModel = $serviceModel;
         $this->cm = $cm;
+        $this->name = $name;
 
         $this->scfg = [];
     }

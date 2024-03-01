@@ -16,9 +16,11 @@ use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Entities\Metadata;
+use DMS\Entities\ServiceEntity;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Helpers\GridDataHelper;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
@@ -190,7 +192,7 @@ class Settings extends APresenter {
         }
 
         foreach($values as $k => $v) {
-            $app->serviceModel->updateService($name, $k, $v);
+            $app->serviceModel->updateServiceConfig($name, $k, $v);
         }
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_CONFIG);
@@ -211,8 +213,31 @@ class Settings extends APresenter {
         $name = $this->get('name');
 
         $data = array(
-            '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
+            '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i> config',
             '$FORM$' => $this->internalCreateEditServiceForm($name),
+            '$LINKS$' => []
+        );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('showServices', '&larr;');
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function editServiceServiceForm() {
+        global $app;
+        
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+        
+        $app->flashMessageIfNotIsset(['id']);
+        
+        $id = $this->get('id');
+        $service = $app->serviceModel->getServiceById($id);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Edit service <i>' . $service->getDisplayName() . '</i>',
+            '$FORM$' => $this->internalCreateEditServiceServiceForm($service),
             '$LINKS$' => []
         );
 
@@ -237,12 +262,75 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Services',
             '$SETTINGS_GRID$' => $servicesGrid,
-            '$LINKS$' => ''
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showNewServiceForm'], 'New service');
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function showNewServiceForm() {
+        $template = $this->loadTemplate(__DIR__ . '/templates/settings/settings-new-entity-form.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'New service',
+            '$LINKS$' => [],
+            '$FORM$' => $this->internalCreateNewServiceForm()
+        ];
+
+        $this->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function processNewServiceForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['system_name', 'display_name', 'description']);
+
+        $data = [
+            'system_name' => $this->post('system_name'),
+            'display_name' => $this->post('display_name'),
+            'description' => $this->post('description'),
+            'is_system' => '0'
+        ];
+
+        if(isset($_POST['is_enabled'])) {
+            $data['is_enabled'] = '1';
+        } else {
+            $data['is_enabled'] = '0';
+        }
+
+        $app->serviceModel->insertNewService($data);
+        $app->logger->info('Inserted new service ' . $this->post('system_name'), __METHOD__);
+
+        $app->flashMessage('New service created', 'success');
+        $app->redirect('showServices');
+    }
+
+    protected function processEditServiceForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'system_name', 'display_name', 'description']);
+
+        $data = [
+            'system_name' => $this->post('system_name'),
+            'display_name' => $this->post('display_name'),
+            'description' => $this->post('description')
+        ];
+
+        if(isset($_POST['is_enabled'])) {
+            $data['is_enabled'] = '1';
+        } else {
+            $data['is_enabled'] = '0';
+        }
+
+        $app->serviceModel->updateService($this->get('id'), $data);
+        $app->flashMessage('Service ' . $data['system_name'] . ' updated', 'success');
+        $app->redirect('showServices');
     }
 
     protected function askToRunService() {
@@ -274,8 +362,13 @@ class Settings extends APresenter {
         $name = $this->get('name');
         $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
 
-        foreach($app->serviceManager->services as $service) {
-            if($service->name == $name) {
+        if(!array_key_exists($name, $app->serviceManager->services)) {
+            $app->flashMessage('Service \'' . $name . '\' (class \\DMS\\Services\\' . $name . ') not found!', 'error');
+            $app->redirect('showServices');
+        }
+
+        foreach($app->serviceManager->services as $serviceName => $service) {
+            if($serviceName == $name) {
                 $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
 
                 $app->logger->logFunction(function() use ($service) {
@@ -557,8 +650,7 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
             '$SETTINGS_GRID$' => $groupsGrid,
-            '$LINKS$' => [],
-            '$PAGE_CONTROL$' => $this->internalCreateGroupGridPageControl($page)
+            '$LINKS$' => []
         );
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
@@ -1334,74 +1426,57 @@ class Settings extends APresenter {
         global $app;
 
         $serviceManager = $app->serviceManager;
+        $serviceModel = $app->serviceModel;
         $user = $app->user;
 
-        $data = function() use ($serviceManager, $user) {
-            $values = [];
-            foreach($serviceManager->services as $k => $v) {
-                $serviceLastRunDate = $serviceManager->getLastRunDateForService($v->name);
-                $serviceNextRunDate = $serviceManager->getNextRunDateForService($v->name);
-
-                $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
-                $serviceNextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceNextRunDate, $user);
-
-                $values[] = new class($v->name, $k, $v->description, $serviceLastRunDate, $serviceNextRunDate) {
-                    private $systemName;
-                    private $name;
-                    private $description;
-                    private $lastRunDate;
-                    private $nextRunDate;
-
-                    function __construct($systemName, $name, $description, $lastRunDate, $nextRunDate) {
-                        $this->systemName = $systemName;
-                        $this->name = $name;
-                        $this->description = $description;
-                        $this->lastRunDate = $lastRunDate;
-                        $this->nextRunDate = $nextRunDate;
-                    }
-
-                    function getSystemName() {
-                        return $this->systemName;
-                    }
-
-                    function getName() {
-                        return $this->name;
-                    }
-
-                    function getDescription() {
-                        return $this->description;
-                    }
-
-                    function getLastRunDate() {
-                        return $this->lastRunDate;
-                    }
-
-                    function getNextRunDate() {
-                        return $this->nextRunDate;
-                    }
-                };
-            }
-            return $values;
+        $dataCallback = function() use ($serviceModel) {
+            return $serviceModel->getAllServicesOrderedByLastRunDate();
         };
 
         $canRunService = $app->actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE);
         $canEditService = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE);
+        $canDeleteService = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_SERVICE);
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['systemName' => 'System name', 'name' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
-        $gb->addDataSourceCallback($data);
-        $gb->addAction(function($service) use ($canRunService) {
+        $gb->addColumns(['systemName' => 'System name', 'isEnabled' => 'Enabled', 'displayName' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
+        $gb->addOnColumnRender('lastRunDate', function(ServiceEntity $service) use ($serviceManager, $user) {
+            $serviceLastRunDate = $serviceManager->getLastRunDateForService($service->getSystemName());
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
+        });
+        $gb->addOnColumnRender('nextRunDate', function(ServiceEntity $service) use ($serviceManager, $user) {
+            $serviceNextRunDate = $serviceManager->getNextRunDateForService($service->getSystemName());
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceNextRunDate, $user);
+        });
+        $gb->addOnColumnRender('isEnabled', function(ServiceEntity $service) {
+            return GridDataHelper::renderBooleanValueWithColors($service->isEnabled(), 'Yes', 'No');
+        });
+        $gb->addDataSourceCallback($dataCallback);
+        $gb->addAction(function(ServiceEntity $service) use ($canRunService) {
             $link = '-';
             if($canRunService) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
             return $link;
         });
-        $gb->addAction(function($service) use ($canEditService) {
+        $gb->addAction(function(ServiceEntity $service) use ($canEditService) {
             $link = '-';
             if($canEditService) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceForm', 'name' => $service->getSystemName()), 'Edit');
+                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceForm', 'name' => $service->getSystemName()), 'Edit config');
+            }
+            return $link;
+        });
+        $gb->addAction(function(ServiceEntity $service) use ($canEditService) {
+            $link = '-';
+            if($canEditService) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceServiceForm', 'id' => $service->getId()), 'Edit service');
+            }
+            return $link;
+        });
+        $gb->addAction(function(ServiceEntity $service) use ($canDeleteService) {
+            $link = '-';
+            if($canDeleteService && !$service->isSystem()) {
+                $link = LinkBuilder::createAdvLink(['page' => 'deleteService', 'name' => $service->getSystemName()], 'Delete');
             }
             return $link;
         });
@@ -1422,6 +1497,34 @@ class Settings extends APresenter {
             $this->_getChildFolderList($list, $cf);
         }
     }
+
+    private function internalCreateEditServiceServiceForm(ServiceEntity $service) {
+        $fb = new FormBuilder();
+
+        $enabledCheckbox = $fb->createInput()->setType('checkbox')->setName('is_enabled');
+
+        if($service->isEnabled()) {
+            $enabledCheckbox->setSpecial('checked');
+        }
+
+        $fb ->setAction('?page=UserModule:Settings:processEditServiceForm&id=' . $service->getId())->setMethod('POST')
+            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
+            ->addElement($fb->createInput()->setType('text')->setName('system_name')->require()->setValue($service->getSystemName())->readonlyIfBoolTrue($service->isSystem()))
+
+            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name'))
+            ->addElement($fb->createInput()->setType('text')->setName('display_name')->require()->setValue($service->getDisplayName())->readonlyIfBoolTrue($service->isSystem()))
+
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createInput()->setType('text')->setName('description')->require()->setValue($service->getDescription())->readonlyIfBoolTrue($service->isSystem()))
+
+            ->addElement($fb->createLabel()->setFor('is_enabled')->setText('Enable'))
+            ->addElement($enabledCheckbox)
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        return $fb->build();
+    }
     
     private function internalCreateEditServiceForm(string $name) {
         global $app;
@@ -1431,14 +1534,7 @@ class Settings extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name)
-            
-            ->addElement($fb->createLabel()->setText('Service name')->setFor('name'))
-            ->addElement($fb->createInput()->setType('text')->setName('name')->disable()->setValue($name))
-
-            ->addElement($fb->createLabel()->setText('Description')->setFor('description'))
-            ->addElement($fb->createInput()->setType('text')->setName('description')->disable()->setValue($service->description))
-        ;
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name);
 
         foreach($serviceCfg as $key => $value) {
             $fb ->addElement($fb->createLabel()->setText(ServiceMetadata::$texts[$key] . ' (' . $key . ')')->setFor($key));
@@ -1668,134 +1764,26 @@ class Settings extends APresenter {
         return $fb->build();
     }
 
-    private function internalCreateUserGridPageControl(int $page) {
-        global $app;
+    private function internalCreateNewServiceForm() {
+        $fb = new FormBuilder();
 
-        $userCount = $app->userModel->getUserCount();
+        $fb ->setAction('?page=UserModule:Settings:processNewServiceForm')->setMethod('POST')
+            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
+            ->addElement($fb->createInput()->setType('text')->setName('system_name')->require())
 
-        $userPageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Settings:showUsers';
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Settings:showUsers';
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Settings:showUsers';
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Settings:showUsers';
+            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name'))
+            ->addElement($fb->createInput()->setType('text')->setName('display_name')->require())
 
-        $pageCheck = $page - 1;
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createInput()->setType('text')->setName('description')->require())
 
-        $firstPageLink .= '"';
-        if($page == 1) {
-            $firstPageLink .= ' hidden';
-        }
+            ->addElement($fb->createLabel()->setFor('is_enabled')->setText('Enable'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('is_enabled')->setSpecial('checked'))
 
-        $firstPageLink .= '>&lt;&lt;</a>';
+            ->addElement($fb->createSubmit('Create'))
+        ;
 
-        if($page > 2) {
-            $previousPageLink .= '&grid_page=' . ($page - 1);
-        }
-        
-        $previousPageLink .= '"';
-
-        if($page == 1) {
-            $previousPageLink .= ' hidden';
-        }
-
-        $previousPageLink .= '>&lt;</a>';
-
-        $nextPageLink .= '&grid_page=' . ($page + 1);
-        $nextPageLink .= '"';
-
-        if($userCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' hidden';
-        }
-
-        $nextPageLink .= '>&gt;</a>';
-
-        $lastPageLink .= '&grid_page=' . (ceil($userCount / AppConfiguration::getGridSize()));
-        $lastPageLink .= '"';
-        
-        if($userCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' hidden';
-        }
-
-        $lastPageLink .= '>&gt;&gt;</a>';
-
-        if($userCount > AppConfiguration::getGridSize()) {
-            if($pageCheck * AppConfiguration::getGridSize() >= $userCount) {
-                $userPageControl = (1 + ($page * AppConfiguration::getGridSize()));
-            } else {
-                $userPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
-            }
-        } else {
-            $userPageControl = $userCount;
-        }
-
-        $userPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
-
-        return $userPageControl;
-    }
-
-    private function internalCreateGroupGridPageControl(int $page) {
-        global $app;
-
-        $groupCount = $app->groupModel->getGroupCount();
-
-        $groupPageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Settings:showGroups';
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Settings:showGroups';
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Settings:showGroups';
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Settings:showGroups';
-
-        $pageCheck = $page - 1;
-
-        $firstPageLink .= '"';
-        if($page == 1) {
-            $firstPageLink .= ' hidden';
-        }
-
-        $firstPageLink .= '>&lt;&lt;</a>';
-
-        if($page > 2) {
-            $previousPageLink .= '&grid_page=' . ($page - 1);
-        }
-        
-        $previousPageLink .= '"';
-
-        if($page == 1) {
-            $previousPageLink .= ' hidden';
-        }
-
-        $previousPageLink .= '>&lt;</a>';
-
-        $nextPageLink .= '&grid_page=' . ($page + 1);
-        $nextPageLink .= '"';
-
-        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' hidden';
-        }
-
-        $nextPageLink .= '>&gt;</a>';
-
-        $lastPageLink .= '&grid_page=' . (ceil($groupCount / AppConfiguration::getGridSize()));
-        $lastPageLink .= '"';
-        
-        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' hidden';
-        }
-
-        $lastPageLink .= '>&gt;&gt;</a>';
-
-        if($groupCount > AppConfiguration::getGridSize()) {
-            if($pageCheck * AppConfiguration::getGridSize() >= $groupCount) {
-                $groupPageControl = (1 + ($page * AppConfiguration::getGridSize()));
-            } else {
-                $groupPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
-            }
-        } else {
-            $groupPageControl = $groupCount;
-        }
-
-        $groupPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
-
-        return $groupPageControl;
+        return $fb->build();
     }
 }
 

@@ -14,7 +14,7 @@ class DocumentArchivationService extends AService {
     private DocumentAuthorizator $documentAuthorizator;
 
     public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentModel $documentModel, DocumentAuthorizator $documentAuthorizator) {
-        parent::__construct('DocumentArchivationService', 'Archives documents waiting for archivation', $logger, $serviceModel, $cm);
+        parent::__construct('DocumentArchivationService', $logger, $serviceModel, $cm);
 
         $this->documentModel = $documentModel;
         $this->documentAuthorizator = $documentAuthorizator;

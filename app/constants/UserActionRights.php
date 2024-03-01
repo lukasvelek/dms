@@ -68,6 +68,7 @@ class UserActionRights {
     public const DELETE_DOCUMENT_REPORT_QUEUE_ENTRY = 'delete_document_report_queue_entry';
     public const VIEW_FILE_STORAGE_LOCATIONS = 'view_file_storage_locations';
     public const EDIT_FILE_STORAGE_LOCATIONS = 'edit_file_storage_locations';
+    public const DELETE_SERVICE = 'delete_service';
 
     public static $all = array(
         self::CREATE_USER,
@@ -129,7 +130,8 @@ class UserActionRights {
         self::EDIT_METADATA,
         self::DELETE_DOCUMENT_REPORT_QUEUE_ENTRY,
         self::VIEW_FILE_STORAGE_LOCATIONS,
-        self::EDIT_FILE_STORAGE_LOCATIONS
+        self::EDIT_FILE_STORAGE_LOCATIONS,
+        self::DELETE_SERVICE
     );
 }
 

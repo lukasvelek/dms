@@ -4,6 +4,8 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.10
+
 ### v1.9
 - added calendar support
 - added ajax grid page controls
@@ -20,6 +22,7 @@ It also enables users to manage metadata and their values.
 - updated document filter
 - updated FileManagerService service
 - updated grid loading across the application
+- updated design
 - fixed bugs and potential bugs
 - fixed a bug where the document report limit would not show integer values but rather float values
 - fixed ajax slowdown (AJAX JS sleep constant update: 250ms -> 0ms)

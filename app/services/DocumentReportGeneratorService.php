@@ -18,7 +18,7 @@ class DocumentReportGeneratorService extends AService {
     private NotificationComponent $notificationComponent;
 
     public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentModel $documentModel, DocumentReportGeneratorComponent $drgc, NotificationComponent $notificationComponent) {
-        parent::__construct('DocumentReportGeneratorService', 'Generates document reports', $logger, $serviceModel, $cm);
+        parent::__construct('DocumentReportGeneratorService', $logger, $serviceModel, $cm);
 
         $this->documentModel = $documentModel;
         $this->drgc = $drgc;

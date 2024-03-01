@@ -18,7 +18,7 @@ class ShreddingSuggestionService extends AService {
     private ProcessComponent $processComponent;
 
     public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentAuthorizator $documentAuthorizator, DocumentModel $documentModel, ProcessComponent $processComponent) {
-        parent::__construct('ShreddingSuggestionService', 'Suggests documents for shredding', $logger, $serviceModel, $cm);
+        parent::__construct('ShreddingSuggestionService', $logger, $serviceModel, $cm);
 
         $this->documentAuthorizator = $documentAuthorizator;
         $this->documentModel = $documentModel;

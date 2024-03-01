@@ -18,7 +18,7 @@ abstract class AModel {
     public const DELETE = 'can_delete';
 
     protected Database $db;
-    private Logger $logger;
+    protected Logger $logger;
 
     /**
      * Constructor for the common model abstract class
