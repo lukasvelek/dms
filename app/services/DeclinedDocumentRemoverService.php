@@ -14,7 +14,7 @@ class DeclinedDocumentRemoverService extends AService {
     private DocumentAuthorizator $documentAuthorizator;
 
     public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentModel $documentModel, DocumentAuthorizator $documentAuthorizator) {
-        parent::__construct('DeclinedDocumentRemoverService', 'Deletes declined documents', $logger, $serviceModel, $cm);
+        parent::__construct('DeclinedDocumentRemoverService', $logger, $serviceModel, $cm);
 
         $this->documentModel = $documentModel;
         $this->documentAuthorizator = $documentAuthorizator;

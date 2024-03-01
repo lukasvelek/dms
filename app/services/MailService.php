@@ -13,7 +13,7 @@ class MailService extends AService {
     private MailManager $mailManager;
 
     public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, MailModel $mailModel, MailManager $mailManager) {
-        parent::__construct('MailService', 'Service responsible for sending emails', $logger, $serviceModel, $cm);
+        parent::__construct('MailService', $logger, $serviceModel, $cm);
 
         $this->mailModel = $mailModel;
         $this->mailManager = $mailManager;

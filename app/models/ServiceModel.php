@@ -4,22 +4,38 @@ namespace DMS\Models;
 
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\ServiceEntity;
 
 class ServiceModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
     }
 
-    public function getIdServiceConfigForNameAndKey(string $name, string $key) {
+    public function getAllServicesOrderedByLastRunDate() {
+        $sql = "SELECT services.*, service_log.* FROM services JOIN service_log ON services.system_name = service_log.name ORDER BY service_log.date_created DESC";
+
+        $rows = $this->db->query($sql);
+
+        $services = [];
+        foreach($rows as $row) {
+            $services[] = $this->createServiceObjectFromDbRow($row);
+        }
+        return $services;
+    }
+
+    public function getAllServices() {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id'])
-            ->from('service_config')
-            ->where('name = ?', [$name])
-            ->andWhere('key = ?', [$key])
+        $qb ->select(['*'])
+            ->from('services')
             ->execute();
 
-        return $qb->fetch('id');
+        $services = [];
+        while($row = $qb->fetchAssoc()) {
+            $services[] = $this->createServiceObjectFromDbRow($row);
+        }
+
+        return $services;
     }
 
     public function getServiceLogLastEntryForServiceName(string $serviceName) {
@@ -65,6 +81,30 @@ class ServiceModel extends AModel {
         }
 
         return $cfg;
+    }
+
+    private function createServiceObjectFromDbRow($row) {
+        $id = $row['id'];
+        $dateCreated = $row['date_created'];
+        $systemName = $row['system_name'];
+        $displayName = $row['display_name'];
+        $description = $row['description'];
+        $isEnabled = $row['is_enabled'];
+        $isSystem = $row['is_system'];
+
+        if($isEnabled == '1') {
+            $isEnabled = true;
+        } else {
+            $isEnabled = false;
+        }
+
+        if($isSystem == '1') {
+            $isSystem = true;
+        } else {
+            $isSystem = false;
+        }
+
+        return new ServiceEntity($id, $dateCreated, $systemName, $displayName, $description, $isEnabled, $isSystem);
     }
 }
 

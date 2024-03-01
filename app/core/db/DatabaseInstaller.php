@@ -71,6 +71,8 @@ class DatabaseInstaller {
         $this->insertDefaultRibbonUserRights();
 
         $this->insertDefaultFileStorageLocations();
+
+        $this->insertSystemServices();
     }
 
     /**
@@ -415,6 +417,15 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_calling_user' => 'INT(32) NULL',
                 'time_taken' => 'VARCHAR(256) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'services' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'system_name' => 'VARCHAR(256) NOT NULL',
+                'display_name' => 'VARCHAR(256) NOT NULL',
+                'description' => 'VARCHAR(256) NOT NULL',
+                'is_enabled' => 'INT(2) NOT NULL DEFAULT 1',
+                'is_system' => 'INT(2) NOT NULL DEFAULT 0',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
@@ -1755,6 +1766,71 @@ class DatabaseInstaller {
             $this->db->query($sql);
             $order++;
         }
+
+        return true;
+    }
+
+    /**
+     * Inserts system serviecs
+     * 
+     * @return true
+     */
+    public function insertSystemServices() {
+        $services = [
+            'LogRotateService' => [
+                'display_name' => 'Log rotate',
+                'description' => 'Deletes old log files'
+            ],
+            'CacheRotateService' => [
+                'display_name' => 'Cache rotate',
+                'description' => 'Deletes old cache files'
+            ],
+            'FileManagerService' => [
+                'display_name' => 'File manager',
+                'description' => 'Deletes old unused files'
+            ],
+            'ShreddingSuggestionService' => [
+                'display_name' => 'Shredding suggestion',
+                'description' => 'Suggests documents for shredding'
+            ],
+            'PasswordPolicyService' => [
+                'display_name' => 'Password policy',
+                'description' => 'Checks if passwords have been changed in a period of time'
+            ],
+            'MailService' => [
+                'display_name' => 'Mail service',
+                'description' => 'Service responsible for sending emails'
+            ],
+            'NotificationManagerService' => [
+                'display_name' => 'Notification manager',
+                'description' => 'Service responsible for deleting old notifications'
+            ],
+            'DocumentArchivationService' => [
+                'display_name' => 'Document archivator',
+                'description' => 'Archives documents waiting for archivation'
+            ],
+            'DeclinedDocumentRemoverService' => [
+                'display_name' => 'Declined document remover',
+                'description' => 'Deletes declined documents'
+            ],
+            'DocumentReportGeneratorService' => [
+                'display_name' => 'Document report generator',
+                'description' => 'Generates document reports'
+            ]
+        ];
+
+        $this->db->beginTransaction();
+
+        foreach($services as $serviceName => $serviceData) {
+            $sql = "INSERT INTO `services` (`system_name`, `display_name`, `description`, `is_enabled`, `is_system`) VALUES (";
+            $sql .= "'$serviceName', '" . $serviceData['display_name'] . "', '" . $serviceData['description'] . "', '1', '1'";
+            $sql .= ")";
+
+            $this->logger->sql($sql, __METHOD__);
+            $this->db->query($sql);
+        }
+
+        $this->db->commit();
 
         return true;
     }

@@ -12,7 +12,7 @@ class LogRotateService extends AService {
     private array $cfg;
 
     public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm) {
-        parent::__construct('LogRotateService', 'Deletes old log files', $logger, $serviceModel, $cm);
+        parent::__construct('LogRotateService', $logger, $serviceModel, $cm);
         
         $this->loadCfg();
     }

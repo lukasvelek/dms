@@ -16,9 +16,11 @@ use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Entities\Metadata;
+use DMS\Entities\ServiceEntity;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Helpers\GridDataHelper;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
@@ -237,8 +239,10 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Services',
             '$SETTINGS_GRID$' => $servicesGrid,
-            '$LINKS$' => ''
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showNewServiceForm'], 'New service');
 
         $this->templateManager->fill($data, $template);
 
@@ -1334,74 +1338,50 @@ class Settings extends APresenter {
         global $app;
 
         $serviceManager = $app->serviceManager;
+        $serviceModel = $app->serviceModel;
         $user = $app->user;
 
-        $data = function() use ($serviceManager, $user) {
-            $values = [];
-            foreach($serviceManager->services as $k => $v) {
-                $serviceLastRunDate = $serviceManager->getLastRunDateForService($v->name);
-                $serviceNextRunDate = $serviceManager->getNextRunDateForService($v->name);
-
-                $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
-                $serviceNextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceNextRunDate, $user);
-
-                $values[] = new class($v->name, $k, $v->description, $serviceLastRunDate, $serviceNextRunDate) {
-                    private $systemName;
-                    private $name;
-                    private $description;
-                    private $lastRunDate;
-                    private $nextRunDate;
-
-                    function __construct($systemName, $name, $description, $lastRunDate, $nextRunDate) {
-                        $this->systemName = $systemName;
-                        $this->name = $name;
-                        $this->description = $description;
-                        $this->lastRunDate = $lastRunDate;
-                        $this->nextRunDate = $nextRunDate;
-                    }
-
-                    function getSystemName() {
-                        return $this->systemName;
-                    }
-
-                    function getName() {
-                        return $this->name;
-                    }
-
-                    function getDescription() {
-                        return $this->description;
-                    }
-
-                    function getLastRunDate() {
-                        return $this->lastRunDate;
-                    }
-
-                    function getNextRunDate() {
-                        return $this->nextRunDate;
-                    }
-                };
-            }
-            return $values;
+        $dataCallback = function() use ($serviceModel) {
+            return $serviceModel->getAllServicesOrderedByLastRunDate();
         };
 
         $canRunService = $app->actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE);
         $canEditService = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE);
+        $canDeleteService = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_SERVICE);
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['systemName' => 'System name', 'name' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
-        $gb->addDataSourceCallback($data);
-        $gb->addAction(function($service) use ($canRunService) {
+        $gb->addColumns(['systemName' => 'System name', 'isEnabled' => 'Enabled', 'displayName' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
+        $gb->addOnColumnRender('lastRunDate', function(ServiceEntity $service) use ($serviceManager, $user) {
+            $serviceLastRunDate = $serviceManager->getLastRunDateForService($service->getSystemName());
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
+        });
+        $gb->addOnColumnRender('nextRunDate', function(ServiceEntity $service) use ($serviceManager, $user) {
+            $serviceNextRunDate = $serviceManager->getNextRunDateForService($service->getSystemName());
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceNextRunDate, $user);
+        });
+        $gb->addOnColumnRender('isEnabled', function(ServiceEntity $service) {
+            return GridDataHelper::renderBooleanValueWithColors($service->isEnabled(), 'Yes', 'No');
+        });
+        $gb->addDataSourceCallback($dataCallback);
+        $gb->addAction(function(ServiceEntity $service) use ($canRunService) {
             $link = '-';
             if($canRunService) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
             return $link;
         });
-        $gb->addAction(function($service) use ($canEditService) {
+        $gb->addAction(function(ServiceEntity $service) use ($canEditService) {
             $link = '-';
             if($canEditService) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'editServiceForm', 'name' => $service->getSystemName()), 'Edit');
+            }
+            return $link;
+        });
+        $gb->addAction(function(ServiceEntity $service) use ($canDeleteService) {
+            $link = '-';
+            if($canDeleteService && !$service->isSystem()) {
+                $link = LinkBuilder::createAdvLink(['page' => 'deleteService', 'name' => $service->getSystemName()], 'Delete');
             }
             return $link;
         });

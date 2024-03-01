@@ -17,7 +17,7 @@ class PasswordPolicyService extends AService {
     private GroupUserModel $groupUserModel;
 
     public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, UserModel $userModel, GroupUserModel $groupUserModel) {
-        parent::__construct('PasswordPolicyService', 'Checks if passwords have been changed in a period of time.', $logger, $serviceModel, $cm);
+        parent::__construct('PasswordPolicyService', $logger, $serviceModel, $cm);
 
         $this->userModel = $userModel;
         $this->groupUserModel = $groupUserModel;

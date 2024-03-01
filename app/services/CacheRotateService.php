@@ -10,7 +10,7 @@ use DMS\Models\ServiceModel;
 
 class CacheRotateService extends AService {
     public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm) {
-        parent::__construct('CacheRotateService', 'Deletes old cache files', $logger, $serviceModel, $cm);
+        parent::__construct('CacheRotateService', $logger, $serviceModel, $cm);
 
         $this->loadCfg();
     }
