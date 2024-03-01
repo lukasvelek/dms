@@ -15,6 +15,17 @@ class ServiceModel extends AModel {
         return $this->updateExisting('services', $id, $data);
     }
 
+    public function getServiceByName(string $name) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('services')
+            ->where('system_name = ?', [$name])
+            ->execute();
+
+        return $this->createServiceObjectFromDbRow($qb->fetch());
+    }
+
     public function getServiceById(int $id) {
         $qb = $this->qb(__METHOD__);
 
@@ -31,7 +42,7 @@ class ServiceModel extends AModel {
     }
 
     public function getAllServicesOrderedByLastRunDate() {
-        $sql = "SELECT services.*, service_log.* FROM services JOIN service_log ON services.system_name = service_log.name ORDER BY service_log.date_created DESC";
+        $sql = "SELECT services.*, service_log.date_created, service_log.name FROM services JOIN service_log ON services.system_name = service_log.name ORDER BY service_log.date_created DESC";
         $this->logger->sql($sql, __METHOD__);
 
         $rows = $this->db->query($sql);
@@ -39,8 +50,10 @@ class ServiceModel extends AModel {
         $services = [];
         $serviceNames = [];
         foreach($rows as $row) {
-            $services[] = $this->createServiceObjectFromDbRow($row);
-            $serviceNames[] = $row['system_name'];
+            if(!in_array($row['system_name'], $serviceNames)) {
+                $serviceNames[] = $row['system_name'];
+                $services[] = $this->createServiceObjectFromDbRow($row);
+            }
         }
 
         $qb = $this->qb(__METHOD__);

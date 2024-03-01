@@ -650,8 +650,7 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
             '$SETTINGS_GRID$' => $groupsGrid,
-            '$LINKS$' => [],
-            '$PAGE_CONTROL$' => $this->internalCreateGroupGridPageControl($page)
+            '$LINKS$' => []
         );
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
@@ -1500,8 +1499,6 @@ class Settings extends APresenter {
     }
 
     private function internalCreateEditServiceServiceForm(ServiceEntity $service) {
-        global $app;
-
         $fb = new FormBuilder();
 
         $enabledCheckbox = $fb->createInput()->setType('checkbox')->setName('is_enabled');
@@ -1512,13 +1509,13 @@ class Settings extends APresenter {
 
         $fb ->setAction('?page=UserModule:Settings:processEditServiceForm&id=' . $service->getId())->setMethod('POST')
             ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
-            ->addElement($fb->createInput()->setType('text')->setName('system_name')->require()->setValue($service->getSystemName()))
+            ->addElement($fb->createInput()->setType('text')->setName('system_name')->require()->setValue($service->getSystemName())->readonlyIfBoolTrue($service->isSystem()))
 
             ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name'))
-            ->addElement($fb->createInput()->setType('text')->setName('display_name')->require()->setValue($service->getDisplayName()))
+            ->addElement($fb->createInput()->setType('text')->setName('display_name')->require()->setValue($service->getDisplayName())->readonlyIfBoolTrue($service->isSystem()))
 
             ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
-            ->addElement($fb->createInput()->setType('text')->setName('description')->require()->setValue($service->getDescription()))
+            ->addElement($fb->createInput()->setType('text')->setName('description')->require()->setValue($service->getDescription())->readonlyIfBoolTrue($service->isSystem()))
 
             ->addElement($fb->createLabel()->setFor('is_enabled')->setText('Enable'))
             ->addElement($enabledCheckbox)
@@ -1537,14 +1534,7 @@ class Settings extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name)
-            
-            ->addElement($fb->createLabel()->setText('Service name')->setFor('name'))
-            ->addElement($fb->createInput()->setType('text')->setName('name')->disable()->setValue($name))
-
-            ->addElement($fb->createLabel()->setText('Description')->setFor('description'))
-            ->addElement($fb->createInput()->setType('text')->setName('description')->disable()->setValue($service->description))
-        ;
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name);
 
         foreach($serviceCfg as $key => $value) {
             $fb ->addElement($fb->createLabel()->setText(ServiceMetadata::$texts[$key] . ' (' . $key . ')')->setFor($key));
@@ -1772,136 +1762,6 @@ class Settings extends APresenter {
         ;
 
         return $fb->build();
-    }
-
-    private function internalCreateUserGridPageControl(int $page) {
-        global $app;
-
-        $userCount = $app->userModel->getUserCount();
-
-        $userPageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Settings:showUsers';
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Settings:showUsers';
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Settings:showUsers';
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Settings:showUsers';
-
-        $pageCheck = $page - 1;
-
-        $firstPageLink .= '"';
-        if($page == 1) {
-            $firstPageLink .= ' hidden';
-        }
-
-        $firstPageLink .= '>&lt;&lt;</a>';
-
-        if($page > 2) {
-            $previousPageLink .= '&grid_page=' . ($page - 1);
-        }
-        
-        $previousPageLink .= '"';
-
-        if($page == 1) {
-            $previousPageLink .= ' hidden';
-        }
-
-        $previousPageLink .= '>&lt;</a>';
-
-        $nextPageLink .= '&grid_page=' . ($page + 1);
-        $nextPageLink .= '"';
-
-        if($userCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' hidden';
-        }
-
-        $nextPageLink .= '>&gt;</a>';
-
-        $lastPageLink .= '&grid_page=' . (ceil($userCount / AppConfiguration::getGridSize()));
-        $lastPageLink .= '"';
-        
-        if($userCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' hidden';
-        }
-
-        $lastPageLink .= '>&gt;&gt;</a>';
-
-        if($userCount > AppConfiguration::getGridSize()) {
-            if($pageCheck * AppConfiguration::getGridSize() >= $userCount) {
-                $userPageControl = (1 + ($page * AppConfiguration::getGridSize()));
-            } else {
-                $userPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
-            }
-        } else {
-            $userPageControl = $userCount;
-        }
-
-        $userPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
-
-        return $userPageControl;
-    }
-
-    private function internalCreateGroupGridPageControl(int $page) {
-        global $app;
-
-        $groupCount = $app->groupModel->getGroupCount();
-
-        $groupPageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Settings:showGroups';
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Settings:showGroups';
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Settings:showGroups';
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Settings:showGroups';
-
-        $pageCheck = $page - 1;
-
-        $firstPageLink .= '"';
-        if($page == 1) {
-            $firstPageLink .= ' hidden';
-        }
-
-        $firstPageLink .= '>&lt;&lt;</a>';
-
-        if($page > 2) {
-            $previousPageLink .= '&grid_page=' . ($page - 1);
-        }
-        
-        $previousPageLink .= '"';
-
-        if($page == 1) {
-            $previousPageLink .= ' hidden';
-        }
-
-        $previousPageLink .= '>&lt;</a>';
-
-        $nextPageLink .= '&grid_page=' . ($page + 1);
-        $nextPageLink .= '"';
-
-        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' hidden';
-        }
-
-        $nextPageLink .= '>&gt;</a>';
-
-        $lastPageLink .= '&grid_page=' . (ceil($groupCount / AppConfiguration::getGridSize()));
-        $lastPageLink .= '"';
-        
-        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' hidden';
-        }
-
-        $lastPageLink .= '>&gt;&gt;</a>';
-
-        if($groupCount > AppConfiguration::getGridSize()) {
-            if($pageCheck * AppConfiguration::getGridSize() >= $groupCount) {
-                $groupPageControl = (1 + ($page * AppConfiguration::getGridSize()));
-            } else {
-                $groupPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
-            }
-        } else {
-            $groupPageControl = $groupCount;
-        }
-
-        $groupPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
-
-        return $groupPageControl;
     }
 
     private function internalCreateNewServiceForm() {
