@@ -47,7 +47,7 @@ class Users extends APresenter {
         $app->userModel->updateUser($id, $data);
 
         $app->flashMessage('Successfully updated settings for user #' . $id, 'success');
-        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
+        $app->redirect('showProfile', array('id' => $id));
     }
 
     protected function showSettingsForm() {
@@ -57,9 +57,8 @@ class Users extends APresenter {
 
         $id = null;
 
-        if(!$app->isset('id')) {
+        if(!$app->isset('id') || ($app->isset('id') && $this->get('id') == 'current_user')) {
             $id = $app->user->getId();
-            $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
         } else {
             $id = $this->get('id');
         }
@@ -137,14 +136,14 @@ class Users extends APresenter {
                 $app->userModel->updateUser($id, $data);
                 $app->userModel->updateUserPassword($id, $password);
 
-                $app->redirect('UserModule:HomePage:showHomepage');
+                $app->redirect('HomePage:showHomepage');
             } else {
                 $app->flashMessage('New passwords do not match or they match the current password used', FlashMessageTypes::ERROR);
-                $app->redirect('UserModule:Users:showChangePasswordForm', array('id' => $id));
+                $app->redirect('showChangePasswordForm', array('id' => $id));
             }
         } else {
             $app->flashMessage('Entered current password does not match the one this account has!', FlashMessageTypes::ERROR);
-            $app->redirect('UserModule:Users:showChangePasswordForm', array('id' => $id));
+            $app->redirect('showChangePasswordForm', array('id' => $id));
         }
     }
 
@@ -153,9 +152,8 @@ class Users extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-profile-grid.html');
 
-        if(!$app->isset('id')) {
+        if(!$app->isset('id') || ($app->isset('id') && $this->get('id') == 'current_user')) {
             $id = $app->user->getId();
-            $app->flashMessage('User ID not defined. Showing result for current user', 'warn');
         } else {
             $id = $this->get('id');
         }
@@ -171,7 +169,7 @@ class Users extends APresenter {
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER)) {
             $editLink = LinkBuilder::createAdvLink(array(
-                'page' => 'UserModule:Users:showEditForm',
+                'page' => 'showEditForm',
                 'id' => $id
             ), 'Edit user');
         }
@@ -187,12 +185,12 @@ class Users extends APresenter {
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::REQUEST_PASSWORD_CHANGE_USER)) {
             $requestPasswordChangeLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
-                'page' => 'UserModule:Users:requestPasswordChange',
+                'page' => 'requestPasswordChange',
                 'id' => $id
             ), 'Request password change');
 
             $forcePasswordChangeLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
-                'page' => 'UserModule:Users:forcePasswordChange',
+                'page' => 'forcePasswordChange',
                 'id' => $id
             ), 'Force password change');
         }
@@ -200,7 +198,7 @@ class Users extends APresenter {
         if($id == $app->user->getId()) {
             // current user
             $changePasswordLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
-                'page' => 'UserModule:Users:showChangePasswordForm',
+                'page' => 'showChangePasswordForm',
                 'id' => $id
             ), 'Change password');
 
@@ -210,8 +208,8 @@ class Users extends APresenter {
             $data['$LINKS$'][] = $forcePasswordChangeLink;
         }
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showSettingsForm', 'id' => $id), 'Settings');
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentReports:showAll'), 'My document reports');
+        /*$data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showSettingsForm', 'id' => $id), 'Settings');
+        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'DocumentReports:showAll'), 'My document reports');*/
 
         $this->templateManager->fill($data, $template);
 
@@ -232,7 +230,7 @@ class Users extends APresenter {
         $app->userModel->updateUser($id, $data);
 
         $app->flashMessage('Request password change for user #' . $id . ' successful.', 'success');
-        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
+        $app->redirect('showProfile', array('id' => $id));
     }
 
     protected function requestPasswordChange() {
@@ -248,7 +246,7 @@ class Users extends APresenter {
         $app->userModel->updateUser($id, $data);
 
         $app->flashMessage('Request password change for user #' . $id . ' successful.', 'success');
-        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
+        $app->redirect('showProfile', array('id' => $id));
     }
 
     protected function showEditForm() {
@@ -311,14 +309,14 @@ class Users extends APresenter {
         $app->userModel->updateUser($id, $data);
 
         $app->flashMessage('Successfully edited user #' . $id, 'success');
-        $app->redirect('UserModule:Users:showProfile', array('id' => $id));
+        $app->redirect('showProfile', array('id' => $id));
     }
 
     protected function showUserRights() {
         global $app;
 
         if(!$app->actionAuthorizator->checkActionRight(UserActionRights::MANAGE_USER_RIGHTS)) {
-            $app->redirect('UserModule:Settings:showUsers');
+            $app->redirect('Settings:showUsers');
         }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/users/user-rights-grid.html');
@@ -350,7 +348,7 @@ class Users extends APresenter {
             '$PAGE_TITLE$' => '<i>' . $user->getFullname() . '</i> rights',
             '$USER_RIGHTS_GRID$' => $userRights,
             '$LINKS$' => ArrayStringHelper::createUnindexedStringFromUnindexedArray($links),
-            '$BACK_LINK$' => LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showUsers'), '<-')
+            '$BACK_LINK$' => LinkBuilder::createAdvLink(array('page' => 'Settings:showUsers'), '&larr;')
         );
 
         $this->templateManager->fill($data, $template);
@@ -415,7 +413,7 @@ class Users extends APresenter {
 
         $app->getConn()->commit();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => $filter));
+        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => $filter));
     }
 
     protected function denyAllRights() {
@@ -475,7 +473,7 @@ class Users extends APresenter {
 
         $app->getConn()->commit();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => $filter));
+        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => $filter));
     }
 
     protected function allowActionRight() {
@@ -497,7 +495,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'actions'), $name);
+        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'actions'), $name);
     }
 
     protected function denyActionRight() {
@@ -519,7 +517,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'actions'), $name);
+        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'actions'), $name);
     }
 
     protected function allowPanelRight() {
@@ -541,7 +539,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
+        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
     }
 
     protected function denyPanelRight() {
@@ -563,7 +561,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
+        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -585,7 +583,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'bulk_actions'), $name);
+        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'bulk_actions'), $name);
     }
 
     protected function denyBulkActionRight() {
@@ -607,7 +605,7 @@ class Users extends APresenter {
         $cm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
         $cm->invalidateCache();
 
-        $app->redirect('UserModule:Users:showUserRights', array('id' => $idUser, 'filter' => 'bulk_actions'), $name);
+        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'bulk_actions'), $name);
     }
 
     private function internalCreateUserRightsGrid(int $idUser, string $filter) {
@@ -695,18 +693,18 @@ class Users extends APresenter {
 
             switch($right->getType()) {
                 case 'action':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
                     break;
 
                 case 'panel':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
                     break;
     
                 case 'bulk':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:allowBulkActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:denyBulkActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
+                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowBulkActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
+                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyBulkActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
                     break;
             }
 

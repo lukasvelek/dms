@@ -15,6 +15,37 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteDocumentReportQueueEntryByFilename(string $filename, bool $like = false) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->delete()
+            ->from('document_reports');
+
+        if($like === TRUE) {
+            $qb->where('file_src LIKE \'?\'', [$filename]);
+        } else {
+            $qb->where('file_src = ?', [$filename]);
+        }
+
+        return $qb->fetch();
+    }
+
+    public function getDocumentsForDirectory(string $path) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('documents')
+            ->where('file LIKE "?%"', [$path])
+            ->execute();
+
+        $documents = array();
+        while($row = $qb->fetchAssoc()) {
+            $documents[] = $this->createDocumentObjectFromDbRow($row);
+        }
+        
+        return $documents;
+    }
+
     public function insertDocumentReportQueueEntry(array $data) {
         return $this->insertNew($data, 'document_reports');
     }
@@ -73,6 +104,14 @@ class DocumentModel extends AModel {
             ->execute();
 
         return $qb->fetch();
+    }
+
+    public function getDocumentCountForCustomSQL(string $sql) {
+        $qb = $this->qb(__METHOD__);
+        $qb->setSQL($sql);
+        $qb->execute();
+
+        return $qb->fetchAll()->num_rows;
     }
 
     public function getDocumentCountForStatus(?int $idFolder, ?string $filter) {
@@ -191,72 +230,21 @@ class DocumentModel extends AModel {
         return $documents;
     }
 
-    public function getFirstIdDocumentInIdArchiveDocumentOnAGridPage(int $idArchiveDocument, int $gridPage) {
-        if($gridPage == 0) $gridPage = 1;
-        return $this->getFirstRowWithCountWithCond($gridPage, 'documents', ['id'], 'id', 'WHERE `id_archive_document` = ' . $idArchiveDocument);
-    }
+    public function getDocumentsInIdArchiveDocumentWithOffset(int $idArchiveDocument, int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
 
-    public function getDocumentsInIdArchiveDocumentFromId(?int $idFrom, int $idArchiveDocument, int $limit) {
-        if(is_null($idFrom)) return [];
-
-        $qb = $this->composeQueryStandardDocuments();
-
-        if($idFrom == 1) {
-            $qb->andWhere('id >= ?', [$idFrom]);
-        } else {
-            $qb->andWhere('id > ?', [$idFrom]);
-        }
-        $qb ->andWhere('id_archive_document = ?', [$idArchiveDocument])
+        $qb ->select(['*'])
+            ->from('documents')
+            ->where('id_archive_document = ?', [$idArchiveDocument])
             ->limit($limit)
-            ->execute();
-    
-        $documents = array();
-        while($row = $qb->fetchAssoc()) {
-            $documents[] = $this->createDocumentObjectFromDbRow($row);
-        }
-    
-        return $documents;
-    }
-
-    public function getFirstIdDocumentOnAGridPage(int $gridPage) {
-        if($gridPage == 0) $gridPage = 1;
-        return $this->getFirstRowWithCount($gridPage, 'documents', ['id']);
-    }
-
-    public function getStandardDocumentsFromId(?int $idFrom, ?int $idFolder, ?string $filter, int $limit) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->composeQueryStandardDocuments();
-
-        if($idFrom == 1) {
-            $qb->andWhere('id >= ?', [$idFrom]);
-        } else {
-            $qb->andWhere('id > ?', [$idFrom]);
-        }
-
-        if($idFolder != null) {
-            $qb ->andWhere('id_folder = ?', [$idFolder]);
-        } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
-                $qb ->andWhere('id_folder IS NULL');
-            }
-        }
-
-        if($filter != null) {
-            $this->addFilterCondition($filter, $qb);
-        }
-
-        $qb ->orderBy('date_created', 'DESC')
-            ->limit($limit)
+            ->offset($offset)
             ->execute();
 
         $documents = array();
         while($row = $qb->fetchAssoc()) {
             $documents[] = $this->createDocumentObjectFromDbRow($row);
         }
-
+        
         return $documents;
     }
 
@@ -468,14 +456,10 @@ class DocumentModel extends AModel {
         return $documents;
     }
 
-    public function getDocumentsForName(string $name, ?int $idFolder, ?string $filter) {
+    public function getDocumentsForNameCount(string $name, ?int $idFolder, ?string $filter) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('name LIKE \'%?%\'', [$name]);
-
-        if($filter != null) {
-            $this->addFilterCondition($filter, $qb);
-        }
+        $qb ->andWhere('name LIKE \'%?%\'', [$name], false);
 
         if($idFolder != null) {
             $qb ->andWhere('id_folder = ?', [$idFolder]);
@@ -485,7 +469,39 @@ class DocumentModel extends AModel {
             }
         }
 
-        $qb ->limit(25)
+        if($filter != null) {
+            $this->addFilterCondition($filter, $qb);
+        }
+        
+        $qb ->orderBy('date_created', 'DESC')
+            ->execute();
+
+        return $qb->fetchAll()->num_rows;
+    }
+
+    public function getDocumentsForName(string $name, ?int $idFolder, ?string $filter, int $limit, int $offset) {
+        $qb = $this->composeQueryStandardDocuments();
+
+        $qb ->andWhere('name LIKE \'%?%\'', [$name], false);
+
+        if($idFolder != null) {
+            $qb ->andWhere('id_folder = ?', [$idFolder]);
+        } else {
+            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+                $qb ->andWhere('id_folder IS NULL');
+            }
+        }
+        
+        if($limit >= 0) {
+            $qb ->limit($limit)
+                ->offset($offset);
+        }
+
+        if($filter != null) {
+            $this->addFilterCondition($filter, $qb);
+        }
+        
+        $qb ->orderBy('date_created', 'DESC')
             ->execute();
 
         $documents = [];
@@ -528,7 +544,6 @@ class DocumentModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('documents')
-            //->setNull(array('id_officer'))
             ->set([
                 'date_updated' => date(Database::DB_DATE_FORMAT),
                 'id_officer' => 'NULL'

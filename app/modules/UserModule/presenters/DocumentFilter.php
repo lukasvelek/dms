@@ -3,7 +3,11 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\DocumentRank;
+use DMS\Constants\DocumentShreddingStatus;
+use DMS\Constants\DocumentStatus;
 use DMS\Constants\FlashMessageTypes;
+use DMS\Constants\MetadataInputType;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Entities\DocumentFilter as EntitiesDocumentFilter;
@@ -11,7 +15,6 @@ use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class DocumentFilter extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -45,7 +48,7 @@ class DocumentFilter extends APresenter {
         unset($rcm, $rucm, $rgcm);
 
         $app->flashMessage('Successfully unpinned selected filter', 'success');
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function pinFilter() {
@@ -83,20 +86,20 @@ class DocumentFilter extends APresenter {
         unset($rcm, $rucm, $rgcm);
 
         $app->flashMessage('Successfully pinned selected filter', 'success');
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function deleteFilter() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'showFilters'));
 
         $idFilter = $this->get('id_filter');
 
         $app->filterModel->deleteDocumentFilter($idFilter);
         
         $app->flashMessage('Document filter #' . $idFilter . ' deleted', 'success');
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function showFilterResults() {
@@ -104,7 +107,7 @@ class DocumentFilter extends APresenter {
 
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-grid.html');
 
-        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'showFilters'));
 
         $idFilter = $this->get('id_filter');
         $filter = $app->filterModel->getDocumentFilterById($idFilter);
@@ -112,7 +115,7 @@ class DocumentFilter extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Document filter #' . $idFilter . ' results',
             '$LINKS$' => array(
-                LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilters'), '<-')
+                LinkBuilder::createAdvLink(array('page' => 'showFilters'), '&larr;')
             ),
             '$FILTER_GRID$' => $this->internalCreateFilterResultsGrid($filter),
             '$BULK_ACTION_CONTROLLER$' => ''
@@ -128,7 +131,7 @@ class DocumentFilter extends APresenter {
 
         $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-form.html');
 
-        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'UserModule:DocumentFilter:showFilters'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, array('page' => 'showFilters'));
 
         $idFilter = $this->get('id_filter');
         $filter = $app->filterModel->getDocumentFilterById($idFilter);
@@ -136,7 +139,7 @@ class DocumentFilter extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Filter <i>' . $filter->getName() . '</i>',
             '$LINKS$' => array(
-                LinkBuilder::createLink('UserModule:DocumentFilter:showFilters', '<-')
+                LinkBuilder::createLink('showFilters', '&larr;')
             ),
             '$FILTER_FORM$' => $this->internalCreateEditFilterForm($filter)
         );
@@ -159,7 +162,7 @@ class DocumentFilter extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_FILTER)) {
-            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showNewFilterForm'), 'New filter');
+            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'showNewFilterForm'), 'New filter');
         }
 
         $this->templateManager->fill($data, $template);
@@ -170,7 +173,7 @@ class DocumentFilter extends APresenter {
     protected function processEditFilterForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('name', 'id_filter'), true, array('page' => 'UserModule:DocumentFilter:showNewFilterForm'));
+        $app->flashMessageIfNotIsset(array('name', 'id_filter'), true, array('page' => 'showNewFilterForm'));
         $idFilter = $this->get('id_filter');
 
         $data = [];
@@ -191,13 +194,13 @@ class DocumentFilter extends APresenter {
         $app->filterModel->updateDocumentFilter($data, $idFilter);
 
         $app->flashMessage('Filter #' . $idFilter . ' updated successfully', FlashMessageTypes::SUCCESS);
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function processNewFilterForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('name'), true, array('page' => 'UserModule:DocumentFilter:showNewFilterForm'));
+        $app->flashMessageIfNotIsset(array('name'), true, array('page' => 'showNewFilterForm'));
 
         $data = [];
         $data['name'] = $this->post('name');
@@ -206,20 +209,119 @@ class DocumentFilter extends APresenter {
             $data['description'] = $this->post('description');
         }
 
-        if(isset($_POST['filter_sql'])) {
-            $data['filter_sql'] = $this->post('filter_sql');
+        $sql = "SELECT * FROM `documents`";
+
+        $metadata = [
+            'id_author',
+            'id_officer',
+            'id_manager',
+            'rank',
+            'status',
+            'shredding_status',
+            'document_form'
+        ];
+        $textMetadata = $metadata;
+
+        // append custom metadata
+        $dbMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
+        foreach($dbMetadata as $dbm) {
+            if($dbm->getIsSystem() == TRUE) continue;
+            if($dbm->getInputType() == MetadataInputType::SELECT_EXTERNAL) continue;
+
+            if($dbm->getInputType() != MetadataInputType::NUMBER) {
+                $textMetadata[] = $dbm->getName();
+            }
+
+            $metadata[] = $dbm->getName();
         }
 
-        if(isset($_POST['has_ordering'])) {
-            $data['has_ordering'] = '1';
+        $createCondition = function(string $column, string $value, string $operation) {
+            $op = '';
+            switch($operation) {
+                case 'equal':
+                    $op = '=';
+                    break;
+
+                case 'not_equal':
+                    $op = '<>';
+                    break;
+
+                case 'bigger':
+                    $op = '>';
+                    break;
+
+                case 'bigger_equal':
+                    $op = '>=';
+                    break;
+
+                case 'smaller':
+                    $op = '<';
+                    break;
+
+                case 'smaller_equal':
+                    $op = '<=';
+                    break;
+            }
+
+            $sql = '`' . $column . '` ' . $op . " '" . $value . "'";
+
+            return $sql;
+        };
+
+        $checkMetadata = [];
+        foreach($metadata as $md) {
+            $operation = '';
+            if(isset($_POST[$md . '_operation'])) {
+                $operation = $this->post($md . '_operation');
+            }
+
+            $value = $this->post($md);
+            $andor = '';
+
+            if(in_array($md, $textMetadata)) {
+                if(!in_array($md, ['equal', 'not_equal'])) {
+                    $operation = 'equal';
+                }
+            }
+
+            if(isset($_POST[$md . '_andor'])) {
+                $andor = strtoupper($this->post($md . '_andor'));
+            }
+
+            if($value != 'null' && ($md != 'shredding_status' && $value != '5')) {
+                $checkMetadata[] = [
+                    'name' => $md,
+                    'operation' => $operation,
+                    'value' => $value,
+                    'andor' => $andor
+                ];
+            }
         }
+
+        if(count($checkMetadata) > 0) {
+            $sql .= ' WHERE ';
+        }
+
+        foreach($checkMetadata as $cm) {
+            if($cm['name'] == 'document_form') {
+                if($cm['value'] == 'IS NULL') {
+                    $sql .= "(`file` IS NULL OR `file` = '') " . $cm['andor'];
+                } else {
+                    $sql .= "(`file` IS NOT NULL AND `file` <> '') " . $cm['andor'];
+                }
+            } else {
+                $sql .= $createCondition($cm['name'], $cm['value'], $cm['operation']) . ' ' . $cm['andor'] . ' ';
+            }
+        }
+
+        $data['filter_sql'] = $sql;
 
         $data['id_author'] = $app->user->getId();
 
         $app->filterModel->insertNewDocumentFilter($data);
 
         $app->flashMessage('Filter created successfully', FlashMessageTypes::SUCCESS);
-        $app->redirect('UserModule:DocumentFilter:showFilters');
+        $app->redirect('showFilters');
     }
 
     protected function showNewFilterForm() {
@@ -237,6 +339,8 @@ class DocumentFilter extends APresenter {
     }
 
     private function internalCreateNewFilterForm() {
+        global $app;
+
         $fb = FormBuilder::getTemporaryObject();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:DocumentFilter:processNewFilterForm')
@@ -245,15 +349,144 @@ class DocumentFilter extends APresenter {
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
 
             ->addElement($fb->createLabel()->setText('Description')->setFor('description'))
-            ->addElement($fb->createTextArea()->setName('description'))
-            
-            ->addElement($fb->createLabel()->setText('SQL query ')->setFor('filter_sql'))
-            ->addElement($fb->createTextArea()->setName('filter_sql'))
+            ->addElement($fb->createTextArea()->setName('description'));
 
-            ->addElement($fb->createLabel()->setText('SQL query has ordering?')->setFor('has_ordering'))
-            ->addElement($fb->createInput()->setType('checkbox')->setName('has_ordering'))
-            
-            ->addElement($fb->createSubmit('Create filter'));
+        // default metadata
+        $operations = [
+            [
+                'value' => 'equal',
+                'text' => '='
+            ],
+            [
+                'value' => 'not_equal',
+                'text' => '!='
+            ],
+            [
+                'value' => 'bigger',
+                'text' => '>'
+            ],
+            [
+                'value' => 'bigger_equal',
+                'text' => '>='
+            ],
+            [
+                'value' => 'smaller',
+                'text' => '<'
+            ],
+            [
+                'value' => 'smaller_equal',
+                'text' => '<='
+            ]
+        ];
+
+        $dbUsers = $app->userModel->getAllUsersPresentInDocuments();
+        $users = [['value' => 'null', 'text' => '-', 'selected' => 'selected']];
+        foreach($dbUsers as $dbu) {
+            $users[] = [
+                'value' => $dbu->getId(),
+                'text' => $dbu->getFullname()
+            ];
+        }
+
+        foreach(['id_author' => 'Author', 'id_officer' => 'Current officer', 'id_manager' => 'Manager'] as $name => $text) {
+            $fb ->addElement($fb->createLabel()->setText($text)->setFor($name))
+                ->addElement($fb->createSelect()->setName($name . '_operation')->addOptionsBasedOnArray($operations))
+                ->addElement($fb->createSelect()->setName($name)->addOptionsBasedOnArray($users))
+            ;
+
+            $fb->addElement($fb->createSelect()->setName($name . '_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+        }
+
+        // rank, status, shredding status
+        $ranks = [['value' => 'null', 'text' => '-', 'selected' => 'selected']];
+        foreach(DocumentRank::$texts as $k => $v) {
+            $ranks[] = [
+                'value' => $k,
+                'text' => $v
+            ];
+        }
+
+        $statuses = [['value' => 'null', 'text' => '-', 'selected' => 'selected']];
+        foreach(DocumentStatus::$texts as $k => $v) {
+            $statuses[] = [
+                'value' => $k,
+                'text' => $v
+            ];
+        }
+        
+        $shreddingStatuses = [];
+        foreach(DocumentShreddingStatus::$texts as $k => $v) {
+            $tmp = [
+                'value' => $k,
+                'text' => $v
+            ];
+
+            if($v == '-') {
+                $tmp['selected'] = 'selected';
+            }
+
+            $shreddingStatuses[] = $tmp;
+        }
+
+        $fb ->addElement($fb->createLabel()->setText('Document rank')->setFor('rank'))
+            ->addElement($fb->createSelect()->setName('rank_operation')->addOptionsBasedOnArray($operations))
+            ->addElement($fb->createSelect()->setName('rank')->addOptionsBasedOnArray($ranks))
+        ;
+
+        $fb->addElement($fb->createSelect()->setName('rank_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+
+        $fb ->addElement($fb->createLabel()->setText('Document status')->setFor('status'))
+            ->addElement($fb->createSelect()->setName('status_operation')->addOptionsBasedOnArray($operations))
+            ->addElement($fb->createSelect()->setName('status')->addOptionsBasedOnArray($statuses))
+        ;
+
+        $fb->addElement($fb->createSelect()->setName('status_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+
+        $fb ->addElement($fb->createLabel()->setText('Document shredding status')->setFor('shredding_status'))
+            ->addElement($fb->createSelect()->setName('shredding_status_operation')->addOptionsBasedOnArray($operations))
+            ->addElement($fb->createSelect()->setName('shredding_status')->addOptionsBasedOnArray($shreddingStatuses))
+        ;
+
+        $fb->addElement($fb->createSelect()->setName('shredding_status_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+
+        $fb ->addElement($fb->createLabel()->setText('Document form')->setFor('document_form'))
+            ->addElement($fb->createSelect()->setName('document_form_operation')->addOptionsBasedOnArray($operations)->disable())
+            ->addElement($fb->createSelect()->setName('document_form')->addOptionsBasedOnArray([['value' => 'null', 'text' => '-', 'selected' => 'selected'], ['value' => 'IS NULL', 'text' => 'Physical'], ['value' => 'IS NOT NULL', 'text' => 'Electronic']]))
+        ;
+
+        // custom metadata
+        $dbMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
+        $first = true;
+        $i = 0;
+        foreach($dbMetadata as $dbm) {
+            if($dbm->getIsSystem() == TRUE) continue;
+            if($dbm->getInputType() == MetadataInputType::SELECT_EXTERNAL) continue;
+
+            $dbValues = $app->metadataModel->getAllValuesForIdMetadata($dbm->getId());
+            $values = [['value' => 'null', 'text' => '-']];
+            foreach($dbValues as $dbv) {
+                $values[] = [
+                    'value' => $dbv->getValue(),
+                    'text' => $dbv->getName()
+                ];
+            }
+
+            if($first === TRUE) {
+                $fb->addElement($fb->createSelect()->setName('shredding_status_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+                $first = false;
+            }
+
+            $fb ->addElement($fb->createLabel()->setText($dbm->getText())->setFor($dbm->getName()))
+                ->addElement($fb->createSelect()->setName($dbm->getName() . '_operation')->addOptionsBasedOnArray($operations))
+                ->addElement($fb->createSelect()->setName($dbm->getName())->addOptionsBasedOnArray($values))
+            ;
+
+            if(($i + 1) < count($dbMetadata)) {
+                $fb->addElement($fb->createSelect()->setName($dbm->getName() . '_andor')->addOptionsBasedOnArray([['value' => 'and', 'text' => 'and'], ['value' => 'or', 'text' => 'or']]));
+            }
+        }
+
+        $fb ->addElement($fb->createSubmit('Create'));
 
         return $fb->build();
     }
@@ -307,40 +540,40 @@ class DocumentFilter extends APresenter {
         $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $canSeeOtherUsersFilterResults, $canSeeSystemFilterResults) {
             if(!is_null($filter->getIdAuthor())) {
                 if($filter->getIdAuthor() == $user->getId()) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                    return LinkBuilder::createAdvLink(array('page' => 'showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                 } else {
                     if($canSeeOtherUsersFilterResults) {
-                        return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                        return LinkBuilder::createAdvLink(array('page' => 'showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                     }
                 }
             } else {
                 if($canSeeSystemFilterResults) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
+                    return LinkBuilder::createAdvLink(array('page' => 'showFilterResults', 'id_filter' => $filter->getId()), 'Show results');
                 }
             }
         });
         $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $canEditOtherUsersFilters, $canEditSystemFilter) {
             if(!is_null($filter->getIdAuthor())) {
                 if($filter->getIdAuthor() == $user->getId()) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                    return LinkBuilder::createAdvLink(array('page' => 'showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                 } else {
                     if($canEditOtherUsersFilters) {
-                        return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                        return LinkBuilder::createAdvLink(array('page' => 'showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                     }
                 }
             } else {
                 if($canEditSystemFilter) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
+                    return LinkBuilder::createAdvLink(array('page' => 'showSingleFilter', 'id_filter' => $filter->getId()), 'Edit');
                 }
             }
         });
         $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($user, $canSeeOtherUsersFilterResults) {
             if(!is_null($filter->getIdAuthor())) {
                 if($filter->getIdAuthor() == $user->getId()) {
-                    return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
+                    return LinkBuilder::createAdvLink(array('page' => 'deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
                 } else {
                     if($canSeeOtherUsersFilterResults) {
-                        return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
+                        return LinkBuilder::createAdvLink(array('page' => 'deleteFilter', 'id_filter' => $filter->getId()), 'Delete');
                     }
                 }
             } else {
@@ -349,9 +582,9 @@ class DocumentFilter extends APresenter {
         });
         $gb->addAction(function(\DMS\Entities\DocumentFilter $filter) use ($idPinnedFilters) {
             if(in_array($filter->getId(), $idPinnedFilters)) {
-                return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:unpinFilter', 'id_filter' => $filter->getId()), 'Unpin');
+                return LinkBuilder::createAdvLink(array('page' => 'unpinFilter', 'id_filter' => $filter->getId()), 'Unpin');
             } else {
-                return LinkBuilder::createAdvLink(array('page' => 'UserModule:DocumentFilter:pinFilter', 'id_filter' => $filter->getId()), 'Pin');
+                return LinkBuilder::createAdvLink(array('page' => 'pinFilter', 'id_filter' => $filter->getId()), 'Pin');
             }
         });
         $gb->addDataSourceCallback($dataSourceCallback);

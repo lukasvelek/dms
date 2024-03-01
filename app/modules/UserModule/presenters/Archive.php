@@ -7,12 +7,9 @@ use DMS\Constants\ArchiveType;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
-use DMS\Core\AppConfiguration;
-use DMS\Helpers\FormDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\Widgets\HomeDashboard\DocumentStats;
 
 class Archive extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -32,7 +29,7 @@ class Archive extends APresenter {
         $action = $this->get('action');
 
         if($action == '-') {
-            $app->redirect('UserModule:Archive:showDocuments');
+            $app->redirect('showDocuments');
         }
 
         if(method_exists($this, '_' . $action)) {
@@ -64,12 +61,11 @@ class Archive extends APresenter {
             '$BULK_ACTION_CONTROLLER$' => '',
             '$SEARCH_FIELD$' => '',
             '$ARCHIVE_GRID$' => $grid,
-            '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, 'showArchives'),
             '$LINKS$' => []
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_ARCHIVE_DOCUMENT)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewArchiveForm', 'New archive');
+            $data['$LINKS$'][] = LinkBuilder::createLink('showNewArchiveForm', 'New archive');
         }
 
         $this->templateManager->fill($data, $template);
@@ -99,12 +95,11 @@ class Archive extends APresenter {
             '$BULK_ACTION_CONTROLLER$' => '',
             '$SEARCH_FIELD$' => '',
             '$ARCHIVE_GRID$' => $grid,
-            '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, 'showBoxes'),
             '$LINKS$' => []
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_ARCHIVE_DOCUMENT)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewBoxForm', 'New box');
+            $data['$LINKS$'][] = LinkBuilder::createLink('showNewBoxForm', 'New box');
         }
 
         $this->templateManager->fill($data, $template);
@@ -134,12 +129,11 @@ class Archive extends APresenter {
             '$BULK_ACTION_CONTROLLER$' => '',
             '$SEARCH_FIELD$' => '',
             '$ARCHIVE_GRID$' => $grid,
-            '$ARCHIVE_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, 'showDocuments'),
             '$LINKS$' => []
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_ARCHIVE_DOCUMENT)) {
-            $data['$LINKS$'][] = LinkBuilder::createLink('UserModule:Archive:showNewDocumentForm', 'New document');
+            $data['$LINKS$'][] = LinkBuilder::createLink('showNewDocumentForm', 'New document');
         }
 
         $this->templateManager->fill($data, $template);
@@ -189,7 +183,7 @@ class Archive extends APresenter {
     protected function processNewDocumentForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['name'], true, ['page' => 'UserModule:Archive:showNewDocumentForm']);
+        $app->flashMessageIfNotIsset(['name'], true, ['page' => 'showNewDocumentForm']);
 
         $name = $this->post('name');
 
@@ -206,16 +200,16 @@ class Archive extends APresenter {
 
         $app->flashMessage('Created new archive document', 'success');
         if($idRibbon == '') {
-            $app->redirect('UserModule:Archive:showDocuments');
+            $app->redirect('showDocuments');
         } else {
-            $app->redirect('UserModule:Archive:showDocuments', ['id_ribbon' => $idRibbon]);
+            $app->redirect('showDocuments', ['id_ribbon' => $idRibbon]);
         }
     }
 
     protected function processNewBoxForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['name'], true, ['page' => 'UserModule:Archive:showNewBoxForm']);
+        $app->flashMessageIfNotIsset(['name'], true, ['page' => 'showNewBoxForm']);
 
         $name = $this->post('name');
 
@@ -232,16 +226,16 @@ class Archive extends APresenter {
 
         $app->flashMessage('Created new archive box', 'success');
         if($idRibbon == '') {
-            $app->redirect('UserModule:Archive:showBoxes');
+            $app->redirect('showBoxes');
         } else {
-            $app->redirect('UserModule:Archive:showBoxes', ['id_ribbon' => $idRibbon]);
+            $app->redirect('showBoxes', ['id_ribbon' => $idRibbon]);
         }
     }
 
     protected function processNewArchiveForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['name'], true, ['page' => 'UserModule:Archive:showNewArchiveForm']);
+        $app->flashMessageIfNotIsset(['name'], true, ['page' => 'showNewArchiveForm']);
 
         $name = $this->post('name');
 
@@ -258,9 +252,9 @@ class Archive extends APresenter {
 
         $app->flashMessage('Created new archive', 'success');
         if($idRibbon == '') {
-            $app->redirect('UserModule:Archive:showArchives');
+            $app->redirect('showArchives');
         } else {
-            $app->redirect('UserModule:Archive:showArchives', ['id_ribbon' => $idRibbon]);
+            $app->redirect('showArchives', ['id_ribbon' => $idRibbon]);
         }
     }
 
@@ -325,7 +319,7 @@ class Archive extends APresenter {
         $code = '<script type="text/javascript">';
         $code .= 'loadArchiveDocuments("' . $page . '");';
         $code .= '</script>';
-        $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
     }
@@ -334,7 +328,7 @@ class Archive extends APresenter {
         $code = '<script type="text/javascript">';
         $code .= 'loadArchiveBoxes("' . $page . '");';
         $code .= '</script>';
-        $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
     }
@@ -343,88 +337,9 @@ class Archive extends APresenter {
         $code = '<script type="text/javascript">';
         $code .= 'loadArchiveArchives("' . $page . '");';
         $code .= '</script>';
-        $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
-    }
-
-    private function internalCreateGridPageControl(int $page, string $action) {
-        global $app;
-
-        $entityCount = 0;
-
-        switch($action) {
-            case 'showDocuments':
-                $entityCount = $app->archiveModel->getDocumentCount();
-                break;
-
-            case 'showBoxes':
-                $entityCount = $app->archiveModel->getBoxCount();
-                break;
-
-            case 'showArchives':
-                $entityCount = $app->archiveModel->getArchiveCount();
-                break;
-        }
-
-        $pageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Archive:' . $action;
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Archive:' . $action;
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Archive:' . $action;
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Archive:' . $action;
-
-        $pageCheck = $page - 1;
-
-        $firstPageLink .= '"';
-
-        if($page == 1) {
-            $firstPageLink .= ' hidden';
-        }
-
-        $firstPageLink .= '>&lt;&lt;</a>';
-
-        if($page > 2) {
-            $previousPageLink .= '&grid_page=' . ($page - 1);
-        }
-        $previousPageLink .= '"';
-
-        if($page == 1) {
-            $previousPageLink .= ' hidden';
-        }
-
-        $previousPageLink .= '>&lt;</a>';
-
-        $nextPageLink .= '&grid_page=' . ($page + 1);
-        $nextPageLink .= '"';
-
-        if($entityCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' hidden';
-        }
-
-        $nextPageLink .= '>&gt;</a>';
-
-        $lastPageLink .= '&grid_page=' . (ceil($entityCount / AppConfiguration::getGridSize()));
-        $lastPageLink .= '"';
-
-        if($entityCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' hidden';
-        }
-
-        $lastPageLink .= '>&gt;&gt;</a>';
-
-        if($entityCount > AppConfiguration::getGridSize()) {
-            if($pageCheck * AppConfiguration::getGridSize() >= $entityCount) {
-                $pageControl = (1 + ($page * AppConfiguration::getGridSize()));
-            } else {
-                $pageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
-            }
-        } else {
-            $pageControl = $entityCount;
-        }
-
-        $pageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
-
-        return $pageControl;
     }
 
     private function internalCreateMoveDocumentToBoxForm(array $ids) {
@@ -533,7 +448,7 @@ class Archive extends APresenter {
             }
 
             $app->flashMessage('Moved documents to the box', 'success');
-            $app->redirect('UserModule:Archive:showDocuments');
+            $app->redirect('showDocuments');
         } else {
             return $this->internalCreateMoveDocumentToBoxForm($ids);
         }
@@ -547,7 +462,7 @@ class Archive extends APresenter {
         }
 
         $app->flashMessage('Removed documents from the box', 'success');
-        $app->redirect('UserModule:Archive:showDocuments');
+        $app->redirect('showDocuments');
     }
 
     private function _move_box_to_archive(array $ids) {
@@ -561,7 +476,7 @@ class Archive extends APresenter {
             }
 
             $app->flashMessage('Moved boxes to archive', 'success');
-            $app->redirect('UserModule:Archive:showBoxes');
+            $app->redirect('showBoxes');
         } else {
             return $this->internalCreateMoveBoxToArchiveForm($ids);
         }
@@ -575,7 +490,7 @@ class Archive extends APresenter {
         }
 
         $app->flashMessage('Removed boxes from archive', 'success');
-        $app->redirect('UserModule:Archive:showBoxes');
+        $app->redirect('showBoxes');
     }
 
     private function _close_archive(array $ids) {
@@ -617,7 +532,7 @@ class Archive extends APresenter {
         $totalCount = $fileCount + $documentCount + $boxCount + $archiveCount;
 
         $app->flashMessage('Finished ' . $totalCount . ' entities');
-        $app->redirect('UserModule:Archive:showArchives');
+        $app->redirect('showArchives');
     }
 
     private function _suggest_for_shredding(array $ids) {
@@ -630,7 +545,7 @@ class Archive extends APresenter {
         }
 
         $app->flashMessage('Archives suggested for shredding', 'success');
-        $app->redirect('UserModule:Archive:showArchives');
+        $app->redirect('showArchives');
     }
 }
 

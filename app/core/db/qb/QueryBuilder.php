@@ -60,7 +60,7 @@ class QueryBuilder
      * 
      * @param string $column Column name
      * @param array $values Column allowed values
-     * @return self
+     * @return string SQL code
      */
     public function getColumnInValues(string $column, array $values) {
         $code = $column . ' IN (';
@@ -254,7 +254,7 @@ class QueryBuilder
      * @param array $values Condition parameter values
      * @return self
      */
-    public function where(string $cond, array $values = []) {
+    public function where(string $cond, array $values = [], bool $useQuotationMarks = true) {
         if(str_contains($cond, '?') && !empty($values)) {
             $count = count(explode('?', $cond));
 
@@ -270,7 +270,11 @@ class QueryBuilder
 
             $tmp = [];
             foreach($values as $value) {
-                $tmp[] = "'" . $value . "'";
+                if($useQuotationMarks === TRUE) {
+                    $tmp[] = "'" . $value . "'";
+                } else {
+                    $tmp[] = $value;
+                }
             }
 
             $values = $tmp;
@@ -290,7 +294,7 @@ class QueryBuilder
      * @param array $values Condition parameter values
      * @return self
      */
-    public function andWhere(string $cond, array $values = []) {
+    public function andWhere(string $cond, array $values = [], bool $useQuotationMarks = true) {
         if(!array_key_exists('where', $this->queryData)) {
             $this->queryData['where'] = '';
         }
@@ -310,7 +314,11 @@ class QueryBuilder
 
             $tmp = [];
             foreach($values as $value) {
-                $tmp[] = "'" . $value . "'";
+                if($useQuotationMarks === TRUE) {
+                    $tmp[] = "'" . $value . "'";
+                } else {
+                    $tmp[] = $value;
+                }
             }
 
             $values = $tmp;
@@ -334,7 +342,7 @@ class QueryBuilder
      * @param array $values Condition parameter values
      * @return self
      */
-    public function orWhere(string $cond, array $values = []) {
+    public function orWhere(string $cond, array $values = [], bool $useQuotationMarks = true) {
         if(!array_key_exists('where', $this->queryData)) {
             $this->queryData['where'] = '';
         }
@@ -354,7 +362,11 @@ class QueryBuilder
 
             $tmp = [];
             foreach($values as $value) {
-                $tmp[] = "'" . $value . "'";
+                if($useQuotationMarks === TRUE) {
+                    $tmp[] = "'" . $value . "'";
+                } else {
+                    $tmp[] = $value;
+                }
             }
 
             $values = $tmp;

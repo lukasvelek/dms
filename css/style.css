@@ -34,17 +34,28 @@ body {
     resize: vertical;
 }
 
-#table table {
+#table table, #calendar-table table {
     width: 100%;
 
     font-size: 16px;
 }
 
-#table tr {
+#table tr, #calendar-table tr {
     text-align: center;
 }
 
-#table .even {
+#calendar-table-td-date {
+    padding-bottom: 25px;
+
+    width: 14.28%;
+}
+
+#calendar-table-td-single-event {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+#table .even, #calendar-table .even {
     background-color: lightgrey;
 }
 
@@ -69,22 +80,53 @@ body {
     text-align: right;
 }
 
-#toppanel .general-link, #subpanel .general-link {
+#toppanel .general-link, #subpanel .general-link, #toppanel .toppanel-link, #subpanel .toppanel-link {
     margin-left: 10px;
 }
 
-#toppanel-right .general-link {
+#toppanel-right .general-link, #toppanel-right .toppanel-link {
     margin-right: 10px;
 }
 
-.general-link {
+.general-link{
     color: black;
     text-decoration: underline;
 
     font-size: 16px;
 }
 
+.toppanel-link {
+    color: black;
+    text-decoration: none;
+
+    font-size: 20px;
+}
+
+.toppanel-link:hover {
+    color: black;
+    text-decoration: none;
+    border-bottom: 2px solid rgb(100, 100, 100);
+}
+
+.toppanel-link:active {
+    color: black;
+    text-decoration: none;
+    border-bottom: 2px solid black;
+}
+
 .general-link:hover {
+    color: black;
+    text-decoration: none;
+}
+
+.general-link-bigger {
+    color: black;
+    text-decoration: underline;
+
+    font-size: 18px;
+}
+
+.general-link-bigger:hover {
     color: black;
     text-decoration: none;
 }
@@ -193,4 +235,19 @@ div[id^="dropdownmenu-ribbon-"] {
     height: 150px;
     background-color: rgb(212, 212, 212, 0.5);
     backdrop-filter: blur(5px);
+}
+
+#grid-first-page-control-btn, #grid-previous-page-control-btn, #grid-next-page-control-btn, #grid-last-page-control-btn {
+    border: 1px solid black;
+
+    border-radius: 5px;
+
+    width: 35px;
+}
+
+#grid-loading {
+    position: fixed;
+
+    top: 50%;
+    left: 49%;
 }

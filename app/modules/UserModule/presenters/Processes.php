@@ -60,8 +60,7 @@ class Processes extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Processes',
             '$PROCESS_PANEL$' => '',
-            '$PROCESS_GRID$' => $processGrid,
-            '$PROCESS_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $filter)
+            '$PROCESS_GRID$' => $processGrid
         );
 
         $this->templateManager->fill($data, $template);
@@ -90,8 +89,11 @@ class Processes extends APresenter {
         return $template;
     }
 
+    /**
+     * Currently not in use
+     */
     private function internalCreateProcessForm(int $type) {
-        $form = '';
+        /*$form = '';
         $action = '?page=UserModule:Processes:startProcess&type=' . $type;
 
         switch($type) {
@@ -101,7 +103,11 @@ class Processes extends APresenter {
                 break;
         }
 
-        return $form;
+        return $form;*/
+
+        global $app;
+
+        $app->redirect('showAll');
     }
 
     /**
@@ -111,7 +117,7 @@ class Processes extends APresenter {
         $tb = TableBuilder::getTemporaryObject();
 
         $processes = array(
-            array('name' => 'Home office', 'link' => array('page' => 'UserModule:Processes:newProcess', 'type' => ProcessTypes::HOME_OFFICE))
+            array('name' => 'Home office', 'link' => array('page' => 'newProcess', 'type' => ProcessTypes::HOME_OFFICE))
         );
 
         $cnt = count($processes);
@@ -158,7 +164,7 @@ class Processes extends APresenter {
             <script type="text/javascript">
             loadProcesses("' . $page . '", "' . $filter . '");
             </script>
-            <table border="1"><img id="processes-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
+            <table border="1"><img id="grid-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
         ';
     }
 
@@ -180,8 +186,6 @@ class Processes extends APresenter {
                 $processCount = $app->processModel->getCountFinishedProcesses();
                 break;
         }
-
-        //$processCount = count($app->processModel->getAllProcessIds());
 
         $add = function(string $key, string $value, string &$link) {
             $link .= $key . '=' . $value;

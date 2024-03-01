@@ -11,6 +11,58 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getUsersWithOffset(int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('users')
+            ->limit($limit)
+            ->offset($offset)
+            ->execute();
+
+        $users = [];
+        while($row = $qb->fetchAssoc()) {
+            $users[] = $this->getUserObjectFromDbRow($row);
+        }
+    
+        return $users;
+    }
+
+    public function getAllUsersPresentInDocuments() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_author', 'id_officer', 'id_manager'])
+            ->from('documents')
+            ->execute();
+
+        $docuUsers = [];
+        while($row = $qb->fetchAssoc()) {
+            if(!in_array($row['id_author'], $docuUsers)) {
+                $docuUsers[] = $row['id_author'];
+            }
+            if(!in_array($row['id_officer'], $docuUsers)) {
+                $docuUsers[] = $row['id_officer'];
+            }
+            if(!in_array($row['id_manager'], $docuUsers)) {
+                $docuUsers[] = $row['id_manager'];
+            }
+        }
+
+        $qb->clean();
+
+        $qb ->select(['*'])
+            ->from('users')
+            ->where($qb->getColumnInValues('id', $docuUsers))
+            ->execute();
+
+        $users = [];
+        while($row = $qb->fetchAssoc()) {
+            $users[] = $this->getUserObjectFromDbRow($row);
+        }
+
+        return $users;
+    }
+
     public function insertLastLoginHashForIdUser(int $id, string $hash) {
         $qb = $this->qb(__METHOD__);
 
@@ -39,38 +91,6 @@ class UserModel extends AModel {
 
     public function deleteUserById(int $id) {
         $this->deleteById($id, 'users');
-    }
-    
-    public function getAllUsersFromId(?int $idFrom, int $limit) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('users');
-
-        if($idFrom == 1) {
-            $qb->andWhere('id >= ?', [$idFrom]);
-        } else {
-            $qb->andWhere('id > ?', [$idFrom]);
-        }
-
-        $qb ->limit($limit)
-            ->execute();
-
-        $users = [];
-        while($row = $qb->fetchAssoc()) {
-            $users[] = $this->getUserObjectFromDbRow($row);
-        }
-
-        return $users;
-    }
-
-    public function getFirstIdUserOnAGridPage(int $gridPage) {
-        if($gridPage == 0) $gridPage = 1;
-        return $this->getFirstRowWithCount($gridPage, 'users', ['id']);
     }
 
     public function removeConnectionForTwoUsers(int $idUser1, int $idUser2) {

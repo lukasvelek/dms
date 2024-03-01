@@ -55,7 +55,7 @@ class SingleDocument extends APresenter {
 
         $app->documentModel->insertDocumentSharing($data);
 
-        $app->redirect('UserModule:Documents:showAll');
+        $app->redirect('Documents:showAll');
     }
 
     protected function showShare() {
@@ -95,7 +95,7 @@ class SingleDocument extends APresenter {
 
         $app->logger->info('Deleted comment #' . $idComment, __METHOD__);
 
-        $app->redirect('UserModule:SingleDocument:showInfo', array('id' => $idDocument));
+        $app->redirect('showInfo', array('id' => $idDocument));
     }
 
     protected function askToDeleteComment() {
@@ -139,7 +139,7 @@ class SingleDocument extends APresenter {
 
         $app->documentCommentModel->insertComment($data);
 
-        $app->redirect('UserModule:SingleDocument:showInfo', array('id' => $idDocument));
+        $app->redirect('showInfo', array('id' => $idDocument));
     }
 
     protected function showInfo() {
@@ -256,7 +256,7 @@ class SingleDocument extends APresenter {
 
         $app->logger->info('Updated document #' . $id, __METHOD__);
 
-        $app->redirect('UserModule:SingleDocument:showInfo', array('id' => $id));
+        $app->redirect('showInfo', array('id' => $id));
     }
 
     private function internalCreateDocumentEditForm(Document $document) {
@@ -535,6 +535,11 @@ class SingleDocument extends APresenter {
         $dateCreated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateCreated, $app->user);
         $dateUpdated = $document->getDateUpdated();
         $dateUpdated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateUpdated, $app->user);
+        $form = 'Physical';
+
+        if($document->getFile() !== NULL) {
+            $form = 'Electronic';
+        }
 
         $data = array(
             'Name' => $document->getName(),
@@ -546,7 +551,8 @@ class SingleDocument extends APresenter {
             'Deleted?' => $document->getIsDeleted() ? 'Yes' : 'No',
             'Folder' => $folder,
             'Date created' => $dateCreated,
-            'Date updated' => $dateUpdated
+            'Date updated' => $dateUpdated,
+            'Form' => $form
         );
 
         foreach($document->getMetadata() as $k => $v) {
@@ -661,7 +667,7 @@ class SingleDocument extends APresenter {
     private function createUserLink(int $id) {
         global $app;
 
-        $ucm = new CacheManager(true, CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
+        $ucm = new CacheManager(CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 
         $cacheUser = $ucm->loadUserByIdFromCache($id);
 
@@ -673,7 +679,7 @@ class SingleDocument extends APresenter {
             $user = $cacheUser;
         }
 
-        return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $id), $user->getFullname());
+        return LinkBuilder::createAdvLink(array('page' => 'Users:showProfile', 'id' => $id), $user->getFullname());
     }
     
     private function createGroupLink(int $id) {
@@ -681,7 +687,7 @@ class SingleDocument extends APresenter {
 
         $group = $app->groupModel->getGroupById($id);
 
-        return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showUsers', 'id' => $id), $group->getName());
+        return LinkBuilder::createAdvLink(array('page' => 'Groups:showUsers', 'id' => $id), $group->getName());
     }
 
     private function createFolderLink(int $id) {
@@ -689,7 +695,7 @@ class SingleDocument extends APresenter {
 
         $folder = $app->folderModel->getFolderById($id);
 
-        return LinkBuilder::createAdvLink(array('page' => 'UserModule:Settings:showFolders', 'id' => $id), $folder->getName());
+        return LinkBuilder::createAdvLink(array('page' => 'Settings:showFolders', 'id' => $id), $folder->getName());
     }
 
     private function internalCreateNewDocumentCommentForm(Document $document) {
@@ -736,7 +742,7 @@ class SingleDocument extends APresenter {
                 );
             }
         } else {
-            ScriptLoader::alert('Could not load any users', array('page' => 'UserModule:Documents:showAll'));
+            ScriptLoader::alert('Could not load any users', array('page' => 'Documents:showAll'));
         }
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:SingleDocument:shareDocument&id_document=' . $document->getId())

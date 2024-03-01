@@ -25,14 +25,6 @@ $cfg['log_stopwatch'] = 0; // 0 - no log, 1 - log all
  */
 
 $cfg['cache_dir'] = ''; // Cache directory location
-$cfg['serialize_cache'] = true; // false does not work yet
-
-
-/**
- * FILE STORAGE CONFIGURATION
- */
-
-$cfg['file_dir'] = ''; // File upload directory location
 
 
 /**
@@ -45,6 +37,8 @@ $cfg['enable_relogin'] = true; // true if relogging in as other (connected) user
 $cfg['folder_max_nest_level'] = 10; // how many levels of nesting do folders allow (max recommended is 10)
 $cfg['absolute_app_dir'] = ''; // the absolute server path to the app root (etc /dms/)
 $cfg['enable_service_auto_run'] = true; // true if services can be run automatically, false if not
+$cfg['is_debug'] = false; // true if debug is activated, false if not
+$cfg['document_report_keep_length'] = 7; // how many days generated documents will be kept
 
 
 /**
@@ -63,9 +57,7 @@ $cfg['mail_login_password'] = ''; // Mail server login password
  * GRID (UI) CONFIGURATION
  */
 
-$cfg['grid_size'] = '25'; // grid size (number of rows)
-$cfg['grid_use_fast_load'] = true; // grid fast load usage (useful with lots of documents)
-$cfg['grid_use_ajax'] = true; // grid ajax usage (generally useful)
+$cfg['grid_size'] = 25; // grid size (number of rows)
 $cfg['grid_main_folder_has_all_documents'] = true; // true if grid main folder contains all documents within all folders, false if it only displays documents located in main folder
 
 

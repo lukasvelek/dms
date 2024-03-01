@@ -80,6 +80,18 @@ class TableCol implements IBuildable {
   }
 
   /**
+   * Adds text to the column text
+   * 
+   * @param string $text Column text
+   * @return self
+   */
+  public function addText(string $text) {
+    $this->text .= $text;
+
+    return $this;
+  }
+
+  /**
    * Sets the column span
    * 
    * @param string $colspan Column span

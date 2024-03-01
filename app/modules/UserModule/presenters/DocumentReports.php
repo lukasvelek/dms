@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentReportStatus;
+use DMS\Constants\FileStorageTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Modules\APresenter;
@@ -25,7 +26,7 @@ class DocumentReports extends APresenter {
 
         $idUser = $app->user->getId();
         $documentModel = $app->documentModel;
-        $actionAuthorizator = $app->actionAuthorizator;
+        $fileManager = $app->fileManager;
 
         $dataCallback = function() use ($idUser, $documentModel) {
             $rows = $documentModel->getDocumentReportQueueEntriesForIdUser($idUser);
@@ -105,9 +106,9 @@ class DocumentReports extends APresenter {
         $gb->addOnColumnRender('status', function(object $obj) {
             return DocumentReportStatus::$texts[$obj->getStatus()];
         });
-        $gb->addAction(function(object $obj) {
-            if($obj->getStatus() == DocumentReportStatus::FINISHED) {
-                return '<a class="general-link" href="' . AppConfiguration::getAbsoluteAppDir() . $obj->getFileSrc() . '">Download</a>';
+        $gb->addAction(function(object $obj) use ($fileManager) {
+            if($obj->getStatus() == DocumentReportStatus::FINISHED && $fileManager->fileExists($obj->getFileSrc())) {
+                return '<a class="general-link" href="' . $obj->getFileSrc() . '">Download</a>';
             } else {
                 return '-';
             }
@@ -115,7 +116,7 @@ class DocumentReports extends APresenter {
         $gb->addAction(function(object $obj) use ($canDeleteDocumentReportQueueEntry) {
             if($canDeleteDocumentReportQueueEntry &&
                 in_array($obj->getStatus(), [DocumentReportStatus::FINISHED, DocumentReportStatus::IN_PROGRESS])) {
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:DocumentReports:deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
+                return LinkBuilder::createAdvLink(['page' => 'deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
             } else {
                 return '-';
             }
@@ -149,7 +150,7 @@ class DocumentReports extends APresenter {
         $app->documentModel->deleteDocumentReportQueueEntry($id);
 
         $app->flashMessage('Deleted generated document report.');
-        $app->redirect('UserModule:DocumentReports:showAll');
+        $app->redirect('showAll');
     }
 }
 

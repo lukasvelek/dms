@@ -80,9 +80,9 @@ class LinkBuilder {
      */
     private function getTemplate(bool $style = false) {
         if(!$style) {
-            return '<a class="$CLASS$" href="$URL$">$NAME$</a>';
+            return '<span class="$CLASS$" style="cursor: pointer" onclick="location.replace(\'$URL$\');">$NAME$</span>';
         } else {
-            return '<a class="$CLASS$" href="$URL$" style="$STYLE$">$NAME$</a>';
+            return '<span class="$CLASS$" style="cursor: pointer; $STYLE$" onclick="location.replace(\'$URL$\');">$NAME$</span>';
         }
     }
 
@@ -92,8 +92,7 @@ class LinkBuilder {
      * @return string HTML image link template
      */
     private function getImgTemplate(int $width) {
-        //$size = array($width, $width); // width, height
-        return '<a class="$CLASS$" href="$URL$"><img src="$IMG_PATH$" width="' . $width . 'px" height="' . $width . 'px" loading="lazy">$NAME$</a>';
+        return '<img src="$IMG_PATH$" width="' . $width . '" loading="lazy"><span class="$CLASS$" style="cursor: pointer" onclick="location.replace(\'$URL$\');">$NAME$</span>';
     }
 
     /**
@@ -148,10 +147,6 @@ class LinkBuilder {
                 }  
             }
 
-            /*if(isset($_GET['id_ribbon'])) {
-                $link .= '&id_ribbon=' . $_GET['id_ribbon'];
-            }*/
-
             $obj = new self($link, $class, $name);
         }
 
@@ -177,6 +172,28 @@ class LinkBuilder {
 
         $i = 0;
         foreach($urlParams as $paramKey => $paramVal) {
+            if($paramKey == 'page' && isset($_GET['page'])) {
+                $urlPage = htmlspecialchars($_GET['page']);
+                $urlPageParts = explode(':', $urlPage);
+                if($paramVal == ':') {
+                    $paramVal = $urlPage;
+                } else {
+                    $vals = explode(':', $paramVal);
+
+                    switch(count($vals)) {
+                        case 1:
+                            // only action
+                            $paramVal = $urlPageParts[0] . ':' . $urlPageParts[1] . ':' . $paramVal;
+                            break;
+
+                        case 2:
+                            // presenter & action
+                            $paramVal = $urlPageParts[0] . ':' . $paramVal;
+                            break;
+                    }   
+                }
+            }
+
             if(($i + 1) == count($urlParams)) {
                 $url .= $paramKey . '=' . $paramVal;
             } else {

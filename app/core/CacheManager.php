@@ -13,8 +13,10 @@ use DMS\Entities\User;
  * @author Lukas Velek
  */
 class CacheManager {
+    private const SERIALIZE = true;
+    private const ADVANCED_CACHE_PROTECTION = true;
+
     private FileManager $fm;
-    private bool $serialize;
     private string $category;
     
     /**
@@ -23,10 +25,9 @@ class CacheManager {
      * @param bool $serialize True if cache should be serialized and false if not
      * @param string $category Cache category
      */
-    public function __construct(bool $serialize, string $category, string $logdir, string $cachedir) {
+    public function __construct(string $category, string $logdir, string $cachedir) {
         $this->fm = new FileManager($logdir, $cachedir);
 
-        $this->serialize = $serialize;
         $this->category = $category;
     }
 
@@ -697,8 +698,12 @@ class CacheManager {
             return false;
         }
 
-        if($this->serialize) {
-            $data = unserialize($data);
+        if(self::SERIALIZE) {
+            if(self::ADVANCED_CACHE_PROTECTION) {
+                $data = unserialize(base64_decode($data));
+            } else {
+                $data = unserialize($data);
+            }
         }
 
         return $data;
@@ -712,8 +717,12 @@ class CacheManager {
     private function saveToCache(array $data) {
         $filename = $this->createFilename();
 
-        if($this->serialize) {
-            $data = serialize($data);
+        if(self::SERIALIZE) {
+            if(self::ADVANCED_CACHE_PROTECTION) {
+                $data = base64_encode(serialize($data));
+            } else {
+                $data = serialize($data);
+            }
         }
 
         $this->fm->writeCache($filename, $data);
@@ -727,9 +736,9 @@ class CacheManager {
      */
     public static function getTemporaryObject(string $category, bool $isAjax = false) {
         if($isAjax) {
-            return new self(AppConfiguration::getSerializeCache(), $category, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
+            return new self($category, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
         } else {
-            return new self(AppConfiguration::getSerializeCache(), $category, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
+            return new self($category, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
         }
     }
 
@@ -738,7 +747,7 @@ class CacheManager {
      */
     public static function invalidateAllCache() {
         foreach(CacheCategories::$all as $cc) {
-            $cm = new self(AppConfiguration::getSerializeCache(), $cc, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
+            $cm = new self($cc, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 
             $cm->invalidateCache();
         }

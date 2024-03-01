@@ -53,19 +53,19 @@ class Panels {
 
         foreach($visibleRibbons as $ribbon) {
             if($ribbon->hasImage()) {
-                $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
+                $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'toppanel-link', true);
             } else {
-                $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'general-link', true);
+                $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'toppanel-link', true);
             }
         }
 
         if(!is_null($app->user)) {
-            $data['$USER_NOTIFICATIONS_LINK$'] = '<img src="img/notifications.svg" width="32" height="32" loading="lazy"><span class="general-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications (0)</span>';
-            $data['$USER_PROFILE_LINK$'] = LinkBuilder::createImgAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId()), $app->user->getFullname(), 'img/user.svg');
-            $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createImgLink('UserModule:UserLogout:logoutUser', 'Logout', 'img/logout.svg');
-            
+            $data['$USER_NOTIFICATIONS_LINK$'] = '<span class="toppanel-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications (0)</span>';
+            $data['$USER_PROFILE_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId(), 'id_ribbon' => '26'), $app->user->getFullname(), 'toppanel-link');
+            $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createLink('UserModule:UserLogout:logoutUser', 'Logout', 'toppanel-link');
+
             if(AppConfiguration::getEnableRelogin() && $app->actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN)) {
-                $data['$USER_RELOGIN_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showConnectedUsers'), 'Relogin');
+                $data['$USER_RELOGIN_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showConnectedUsers'), 'Relogin', 'toppanel-link');
             } else {
                 $data['$USER_RELOGIN_LINK$'] = '';
             }
@@ -115,6 +115,10 @@ class Panels {
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBONS);
         $currentRibbon = $cm->loadRibbonById($currentIdRibbon);
+
+        if($currentRibbon === NULL) {
+            $currentRibbon = $app->ribbonModel->getRibbonById($currentIdRibbon);
+        }
         
         if($currentRibbon->hasParent()) {
             $currentIdRibbon = $currentRibbon->getIdParentRibbon();
@@ -134,9 +138,9 @@ class Panels {
                     $data['$LINKS$'][] = '<a class="general-link" href="#" id="dropdown-ribbon-' . $ribbon->getId() . '" onclick="' . $ribbon->getJSMethodName() . '">' . $ribbon->getName() . '</a>';
                 } else {
                     if($ribbon->hasImage()) {
-                        $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId() . ((!is_null($idFolder)) ? ('&id_folder=' . $idFolder) : ''), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
+                        $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId() . ((!is_null($idFolder)) ? ('&id_folder=' . $idFolder) : ''), $ribbon->getName(), $ribbon->getImage(), 'toppanel-link', true);
                     } else {
-                        $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId() . ((!is_null($idFolder)) ? ('&id_folder=' . $idFolder) : ''), $ribbon->getName(), 'general-link', true);
+                        $data['$LINKS$'][] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId() . ((!is_null($idFolder)) ? ('&id_folder=' . $idFolder) : ''), $ribbon->getName(), 'toppanel-link', true);
                     }
                 }
             }

@@ -12,7 +12,7 @@ use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
 
-$ucm = new CacheManager(true, CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
+$ucm = new CacheManager(CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
 
 $action = null;
 
@@ -29,7 +29,9 @@ if($action === NULL) {
 echo($action());
 
 function search() {
-    global $userModel, $gridSize, $gridUseFastLoad, $actionAuthorizator, $user;
+    global $userModel, $gridSize, $actionAuthorizator, $user;
+
+    $returnArray = [];
 
     if($user === NULL) {
         exit;
@@ -44,16 +46,9 @@ function search() {
         $page = (int)(htmlspecialchars($_GET['page']));
     }
 
-    $dataSourceCallback = function() use ($gridUseFastLoad, $userModel, $page, $gridSize) {
-        if($gridUseFastLoad) {
-            $page -= 1;
-    
-            $firstIdUserOnPage = $userModel->getFirstIdUserOnAGridPage(($page * $gridSize));
-    
-            return $userModel->getAllUsersFromId($firstIdUserOnPage, $gridSize);
-        } else {
-            return $userModel->getAllUsers($gridSize);
-        }
+    $dataSourceCallback = function() use ($userModel, $page, $gridSize) {
+        $page -= 1;
+        return $userModel->getUsersWithOffset($gridSize, ($page * $gridSize));
     };
 
     $canViewUserProfile = $actionAuthorizator->checkActionRight(UserActionRights::VIEW_USER_PROFILE, null, false);
@@ -107,7 +102,77 @@ function search() {
         }
     });
 
-    echo $gb->build();
+    $returnArray['grid'] = $gb->build();
+    $returnArray['controls'] = _createGridPageControls($page);
+
+    return json_encode($returnArray);
+}
+
+function _createGridPageControls(int $page) {
+    global $userModel;
+    $userCount = $userModel->getUserCount();
+
+    $pageControl = '';
+
+    $firstPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="loadUsers(\'';
+    $previousPageLink = '<button id="grid-previous-page-control-btn" type="button" onclick="loadUsers(\'';
+    $nextPageLink = '<button id="grid-next-page-control-btn" type="button" onclick="loadUsers(\'';
+    $lastPageLink = '<button id="grid-last-page-control-btn" type="button" onclick="loadUsers(\'';
+
+    $pageCheck = $page - 1;
+
+    $firstPageLink .= '1\')"';
+    $firstPageLink .= '>&lt;&lt;</button>';
+
+
+    if($page >= 2) {
+        $previousPageLink .= ($page - 1) . '\')';
+    } else {
+        $previousPageLink .= '1\')';
+    }
+    $previousPageLink .= '"';
+    $previousPageLink .= '>&lt;</button>';
+
+
+    if($page < ceil($userCount / AppConfiguration::getGridSize())) {
+        $nextPageLink .= ($page + 1) . '\')';
+    } else if($userCount == 0) {
+        $nextPageLink .= '1\')';
+    } else {
+        $nextPageLink .= ceil($userCount / AppConfiguration::getGridSize()) . '\')';
+    }
+    $nextPageLink .= '"';
+    $nextPageLink .= '>&gt;</button>';
+
+
+    if($userCount == 0) {
+        $lastPageLink .= '1\')';
+    } else {
+        $lastPageLink .= ceil($userCount / AppConfiguration::getGridSize()) . '\')';
+    }
+    $lastPageLink .= '"';
+    $lastPageLink .= '>&gt;&gt;</button>';
+
+    $pageControl = 'Total count: ' . $userCount . ' | ';
+    if($userCount > AppConfiguration::getGridSize()) {
+        if($pageCheck * AppConfiguration::getGridSize() >= $userCount) {
+            $pageControl .= (1 + ($page * AppConfiguration::getGridSize()));
+        } else {
+            $from = 1 + ($pageCheck * AppConfiguration::getGridSize());
+            $to = AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize());
+
+            if($to > $userCount) {
+                $to = $userCount;
+            }
+
+            $pageControl .= $from . '-' . $to;
+        }
+    } else {
+        $pageControl = 'Total count: ' . $userCount;
+    }
+    $pageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
+
+    return $pageControl;
 }
 
 ?>

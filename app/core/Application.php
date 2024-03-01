@@ -14,6 +14,7 @@ use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\PanelAuthorizator;
 use DMS\Authorizators\RibbonAuthorizator;
+use DMS\Components\CalendarComponent;
 use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
@@ -22,13 +23,16 @@ use DMS\Components\RibbonComponent;
 use DMS\Components\SharingComponent;
 use DMS\Components\WidgetComponent;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\FileStorageSystemLocations;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Core\Logger\Logger;
 use DMS\Core\FileManager;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\ArchiveModel;
+use DMS\Models\CalendarModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
+use DMS\Models\FileStorageModel;
 use DMS\Models\FilterModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
@@ -50,7 +54,6 @@ use DMS\Modules\IPresenter;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
-use DMS\Services\AService;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -68,16 +71,14 @@ class Application {
     public const URL_LOGOUT_PAGE = 'UserModule:UserLogout:logoutUser';
 
     public const SYSTEM_VERSION_MAJOR = 1;
-    public const SYSTEM_VERSION_MINOR = 8;
+    public const SYSTEM_VERSION_MINOR = 9;
     public const SYSTEM_VERSION_PATCH = 0;
     public const SYSTEM_VERSION_PATCH_DISPLAY = false;
 
     public const SYSTEM_IS_BETA = true;
-    public const SYSTEM_DEBUG = true && self::SYSTEM_IS_BETA;
-    public const SYSTEM_VERSION = self::SYSTEM_VERSION_MAJOR . '.' . self::SYSTEM_VERSION_MINOR . (self::SYSTEM_VERSION_PATCH_DISPLAY ? ('.' . self::SYSTEM_VERSION_PATCH) : '') . (self::SYSTEM_IS_BETA ? '_beta' : '');
+    public const SYSTEM_VERSION = self::SYSTEM_VERSION_MAJOR . '.' . self::SYSTEM_VERSION_MINOR . (self::SYSTEM_VERSION_PATCH_DISPLAY ? ('.' . self::SYSTEM_VERSION_PATCH) : '') . (self::SYSTEM_IS_BETA ? ' beta' : '');
     public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2024/02/21';
 
-    //private array $cfg;
     public ?string $currentUrl;
     
     public IModule $currentModule;
@@ -116,6 +117,8 @@ class Application {
     public RibbonRightsModel $ribbonRightsModel;
     public FilterModel $filterModel;
     public ArchiveModel $archiveModel;
+    public FileStorageModel $fileStorageModel;
+    public CalendarModel $calendarModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -133,6 +136,7 @@ class Application {
     public ExternalEnumComponent $externalEnumComponent;
     public RibbonComponent $ribbonComponent;
     public DocumentReportGeneratorComponent $documentReportGeneratorComponent;
+    public CalendarComponent $calendarComponent;
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
@@ -190,6 +194,8 @@ class Application {
         $this->ribbonRightsModel = new RibbonRightsModel($this->conn, $this->logger);
         $this->filterModel = new FilterModel($this->conn, $this->logger);
         $this->archiveModel = new ArchiveModel($this->conn, $this->logger);
+        $this->fileStorageModel = new FileStorageModel($this->conn, $this->logger);
+        $this->calendarModel = new CalendarModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -210,7 +216,9 @@ class Application {
             'mailModel' => $this->mailModel,
             'ribbonModel' => $this->ribbonModel,
             'filterModel' => $this->filterModel,
-            'archiveModel' => $this->archiveModel
+            'archiveModel' => $this->archiveModel,
+            'fileStorageModel' => $this->fileStorageModel,
+            'calendarModel' => $this->calendarModel
         );
 
         $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -222,12 +230,18 @@ class Application {
         $sessionDestroyed = false;
         if($install) {
             $this->installDb($sessionDestroyed);
+
+            foreach(FileStorageSystemLocations::$texts as $k => $v) {
+                if(!is_dir(getcwd() . $v['path'])) {
+                    mkdir(getcwd() . $v['path']);
+                }
+            }
         }
         
-        $this->fsManager = new FileStorageManager($this->baseDir . AppConfiguration::getFileDir(), $this->fileManager, $this->logger);
+        $this->fsManager = new FileStorageManager($this->fileManager, $this->logger, $this->fileStorageModel);
         $this->mailManager = new MailManager();
         
-        $serviceManagerCacheManager = new CacheManager(AppConfiguration::getSerializeCache(), CacheCategories::SERVICE_CONFIG, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
+        $serviceManagerCacheManager = new CacheManager(CacheCategories::SERVICE_CONFIG, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
         
         $this->notificationComponent = new NotificationComponent($this->conn, $this->logger, $this->notificationModel);
         $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->models, $this->notificationComponent);
@@ -242,7 +256,8 @@ class Application {
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
         
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
-        $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager, $this->externalEnumComponent);
+        $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager, $this->externalEnumComponent, $this->fsManager);
+        $this->calendarComponent = new CalendarComponent($this->conn, $this->logger, $this->calendarModel);
         
         $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
         
@@ -266,6 +281,27 @@ class Application {
      */
     public function redirect(string $url, array $params = array(), string $hashtag = '') {
         $page = '?';
+
+        if(isset($_GET['page'])) {
+            $urlPage = htmlspecialchars($_GET['page']);
+            $urlPageParts = explode(':', $urlPage);
+
+            if($url == ':') {
+                $url = $urlPage;
+            } else {
+                $vals = explode(':', $url);
+
+                switch(count($vals)) {
+                    case 1:
+                        $url = $urlPageParts[0] . ':' . $urlPageParts[1] . ':' . $url;
+                        break;
+            
+                    case 2:
+                        $url = $urlPageParts[0] . ':' . $url;
+                        break;
+                }
+            }
+        }
 
         $newParams = array('page' => $url);
 

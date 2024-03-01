@@ -105,6 +105,8 @@ class Database implements IDbQueriable {
             $this->query($sql);
 
             $this->transactionCount++;
+
+            $_SESSION['transaction_start_timestamp'] = time();
         }
 
         return true;
@@ -124,6 +126,14 @@ class Database implements IDbQueriable {
 
         $this->transactionCount--;
 
+        if(isset($_SESSION['transaction_start_timestamp'])) {
+            $start = $_SESSION['transaction_start_timestamp'];
+            $end = time();
+            $diff = $end - $start;
+            unset($_SESSION['transaction_start_timestamp']);
+            $this->insertTransactionLogEntry($diff);
+        }
+
         return true;
     }
 
@@ -138,6 +148,10 @@ class Database implements IDbQueriable {
         $this->query($sql);
 
         $this->transactionCount = 0;
+
+        if(isset($_SESSION['transaction_start_timestamp'])) {
+            unset($_SESSION['transaction_start_timestamp']);
+        }
 
         return true;
     }
@@ -162,6 +176,17 @@ class Database implements IDbQueriable {
                 $this->conn = new \mysqli($this->config['dbServer'], $this->config['dbUser'], $this->config['dbPass']);
             }
         }
+    }
+
+    private function insertTransactionLogEntry(int $timeTaken) {
+        if(isset($_SESSION['id_current_user'])) {
+            $idUser = $_SESSION['id_current_user'];
+            $sql = "INSERT INTO `db_transaction_log` (`time_taken`, `id_calling_user`) VALUES ('$timeTaken', '$idUser')";
+        } else {
+            $sql = "INSERT INTO `db_transaction_log` (`time_taken`) VALUES ('$timeTaken')";
+        }
+
+        return $this->query($sql);
     }
 
     /**

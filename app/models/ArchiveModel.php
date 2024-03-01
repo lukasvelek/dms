@@ -13,6 +13,92 @@ class ArchiveModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentsInIdBoxWithOffset(int $idBox, int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('archive_documents')
+            ->where('id_parent_archive_entity = ?', [$idBox])
+            ->limit($limit)
+            ->offset($offset)
+            ->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::DOCUMENT);
+        }
+    
+        return $entities;
+    }
+
+    public function getBoxesInIdArchiveWithOffset(int $idArchive, int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('archive_boxes')
+            ->where('id_parent_archive_entity = ?', [$idArchive])
+            ->limit($limit)
+            ->offset($offset)
+            ->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::DOCUMENT);
+        }
+    
+        return $entities;
+    }
+
+    public function getDocumentsWithOffset(int $limit, int $offset) {
+        $qb = $this->getArchiveEntitiesWithOffset('archive_documents', $limit, $offset);
+
+        $qb->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::DOCUMENT);
+        }
+
+        return $entities;
+    }
+
+    public function getBoxesWithOffset(int $limit, int $offset) {
+        $qb = $this->getArchiveEntitiesWithOffset('archive_boxes', $limit, $offset);
+
+        $qb->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::BOX);
+        }
+
+        return $entities;
+    }
+
+    public function getArchivesWithOffset(int $limit, int $offset) {
+        $qb = $this->getArchiveEntitiesWithOffset('archive_archives', $limit, $offset);
+
+        $qb->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::ARCHIVE);
+        }
+
+        return $entities;
+    }
+
+    public function getArchiveEntitiesWithOffset(string $dbTable, int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from($dbTable)
+            ->limit($limit)
+            ->offset($offset);
+
+        return $qb;
+    }
+
     public function getDocumentsForIdParent(int $idParent) {
         $qb = $this->qb(__METHOD__);
 
@@ -162,21 +248,6 @@ class ArchiveModel extends AModel {
         return $result->num_rows;
     }
 
-    public function getFirstIdDocumentOnAGridPage(int $gridPage) {
-        if($gridPage == 0) $gridPage = 1;
-        return $this->getFirstRowWithCount($gridPage, 'archive_documents', ['id']);
-    }
-
-    public function getFirstIdBoxOnAGridPage(int $gridPage) {
-        if($gridPage == 0) $gridPage = 1;
-        return $this->getFirstRowWithCount($gridPage, 'archive_boxes', ['id']);
-    }
-
-    public function getFirstIdArchiveOnAGridPage(int $gridPage) {
-        if($gridPage == 0) $gridPage = 1;
-        return $this->getFirstRowWithCount($gridPage, 'archive_archives', ['id']);
-    }
-
     public function getDocumentById(int $id) {
         $qb = $this->qb(__METHOD__);
 
@@ -222,62 +293,6 @@ class ArchiveModel extends AModel {
         return $this->insertNew($data, 'archive_archives');
     }
 
-    public function getBoxesForIdArchiveFromId(?int $idFrom, int $limit, int $idArchive) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('archive_boxes')
-            ->where('id_parent_archive_entity = ?', [$idArchive]);
-
-        if($idFrom == 1) {
-            $qb ->andWhere('id >= ?', [$idFrom]);
-        } else {
-            $qb ->andWhere('id > ?', [$idFrom]);
-        }
-
-        $qb ->limit($limit)
-            ->execute();
-
-        $entities = [];
-        while($row = $qb->fetchAssoc()) {
-            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::BOX);
-        }
-    
-        return $entities;
-    }
-
-    public function getDocumentsForIdBoxFromId(?int $idFrom, int $limit, int $idBox) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('archive_documents')
-            ->where('id_parent_archive_entity = ?', [$idBox]);
-
-        if($idFrom == 1) {
-            $qb ->andWhere('id >= ?', [$idFrom]);
-        } else {
-            $qb ->andWhere('id > ?', [$idFrom]);
-        }
-
-        $qb ->limit($limit)
-            ->execute();
-
-        $entities = [];
-        while($row = $qb->fetchAssoc()) {
-            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::DOCUMENT);
-        }
-    
-        return $entities;
-    }
-
     public function getDocumentCount() {
         return $this->getRowCount('archive_documents', 'id');
     }
@@ -288,87 +303,6 @@ class ArchiveModel extends AModel {
 
     public function getArchiveCount() {
         return $this->getRowCount('archive_archives', 'id');
-    }
-
-    public function getAllArchivesFromId(?int $idFrom, int $limit) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('archive_archives');
-
-        if($idFrom == 1) {
-            $qb ->where('id >= ?', [$idFrom]);
-        } else {
-            $qb ->where('id > ?', [$idFrom]);
-        }
-
-        $qb ->limit($limit)
-            ->execute();
-
-        $entities = [];
-        while($row = $qb->fetchAssoc()) {
-            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::ARCHIVE);
-        }
-    
-        return $entities;
-    }
-
-    public function getAllBoxesFromId(?int $idFrom, int $limit) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('archive_boxes');
-
-        if($idFrom == 1) {
-            $qb ->where('id >= ?', [$idFrom]);
-        } else {
-            $qb ->where('id > ?', [$idFrom]);
-        }
-
-        $qb ->limit($limit)
-            ->execute();
-
-        $entities = [];
-        while($row = $qb->fetchAssoc()) {
-            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::BOX);
-        }
-    
-        return $entities;
-    }
-
-    public function getAllDocumentsFromId(?int $idFrom, int $limit) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('archive_documents');
-
-        if($idFrom == 1) {
-            $qb ->where('id >= ?', [$idFrom]);
-        } else {
-            $qb ->where('id > ?', [$idFrom]);
-        }
-
-        $qb ->limit($limit)
-            ->execute();
-
-        $entities = [];
-        while($row = $qb->fetchAssoc()) {
-            $entities[] = $this->createArchiveObjectFromDbRow($row, ArchiveType::DOCUMENT);
-        }
-    
-        return $entities;
     }
 
     public function getAllDocuments() {

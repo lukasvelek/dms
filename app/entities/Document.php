@@ -200,7 +200,7 @@ class Document extends AEntity {
     /**
      * Returns file path
      * 
-     * @return string File path
+     * @return null|string File path or null
      */
     public function getFile() {
         return $this->file;

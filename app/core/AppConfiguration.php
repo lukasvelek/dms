@@ -55,18 +55,6 @@ class AppConfiguration {
         return self::loadParam('cache_dir');
     }
 
-    public static function getSerializeCache() {
-        return self::loadParam('serialize_cache');
-    }
-
-    /**
-     * ----- FILE STORAGE -----
-     */
-
-    public static function getFileDir() {
-        return self::loadParam('file_dir');
-    }
-
     /**
      * ----- SERVICE USER DEFINITION -----
      */
@@ -111,14 +99,6 @@ class AppConfiguration {
         return self::loadParam('grid_size');
     }
 
-    public static function getGridUseFastLoad() {
-        return self::loadParam('grid_use_fast_load');
-    }
-
-    public static function getGridUseAjax() {
-        return self::loadParam('grid_use_ajax');
-    }
-
     public static function getDefaultDatetimeFormat() {
         return self::loadParam('default_datetime_format');
     }
@@ -141,6 +121,14 @@ class AppConfiguration {
 
     public static function getServiceAutoRun() {
         return self::loadParam('enable_service_auto_run');
+    }
+
+    public static function getIsDebug() {
+        return self::loadParam('is_debug');
+    }
+
+    public static function getDocumentReportKeepLength() {
+        return self::loadParam('document_report_keep_length');
     }
 
     /**

@@ -9,6 +9,7 @@ use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\FileStorageSystemLocations;
 use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
@@ -68,6 +69,8 @@ class DatabaseInstaller {
         $this->insertDefaultRibbons();
         $this->insertDefaultRibbonGroupRights();
         $this->insertDefaultRibbonUserRights();
+
+        $this->insertDefaultFileStorageLocations();
     }
 
     /**
@@ -246,7 +249,7 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_author' => 'INT(32) NOT NULL',
                 'id_document' => 'INT(32) NOT NULL',
-                'text' => 'VARCHAR(32768)',
+                'text' => 'TEXT',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'process_comments' => array(
@@ -276,7 +279,7 @@ class DatabaseInstaller {
             'notifications' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user' => 'INT(32) NOT NULL',
-                'text' => 'VARCHAR(32768) NOT NULL',
+                'text' => 'TEXT NOT NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'action' => 'VARCHAR(256) NOT NULL'
@@ -284,14 +287,14 @@ class DatabaseInstaller {
             'service_log' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'name' => 'VARCHAR(256) NOT NULL',
-                'text' => 'VARCHAR(32768) NOT NULL',
+                'text' => 'TEXT NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'mail_queue' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'recipient' => 'VARCHAR(256) NOT NULL',
                 'title' => 'VARCHAR(256) NOT NULL',
-                'body' => 'VARCHAR(32768) NOT NULL',
+                'body' => 'TEXT NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'password_reset_hashes' => array(
@@ -349,7 +352,7 @@ class DatabaseInstaller {
                 'id_author' => 'INT(32) NULL',
                 'name' => 'VARCHAR(256) NOT NULL',
                 'description' => 'VARCHAR(256) NULL',
-                'filter_sql' => 'VARCHAR(32768) NOT NULL',
+                'filter_sql' => 'TEXT NOT NULL',
                 'has_ordering' => 'INT(2) NOT NULL DEFAULT 0'
             ),
             'user_connections' => array(
@@ -380,12 +383,39 @@ class DatabaseInstaller {
             ),
             'document_reports' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'sql_string' => 'VARCHAR(32768) NOT NULL',
+                'sql_string' => 'TEXT NOT NULL',
                 'id_user' => 'INT(32) NOT NULL',
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'file_src' => 'VARCHAR(256) NULL'
+            ),
+            'file_storage_locations' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'name' => 'VARCHAR(256) NOT NULL',
+                'path' => 'VARCHAR(256) NOT NULL',
+                'is_default' => 'INT(2) NOT NULL DEFAULT 0',
+                'is_active' => 'INT(2) NOT NULL DEFAULT 1',
+                'order' => 'INT(32) NOT NULL',
+                'is_system' => 'INT(2) NOT NULL DEFAULT 0',
+                'type' => 'VARCHAR(256) NOT NULL',
+                'absolute_path' => 'VARCHAR(256) NOT NULL'
+            ),
+            'calendar_events' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'title' => 'VARCHAR(256) NOT NULL',
+                'color' => 'VARCHAR(256) NOT NULL',
+                'tag' => 'VARCHAR(256) NULL',
+                'date_from' => 'VARCHAR(256) NOT NULL',
+                'date_to' => 'VARCHAR(256) NULL',
+                'time' => 'VARCHAR(256) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'db_transaction_log' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_calling_user' => 'INT(32) NULL',
+                'time_taken' => 'VARCHAR(256) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 
@@ -1263,14 +1293,14 @@ class DatabaseInstaller {
             'documents',
             'processes',
             'settings',
-            'archive'
+            'archive',
+            'current_user'
         );
 
         $toppanelRibbons = array(
             array(
                 'name' => 'Home',
                 'code' => 'home',
-                'image' => 'img/home.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:HomePage:showHomepage',
                 'is_system' => '1',
@@ -1279,7 +1309,6 @@ class DatabaseInstaller {
             array(
                 'name' => 'Documents',
                 'code' => 'documents',
-                'image' => 'img/documents.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Documents:showAll',
                 'is_system' => '1',
@@ -1288,7 +1317,6 @@ class DatabaseInstaller {
             array(
                 'name' => 'Processes',
                 'code' => 'processes',
-                'image' => 'img/processes.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Processes:showAll',
                 'is_system' => '1',
@@ -1297,7 +1325,6 @@ class DatabaseInstaller {
             array(
                 'name' => 'Archive',
                 'code' => 'archive',
-                'image' => 'img/archive.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Archive:showDocuments',
                 'is_system' => '1',
@@ -1306,11 +1333,18 @@ class DatabaseInstaller {
             array(
                 'name' => 'Settings',
                 'code' => 'settings',
-                'image' => 'img/settings.svg',
                 'is_visible' => '1',
                 'page_url' => '?page=UserModule:Settings:showDashboard',
                 'is_system' => '1',
                 'ribbon_right' => Ribbons::ROOT_SETTINGS
+            ),
+            array(
+                'name' => 'Current user',
+                'code' => 'current_user',
+                'is_visible' => '0',
+                'page_url' => '?page=UserModule:Users:showProfile',
+                'is_system' => '1',
+                'ribbon_right' => Ribbons::ROOT_CURRENT_USER
             )
         );
 
@@ -1426,7 +1460,6 @@ class DatabaseInstaller {
                     'code' => 'settings.dashboard',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboard',
-                    'image' => 'img/dashboard.svg',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_DASHBOARD
                 ),
@@ -1435,7 +1468,6 @@ class DatabaseInstaller {
                     'code' => 'settings.document_folders',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showFolders',
-                    'image' => 'img/folder.svg',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_DOCUMENT_FOLDERS
                 ),
@@ -1444,7 +1476,6 @@ class DatabaseInstaller {
                     'code' => 'settings.users',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showUsers',
-                    'image' => 'img/users.svg',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_USERS
                 ),
@@ -1453,7 +1484,6 @@ class DatabaseInstaller {
                     'code' => 'settings.groups',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showGroups',
-                    'image' => 'img/groups.svg',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_GROUPS
                 ),
@@ -1462,7 +1492,6 @@ class DatabaseInstaller {
                     'code' => 'settings.metadata',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showMetadata',
-                    'image' => 'img/metadata.svg',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_METADATA
                 ),
@@ -1471,7 +1500,6 @@ class DatabaseInstaller {
                     'code' => 'settings.system',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showSystem',
-                    'image' => 'img/system.svg',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_SYSTEM
                 ),
@@ -1480,7 +1508,6 @@ class DatabaseInstaller {
                     'code' => 'settings.services',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showServices',
-                    'image' => 'img/services.svg',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_SERVICES
                 ),
@@ -1489,14 +1516,12 @@ class DatabaseInstaller {
                     'code' => 'settings.dashboard_widgets',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:Settings:showDashboardWidgets',
-                    'image' => 'img/dashboard-widgets.svg',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_DASHBOARD_WIDGETS
                 ),
                 array(
                     'name' => 'Ribbons',
                     'code' => 'settings.ribbons',
-                    'image' => 'img/ribbons.svg',
                     'is_visible' => '1',
                     'page_url' => '?page=UserModule:RibbonSettings:showAll',
                     'is_system' => '1',
@@ -1527,6 +1552,24 @@ class DatabaseInstaller {
                     'page_url' => '?page=UserModule:Archive:showArchives',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::ARCHIVE_ARCHIVES
+                )
+            ),
+            'current_user' => array(
+                array(
+                    'name' => 'Settings',
+                    'code' => 'current_user.settings',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:Users:showSettingsForm&id=current_user',
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::CURRENT_USER_SETTINGS
+                ),
+                array(
+                    'name' => 'My document reports',
+                    'code' => 'current_user.document_reports',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:DocumentReports:showAll&id=current_user',
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::CURRENT_USER_DOCUMENT_REPORTS
                 )
             )
         );
@@ -1689,6 +1732,29 @@ class DatabaseInstaller {
         }
 
         $this->db->commit();
+
+        return true;
+    }
+
+    /**
+     * Inserts default file storage locations
+     * 
+     * @return true
+     */
+    public function insertDefaultFileStorageLocations() {
+        $cwd = getcwd();
+        $cwd = str_replace('\\', '\\\\', $cwd);
+
+        $order = 1;
+        foreach(FileStorageSystemLocations::$texts as $key => $valArr) {
+            $val = $cwd . '\\' . $valArr['path'] . '\\';
+            $type = $valArr['type'];
+            $absPath = $valArr['absolute_path'];
+            $sql = "INSERT INTO `file_storage_locations` (`name`, `path`, `order`, `is_default`, `is_active`, `is_system`, `type`, `absolute_path`) VALUES ('$key', '$val', '$order', '1', '1', '1', '$type', '$absPath')";
+            $this->logger->sql($sql, __METHOD__);
+            $this->db->query($sql);
+            $order++;
+        }
 
         return true;
     }

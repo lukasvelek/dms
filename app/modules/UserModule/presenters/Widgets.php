@@ -20,7 +20,7 @@ class Widgets extends APresenter {
 
         $this->updateDocumentStats();
 
-        $app->redirect('UserModule:HomePage:showHomepage');
+        $app->redirect('HomePage:showHomepage');
     }
 
     protected function updateProcessStats() {
@@ -28,7 +28,7 @@ class Widgets extends APresenter {
 
         $this->_updateProcessStats();
 
-        $app->redirect('UserModule:HomePage:showHomepage');
+        $app->redirect('HomePage:showHomepage');
     }
 
     protected function updateAllStats() {
@@ -37,7 +37,7 @@ class Widgets extends APresenter {
         $this->_updateProcessStats();
         $this->_updateDocumentStats();
 
-        $app->redirect('UserModule:HomePage:showHomepage');
+        $app->redirect('HomePage:showHomepage');
     }
 
     private function _updateProcessStats() {

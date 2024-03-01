@@ -180,6 +180,8 @@ class ServiceManager {
 
     /**
      * Creates service instances
+     * 
+     * To disable service, comment the service line that saves instance to the ServiceManager::services array
      */
     private function loadServices() {
         $this->services['Log Rotate'] = new LogRotateService($this->logger, $this->serviceModel, $this->cm);

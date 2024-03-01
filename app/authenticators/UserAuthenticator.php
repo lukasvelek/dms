@@ -61,8 +61,7 @@ class UserAuthenticator extends AAuthenticator {
         
         CacheManager::invalidateAllCache();
 
-        unset($_SESSION['id_current_user']);
-        unset($_SESSION['session_end_date']);
+        session_destroy();
 
         return true;
     }

@@ -2,7 +2,7 @@ function sleep(ms) {
     return new Promise(r => setTimeout(r, ms));
 }
 
-const general_sleep_length = 250;
+const general_sleep_length = 0;
 
 $(window).on("load", function() {
     $("#cover").remove();
@@ -288,7 +288,7 @@ async function reloadDocumentComments(id_document, can_delete) {
 async function loadDocumentsSearchFilter(query, id_folder, _filter) {
     await sleep(general_sleep_length);
 
-    $('#documents-loading').show();
+    $('#grid-loading').show();
 
     $.ajax({
         url: 'app/ajax/Documents.php',
@@ -302,11 +302,13 @@ async function loadDocumentsSearchFilter(query, id_folder, _filter) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
-async function loadDocumentsFilter(id_folder, _filter) {
+async function loadDocumentsFilter(id_folder, _filter, _page) {
+    $('#grid-loading').show();
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -315,25 +317,28 @@ async function loadDocumentsFilter(id_folder, _filter) {
         data: {
             idFolder: id_folder,
             filter: _filter,
-            action: "search"
+            action: "search",
+            page: _page
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#documents-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+        $('#grid-loading').hide();
     });
 }
 
-async function loadDocumentsSearch(query, id_folder) {
+async function loadDocumentsSearch(query, id_folder, _page) {
     if(query.length < 3 && query.length > 0) {
         return;
     } else if(query.length == 0) {
         await loadDocuments(id_folder);
     }
-
+    
+    $('#grid-loading').show();
+    
     await sleep(general_sleep_length);
-
-    $('#documents-loading').show();
 
     $.ajax({
         url: 'app/ajax/Documents.php',
@@ -341,16 +346,26 @@ async function loadDocumentsSearch(query, id_folder) {
         data: {
             q: query,
             idFolder: id_folder,
-            action: "search"
+            action: "search",
+            page: _page
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#documents-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+        $('#grid-loading').hide();
     });
 }
 
 async function loadDocuments(id_folder, _page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -363,8 +378,16 @@ async function loadDocuments(id_folder, _page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#documents-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
     });
 }
 
@@ -394,11 +417,18 @@ async function loadDocumentsSharedWithMe(_page) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
 async function loadProcesses(_page, _filter = 'waitingForMe') {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -411,8 +441,16 @@ async function loadProcesses(_page, _filter = 'waitingForMe') {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#processes-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
     });
 }
 
@@ -484,7 +522,6 @@ async function reloadProcessComments(id_process, can_delete) {
 }
 
 function hideFlashMessage(index) {
-    //sessionStorage.removeItem('flash_message');
     $('#flash-message-' + index).hide();
 }
 
@@ -522,13 +559,11 @@ async function generateDocuments(_is_debug) {
         }
     })
     .done(function(data) {
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
 
         if(_id_folder != "0") {
-            //location.replace("?page=UserModule:Documents:showAll&id_folder=" + _id_folder);
             location.replace('?page=UserModule:AjaxHelper:flashMessage&id_folder=' + _id_folder + '&message=Documents%20have%20been%20generated&type=info&redirect=UserModule:Documents:showAll');
         } else {
-            //location.replace("?page=UserModule:Documents:showAll");
             location.replace('?page=UserModule:AjaxHelper:flashMessage&message=Documents%20have%20been%20generated&type=info&redirect=UserModule:Documents:showAll');
         }
     });
@@ -547,11 +582,18 @@ async function loadDocumentsCustomFilter(_idFilter) {
     })
     .done(function(data) {
         $('table').html(data);
-        $('#documents-loading').hide();
+        $('#grid-loading').hide();
     });
 }
 
 async function loadUsers(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -563,12 +605,27 @@ async function loadUsers(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#users-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid)
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
     });
 }
 
 async function loadGroups(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -580,8 +637,16 @@ async function loadGroups(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#groups-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
     });
 }
 
@@ -622,6 +687,13 @@ async function hideDropdownMenu(_parentRibbonId, _ribbonId) {
 }
 
 async function loadArchiveDocuments(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -633,12 +705,27 @@ async function loadArchiveDocuments(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#documents-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
     });
 }
 
 async function loadArchiveBoxes(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -650,12 +737,28 @@ async function loadArchiveBoxes(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#documents-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+
+        $('#grid-loading').hide();
     });
 }
 
 async function loadArchiveArchives(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -667,12 +770,27 @@ async function loadArchiveArchives(_page) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#documents-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+
+        $('#grid-loading').hide();
     });
 }
 
 async function loadArchiveEntityContent(_id, _page, _type) {
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
     await sleep(general_sleep_length);
 
     $.ajax({
@@ -686,7 +804,67 @@ async function loadArchiveEntityContent(_id, _page, _type) {
         }
     })
     .done(function(data) {
-        $('table').html(data);
-        $('#documents-loading').hide();
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
+    });
+}
+
+async function loadMetadata(_page) {
+    $('#grid-loading').show();
+
+    $('#grid-first-page-control-btn').prop('disabled', true);
+    $('#grid-previous-page-control-btn').prop('disabled', true);
+    $('#grid-next-page-control-btn').prop('disabled', true);
+    $('#grid-last-page-control-btn').prop('disabled', true);
+
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/Metadata.php',
+        type: 'GET',
+        data: {
+            action: "getMetadata",
+            page: _page
+        }
+    })
+    .done(function(data) {
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+        $('#page_control').html(obj.controls);
+
+        $('#grid-first-page-control-btn').prop('disabled', false);
+        $('#grid-previous-page-control-btn').prop('disabled', false);
+        $('#grid-next-page-control-btn').prop('disabled', false);
+        $('#grid-last-page-control-btn').prop('disabled', false);
+
+        $('#grid-loading').hide();
+    });
+}
+
+async function loadFileStorageLocations() {
+    $('#grid-loading').show();
+
+    await sleep(general_sleep_length);
+
+    $.ajax({
+        url: 'app/ajax/FileStorageSettings.php',
+        type: 'GET',
+        data: {
+            action: 'getLocationsGrid'
+        }
+    })
+    .done(function(data) {
+        const obj = JSON.parse(data);
+        $('table').html(obj.grid);
+
+        $('#grid-loading').hide();
     });
 }

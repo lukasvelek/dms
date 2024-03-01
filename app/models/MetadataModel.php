@@ -12,6 +12,35 @@ class MetadataModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getAllViewableMetadataCount(array $ids) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('metadata')
+            ->where($qb->getColumnInValues('id', $ids))
+            ->execute();
+
+        return $qb->fetchAll()->num_rows;
+    }
+
+    public function getAllViewableMetadataWithOffset(array $ids, int $limit, int $offset) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('metadata')
+            ->where($qb->getColumnInValues('id', $ids))
+            ->limit($limit)
+            ->offset($offset)
+            ->execute();
+
+        $metadata = [];
+        while($row = $qb->fetchAssoc()) {
+            $metadata[] = $this->createMetadataObjectFromDbRow($row);
+        }
+
+        return $metadata;
+    }
+
     public function updateMetadata(int $idMetadata, array $data) {
         return $this->updateExisting('metadata', $idMetadata, $data);
     }

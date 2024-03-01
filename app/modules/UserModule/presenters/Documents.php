@@ -3,23 +3,20 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\ArchiveType;
-use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\FileStorageTypes;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
-use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
-use DMS\Entities\Document;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
-use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
 class Documents extends APresenter {
@@ -34,7 +31,7 @@ class Documents extends APresenter {
     protected function processMoveToArchiveDocumentFormBulkAction() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['ids', 'archive_document'], true, ['page' => 'UserModule:Documents:showAll']);
+        $app->flashMessageIfNotIsset(['ids', 'archive_document'], true, ['page' => 'showAll']);
 
         $ids = $this->get('ids', false);
         $archiveDocument = $this->post('archive_document');
@@ -48,7 +45,7 @@ class Documents extends APresenter {
         }
 
         $app->flashMessage('Documents moved to selected archive document', 'success');
-        $app->redirect('UserModule:Documents:showAll');
+        $app->redirect('showAll');
     }
 
     protected function showDocumentsCustomFilter() {
@@ -68,7 +65,7 @@ class Documents extends APresenter {
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
-            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+            $newEntityLink = LinkBuilder::createLink('showNewForm', 'New document');
         }
 
         $data['$LINKS$'][] = $newEntityLink;
@@ -112,6 +109,8 @@ class Documents extends APresenter {
         $filter = $this->post('filter');
         $limit = $this->post('limit_range');
         $order = $this->post('order');
+
+        $limit = ceil($limit);
 
         $qb = $app->documentModel->composeQueryStandardDocuments(false);
 
@@ -180,7 +179,7 @@ class Documents extends APresenter {
             $app->documentModel->insertDocumentReportQueueEntry($data);
 
             $app->flashMessage('You requested to export more than 1000 entries. This operation will be done by background service. You will be able to find your export ' . LinkBuilder::createAdvLink(['page' => 'UserModule:DocumentReports:showAll'], 'here') . '.');
-            $app->redirect('UserModule:Documents:showAll');
+            $app->redirect('showAll');
         }
 
         $hash = CypherManager::createCypher(32);
@@ -230,7 +229,7 @@ class Documents extends APresenter {
         $page = 1;
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
-            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+            $newEntityLink = LinkBuilder::createLink('showNewForm', 'New document');
         }
         
         if(isset($_GET['grid_page'])) {
@@ -280,14 +279,14 @@ class Documents extends APresenter {
         $page = 1;
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
-            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+            $newEntityLink = LinkBuilder::createLink('showNewForm', 'New document');
         }
 
         if(isset($_GET['id_folder'])) {
             $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
             $folderName = $folder->getName();
-            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'id_folder' => $idFolder), 'New document');
         }
 
         if(isset($_GET['grid_page'])) {
@@ -304,11 +303,7 @@ class Documents extends APresenter {
         }
 
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $filter, $page, $app) {
-            if(AppConfiguration::getGridUseAjax()) {
-                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $filter, $page);
-            } else{
-                $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $filter, $page);
-            }
+            $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, $filter, $page);
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder, $filter) {
@@ -327,8 +322,7 @@ class Documents extends APresenter {
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder, 'showFiltered')
+            '$SEARCH_FIELD$' => $searchField
         );
 
         $this->templateManager->fill($data, $template);
@@ -347,16 +341,16 @@ class Documents extends APresenter {
         $page = 1;
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_DOCUMENT)) {
-            $newEntityLink = LinkBuilder::createLink('UserModule:Documents:showNewForm', 'New document');
+            $newEntityLink = LinkBuilder::createLink('showNewForm', 'New document');
         }
 
         if(isset($_GET['id_folder'])) {
             $idFolder = $this->get('id_folder');
 
-            if($idFolder > -1) {
+            if($idFolder > 0) {
                 $folder = $app->folderModel->getFolderById($idFolder);
                 $folderName = $folder->getName();
-                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showNewForm', 'id_folder' => $idFolder), 'New document');
+                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'id_folder' => $idFolder), 'New document');
             } else {
                 $idFolder = null;
             }
@@ -370,11 +364,7 @@ class Documents extends APresenter {
         $folderList = '';
         
         $app->logger->logFunction(function() use (&$documentGrid, $idFolder, $page, $app) {
-            if(AppConfiguration::getGridUseAjax()) {
-                $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, '', $page);
-            } else{
-                $documentGrid = $this->internalCreateStandardDocumentGrid($idFolder, $page);
-            }
+            $documentGrid = $this->internalCreateStandardDocumentGridAjax($idFolder, '', $page);
         }, __METHOD__);
 
         $app->logger->logFunction(function() use (&$folderList, $idFolder) {
@@ -383,8 +373,6 @@ class Documents extends APresenter {
 
         $searchField = '
             <input type="text" id="q" placeholder="Search" oninput="loadDocumentsSearch(this.value, \'' . ($idFolder ?? 'null') . '\');">
-            <!--<script type="text/javascript" src="js/DocumentAjaxSearch.js"></script>
-            <script type="text/javascript" src="js/DocumentAjaxBulkActions.js"></script>-->
         ';
 
         $data = array(
@@ -395,12 +383,11 @@ class Documents extends APresenter {
             '$LINKS$' => array($newEntityLink),
             '$CURRENT_FOLDER_TITLE$' => $folderName,
             '$FOLDER_LIST$' => $folderList,
-            '$SEARCH_FIELD$' => $searchField,
-            '$DOCUMENT_PAGE_CONTROL$' => $this->internalCreateGridPageControl($page, $idFolder)
+            '$SEARCH_FIELD$' => $searchField
         );
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT)) {
-            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'UserModule:Documents:showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
+            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showReportForm', 'id_folder' => ($idFolder ?? 0)), 'Document report');
         }
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::SEE_OTHER_USERS_FILTERS) ||
@@ -413,74 +400,7 @@ class Documents extends APresenter {
 
         return $template;
     }
-
-    private function internalCreateStandardDocumentGrid(?int $idFolder, ?string $filter, int $page = 1) {
-        global $app;
-
-        $documentModel = $app->documentModel;
-        $userModel = $app->userModel;
-        $folderModel = $app->folderModel;
-
-        $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
-        $fcm = CacheManager::getTemporaryObject(CacheCategories::FOLDERS);
-
-        if($idFolder == 'null') {
-            $idFolder = null;
-        }
-
-        $dataSourceCallback = function() use ($documentModel, $idFolder, $filter, $page) {
-            if(AppConfiguration::getGridUseFastLoad()) {
-                $page -= 1;
-
-                $firstIdDocumentOnPage = $documentModel->getFirstIdDocumentOnAGridPage(($page * AppConfiguration::getGridSize()));
-
-                return $documentModel->getStandardDocumentsFromId($firstIdDocumentOnPage, $idFolder, $filter, AppConfiguration::getGridSize());
-            } else {
-                return $documentModel->getStandardDocuments($idFolder, $filter, ($page * AppConfiguration::getGridSize()));
-            }
-        };
-
-        $gb = new GridBuilder();
-
-        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder']);
-        $gb->addOnColumnRender('idAuthor', function(Document $document) use ($ucm, $userModel) {
-            $user = $ucm->loadUserByIdFromCache($document->getIdAuthor());
-
-            if(is_null($user)) {
-                $user = $userModel->getUserById($document->getIdAuthor());
-
-                $ucm->saveUserToCache($user);
-            }
-
-            return $user->getFullname();
-        });
-        $gb->addOnColumnRender('idFolder', function(Document $document) use ($fcm, $folderModel) {
-            if(is_null($document->getIdFolder())) {
-                return '-';
-            } else {
-                $folder = $fcm->loadFolderByIdFromCache($document->getIdFolder());
-
-                if(is_null($folder)) {
-                    $folder = $folderModel->getFolderById($document->getIdFolder());
-
-                    $fcm->saveFolderToCache($folder);
-                }
-
-                return $folder->getName();
-            }
-        });
-        $gb->addOnColumnRender('status', function(Document $document) {
-            return DocumentStatus::$texts[$document->getStatus()];
-        });
-        $gb->addHeaderCheckbox('select-all', 'selectAllDocumentEntries()');
-        $gb->addRowCheckbox(function(Document $document) {
-            return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions()" onchange="drawDocumentBulkActions()">';
-        });
-        $gb->addDataSourceCallback($dataSourceCallback);
-
-        return $gb->build();
-    }
-
+    
     private function internalCreateStandardDocumentGridAjax(?int $idFolder, ?string $filter, int $page = 1) {
         $code = '<script type="text/javascript">';
 
@@ -491,7 +411,7 @@ class Documents extends APresenter {
         }
 
         $code .= '</script>';
-        $code .= '<table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
     }
@@ -515,7 +435,7 @@ class Documents extends APresenter {
         }
 
         if($action == '-') {
-            $app->redirect('UserModule:Documents:showAll', ['id_folder' => $idFolder]);
+            $app->redirect('showAll', ['id_folder' => $idFolder]);
         }
 
         if(method_exists($this, '_' . $action)) {
@@ -716,6 +636,22 @@ class Documents extends APresenter {
             }
         }
 
+        $dbFSL = $app->fileStorageModel->getAllActiveFileStorageLocations(true);
+        
+        $fileStorageLocations = [];
+        foreach($dbFSL as $loc) {
+            $fsl = [
+                'value' => $loc->getPath(),
+                'text' => $loc->getName()
+            ];
+
+            if($loc->isDefault() && $loc->getType() == FileStorageTypes::FILES) {
+                $fsl['selected'] = 'selected';
+            }
+
+            $fileStorageLocations[] = $fsl;
+        }
+
         $fb = FormBuilder::getTemporaryObject();
         
         $name = $fb->createInput()  ->setType('text')
@@ -756,6 +692,11 @@ class Documents extends APresenter {
             ->addElement($fb->createLabel()->setFor('file')
                                            ->setText('File'))
             ->addElement($fb->createInput()->setType('file')->setName('file'))
+
+            ->addElement($fb->createLabel()->setFor('file_storage_directory')
+                                           ->setText('File storage'))
+            ->addElement($fb->createSelect()->setName('file_storage_directory')
+                                            ->addOptionsBasedOnArray($fileStorageLocations))
 
             ->addElement($fb->createLabel()->setFor('shred_year')
                                            ->setText('Shred year'))
@@ -841,6 +782,7 @@ class Documents extends APresenter {
 
         $idGroup = $this->post('group');
         $idFolder = $this->post('folder');
+        $fileStorageDirectory = $this->post('file_storage_directory');
         
         $data['name'] = $this->post('name');
         $data['id_manager'] = $this->post('manager');
@@ -866,7 +808,8 @@ class Documents extends APresenter {
             'group',
             'folder',
             'shred_year',
-            'after_shred_action'
+            'after_shred_action',
+            'file_storage_directory'
         ]);
 
         $customMetadata = ArrayHelper::formatArrayData($_POST);
@@ -881,8 +824,14 @@ class Documents extends APresenter {
         ArrayHelper::deleteKeysFromArray($customMetadata, $remove);
         $data = array_merge($data, $customMetadata);
 
+        $fileUpload = true;
         if(isset($data['file']) && !empty($data['file'])) {
-            $app->fsManager->uploadFile($_FILES['file'], $data['file']);
+            $fileUpload = $app->fsManager->uploadFile($_FILES['file'], $data['file'], $fileStorageDirectory); // filepath is converted here
+        }
+
+        if($fileUpload !== TRUE) {
+            $app->flashMessage('The file you selected has unsupported extension!', 'error');
+            $app->redirect('showAll');
         }
         
         // CUSTOM OPERATION DEFINITION
@@ -912,7 +861,7 @@ class Documents extends APresenter {
 
         $app->flashMessage('Created new document', 'success');
         
-        $url = 'UserModule:Documents:showAll';
+        $url = 'showAll';
 
         if(isset($data['id_folder'])) {
             $app->redirect($url, array('id_folder' => $data['id_folder']));
@@ -950,9 +899,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -973,9 +922,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -993,9 +942,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -1029,9 +978,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -1065,9 +1014,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -1101,9 +1050,9 @@ class Documents extends APresenter {
             if($idFolder > -1) {
                 $params['id_folder'] = $idFolder;
             }
-            $app->redirect('UserModule:Documents:showFiltered', $params);
+            $app->redirect('showFiltered', $params);
         } else {
-            $app->redirect('UserModule:Documents:showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
+            $app->redirect('showAll', ($idFolder > -1) ? ['id_folder' => $idFolder] : []);
         }
     }
 
@@ -1112,7 +1061,7 @@ class Documents extends APresenter {
 
         $createLink = function(string $action, string $text, ?int $idFolder, ?string $filter) {
             $url = array(
-                'page' => 'UserModule:Documents:' . $action
+                'page' => $action
             );
 
             if($idFolder != null) {
@@ -1146,7 +1095,7 @@ class Documents extends APresenter {
             $list['null3'] = '<hr>';
         }
 
-        $list['null4'] = '&nbsp;&nbsp;' . LinkBuilder::createLink('UserModule:Documents:showSharedWithMe', 'Documents shared with me');
+        $list['null4'] = '&nbsp;&nbsp;' . LinkBuilder::createLink('showSharedWithMe', 'Documents shared with me');
 
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }
@@ -1281,7 +1230,14 @@ class Documents extends APresenter {
             if($pageCheck * AppConfiguration::getGridSize() >= $documentCount) {
                 $documentPageControl .= (1 + ($page * AppConfiguration::getGridSize()));
             } else {
-                $documentPageControl .= (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
+                $from = 1 + ($pageCheck * AppConfiguration::getGridSize());
+                $to = AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize());
+
+                if($to > $documentCount) {
+                    $to = $documentCount;
+                }
+
+                $documentPageControl .= $from . '-' . $to;
             }
         } else {
             $documentPageControl = 'Total documents: ' .  $documentCount;
@@ -1357,7 +1313,7 @@ class Documents extends APresenter {
 
             ->addElement($fb->createLabel()->setText('Limit')->setFor('limit_range'))
             ->addElement($fb->createLabel()->setText('')->setId('limit_text'))
-            ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax(($count + 1))->setName('limit_range')->setStep($step)->setValue(($count / 2)))
+            ->addElement($fb->createInput()->setType('range')->setMin('1')->setMax(($count + 1))->setName('limit_range')->setStep($step)->setValue((ceil($count / 2))))
 
             ->addElement($fb->createLabel()->setText('Order')->setFor('order'))
             ->addElement($fb->createSelect()->setName('order')->addOptionsBasedOnArray($orderArray))

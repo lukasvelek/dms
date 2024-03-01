@@ -10,7 +10,6 @@ use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 class UserRelogin extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -31,7 +30,7 @@ class UserRelogin extends APresenter {
         $newConnectionLink = '';
         
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_USER_CONNECTIONS)) {
-            $newConnectionLink = LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:showNewConnectionForm'), 'New connection');
+            $newConnectionLink = LinkBuilder::createAdvLink(array('page' => 'showNewConnectionForm'), 'New connection');
         }
 
         $data = array(
@@ -67,7 +66,7 @@ class UserRelogin extends APresenter {
 
         $this->checkEnabled();
 
-        $app->flashMessageIfNotIsset(array('user'), true, array('page' => 'UserModule:UserRelogin:showNewConnectionForm'));
+        $app->flashMessageIfNotIsset(array('user'), true, array('page' => 'showNewConnectionForm'));
 
         $user = $this->post('user'); // id user
 
@@ -79,7 +78,7 @@ class UserRelogin extends APresenter {
         $app->userModel->insertNewUserConnect($data);
 
         $app->flashMessage('Successfully connected users', 'success');
-        $app->redirect('UserModule:UserRelogin:showConnectedUsers');
+        $app->redirect('showConnectedUsers');
     }
 
     protected function removeConnectedUser() {
@@ -87,14 +86,14 @@ class UserRelogin extends APresenter {
 
         $this->checkEnabled();
 
-        $app->flashMessageIfNotIsset(array('id_user'), true, array('page' => 'UserModule:UserRelogin:showConnectedUsers'));
+        $app->flashMessageIfNotIsset(array('id_user'), true, array('page' => 'showConnectedUsers'));
 
         $idUser = $this->get('id_user');
 
         $app->userModel->removeConnectionForTwoUsers($idUser, $app->user->getId());
 
         $app->flashMessage('Successfully removed connection', 'success');
-        $app->redirect('UserModule:UserRelogin:showConnectedUsers');
+        $app->redirect('showConnectedUsers');
     }
 
     protected function reloginAsUser() {
@@ -102,7 +101,7 @@ class UserRelogin extends APresenter {
 
         $this->checkEnabled();
 
-        $app->flashMessageIfNotIsset(array('id_user'), true, array('page' => 'UserModule:UserRelogin:showConnectedUsers'));
+        $app->flashMessageIfNotIsset(array('id_user'), true, array('page' => 'showConnectedUsers'));
 
         $idUser = $this->get('id_user');
         $user = $app->userModel->getUserById($idUser);
@@ -114,12 +113,7 @@ class UserRelogin extends APresenter {
 
         $app->flashMessage('Logged in as <i>' . $user->getFullname() . '</i>');
 
-        $app->redirect('UserModule:HomePage:showHomepage');
-        /*if(!is_null($user->getDefaultUserPageUrl())) {
-            $app->redirect($user->getDefaultUserPageUrl());
-        } else {
-            $app->redirect('UserModule:HomePage:showHomepage');
-        }*/
+        $app->redirect('HomePage:showHomepage');
     }
 
     private function internalCreateNewConnectionForm() {
@@ -190,14 +184,14 @@ class UserRelogin extends APresenter {
         });
         $gb->addAction(function(User $user) use ($actionAuthorizator) {
             if($actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN)) {
-                return LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:reloginAsUser', 'id_user' => $user->getId()), 'Login');
+                return LinkBuilder::createAdvLink(array('page' => 'reloginAsUser', 'id_user' => $user->getId()), 'Login');
             } else {
                 return '-';
             }
         });
         $gb->addAction(function(User $user) use ($actionAuthorizator) {
             if($actionAuthorizator->checkActionRight(UserActionRights::REMOVE_USER_CONNECTIONS)) {
-                return LinkBuilder::createAdvLink(array('page' => 'UserModule:UserRelogin:removeConnectedUser', 'id_user' => $user->getId()), 'Remove connection');
+                return LinkBuilder::createAdvLink(array('page' => 'removeConnectedUser', 'id_user' => $user->getId()), 'Remove connection');
             } else {
                 return '-';
             }

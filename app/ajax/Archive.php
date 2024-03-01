@@ -15,7 +15,7 @@ use DMS\UI\LinkBuilder;
 
 require_once('Ajax.php');
 
-$ucm = new CacheManager(true, CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
+$ucm = new CacheManager(CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
 
 $action = null;
 
@@ -359,11 +359,7 @@ function getDocuments() {
     }
 
     $dataSourceCallback = function() use ($archiveModel, $page, $gridSize) {
-        $page -= 1;
-
-        $firstIdOnPage = $archiveModel->getFirstIdDocumentOnAGridPage(($page * $gridSize));
-
-        return $archiveModel->getAllDocumentsFromId($firstIdOnPage, $gridSize);
+        return $archiveModel->getDocumentsWithOffset($gridSize, (($page - 1) * $gridSize));
     };
 
     $gb = new GridBuilder();
@@ -400,7 +396,11 @@ function getDocuments() {
         return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveDocumentBulkActions()" onchange="drawArchiveDocumentBulkActions()">';
     });
 
-    return $gb->build();
+    $returnArray = [];
+    $returnArray['grid'] = $gb->build();
+    $returnArray['controls'] = _createGridPageControls($page, ArchiveType::DOCUMENT);
+
+    return json_encode($returnArray);
 }
 
 function getBoxes() {
@@ -413,13 +413,7 @@ function getBoxes() {
     }
 
     $dataSourceCallback = function() use ($archiveModel, $page, $gridSize) {
-        $page -= 1;
-
-        $firstIdOnPage = $archiveModel->getFirstIdBoxOnAGridPage(($page * $gridSize));
-
-        $result =  $archiveModel->getAllBoxesFromId($firstIdOnPage, $gridSize);
-
-        return $result;
+        return $archiveModel->getBoxesWithOffset($gridSize, (($page - 1) * $gridSize));
     };
 
     $gb = new GridBuilder();
@@ -456,7 +450,11 @@ function getBoxes() {
         return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveBoxBulkActions()" onchange="drawArchiveBoxBulkActions()">';
     });
 
-    return $gb->build();
+    $returnArray = [];
+    $returnArray['grid'] = $gb->build();
+    $returnArray['controls'] = _createGridPageControls($page, ArchiveType::BOX);
+
+    return json_encode($returnArray);
 }
 
 function getArchives() {
@@ -469,11 +467,7 @@ function getArchives() {
     }
 
     $dataSourceCallback = function() use ($archiveModel, $page, $gridSize) {
-        $page -= 1;
-
-        $firstIdOnPage = $archiveModel->getFirstIdArchiveOnAGridPage(($page * $gridSize));
-
-        return $archiveModel->getAllArchivesFromId($firstIdOnPage, $gridSize);
+        return $archiveModel->getArchivesWithOffset($gridSize, (($page - 1) * $gridSize));
     };
 
     $gb = new GridBuilder();
@@ -510,7 +504,11 @@ function getArchives() {
         return '<input type="checkbox" id="select" name="select[]" value="' . $archive->getId() . '" onupdate="drawArchiveArchiveBulkActions()" onchange="drawArchiveArchiveBulkActions()">';
     });
 
-    return $gb->build();
+    $returnArray = [];
+    $returnArray['grid'] = $gb->build();
+    $returnArray['controls'] = _createGridPageControls($page, ArchiveType::ARCHIVE);
+
+    return json_encode($returnArray);
 }
 
 function getContent() {
@@ -554,7 +552,10 @@ function getContent() {
             break;
     }
 
-    return $content;
+    $returnArray = [];
+    $returnArray['grid'] = $content;
+    $returnArray['controls'] = _createEntityContentGridPageControls($page, $type, $entity->getId());
+    return json_encode($returnArray);
 }
 
 
@@ -567,11 +568,7 @@ function internalCreateDocumentGrid(Archive $entity, int $page) {
     global $documentModel, $gridSize, $userModel, $ucm;
 
     $dataSourceCallback = function() use ($documentModel, $entity, $page, $gridSize) {
-        $page -= 1;
-
-        $firstIdOnPage = $documentModel->getFirstIdDocumentInIdArchiveDocumentOnAGridPage($entity->getId(), ($page * $gridSize));
-
-        return $documentModel->getDocumentsInIdArchiveDocumentFromId($firstIdOnPage, $entity->getId(), $gridSize);
+        return $documentModel->getDocumentsInIdArchiveDocumentWithOffset($entity->getId(), $gridSize, (($page - 1) * $gridSize));
     };
 
     $gb = new GridBuilder();
@@ -598,11 +595,7 @@ function internalCreateBoxGrid(Archive $entity, int $page) {
     global $archiveModel, $gridSize;
 
     $dataSourceCallback = function() use ($archiveModel, $entity, $page, $gridSize) {
-        $page -= 1;
-
-        $firstIdOnPage = $archiveModel->getFirstIdDocumentOnAGridPage(($page * $gridSize), ArchiveType::DOCUMENT);
-
-        return $archiveModel->getDocumentsForIdBoxFromId($firstIdOnPage, $gridSize, $entity->getId());
+        return $archiveModel->getDocumentsInIdBoxWithOffset($entity->getId(), $gridSize, (($page - 1) * $gridSize));
     };
 
     $gb = new GridBuilder();
@@ -617,11 +610,7 @@ function internalCreateArchiveGrid(Archive $entity, int $page) {
     global $archiveModel, $gridSize;
 
     $dataSourceCallback = function() use ($archiveModel, $entity, $page, $gridSize) {
-        $page -= 1;
-
-        $firstIdOnPage = $archiveModel->getFirstIdBoxOnAGridPage(($page * $gridSize), ArchiveType::BOX);
-
-        return $archiveModel->getBoxesForIdArchiveFromId($firstIdOnPage, $gridSize, $entity->getId());
+        return $archiveModel->getBoxesInIdArchiveWithOffset($entity->getId(), $gridSize, (($page - 1) * $gridSize));
     };
 
     $gb = new GridBuilder();
@@ -630,6 +619,175 @@ function internalCreateArchiveGrid(Archive $entity, int $page) {
     $gb->addDataSourceCallback($dataSourceCallback);
 
     return $gb->build();
+}
+
+function _createEntityContentGridPageControls(int $page, int $type, int $idEntity) {
+    global $archiveModel, $documentModel;
+
+    $totalCount = 0;
+
+    switch($type) {
+        case ArchiveType::DOCUMENT:
+            $totalCount = $documentModel->getDocumentCountInArchiveDocument($idEntity);
+            break;
+
+        case ArchiveType::BOX:
+            $totalCount = $archiveModel->getChildrenCount($idEntity, ArchiveType::BOX);
+            break;
+
+        case ArchiveType::ARCHIVE:
+            $totalCount = $archiveModel->getChildrenCount($idEntity, ArchiveType::ARCHIVE);
+            break;
+
+        case -1:
+            // document content
+            break;
+    }
+
+    $firstPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="loadArchiveEntityContent(\'' . $idEntity . '\', \'';
+    $previousPageLink = '<button id="grid-previous-page-control-btn" type="button" onclick="loadArchiveEntityContent(\'' . $idEntity . '\', \'';
+    $nextPageLink = '<button id="grid-next-page-control-btn" type="button" onclick="loadArchiveEntityContent(\'' . $idEntity . '\', \'';
+    $lastPageLink = '<button id="grid-last-page-control-btn" type="button" onclick="loadArchiveEntityContent(\'' . $idEntity . '\', \'';
+
+    $pageCheck = $page - 1;
+
+    $firstPageLink .= '1\', \'' . $type . '\')"';
+    if($page == 1 || $totalCount <= AppConfiguration::getGridSize()) {
+        $firstPageLink .= ' hidden';
+    }
+    $firstPageLink .= '>&lt;&lt;</button>';
+
+    if($page >= 2) {
+        $previousPageLink .= ($page - 1) . '\', \'' . $type . '\')';
+    } else {
+        $previousPageLink .= '1\', \'' . $type . '\')';
+    }
+    $previousPageLink .= '"';
+    if($page == 1 || $totalCount <= AppConfiguration::getGridSize()) {
+        $previousPageLink .= ' hidden';
+    }
+    $previousPageLink .= '>&lt;</button>';
+
+    $nextPageLink .= ($page + 1) . '\', \'' . $type . '\')';
+    $nextPageLink .= '"';
+    if($totalCount < ($page * AppConfiguration::getGridSize())) {
+        $nextPageLink .= ' hidden';
+    }
+    $nextPageLink .= '>&gt;</button>';
+
+    $lastPageLink .= ceil($totalCount / AppConfiguration::getGridSize()) . '\', \'' . $type . '\')';
+    $lastPageLink .= '"';
+    if($totalCount <= ($page * AppConfiguration::getGridSize())) {
+        $lastPageLink .= ' hidden';
+    }
+    $lastPageLink .= '>&gt;&gt;</button>';
+
+    $pageControl = 'Total count: ' . $totalCount . ' | ';
+    if($totalCount > AppConfiguration::getGridSize()) {
+        if($pageCheck * AppConfiguration::getGridSize() >= $totalCount) {
+            $pageControl .= (1 + ($page * AppConfiguration::getGridSize()));
+        } else {
+            $from = 1 + ($pageCheck * AppConfiguration::getGridSize());
+            $to = AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize());
+
+            if($to > $totalCount) {
+                $to = $totalCount;
+            }
+
+            $pageControl .= $from . '-' . $to;
+        }
+    } else {
+        $pageControl = 'Total count: ' . $totalCount;
+    }
+    $pageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
+
+    return $pageControl;
+}
+
+function _createGridPageControls(int $page, int $type) {
+    global $archiveModel;
+
+    $totalCount = 0;
+    $link = '';
+
+    switch($type) {
+        case ArchiveType::DOCUMENT:
+            $totalCount = $archiveModel->getDocumentCount();
+            $link = 'loadArchiveDocuments(\'';
+            break;
+
+        case ArchiveType::BOX:
+            $totalCount = $archiveModel->getBoxCount();
+            $link = 'loadArchiveBoxes(\'';
+            break;
+
+        case ArchiveType::ARCHIVE:
+            $totalCount = $archiveModel->getArchiveCount();
+            $link = 'loadArchiveArchives(\'';
+            break;
+
+        case -1:
+            // document content
+            break;
+    }
+
+    $firstPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="' . $link;
+    $previousPageLink = '<button id="grid-previous-page-control-btn" type="button" onclick="' . $link;
+    $nextPageLink = '<button id="grid-next-page-control-btn" type="button" onclick="' . $link;
+    $lastPageLink = '<button id="grid-last-page-control-btn" type="button" onclick="' . $link;
+
+    $pageCheck = $page - 1;
+
+    $firstPageLink .= '1\')"';
+    $firstPageLink .= '>&lt;&lt;</button>';
+
+
+    if($page >= 2) {
+        $previousPageLink .= ($page - 1) . '\')';
+    } else {
+        $previousPageLink .= '1\')';
+    }
+    $previousPageLink .= '"';
+    $previousPageLink .= '>&lt;</button>';
+
+    if($page < ceil($totalCount / AppConfiguration::getGridSize())) {
+        $nextPageLink .= ($page + 1) . '\')';
+    } else if($totalCount == 0) {
+        $nextPageLink .= '1\')';
+    } else {
+        $nextPageLink .= ceil($totalCount / AppConfiguration::getGridSize()) . '\')';
+    }
+    $nextPageLink .= '"';
+    $nextPageLink .= '>&gt;</button>';
+
+    if($totalCount == 0) {
+        $lastPageLink .= '1\')';
+    } else {
+        $lastPageLink .= ceil($totalCount / AppConfiguration::getGridSize()) . '\')';
+    }
+    $lastPageLink .= '"';
+    $lastPageLink .= '>&gt;&gt;</button>';
+
+    $pageControl = 'Total count: ' . $totalCount . ' | ';
+    if($totalCount > AppConfiguration::getGridSize()) {
+        if($pageCheck * AppConfiguration::getGridSize() >= $totalCount) {
+            $pageControl .= (1 + ($page * AppConfiguration::getGridSize()));
+        } else {
+            $from = 1 + ($pageCheck * AppConfiguration::getGridSize());
+            $to = AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize());
+
+            if($to > $totalCount) {
+                $to = $totalCount;
+            }
+
+            $pageControl .= $from . '-' . $to;
+        }
+    } else {
+        $pageControl = 'Total count: ' . $totalCount;
+    }
+    $pageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
+
+    return $pageControl;
 }
 
 function _createLink(string $url, string $text, int $left, int $top) {

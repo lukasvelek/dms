@@ -1,26 +1,23 @@
 <?php
 
 use DMS\Constants\CacheCategories;
-use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
-use DMS\Core\ScriptLoader;
 use DMS\Entities\Document;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
 require_once('AjaxCommonMethods.php');
 
-$ucm = new CacheManager(true, CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
-$fcm = new CacheManager(true, CacheCategories::FOLDERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
+$ucm = new CacheManager(CacheCategories::USERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
+$fcm = new CacheManager(CacheCategories::FOLDERS, '../../' . AppConfiguration::getLogDir(), '../../' . AppConfiguration::getCacheDir());
 
 $action = null;
 
@@ -299,7 +296,9 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $gridUseFastLoad, $actionAuthorizator, $user;
+    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user;
+
+    $returnArray = [];
 
     if($user === NULL) {
         die();
@@ -313,21 +312,23 @@ function search() {
 
     $filter = null;
     $page = 1;
-
+    
     if(isset($_POST['filter'])) {
         $filter = htmlspecialchars($_POST['filter']);
     }
-
+    
     if(isset($_POST['page'])) {
         $page = (int)(htmlspecialchars($_POST['page']));
     }
-
+    
     if(isset($_POST['q'])) {
         $query = htmlspecialchars($_POST['q']);
 
         $query = str_replace('_', '%', $query);
 
         $canShareDocuments = $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false);
+
+        $documents = $documentModel->getDocumentsForName($query, $idFolder, $filter, $gridSize, (($page - 1) * $gridSize));
 
         $gb = new GridBuilder();
 
@@ -384,24 +385,12 @@ function search() {
         $gb->addRowCheckbox(function(Document $document) {
             return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\')">';
         });
-        $gb->addDataSourceCallback(function() use ($documentModel, $idFolder, $filter, $query) {
-            return $documentModel->getDocumentsForName($query, $idFolder, $filter);
-        });
+        $gb->addDataSource($documents);
 
-        echo $gb->build();
+        $returnArray['grid'] = $gb->build();
+        $returnArray['controls'] = _createGridPageControls($page, $filter, $idFolder, 'search', $query);
     } else {
-        $dataSourceCallback = null;
-        if($gridUseFastLoad) {
-            $page -= 1;
-
-            $dataSourceCallback = function() use ($documentModel, $idFolder, $page, $gridSize, $filter) {
-                return $documentModel->getStandardDocumentsWithOffset($idFolder, $gridSize, ($page * $gridSize), $filter);
-            };
-        } else {
-            $dataSourceCallback = function() use ($documentModel, $idFolder, $filter, $page, $gridSize) {
-                return $documentModel->getStandardDocuments($idFolder, $filter, ($page * $gridSize));
-            };
-        }
+        $documents = $documentModel->getStandardDocumentsWithOffset($idFolder, $gridSize, (($page - 1) * $gridSize), $filter);
 
         $canShareDocuments = $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false);
 
@@ -464,14 +453,17 @@ function search() {
         $gb->addRowCheckbox(function(Document $document) use ($filter) {
             return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')">';
         });
-        $gb->addDataSourceCallback($dataSourceCallback);
+        $gb->addDataSource($documents);
 
-        echo $gb->build();
+        $returnArray['grid'] = $gb->build();
+        $returnArray['controls'] = _createGridPageControls($page, $filter, $idFolder, 'showAll', count($documents));
     }
+
+    echo json_encode($returnArray);
 }
 
 function searchDocumentsSharedWithMe() {
-    global $documentModel, $folderModel, $user, $userModel, $metadataModel, $ucm, $fcm;
+    global $documentModel, $folderModel, $user, $userModel, $ucm, $fcm;
 
     if(is_null($user)) {
         return '';
@@ -580,6 +572,8 @@ function generateDocuments() {
         exit;
     }
 
+    $documentModel->beginTran();
+
     $inserted = 0;
     while($inserted < $count) {
         $data = array(
@@ -607,6 +601,9 @@ function generateDocuments() {
         }
     }
 
+    $documentModel->commitTran();
+    $documentModel->beginTran();
+
     if($inserted < $count) {
         for($i = 0; $i < ($count - $inserted); $i++) {
             $data = array(
@@ -630,6 +627,8 @@ function generateDocuments() {
             $documentModel->insertNewDocument($data);
         }
     }
+
+    $documentModel->commitTran();
 
     if($id_folder == '0') {
         $id_folder = null;
@@ -715,6 +714,170 @@ function documentsCustomFilter() {
 }
 
 // PRIVATE METHODS
+
+function _createGridPageControls(int $page, ?string $filter, ?string $idFolder, string $action = 'showAll', ?string $query = null) {
+    global $documentModel, $user;
+    $documentCount = 0;
+
+    if($user === NULL) {
+        return '';
+    }
+
+    if($filter !== NULL && $action == 'showAll') {
+        $action = 'showFiltered';
+    }
+
+    switch($action) {
+        case 'showSharedWithMe':
+            $documentCount = $documentModel->getCountDocumentsSharedWithUser($user->getId());
+            break;
+
+        case 'showFiltered':
+            $documentCount = $documentModel->getDocumentCountForStatus($idFolder, $filter);
+            break;
+
+        case 'search':
+            $documentCount = $documentModel->getDocumentsForNameCount($query, $idFolder, $filter);
+            break;
+
+        default:
+        case 'showAll':
+            $documentCount = $documentModel->getTotalDocumentCount($idFolder);
+            break;
+        }
+
+        $documentPageControl = '';
+
+        $firstPageLink = '<button id="grid-first-page-control-btn" type="button" onclick="';
+        $previousPageLink = '<button id="grid-previous-page-control-btn" type="button" onclick="';
+        $nextPageLink = '<button id="grid-next-page-control-btn" type="button" onclick="';
+        $lastPageLink = '<button id="grid-last-page-control-btn" type="button" onclick="';
+
+        if($action == 'search') {
+            $firstPageLink .= 'loadDocumentsSearch(\'' . $query . '\', \'';
+            $previousPageLink .= 'loadDocumentsSearch(\'' . $query . '\', \'';
+            $nextPageLink .= 'loadDocumentsSearch(\'' . $query . '\', \'';
+            $lastPageLink .= 'loadDocumentsSearch(\'' . $query . '\', \'';
+
+            if($idFolder !== NULL) {
+                $firstPageLink .= $idFolder . '\', ';
+                $previousPageLink .= $idFolder . '\', ';
+                $nextPageLink .= $idFolder . '\', ';
+                $lastPageLink .= $idFolder . '\', ';
+            } else {
+                $firstPageLink .= 'null\', ';
+                $previousPageLink .= 'null\', ';
+                $nextPageLink .= 'null\', ';
+                $lastPageLink .= 'null\', ';
+            }
+
+            $firstPageLink .= '\'1\')';
+        } else {
+            if($filter !== NULL) {
+                $firstPageLink .= 'loadDocumentsFilter(\'';
+                $previousPageLink .= 'loadDocumentsFilter(\'';
+                $nextPageLink .= 'loadDocumentsFilter(\'';
+                $lastPageLink .= 'loadDocumentsFilter(\'';
+    
+                if($idFolder !== NULL) {
+                    $firstPageLink .= $idFolder . '\', ';
+                    $previousPageLink .= $idFolder . '\', ';
+                    $nextPageLink .= $idFolder . '\', ';
+                    $lastPageLink .= $idFolder . '\', ';
+                } else {
+                    $firstPageLink .= 'null\', ';
+                    $previousPageLink .= 'null\', ';
+                    $nextPageLink .= 'null\', ';
+                    $lastPageLink .= 'null\', ';
+                }
+    
+                $firstPageLink .= '\'' . $filter . '\', \'1\')';
+                $previousPageLink .= '\'' . $filter . '\', ';
+                $nextPageLink .= '\'' . $filter . '\', ';
+                $lastPageLink .= '\'' . $filter . '\', ';
+            } else {
+                $firstPageLink .= 'loadDocuments(\'';
+                $previousPageLink .= 'loadDocuments(\'';
+                $nextPageLink .= 'loadDocuments(\'';
+                $lastPageLink .= 'loadDocuments(\'';
+    
+                if($idFolder !== NULL) {
+                    $firstPageLink .= $idFolder . '\', ';
+                    $previousPageLink .= $idFolder . '\', ';
+                    $nextPageLink .= $idFolder . '\', ';
+                    $lastPageLink .= $idFolder . '\', ';
+                } else {
+                    $firstPageLink .= 'null\', ';
+                    $previousPageLink .= 'null\', ';
+                    $nextPageLink .= 'null\', ';
+                    $lastPageLink .= 'null\', ';
+                }
+    
+                $firstPageLink .= '\'1\')';
+            }
+        }
+
+        $pageCheck = $page - 1;
+
+        // FIRST PAGE LINK
+        $firstPageLink .= '"';
+        $firstPageLink .= '>&lt;&lt;</button>';
+
+
+        // PREVIOUS PAGE LINK
+        if($page >= 2) {
+            $previousPageLink .= '\'' . ($page - 1) . '\')';
+        } else {
+            $previousPageLink .= '\'1\')';
+        }
+        $previousPageLink .= '"';
+        $previousPageLink .= '>&lt;</button>';
+
+        
+        // NEXT PAGE LINK
+        if($page < ceil($documentCount / AppConfiguration::getGridSize())) {
+            $nextPageLink .= '\'' . ($page + 1) . '\')';
+        } else if($documentCount == 0) {
+            $nextPageLink .= '\'1\')';
+        } else {
+            $nextPageLink .= '\'' . ceil($documentCount / AppConfiguration::getGridSize()) . '\')';
+        }
+        $nextPageLink .= '"';
+        $nextPageLink .= '>&gt;</button>';
+
+
+        // LAST PAGE LINK
+        if($documentCount == 0) {
+            $lastPageLink .= '\'1\')';
+        } else {
+            $lastPageLink .= '\'' . ceil($documentCount / AppConfiguration::getGridSize()) . '\')';
+        }
+        $lastPageLink .= '"';
+        $lastPageLink .= '>&gt;&gt;</button>';
+
+        $documentPageControl = 'Total count: ' . $documentCount . ' | ';
+
+        if($documentCount > AppConfiguration::getGridSize()) {
+            if($pageCheck * AppConfiguration::getGridSize() >= $documentCount) {
+                $documentPageControl .= (1 + ($page * AppConfiguration::getGridSize()));
+            } else {
+                $from = 1 + ($pageCheck * AppConfiguration::getGridSize());
+                $to = AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize());
+
+                if($to > $documentCount) {
+                    $to = $documentCount;
+                }
+
+                $documentPageControl .= $from . '-' . $to;
+            }
+        } else {
+            $documentPageControl = 'Total count: ' .  $documentCount;
+        }
+
+        $documentPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
+
+        return $documentPageControl;
+}
 
 function _createLink(string $url, string $text, int $left, int $top) {
     $code = '
