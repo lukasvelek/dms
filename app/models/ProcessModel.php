@@ -376,44 +376,6 @@ class ProcessModel extends AModel {
         return $qb->fetch('cnt');
     }
 
-    public function getFinishedProcessesWithIdUserFromId(?int $idFrom, int $idUser, int $limit) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('processes')
-            ->where('WHERE ' . $this->xb()
-                                    ->lb()
-                                        ->where('status = ?', [ProcessStatus::FINISHED])
-                                    ->rb()
-                                    ->and()
-                                    ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
-                                    ->rb()
-                                    ->build());
-
-        if($idFrom == 1) {
-            $qb ->andWhere('id >= ?', [$idFrom]);
-        } else {
-            $qb ->andWhere('id > ?', [$idFrom]);
-        }
-
-        $qb->execute();
-
-        $processes = [];
-        while($row = $qb->fetchAssoc()) {
-            $processes[] = $this->createProcessObjectFromDbRow($row);
-        }
-
-        return $processes;
-    }
-
     public function getFinishedProcessesWithIdUser(int $idUser, int $limit) {
         $qb = $this->qb(__METHOD__);
 
@@ -432,35 +394,6 @@ class ProcessModel extends AModel {
                                     ->rb()
                                     ->build())
             ->limit($limit)
-            ->execute();
-
-        $processes = [];
-        while($row = $qb->fetchAssoc()) {
-            $processes[] = $this->createProcessObjectFromDbRow($row);
-        }
-
-        return $processes;
-    }
-
-    public function getProcessesWhereIdUserIsAuthorFromId(?int $idFrom, int $idUser, int $limit) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('processes')
-            ->where('id_author = ?', [$idUser])
-            ->andWhere('status <> ?', [ProcessStatus::FINISHED]);
-
-        if($idFrom == 1) {
-            $qb->andWhere('id >= ?', [$idFrom]);
-        } else {
-            $qb->andWhere('id > ?', [$idFrom]);
-        }
-
-        $qb ->limit($limit)
             ->execute();
 
         $processes = [];
@@ -520,44 +453,6 @@ class ProcessModel extends AModel {
             ->execute();
 
         return $this->createProcessObjectFromDbRow($qb->fetch());
-    }
-
-    public function getProcessesWithIdUserFromId(?int $idFrom, int $idUser, int $limit) {
-        if(is_null($idFrom)) {
-            return [];
-        }
-
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('processes')
-            ->where('WHERE ' . $this->xb()
-                                    ->lb()
-                                        ->where('status <> ?', [ProcessStatus::FINISHED])
-                                    ->rb()
-                                    ->and()
-                                    ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
-                                    ->rb()
-                                    ->build());
-
-        if($idFrom == 1) {
-            $qb ->andWhere('id >= ?', [$idFrom]);
-        } else {
-            $qb ->andWhere('id > ?', [$idFrom]);
-        }
-
-        $qb ->limit($limit)
-            ->execute();
-
-        $processes = [];
-        while($row = $qb->fetchAssoc()) {
-            $processes[] = $this->createProcessObjectFromDbRow($row);
-        }
-        return $processes;
     }
 
     public function getProcessesWithIdUser(int $idUser, int $limit = 25) {
