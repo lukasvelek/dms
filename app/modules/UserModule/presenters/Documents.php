@@ -1054,7 +1054,9 @@ class Documents extends APresenter {
             $link = 'showFiltered';
         }
 
-        $folderArray = $app->folderModel->getAllFolders();
+        if(empty($folderArray)) {
+            $folderArray = $app->folderModel->getAllFolders();
+        }
 
         $getFoldersForIdParentFolder = function(int $idParentFolder) use($folderArray) {
             $return = [];
@@ -1066,7 +1068,6 @@ class Documents extends APresenter {
             return $return;
         };
 
-        //$childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
         $childFolders = $getFoldersForIdParentFolder($folder->getId());
 
         $folderLink = $linkCreationMethod($link, $folder->getName(), $folder->getId(), $filter);
