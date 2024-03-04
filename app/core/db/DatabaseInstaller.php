@@ -523,7 +523,7 @@ class DatabaseInstaller {
             'metadata_values' => [
                 'id_metadata'
             ],
-            'folder' => [
+            'folders' => [
                 'id_parent_folder'
             ],
             'processes' => [
@@ -576,6 +576,8 @@ class DatabaseInstaller {
                 } else {
                     $sql .= $col . ', ';
                 }
+
+                $i++;
             }
 
             $this->logger->sql($sql, __METHOD__);
