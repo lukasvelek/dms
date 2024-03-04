@@ -937,14 +937,19 @@ function _createBlankLink(int $left, int $top) {
 function _createBulkFunctionLink(string $action, array $idDocuments, ?int $idFolder, ?string $filter) {
     $link = '?page=UserModule:Documents:performBulkAction&';
 
+    $idString = '';
     $i = 0;
     foreach($idDocuments as $idDocument) {
         if(($i + 1) == count($idDocuments)) {
-            $link .= 'select[]=' . $idDocument;
+            $idString .= $idDocument;
         } else {
-            $link .= 'select[]=' . $idDocument . '&';
+            //$link .= 'select[]=' . $idDocument . '&';
+            $idString .= $idDocument . ';';
         }
     }
+
+    //$link .= 'select=' . base64_encode($idString);
+    $_SESSION['bulk_action_ids'] = base64_encode($idString);
 
     $link .= '&action=' . $action;
 
