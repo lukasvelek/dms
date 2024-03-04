@@ -1244,7 +1244,7 @@ class Settings extends APresenter {
         $counts = $app->logger->logFunction(function(UserModel $userModel, GroupModel $groupModel, DocumentModel $documentModel, FolderModel $folderModel, MailModel $mailModel) {
             $users = $userModel->getUserCount();
             $groups = $groupModel->getGroupCount();
-            $documents = $documentModel->getTotalDocumentCount(null);
+            $documents = $documentModel->getTotalDocumentCount(null, false);
             $folders = $folderModel->getFolderCount();
             $emails = $mailModel->getMailInQueueCount();
 

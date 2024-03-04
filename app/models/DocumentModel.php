@@ -264,13 +264,13 @@ class DocumentModel extends AModel {
         return $this->insertNew($data, 'document_stats');
     }
 
-    public function getTotalDocumentCount(?int $idFolder) {
+    public function getTotalDocumentCount(?int $idFolder, bool $useConfigValueToShowAll = true) {
         $cond = null;
 
         if($idFolder !== NULL) {
             $cond = 'WHERE id_folder = ' . $idFolder;
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+            if($useConfigValueToShowAll === TRUE && AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
                 $cond = 'WHERE id_folder IS NULL';
             }
         }
