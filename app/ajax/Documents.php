@@ -82,6 +82,14 @@ function getBulkActions() {
             $documents[$row['id']] = $documentModel->createDocumentObjectFromDbRow($row);
         }
 
+        $canDeleteIds = $documentBulkActionAuthorizator->getAllDocumentIdsForCanDelete($documentModel, null, true);
+        $canApproveArchivationIds = $documentBulkActionAuthorizator->getAllDocumentIdsForApproveArchivation($documentModel, null, true);
+        $canDeclineArchivationIds = $documentBulkActionAuthorizator->getAllDocumentIdsForDeclineArchivation($documentModel, null, true);
+        $canArchiveIds = $documentBulkActionAuthorizator->getAllDocumentIdsForArchive($documentModel, null, true);
+        $canSuggestShreddingIds = $documentBulkActionAuthorizator->getAllDocumentIdsForSuggestForShredding($documentModel, null, true);
+        $canMoveToArchiveDocumentIds = $documentBulkActionAuthorizator->getAllDocumentIdsForMoveToArchiveDocument($documentModel, null, true);
+        $canMoveFromArchiveDocumentIds = $documentBulkActionAuthorizator->getAllDocumentIdsForSuggestForShredding($documentModel, null, true);
+
         foreach($idDocuments as $idDocument) {
             $inProcess = false;
             if(in_array($idDocument, $idDocumentsInProcess)) {
@@ -95,57 +103,99 @@ function getBulkActions() {
             }
 
 
-            if($documentBulkActionAuthorizator->canDelete($document, null, true, false) && 
+            /*if($documentBulkActionAuthorizator->canDelete($document, null, true, false) && 
                 (is_null($canDelete) || $canDelete) &&
                 !$inProcess) {
                 $canDelete = true;
             } else {
                 $canDelete = false;
+            }*/
+
+            if(in_array($idDocument, $canDeleteIds) && (is_null($canDelete) || $canDelete) && !$inProcess) {
+                $canDelete = true;
+            } else {
+                $canDelete = false;
             }
 
-            if($documentBulkActionAuthorizator->canApproveArchivation($document, null, true, false) && 
+            /*if($documentBulkActionAuthorizator->canApproveArchivation($document, null, true, false) && 
                 (is_null($canApproveArchivation) || $canApproveArchivation) &&
                 !$inProcess) {
                 $canApproveArchivation = true;
             } else {
                 $canApproveArchivation = false;
+            }*/
+
+            if(in_array($idDocument, $canApproveArchivationIds) && (is_null($canApproveArchivation) || $canApproveArchivation) && !$inProcess) {
+                $canApproveArchivation = true;
+            } else {
+                $canApproveArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canDeclineArchivation($document, null, true, false) &&
+            /*if($documentBulkActionAuthorizator->canDeclineArchivation($document, null, true, false) &&
                 (is_null($canDeclineArchivation) || $canDeclineArchivation) &&
                 !$inProcess) {
                 $canDeclineArchivation = true;
             } else {
                 $canDeclineArchivation = false;
+            }*/
+
+            if(in_array($idDocument, $canDeclineArchivationIds) && (is_null($canDeclineArchivation) || $canDeclineArchivation) && !$inProcess) {
+                $canDeclineArchivation = true;
+            } else {
+                $canDeclineArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canArchive($document, null, true, false) &&
+            /*if($documentBulkActionAuthorizator->canArchive($document, null, true, false) &&
                 (is_null($canArchive) || $canArchive) &&
                 !$inProcess) {
                 $canArchive = true;
             } else {
                 $canArchive = false;
+            }*/
+
+            if(in_array($idDocument, $canArchiveIds) && (is_null($canArchive) || $canArchive) && !$inProcess) {
+                $canArchive = true;
+            } else {
+                $canArchive = false;
             }
 
-            if($documentBulkActionAuthorizator->canSuggestForShredding($document, null, true, false) &&
+            /*if($documentBulkActionAuthorizator->canSuggestForShredding($document, null, true, false) &&
               (is_null($canSuggestShredding) || $canSuggestShredding) &&
               !$inProcess) {
                 $canSuggestShredding = true;
             } else {
                 $canSuggestShredding = false;
+            }*/
+
+            if(in_array($idDocument, $canSuggestShreddingIds) && (is_null($canSuggestShredding) || $canSuggestShredding) && !$inProcess) {
+                $canSuggestShredding = true;
+            } else {
+                $canSuggestShredding = false;
             }
 
-            if($documentBulkActionAuthorizator->canMoveToArchiveDocument($document, null, true, false) &&
+            /*if($documentBulkActionAuthorizator->canMoveToArchiveDocument($document, null, true, false) &&
                (is_null($canMoveToArchiveDocument) || $canMoveToArchiveDocument) &&
                !$inProcess) {
                 $canMoveToArchiveDocument = true;
             } else {
                 $canMoveToArchiveDocument = false;
+            }*/
+
+            if(in_array($idDocument, $canMoveToArchiveDocumentIds) && (is_null($canMoveToArchiveDocument) || $canMoveToArchiveDocument) && !$inProcess) {
+                $canMoveToArchiveDocument = true;
+            } else {
+                $canMoveToArchiveDocument = false;
             }
 
-            if($documentBulkActionAuthorizator->canMoveFromArchiveDocument($document, null, true, false) &&
+            /*if($documentBulkActionAuthorizator->canMoveFromArchiveDocument($document, null, true, false) &&
                (is_null($canMoveFromArchiveDocument) || $canMoveFromArchiveDocument) &&
                !$inProcess) {
+                $canMoveFromArchiveDocument = true;
+            } else {
+                $canMoveFromArchiveDocument = false;
+            }*/
+
+            if(in_array($idDocument, $canMoveFromArchiveDocumentIds) && (is_null($canMoveFromArchiveDocument) || $canMoveFromArchiveDocument) && !$inProcess) {
                 $canMoveFromArchiveDocument = true;
             } else {
                 $canMoveFromArchiveDocument = false;
