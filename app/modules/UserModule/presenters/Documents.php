@@ -76,30 +76,6 @@ class Documents extends APresenter {
         return $template;
     }
 
-    protected function downloadReport() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['hash']);
-
-        $filename = 'cache/temp_' . $this->get('hash') . '.csv';
-        $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
-
-        copy($filename, $downloadFilename);
-
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary"); 
-        header("Content-disposition: attachment; filename=\"" . basename($downloadFilename) . "\"");
-
-        readfile($downloadFilename);
-
-        unlink($filename);
-        unlink($downloadFilename);
-
-        $app->flashMessage('Report has been generated and downloaded', 'success');
-
-        ScriptLoader::loadJSScript('DocumentReportGenerator.js');
-    }
-
     protected function generateReport() {
         global $app;
 
@@ -185,8 +161,7 @@ class Documents extends APresenter {
             $app->redirect('showAll');
         }
 
-        $hash = CypherManager::createCypher(32);
-        $filename = 'temp_' . $hash . '.' . $fileFormat;
+        $filename = $app->user->getId() . '_' . date('Y-m-d_H-i-s') . '_document_report.' . $fileFormat;
 
         $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $fileFormat, $filename);
 
@@ -194,20 +169,21 @@ class Documents extends APresenter {
             die('ERROR! Documents presenter method '. __METHOD__);
         }
 
-        $filename = $result['file_src'];
-        $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.' . $fileFormat;
+        $idFileStorageLocation = $result['id_file_storage_location'];
+        $realFilename = $result['file_name'];
 
-        copy($filename, $downloadFilename);
+        $location = $app->fileStorageModel->getLocationById($idFileStorageLocation);
+        $realServerPath = $location->getPath() . $realFilename;
 
         header('Content-Type: application/octet-stream');
         header("Content-Transfer-Encoding: Binary"); 
-        header("Content-disposition: attachment; filename=\"" . basename($downloadFilename) . "\"");
+        header("Content-disposition: attachment; filename=\"" . basename($realServerPath) . "\"");
 
-        readfile($downloadFilename);
+        readfile($realServerPath);
 
         unlink($filename);
 
-        return;
+        exit;
     }
 
     protected function showReportForm() {

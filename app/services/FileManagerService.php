@@ -8,17 +8,20 @@ use DMS\Core\CacheManager;
 use DMS\Core\FileStorageManager;
 use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentModel;
+use DMS\Models\FileStorageModel;
 use DMS\Models\ServiceModel;
 
 class FileManagerService extends AService {
     private FileStorageManager $fsm;
     private DocumentModel $documentModel;
+    private FileStorageModel $fsModel;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, FileStorageManager $fsm, DocumentModel $documentModel, CacheManager $cm, FileStorageModel $fsModel) {
         parent::__construct('FileManagerService', $logger, $serviceModel, $cm);
 
         $this->fsm = $fsm;
         $this->documentModel = $documentModel;
+        $this->fsModel = $fsModel;
 
         $this->loadCfg();
     }
@@ -81,12 +84,17 @@ class FileManagerService extends AService {
         $documentReportDbEntries = $this->documentModel->getDocumentReportQueueEntriesForStatus(DocumentReportStatus::FINISHED);
 
         foreach($documentReportDbEntries as $entry) {
-            if(!$this->fsm->fm->fileExists($entry['file_src'])) {
+            $idFileStorageLocation = $entry['id_file_storage_location'];
+            $realFilename = $entry['file_name'];
+
+            $location = $this->fsModel->getLocationById($idFileStorageLocation);
+            $realServerPath = $location->getPath() . $realFilename;
+            if(!$this->fsm->fm->fileExists($realServerPath)) {
                 $this->log('Deleting entry #' . $entry['id'], __METHOD__);
-                $filesToDelete[] = $entry['file_src'];
+                $filesToDelete[] = $realServerPath;
                 $this->documentModel->deleteDocumentReportQueueEntry($entry['id']);
             } else {
-                $existingFiles[] = $entry['file_src'];
+                $existingFiles[] = $entry['file_name'];
             }
         }
 
@@ -105,7 +113,7 @@ class FileManagerService extends AService {
                 } else {
                     $timestampCreated = filemtime($file->getFullname());
                     if($advancedLogging === TRUE) $this->log('Found file for generated document report "' . $file->getName() . '" with date: ' . date('Y-m-d H:i:s', $timestampCreated), __METHOD__);
-                    if(((AppConfiguration::getDocumentReportKeepLength() * 24 * 60 * 60) + $timestampCreated) < time() || !in_array($file->getFullname(), $existingFiles)) {
+                    if(((AppConfiguration::getDocumentReportKeepLength() * 24 * 60 * 60) + $timestampCreated) < time() && !in_array($file->getFullname(), $existingFiles)) {
                         if($advancedLogging === TRUE) $this->log('File "' . $file->getName() . '" is too old. Deleting...', __METHOD__);
                         if(!in_array($file->getFullname(), $filesToDelete)) {
                             $filesToDelete[] = $file->getFullname();

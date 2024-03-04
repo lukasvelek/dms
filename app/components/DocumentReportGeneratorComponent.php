@@ -4,6 +4,7 @@ namespace DMS\Components;
 
 use DMS\Components\DocumentReports\CSVGenerator;
 use DMS\Components\DocumentReports\HTMLGenerator;
+use DMS\Components\DocumentReports\JSONGenerator;
 use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
@@ -51,6 +52,14 @@ class DocumentReportGeneratorComponent extends AComponent {
 
             case 'html':
                 $engine = new HTMLGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models);
+                break;
+
+            case 'json':
+                $engine = new JSONGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models);
+                break;
+
+            default:
+                die('Undefined file format (exception thrown in ' . __CLASS__ . '::' . __METHOD__ . '()');
                 break;
         }
 

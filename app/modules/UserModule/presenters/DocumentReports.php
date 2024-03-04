@@ -30,7 +30,7 @@ class DocumentReports extends APresenter {
 
         readfile($path);
 
-        return;
+        exit;
     }
 
     protected function showAll() {
@@ -141,7 +141,7 @@ class DocumentReports extends APresenter {
 
                 if($fileManager->fileExists($realServerPath)) {
                     //return '<a class="general-link" href="' . $obj->getFileSrc() . '">Download</a>';
-                    return LinkBuilder::createAdvLink(['page' => 'downloadReport', 'path' => base64_encode($obj->getFileSrc())], 'Download');
+                    return LinkBuilder::createAdvLink(['page' => 'downloadReport', 'path' => base64_encode($realServerPath)], 'Download');
                 } else {
                     return '-';
                 }
@@ -150,8 +150,8 @@ class DocumentReports extends APresenter {
             }
         });
         $gb->addAction(function(object $obj) use ($canDeleteDocumentReportQueueEntry) {
-            if($canDeleteDocumentReportQueueEntry &&
-                in_array($obj->getStatus(), [DocumentReportStatus::FINISHED, DocumentReportStatus::IN_PROGRESS])) {
+            if($canDeleteDocumentReportQueueEntry /*&&
+                in_array($obj->getStatus(), [DocumentReportStatus::FINISHED, DocumentReportStatus::IN_PROGRESS])*/) {
                 return LinkBuilder::createAdvLink(['page' => 'deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
             } else {
                 return '-';
