@@ -1034,7 +1034,7 @@ class Documents extends APresenter {
         $folders = $app->folderModel->getAllFolders();
 
         foreach($folders as $folder) {
-            $this->_createFolderList($folder, $list, 0, $filter, $createLink);
+            $this->_createFolderList($folder, $list, 0, $filter, $createLink, $folders);
         }
 
         if(count($folders) > 0) {
