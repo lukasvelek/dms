@@ -29,6 +29,8 @@ class DocumentReports extends APresenter {
         header("Content-disposition: attachment; filename=\"" . basename($path) . "\"");
 
         readfile($path);
+
+        return;
     }
 
     protected function showAll() {
