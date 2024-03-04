@@ -61,7 +61,9 @@ abstract class ADocumentReport {
         $this->customValues = [];
 
         $this->cacheManagers = [
-            'users' => CacheManager::getTemporaryObject(CacheCategories::USERS)
+            'users' => CacheManager::getTemporaryObject(CacheCategories::USERS),
+            'groups' => CacheManager::getTemporaryObject(CacheCategories::GROUPS),
+            'folders' => CacheManager::getTemporaryObject(CacheCategories::FOLDERS)
         ];
     }
 
@@ -110,6 +112,8 @@ abstract class ADocumentReport {
         $archiveModel = $this->models['archiveModel'];
         $groupModel = $this->models['groupModel'];
         $ucm = $this->getCacheManagerByCat('users');
+        $gcm = $this->getCacheManagerByCat('groups');
+        $fcm = $this->getCacheManagerByCat('folders');
 
         $data = [];
         if(array_key_exists($name, $this->customValues)) {
@@ -126,9 +130,17 @@ abstract class ADocumentReport {
             if(array_key_exists('folders', $data) && array_key_exists($value, $data['folders'])) {
                 return $data['folders'][$value];
             } else {
-                $folder = $folderModel->getFolderById($value)->getName();
-                $data['folders'][$value] = $folder;
-                return $folder;
+                $valFromCache = $fcm->loadFolderByIdFromCache();
+
+                if($valFromCache === NULL) {
+                    $folder = $folderModel->getFolderById($value);
+                    $fcm->saveFolderToCache($folder);
+                    $data['folders'][$value] = $folder->getName();
+                    return $folder->getName();
+                } else {
+                    $data['folders'][$value] = $valFromCache->getName();
+                    return $valFromCache->getName();
+                }
             }
         }
         if(in_array($name, ['id_officer', 'id_manager'])) {
@@ -185,9 +197,17 @@ abstract class ADocumentReport {
             if(array_key_exists('groups', $data) && array_key_exists($value, $data['groups'])) {
                 return $data['groups'][$value];
             } else {
-                $group = $groupModel->getGroupById($value)->getName();
-                $data['groups'][$value] = $group;
-                return $group;
+                $valFromCache = $gcm->loadGroupByIdFromCache($value);
+
+                if($valFromCache === NULL) {
+                    $group = $groupModel->getGroupById($value);
+                    $gcm->saveGroupToCache($group);
+                    $data['groups'][$value] = $group->getName();
+                    return $group->getName();
+                } else {
+                    $data['groups'][$value] = $valFromCache->getName();
+                    return $valFromCache->getName();
+                }
             }
         }
         if($name == 'after_shred_action') {

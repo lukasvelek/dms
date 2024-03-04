@@ -21,6 +21,7 @@ class CacheCategories {
     public const RIBBON_GROUP_RIGHTS = 'ribbon_group_rights';
     public const FLASH_MESSAGES = 'flash_messages';
     public const SERVICE_RUN_DATES = 'service_run_dates';
+    public const GROUPS = 'groups';
 
     public static $all = array(
         self::BULK_ACTIONS,
@@ -35,7 +36,8 @@ class CacheCategories {
         self::RIBBON_USER_RIGHTS,
         self::RIBBON_GROUP_RIGHTS,
         self::FLASH_MESSAGES,
-        self::SERVICE_RUN_DATES
+        self::SERVICE_RUN_DATES,
+        self::GROUPS
     );
 }
 
