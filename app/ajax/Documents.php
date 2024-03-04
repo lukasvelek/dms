@@ -74,8 +74,8 @@ function getBulkActions() {
         $qb->clean();
 
         $canDeleteIds = $documentBulkActionAuthorizator->getAllDocumentIdsForCanDelete($documentModel, null, true);
-        $canApproveArchivationIds = $documentBulkActionAuthorizator->getAllDocumentIdsForApproveArchivation($documentModel, null, true);
-        $canDeclineArchivationIds = $documentBulkActionAuthorizator->getAllDocumentIdsForDeclineArchivation($documentModel, null, true);
+        $canApproveArchivationIds = $canDeclineArchivationIds = $documentBulkActionAuthorizator->getAllDocumentIdsForApproveArchivation($documentModel, null, true);
+        //$canDeclineArchivationIds = $documentBulkActionAuthorizator->getAllDocumentIdsForDeclineArchivation($documentModel, null, true); // commented because it does the same SQL query as above
         $canArchiveIds = $documentBulkActionAuthorizator->getAllDocumentIdsForArchive($documentModel, null, true);
         $canSuggestShreddingIds = $documentBulkActionAuthorizator->getAllDocumentIdsForSuggestForShredding($documentModel, null, true);
         $canMoveToArchiveDocumentIds = $documentBulkActionAuthorizator->getAllDocumentIdsForMoveToArchiveDocument($documentModel, null, true);
