@@ -11,6 +11,7 @@ use DMS\Constants\FileStorageTypes;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
+use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
@@ -401,18 +402,14 @@ class Documents extends APresenter {
 
     protected function performBulkAction() {
         global $app;
-
-        //$app->flashMessageIfNotIsset(['select']);
-
-        if(isset($_SESSION['bulk_action_ids'])) {
-            die('err no ids provided');
-        }
-
-        //$ids = base64_decode($this->get('select', false));
-        $ids = explode(';', base64_decode($_SESSION['bulk_action_ids']));
-        unset($_SESSION['bulk_action_ids']);
-        //$_SESSION['bulk_action_ids'] = base64_encode($idString);
+        
         $action = $this->get('action');
+        
+        $cm = CacheManager::getTemporaryObject(base64_encode($app->user->getId() . 'bulk_action' . $action));
+        $ids = $cm->loadStringsFromCache();
+
+        $cm->invalidateCache();
+        unset($cm);
         
         $idFolder = -1;
         if(isset($_GET['id_folder'])) {

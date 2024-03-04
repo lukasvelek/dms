@@ -935,9 +935,15 @@ function _createBlankLink(int $left, int $top) {
 }
 
 function _createBulkFunctionLink(string $action, array $idDocuments, ?int $idFolder, ?string $filter) {
+    global $user;
     $link = '?page=UserModule:Documents:performBulkAction&';
 
-    $idString = '';
+    if($user === NULL) {
+        die();
+        exit;
+    }
+
+    /*$idString = '';
     $i = 0;
     foreach($idDocuments as $idDocument) {
         if(($i + 1) == count($idDocuments)) {
@@ -949,7 +955,13 @@ function _createBulkFunctionLink(string $action, array $idDocuments, ?int $idFol
     }
 
     //$link .= 'select=' . base64_encode($idString);
-    $_SESSION['bulk_action_ids'] = base64_encode($idString);
+    $_SESSION['bulk_action_ids'] = base64_encode($idString);*/
+
+    $cm = CacheManager::getTemporaryObject(base64_encode($user->getId() . 'bulk_action' . $action), true);
+    //$cm->saveStringToCache(json_encode($idDocuments));
+    foreach($idDocuments as $idDocument) {
+        $cm->saveStringToCache($idDocument);
+    }
 
     $link .= '&action=' . $action;
 
