@@ -3,9 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentReportStatus;
-use DMS\Constants\FileStorageTypes;
 use DMS\Constants\UserActionRights;
-use DMS\Core\AppConfiguration;
 use DMS\Modules\APresenter;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
