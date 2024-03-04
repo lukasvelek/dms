@@ -300,7 +300,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status IN (?, ?)', [DocumentStatus::SHREDDED, DocumentStatus::ARCHIVED])
+        $qb ->andWhere($qb->getColumnInValues('status', [DocumentStatus::ARCHIVED, DocumentStatus::SHREDDED]))
             ->execute();
 
         $ids = [];

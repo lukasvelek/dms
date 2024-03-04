@@ -79,7 +79,7 @@ function getBulkActions() {
         $canArchiveIds = $documentBulkActionAuthorizator->getAllDocumentIdsForArchive($documentModel, null, true);
         $canSuggestShreddingIds = $documentBulkActionAuthorizator->getAllDocumentIdsForSuggestForShredding($documentModel, null, true);
         $canMoveToArchiveDocumentIds = $documentBulkActionAuthorizator->getAllDocumentIdsForMoveToArchiveDocument($documentModel, null, true);
-        $canMoveFromArchiveDocumentIds = $documentBulkActionAuthorizator->getAllDocumentIdsForSuggestForShredding($documentModel, null, true);
+        $canMoveFromArchiveDocumentIds = $documentBulkActionAuthorizator->getAllDocumentIdsForMoveFromArchiveDocument($documentModel, null, true);
 
         foreach($idDocuments as $idDocument) {
             $inProcess = false;
