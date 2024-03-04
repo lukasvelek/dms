@@ -11,9 +11,10 @@ use DMS\Constants\FileStorageTypes;
 use DMS\Constants\MetadataInputType;
 use DMS\Core\FileManager;
 use DMS\Core\FileStorageManager;
+use DMS\UI\TableBuilder\TableBuilder;
 
-class CSVGenerator extends ADocumentReport implements IGeneratable {
-    private const FILE_EXTENSION = 'csv';
+class HTMLGenerator extends ADocumentReport implements IGeneratable {
+    private const FILE_EXTENSION = 'html';
 
     public function __construct(ExternalEnumComponent $eec, FileManager $fm, FileStorageManager $fsm, mixed $sqlResult, int $idCallingUser, array $models) {
         parent::__construct($eec, $fm, $fsm, $sqlResult, $idCallingUser, $models);
@@ -21,8 +22,6 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
 
     public function generate(?string $filename = null): array|bool {
         $metadata = parent::$defaultMetadata;
-        $fileRow = [];
-
         $customValues = [];
 
         // CUSTOM METADATA
@@ -59,7 +58,7 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
         $ucm = $this->getCacheManagerByCat('users');
 
         $data = [];
-
+        
         $getCustomValue = function(string $name, string $value) use ($userModel, $folderModel, $archiveModel, $customValues, $groupModel, $ucm, &$data) {
             if(array_key_exists($name, $customValues)) {
                 foreach($customValues[$name] as $cv) {
@@ -148,25 +147,19 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
             return $value;
         };
 
-        $headerRow = '';
+        $tb = TableBuilder::getTemporaryObject();
 
-        $i = 0;
+        $tr = $tb->createRow();
         foreach($metadata as $m) {
-            if(($i + 1) == count($metadata)) {
-                $headerRow .= $m;
-            } else {
-                $headerRow .= $m . ';';
-            }
-            $i++;
+            $tr->addCol($tb->createCol()->setBold()->setText($m));
         }
-
-        $fileRow[] = $headerRow . "\r\n";
+        $tb->addRow($tr);
 
         foreach($this->sqlResult as $row) {
-            $dataRow = '';
-
-            $i = 0;
+            $tr = $tb->createRow();
             foreach($metadata as $m) {
+                $td = $tb->createCol();
+
                 $text = '-';
                 if(isset($row[$m]) && ($row[$m] !== NULL)) {
                     if(!in_array($m, $this->customMetadataValues)) {
@@ -176,16 +169,11 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
                     }
                 }
 
-                if(($i + 1) == count($metadata)) {
-                    $dataRow .= $text;
-                } else {
-                    $dataRow .= $text . ';';
-                }
-
-                $i++;
+                $td->setText($text);
+                $tr->addCol($td);
             }
 
-            $fileRow[] = $dataRow . "\r\n";
+            $tb->addRow($tr);
         }
 
         if($filename === NULL) {
@@ -209,7 +197,7 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
             $i++;
         }
 
-        $writeResult = $this->fm->write($reportStorage . $filename, $fileRow, false);
+        $writeResult = $this->fm->write($reportStorage . $filename, $tb->build(), false);
 
         if($writeResult === TRUE) {
             $path = $reportStorageObj->getPath();

@@ -10,7 +10,8 @@ use DMS\Core\FileStorageManager;
 
 abstract class ADocumentReport {
     public const SUPPORTED_EXTENSIONS = [
-        'csv' => 'CSV'
+        'csv' => 'CSV',
+        'html' => 'HTML'
     ];
 
     protected static $defaultMetadata = [

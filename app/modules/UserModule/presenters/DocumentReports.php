@@ -18,6 +18,20 @@ class DocumentReports extends APresenter {
 
         $this->getActionNamesFromClass($this);
     }
+    
+    protected function downloadReport() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['path']);
+
+        $path = base64_decode($this->get('path'));
+
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary"); 
+        header("Content-disposition: attachment; filename=\"" . basename($path) . "\"");
+
+        readfile($path);
+    }
 
     protected function showAll() {
         global $app;
@@ -126,7 +140,8 @@ class DocumentReports extends APresenter {
                 $realServerPath = $location->getPath() . $obj->getFilename();
 
                 if($fileManager->fileExists($realServerPath)) {
-                    return '<a class="general-link" href="' . $obj->getFileSrc() . '">Download</a>';
+                    //return '<a class="general-link" href="' . $obj->getFileSrc() . '">Download</a>';
+                    return LinkBuilder::createAdvLink(['page' => 'downloadReport', 'path' => base64_encode($obj->getFileSrc())], 'Download');
                 } else {
                     return '-';
                 }

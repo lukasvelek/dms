@@ -3,13 +3,8 @@
 namespace DMS\Components;
 
 use DMS\Components\DocumentReports\CSVGenerator;
+use DMS\Components\DocumentReports\HTMLGenerator;
 use DMS\Constants\CacheCategories;
-use DMS\Constants\DocumentAfterShredActions;
-use DMS\Constants\DocumentRank;
-use DMS\Constants\DocumentShreddingStatus;
-use DMS\Constants\DocumentStatus;
-use DMS\Constants\FileStorageTypes;
-use DMS\Constants\MetadataInputType;
 use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
 use DMS\Core\FileStorageManager;
@@ -23,7 +18,6 @@ class DocumentReportGeneratorComponent extends AComponent {
     private array $models;
     private FileManager $fm;
     private ExternalEnumComponent $eec;
-    private CacheManager $ucm;
     private FileStorageManager $fsm;
 
     /**
@@ -37,7 +31,6 @@ class DocumentReportGeneratorComponent extends AComponent {
         $this->models = $models;
         $this->fm = $fm;
         $this->eec = $eec;
-        $this->ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
         $this->fsm = $fsm;
     }
 
@@ -54,6 +47,10 @@ class DocumentReportGeneratorComponent extends AComponent {
         switch($fileFormat) {
             case 'csv':
                 $engine = new CSVGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models);
+                break;
+
+            case 'html':
+                $engine = new HTMLGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models);
                 break;
         }
 

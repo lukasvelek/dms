@@ -186,7 +186,7 @@ class Documents extends APresenter {
         }
 
         $hash = CypherManager::createCypher(32);
-        $filename = 'temp_' . $hash . '.csv';
+        $filename = 'temp_' . $hash . '.' . $fileFormat;
 
         $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $fileFormat, $filename);
 
@@ -195,7 +195,7 @@ class Documents extends APresenter {
         }
 
         $filename = $result['file_src'];
-        $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
+        $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.' . $fileFormat;
 
         copy($filename, $downloadFilename);
 
