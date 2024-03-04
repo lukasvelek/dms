@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Components\DocumentReports\ADocumentReport;
 use DMS\Constants\ArchiveType;
+use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
@@ -1045,7 +1046,7 @@ class Documents extends APresenter {
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }
 
-    private function _createFolderList(Folder $folder, array &$list, int $level, ?string $filter, callable $linkCreationMethod) {
+    private function _createFolderList(Folder $folder, array &$list, int $level, ?string $filter, callable $linkCreationMethod, array $folderArray = []) {
         global $app;
 
         $link = 'showAll';
@@ -1053,7 +1054,20 @@ class Documents extends APresenter {
             $link = 'showFiltered';
         }
 
-        $childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
+        $folderArray = $app->folderModel->getAllFolders();
+
+        $getFoldersForIdParentFolder = function(int $idParentFolder) use($folderArray) {
+            $return = [];
+            foreach($folderArray as $fa) {
+                if($fa->getIdParentFolder() == $idParentFolder) {
+                    $return[] = $fa;
+                }
+            }
+            return $return;
+        };
+
+        //$childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
+        $childFolders = $getFoldersForIdParentFolder($folder->getId());
 
         $folderLink = $linkCreationMethod($link, $folder->getName(), $folder->getId(), $filter);
         
@@ -1071,7 +1085,7 @@ class Documents extends APresenter {
 
         if(count($childFolders) > 0) {
             foreach($childFolders as $cf) {
-                $this->_createFolderList($cf, $list, $level + 1, $filter, $linkCreationMethod);
+                $this->_createFolderList($cf, $list, $level + 1, $filter, $linkCreationMethod, $folderArray);
             }
         }
     }

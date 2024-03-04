@@ -417,6 +417,21 @@ class CacheManager {
     }
 
     /**
+     * Loads all folders from cache
+     * 
+     * @return null|array Folder array or null
+     */
+    public function loadFoldersFromCache() {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        return $cacheData[$this->category];
+    }
+
+    /**
      * Loads folder from cache
      * 
      * @param int $id Folder ID
