@@ -5,6 +5,9 @@ It also enables users to manage metadata and their values.
 
 ## Changelog
 ### v1.10
+- added database indexes
+- fixed a bug where if the user selects more than 100 documents and wants to perform a bulk action on them, no bulk actions are displayed
+-fixed bugs and potential bugs
 
 ### v1.9
 - added calendar support

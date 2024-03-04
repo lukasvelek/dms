@@ -49,6 +49,7 @@ class DatabaseInstaller {
      */
     public function install() {
         $this->createTables();
+        $this->createIndexes();
         $this->insertDefaultUsers();
         $this->insertDefaultGroups();
         $this->insertDefaultUserGroups();
@@ -450,6 +451,132 @@ class DatabaseInstaller {
             }
 
             $sql = 'CREATE TABLE IF NOT EXISTS `' . $table . '` (' . $col . ')';
+
+            $this->logger->sql($sql, __METHOD__);
+
+            $this->db->query($sql);
+        }
+
+        return true;
+    }
+
+    /**
+     * Inserts indexes for selected database tables
+     * 
+     * @return true
+     */
+    private function createIndexes() {
+        $indexes = [
+            'documents' => [
+                'id_folder'
+            ],
+            'documents' => [
+                'status'
+            ],
+            'document_comments' => [
+                'id_document'
+            ],
+            'document_sharing' => [
+                'id_user',
+                'id_document'
+            ],
+            'document_filters' => [
+                'id_author'
+            ],
+            'document_reports' => [
+                'id_user'
+            ],
+            'user_panel_rights' => [
+                'id_user'
+            ],
+            'user_bulk_rights' => [
+                'id_user'
+            ],
+            'user_action_rights' => [
+                'id_user'
+            ],
+            'user_metadata_rights' => [
+                'id_user',
+                'id_metadata'
+            ],
+            'ribbon_user_rights' => [
+                'id_ribbon',
+                'id_user'
+            ],
+            'group_panel_rights' => [
+                'id_group'
+            ],
+            'group_bulk_rights' => [
+                'id_group'
+            ],
+            'group_action_rights' => [
+                'id_group'
+            ],
+            'group_metadata_rights' => [
+                'id_group',
+                'id_metadata'
+            ],
+            'ribbon_group_rights' => [
+                'id_ribbon',
+                'id_group'
+            ],
+            'metadata_values' => [
+                'id_metadata'
+            ],
+            'folder' => [
+                'id_parent_folder'
+            ],
+            'processes' => [
+                'id_document'
+            ],
+            'process_comments' => [
+                'id_process'
+            ],
+            'notifications' => [
+                'id_user'
+            ],
+            'password_reset_hashes' => [
+                'id_user'
+            ],
+            'ribbons' => [
+                'id_parent_ribbon'
+            ],
+            'file_storage_locations' => [
+                'type'
+            ],
+            'file_storage_locations' => [
+                'name'
+            ]
+        ];
+
+        $tables = [];
+        foreach($indexes as $tableName => $indexColumns) {
+            $i = 1;
+            foreach($tables as $table) {
+                if($table == $tableName) {
+                    $i++;
+                }
+            }
+
+            $sql = 'CREATE INDEX `$INDEX_NAME$` ON `$TABLE_NAME$` (';
+
+            $params = [
+                '$INDEX_NAME$' => $tableName . '_' . $i,
+                '$TABLE_NAME$' => $tableName
+            ];
+
+            foreach($params as $paramName => $paramValue) {
+                $sql = str_replace($paramName, $paramValue, $sql);
+            }
+
+            $i = 0;
+            foreach($indexColumns as $col) {
+                if(($i + 1) == count($indexColumns)) {
+                    $sql .= $col . ')';
+                } else {
+                    $sql .= $col . ', ';
+                }
+            }
 
             $this->logger->sql($sql, __METHOD__);
 
