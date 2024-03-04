@@ -35,7 +35,7 @@ if($action == null) {
 echo($action());
 
 function getBulkActions() {
-    global $documentModel, $documentBulkActionAuthorizator, $user, $processModel, $logger;
+    global $documentModel, $documentBulkActionAuthorizator, $user, $processModel;
 
     $bulkActions = [];
     $text = '';
@@ -65,23 +65,21 @@ function getBulkActions() {
             ->andWhere('status = ?', [ProcessStatus::IN_PROGRESS])
             ->andWhere('id_document IS NOT NULL')
             ->execute();
-
-        $logger->sql($qb->getSQL(), __METHOD__);
         
         $idDocumentsInProcess = [];
         while($row = $qb->fetchAssoc()) {
             $idDocumentsInProcess[] = $row['id_document'];
         }
 
+        $qb->clean();
+
         $qb = $documentModel->composeQueryStandardDocuments();
         $qb ->andWhere($qb->getColumnInValues('id', $idDocuments))
             ->execute();
-        
-        $logger->sql($qb->getSQL(), __METHOD__);
 
         $documents = [];
         while($row = $qb->fetchAssoc()) {
-            $documents[] = $row['id'];
+            $documents[$row['id']] = $documentModel->createDocumentObjectFromDbRow($row);
         }
 
         foreach($idDocuments as $idDocument) {
@@ -89,7 +87,13 @@ function getBulkActions() {
             if(in_array($idDocument, $idDocumentsInProcess)) {
                 $inProcess = true;
             }
-            $document = /*$documentModel->getDocumentById($idDocument);*/ $documents[$idDocument];
+
+            if(!array_key_exists($idDocument, $documents)) {
+                continue;
+            } else {
+                $document = $documents[$idDocument];
+            }
+
 
             if($documentBulkActionAuthorizator->canDelete($document, null, true, false) && 
                 (is_null($canDelete) || $canDelete) &&

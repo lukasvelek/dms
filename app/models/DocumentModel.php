@@ -706,7 +706,7 @@ class DocumentModel extends AModel {
         return $qb;
     }
 
-    private function createDocumentObjectFromDbRow($row) {
+    public function createDocumentObjectFromDbRow($row) {
         if($row === NULL) {
             return null;
         }
