@@ -939,26 +939,11 @@ function _createBulkFunctionLink(string $action, array $idDocuments, ?int $idFol
     $link = '?page=UserModule:Documents:performBulkAction&';
 
     if($user === NULL) {
-        die();
+        die('User does not exist in AJAX');
         exit;
     }
 
-    /*$idString = '';
-    $i = 0;
-    foreach($idDocuments as $idDocument) {
-        if(($i + 1) == count($idDocuments)) {
-            $idString .= $idDocument;
-        } else {
-            //$link .= 'select[]=' . $idDocument . '&';
-            $idString .= $idDocument . ';';
-        }
-    }
-
-    //$link .= 'select=' . base64_encode($idString);
-    $_SESSION['bulk_action_ids'] = base64_encode($idString);*/
-
-    $cm = CacheManager::getTemporaryObject(base64_encode($user->getId() . 'bulk_action' . $action), true);
-    //$cm->saveStringToCache(json_encode($idDocuments));
+    $cm = CacheManager::getTemporaryObject(md5($user->getId() . 'bulk_action' . $action), true);
     foreach($idDocuments as $idDocument) {
         $cm->saveStringToCache($idDocument);
     }

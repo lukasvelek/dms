@@ -405,7 +405,7 @@ class Documents extends APresenter {
         
         $action = $this->get('action');
         
-        $cm = CacheManager::getTemporaryObject(base64_encode($app->user->getId() . 'bulk_action' . $action));
+        $cm = CacheManager::getTemporaryObject(md5($app->user->getId() . 'bulk_action' . $action));
         $ids = $cm->loadStringsFromCache();
 
         $cm->invalidateCache();
