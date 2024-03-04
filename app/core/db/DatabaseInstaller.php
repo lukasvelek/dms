@@ -390,7 +390,10 @@ class DatabaseInstaller {
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
-                'file_src' => 'VARCHAR(256) NULL'
+                'file_src' => 'VARCHAR(256) NULL',
+                'file_format' => 'VARCHAR(256) NOT NULL',
+                'file_name' => 'VARCHAR(256) NULL',
+                'id_file_storage_location' => 'INT(32) NULL'
             ),
             'file_storage_locations' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',

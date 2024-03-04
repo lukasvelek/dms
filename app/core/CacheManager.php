@@ -4,6 +4,7 @@ namespace DMS\Core;
 
 use DMS\Constants\CacheCategories;
 use DMS\Entities\Folder;
+use DMS\Entities\Group;
 use DMS\Entities\Ribbon;
 use DMS\Entities\User;
 
@@ -29,6 +30,40 @@ class CacheManager {
         $this->fm = new FileManager($logdir, $cachedir);
 
         $this->category = $category;
+    }
+
+    /**
+     * Saves group to cache
+     * 
+     * @param Group $group Group instance
+     * @return void
+     */
+    public function saveGroupToCache(Group $group) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[$this->category][$group->getId()] = $group;
+
+        $this->saveToCache($cacheData);
+    }
+
+    /**
+     * Loads group from cache
+     * 
+     * @param int $id Group ID
+     * @return null|Group Group instance or null
+     */
+    public function loadGroupByIdFromCache(int $id) {
+        $cacheData = $this->loadFromCache();
+
+        if($cacheData === FALSE) {
+            return null;
+        }
+
+        if(array_key_exists($id, $cacheData[$this->category])) {
+            return $cacheData[$this->category][$id];
+        } else {
+            return null;
+        }
     }
 
     /**

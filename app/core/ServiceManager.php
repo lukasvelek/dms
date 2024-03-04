@@ -10,6 +10,7 @@ use DMS\Constants\CacheCategories;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentModel;
+use DMS\Models\FileStorageModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\MailModel;
 use DMS\Models\NotificationModel;
@@ -46,6 +47,7 @@ class ServiceManager {
     private NotificationModel $notificationModel;
     private DocumentReportGeneratorComponent $documentReportGeneratorComponent;
     private NotificationComponent $notificationComponent;
+    private FileStorageModel $fsModel;
 
     private array $runDates;
 
@@ -82,7 +84,8 @@ class ServiceManager {
                                 MailManager $mailManager, 
                                 NotificationModel $notificationModel, 
                                 DocumentReportGeneratorComponent $documentReportGeneratorComponent, 
-                                NotificationComponent $notificationComponent) {
+                                NotificationComponent $notificationComponent,
+                                FileStorageModel $fsModel) {
         $this->logger = $logger;
         $this->serviceModel = $serviceModel;
         $this->fsm = $fsm;
@@ -97,6 +100,7 @@ class ServiceManager {
         $this->notificationModel = $notificationModel;
         $this->documentReportGeneratorComponent = $documentReportGeneratorComponent;
         $this->notificationComponent = $notificationComponent;
+        $this->fsModel = $fsModel;
         
         $this->loadServices();
         $this->loadRunDates();
@@ -186,14 +190,14 @@ class ServiceManager {
     private function loadServices() {
         $this->services['LogRotateService'] = new LogRotateService($this->logger, $this->serviceModel, $this->cm);
         $this->services['CacheRotateService'] = new CacheRotateService($this->logger, $this->serviceModel, $this->cm);
-        $this->services['FileManagerService'] = new FileManagerService($this->logger, $this->serviceModel, $this->fsm, $this->documentModel, $this->cm);
+        $this->services['FileManagerService'] = new FileManagerService($this->logger, $this->serviceModel, $this->fsm, $this->documentModel, $this->cm, $this->fsModel);
         $this->services['ShreddingSuggestionService'] = new ShreddingSuggestionService($this->logger, $this->serviceModel, $this->cm, $this->documentAuthorizator, $this->documentModel, $this->processComponent);
         $this->services['PasswordPolicyService'] = new PasswordPolicyService($this->logger, $this->serviceModel, $this->cm, $this->userModel, $this->groupUserModel);
         $this->services['MailService'] = new MailService($this->logger, $this->serviceModel, $this->cm, $this->mailModel, $this->mailManager);
         $this->services['NotificationManagerService'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel);
         $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator);
         $this->services['DeclinedDocumentRemoverService'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator);
-        $this->services['DocumentReportGenerator'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
+        $this->services['DocumentReportGeneratorService'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
     }
 }
 
