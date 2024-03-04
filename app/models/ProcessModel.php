@@ -14,6 +14,15 @@ class ProcessModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function composeStandardProcessQuery(array $selectValues = ['*']) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select($selectValues)
+            ->from('processes');
+
+        return $qb;
+    }
+
     public function getFinishedProcessesWithUserCount(int $idUser) {
         $qb = $this->qb(__METHOD__);
 

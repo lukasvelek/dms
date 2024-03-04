@@ -3,6 +3,7 @@
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\ProcessStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
@@ -34,7 +35,7 @@ if($action == null) {
 echo($action());
 
 function getBulkActions() {
-    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user;
+    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user, $processModel;
 
     $bulkActions = [];
     $text = '';
@@ -59,8 +60,23 @@ function getBulkActions() {
     }
 
     if(!is_null($user)) {
+        $qb = $processModel->composeStandardProcessQuery(['id_document']);
+        $qb ->where('is_archive = 0')
+            ->andWhere('status = ?', [ProcessStatus::IN_PROGRESS])
+            ->andWhere('id_document IS NOT NULL')
+            ->execute();
+        
+        $idDocumentsInProcess = [];
+        while($row = $qb->fetchAssoc()) {
+            $idDocumentsInProcess[] = $row['id_document'];
+        }
+
         foreach($idDocuments as $idDocument) {
-            $inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
+            $inProcess = false;
+            if(in_array($idDocument, $idDocumentsInProcess)) {
+                $inProcess = true;
+            }
+            //$inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
             $document = $documentModel->getDocumentById($idDocument);
 
             if($documentBulkActionAuthorizator->canDelete($document, null, true, false) && 
