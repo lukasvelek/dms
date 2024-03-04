@@ -71,12 +71,21 @@ function getBulkActions() {
             $idDocumentsInProcess[] = $row['id_document'];
         }
 
+        $qb = $documentModel->composeQueryStandardDocuments();
+        $qb ->andWhere($qb->getColumnInValues('id', $idDocuments))
+        ->execute();
+        
+        $documents = [];
+        while($row = $qb->fetchAssoc()) {
+            $documents[] = $row['id'];
+        }
+
         foreach($idDocuments as $idDocument) {
             $inProcess = false;
             if(in_array($idDocument, $idDocumentsInProcess)) {
                 $inProcess = true;
             }
-            $document = $documentModel->getDocumentById($idDocument);
+            $document = /*$documentModel->getDocumentById($idDocument);*/ $documents[$idDocument];
 
             if($documentBulkActionAuthorizator->canDelete($document, null, true, false) && 
                 (is_null($canDelete) || $canDelete) &&
