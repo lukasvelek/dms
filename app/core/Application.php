@@ -679,6 +679,10 @@ class Application {
      */
     private function autoRunServices() {
         foreach($this->serviceManager->services as $displayName => $service) {
+            $serviceObj = $this->serviceModel->getServiceByName($service->name);
+
+            if($serviceObj->isEnabled() === FALSE) continue;
+
             $nextRunDate = $this->serviceManager->getNextRunDateForService($service->name);
 
             if($nextRunDate !== NULL && time() > strtotime($nextRunDate)) {
