@@ -1454,7 +1454,7 @@ class Settings extends APresenter {
         $gb->addDataSourceCallback($dataCallback);
         $gb->addAction(function(ServiceEntity $service) use ($canRunService) {
             $link = '-';
-            if($canRunService) {
+            if($canRunService && $service->isEnabled() === TRUE) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
             return $link;
