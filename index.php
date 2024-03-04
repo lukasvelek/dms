@@ -58,7 +58,7 @@ if(isset($_SESSION['id_current_user'])) {
 
             if($_SESSION['last_login_hash'] == $loginHash) { // ok
                 $app->logger->info('Successfully authenticated user #' . $user->getId());
-                $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
+                $app->setCurrentUser($user);
             } else { // hash mismatch
                 $app->logger->warn('Login hash mismatch for user #' . $user->getId() . '. Requesting relogin!');
                 $app->flashMessage('Auto authentication failed, please log in again. You are probably logging in as a user that is already logged in somewhere else.', 'warn');

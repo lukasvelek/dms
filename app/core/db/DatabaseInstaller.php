@@ -546,6 +546,12 @@ class DatabaseInstaller {
             ],
             'file_storage_locations' => [
                 'name'
+            ],
+            'services' => [
+                'system_name'
+            ],
+            'users' => [
+                'last_login_hash'
             ]
         ];
 

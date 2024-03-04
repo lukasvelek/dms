@@ -678,8 +678,18 @@ class Application {
      * Automatically runs scheduled services
      */
     private function autoRunServices() {
+        $serviceObjs = $this->serviceModel->getAllServices();
         foreach($this->serviceManager->services as $displayName => $service) {
-            $serviceObj = $this->serviceModel->getServiceByName($service->name);
+            //$serviceObj = $this->serviceModel->getServiceByName($service->name);
+
+            $serviceObj = null;
+            foreach($serviceObjs as $sobj) {
+                if($sobj->getSystemName() == $service->name) {
+                    $serviceObj = $sobj;
+                }
+            }
+
+            if($serviceObj === NULL) continue;
 
             if($serviceObj->isEnabled() === FALSE) continue;
 
