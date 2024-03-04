@@ -937,22 +937,8 @@ class Documents extends APresenter {
 
     private function _decline_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
-        
-        foreach($ids as $id) {
-            $document = null;
 
-            $app->logger->logFunction(function() use (&$document, $id, $app) {
-                $document = $app->documentModel->getDocumentById($id);
-            }, __METHOD__);
-
-            if($document == null) {
-                die();
-            }
-
-            if($app->documentAuthorizator->canDeclineArchivation($document)) {
-                $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVATION_DECLINED);
-            }
-        }
+        $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVATION_DECLINED], $ids);
 
         if(count($ids) == 1) {
             $app->flashMessage('Declined archivation for selected document', 'success');
@@ -973,22 +959,6 @@ class Documents extends APresenter {
 
     private function _approve_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
-
-        /*foreach($ids as $id) {
-            $document = null;
-
-            $app->logger->logFunction(function() use (&$document, $id, $app) {
-                $document = $app->documentModel->getDocumentById($id);
-            }, __METHOD__);
-
-            if($document == null) {
-                die();
-            }
-
-            if($app->documentAuthorizator->canApproveArchivation($document)) {
-                $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVATION_APPROVED);
-            }
-        }*/
 
         $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVATION_APPROVED], $ids);
 
@@ -1012,21 +982,7 @@ class Documents extends APresenter {
     private function _archive(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        foreach($ids as $id) {
-            $document = null;
-
-            $app->logger->logFunction(function() use (&$document, $id, $app) {
-                $document = $app->documentModel->getDocumentById($id);
-            }, __METHOD__);
-
-            if($document == null) {
-                die();
-            }
-
-            if($app->documentAuthorizator->canArchive($document)) {
-                $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVED);
-            }
-        }
+        $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVED], $ids);
 
         if(count($ids) == 1) {
             $app->flashMessage('Archived selected document', 'success');
