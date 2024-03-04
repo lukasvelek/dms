@@ -35,7 +35,7 @@ if($action == null) {
 echo($action());
 
 function getBulkActions() {
-    global $documentModel, $documentBulkActionAuthorizator, $user, $processModel;
+    global $documentModel, $documentBulkActionAuthorizator, $user, $processModel, $logger;
 
     $bulkActions = [];
     $text = '';
@@ -65,6 +65,8 @@ function getBulkActions() {
             ->andWhere('status = ?', [ProcessStatus::IN_PROGRESS])
             ->andWhere('id_document IS NOT NULL')
             ->execute();
+
+        $logger->sql($qb->getSQL(), __METHOD__);
         
         $idDocumentsInProcess = [];
         while($row = $qb->fetchAssoc()) {
@@ -73,8 +75,10 @@ function getBulkActions() {
 
         $qb = $documentModel->composeQueryStandardDocuments();
         $qb ->andWhere($qb->getColumnInValues('id', $idDocuments))
-        ->execute();
+            ->execute();
         
+        $logger->sql($qb->getSQL(), __METHOD__);
+
         $documents = [];
         while($row = $qb->fetchAssoc()) {
             $documents[] = $row['id'];
