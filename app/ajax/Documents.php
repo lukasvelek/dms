@@ -35,7 +35,7 @@ if($action == null) {
 echo($action());
 
 function getBulkActions() {
-    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user, $processModel;
+    global $documentModel, $documentBulkActionAuthorizator, $user, $processModel;
 
     $bulkActions = [];
     $text = '';
@@ -76,7 +76,6 @@ function getBulkActions() {
             if(in_array($idDocument, $idDocumentsInProcess)) {
                 $inProcess = true;
             }
-            //$inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
             $document = $documentModel->getDocumentById($idDocument);
 
             if($documentBulkActionAuthorizator->canDelete($document, null, true, false) && 

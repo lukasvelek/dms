@@ -198,7 +198,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canApproveShredding($document, true, $checkForExistingProcess)) {
+        if(!$this->documentAuthorizator->canApproveShredding($document, $checkForExistingProcess)) {
             return false;
         }
 
@@ -223,7 +223,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canDeclineShredding($document, true, $checkForExistingProcess)) {
+        if(!$this->documentAuthorizator->canDeclineShredding($document, $checkForExistingProcess)) {
             return false;
         }
 
@@ -248,7 +248,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canSuggestForShredding($document, true, $checkForExistingProcess)) {
+        if(!$this->documentAuthorizator->canSuggestForShredding($document, $checkForExistingProcess)) {
             return false;
         }
 
@@ -273,7 +273,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canShred($document, true, $checkForExistingProcess)) {
+        if(!$this->documentAuthorizator->canShred($document, $checkForExistingProcess)) {
             return false;
         }
 
