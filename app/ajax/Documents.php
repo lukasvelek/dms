@@ -47,16 +47,16 @@ function getBulkActions() {
     $canMoveToArchiveDocument = null;
     $canMoveFromArchiveDocument = null;
 
-    $idDocuments = $_GET['idDocuments'];
+    $idDocuments = $_POST['idDocuments'];
 
     $idFolder = null;
-    if(isset($_GET['id_folder']) && $_GET['id_folder'] != 'null') {
-        $idFolder = $_GET['id_folder'];
+    if(isset($_POST['id_folder']) && $_POST['id_folder'] != 'null') {
+        $idFolder = $_POST['id_folder'];
     }
 
     $filter = null;
-    if(isset($_GET['filter']) && $_GET['filter'] != 'null') {
-        $filter = $_GET['filter'];
+    if(isset($_POST['filter']) && $_POST['filter'] != 'null') {
+        $filter = $_POST['filter'];
     }
 
     if(!is_null($user)) {
