@@ -315,6 +315,25 @@ abstract class AModel {
 
         return $qb->fetchAll();
     }
+
+    /**
+     * Updates existing database table entries that match the given ids
+     * 
+     * @param array $data Data to update
+     * @param array $ids Entry IDs
+     * @param string $tableName Database table name
+     * @return null|mixed Result of SQl query
+     */
+    public function bulkUpdateExisting(array $data, array $ids, string $tableName) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->update($tableName)
+            ->set($data)
+            ->where($qb->getColumnInValues('id', $ids))
+            ->execute();
+
+        return $qb->fetchAll();
+    }
 }
 
 ?>

@@ -15,6 +15,10 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateDocumentsBulk(array $data, array $ids) {
+        return $this->bulkUpdateExisting($data, $ids, 'documents');
+    }
+
     public function deleteDocumentReportQueueEntryByFilename(string $filename, bool $like = false) {
         $qb = $this->qb(__METHOD__);
 

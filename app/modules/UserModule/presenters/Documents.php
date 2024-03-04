@@ -974,7 +974,7 @@ class Documents extends APresenter {
     private function _approve_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        foreach($ids as $id) {
+        /*foreach($ids as $id) {
             $document = null;
 
             $app->logger->logFunction(function() use (&$document, $id, $app) {
@@ -988,7 +988,9 @@ class Documents extends APresenter {
             if($app->documentAuthorizator->canApproveArchivation($document)) {
                 $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVATION_APPROVED);
             }
-        }
+        }*/
+
+        $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVATION_APPROVED], $ids);
 
         if(count($ids) == 1) {
             $app->flashMessage('Approved archivation for selected document', 'success');
