@@ -6,6 +6,7 @@ It also enables users to manage metadata and their values.
 ## Changelog
 ### v1.10
 - added database indexes
+- updated grid list render speed (SQL queries are now performed more efficiently)
 - updated speed of some operations when working with hundreds or thousands of entities (mostly documents)
 - fixed a bug where if the user selects more than 100 documents and wants to perform a bulk action on them, no bulk actions are displayed
 - fixed bugs and potential bugs
