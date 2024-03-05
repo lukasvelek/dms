@@ -707,7 +707,11 @@ class QueryBuilder
         $i = 0;
         foreach($this->queryData['values'] as $key => $value) {
             if($value == 'NULL') {
-                $sql .= $key . ' = ' . $value;
+                if(($i + 1) == count($this->queryData['values'])) {
+                    $sql .= $key . ' = ' . $value;
+                } else {
+                    $sql .= $key . ' = ' . $value . ', ';
+                }
             } else {
                 if(($i + 1) == count($this->queryData['values'])) {
                     $sql .= $key . ' = \'' . $value . '\'';
