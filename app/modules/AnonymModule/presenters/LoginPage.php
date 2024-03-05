@@ -30,7 +30,7 @@ class LoginPage extends APresenter {
             '$FORM$' => $this->internalRenderForm()
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createLink('AnonymModule:LoginPage:showFirstLoginForm', 'First login');
+        //$data['$LINKS$'][] = LinkBuilder::createLink('AnonymModule:LoginPage:showFirstLoginForm', 'First login');
         $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createLink('AnonymModule:LoginPage:showForgotPasswordForm', 'Forgot password');
 
         $this->templateManager->fill($data, $template);
@@ -131,20 +131,6 @@ class LoginPage extends APresenter {
             $app->flashMessage('You have entered wrong credentials. Please log in again.', 'warn');
             $app->redirect('AnonymModule:LoginPage:showForm');
         }
-    }
-
-    protected function showFirstLoginForm() {
-        $template = $this->templateManager->loadTemplate('app/modules/AnonymModule/presenters/templates/GeneralForm.html');
-
-        $data = array(
-            '$PAGE_TITLE$' => 'First login',
-            '$LINKS$' => array(LinkBuilder::createLink('AnonymModule:LoginPage:showForm', 'General login')),
-            '$FORM$' => $this->internalCreateFirstLoginForm()
-        );
-
-        $this->templateManager->fill($data, $template);
-
-        return $template;
     }
 
     protected function findUser() {
@@ -251,24 +237,6 @@ class LoginPage extends APresenter {
             ->addElement($fb->createSpecial('<input type="text" name="username" value="' . $username . '" hidden>'))
 
             ->addElement($fb->createSubmit()->setId('submit'))
-        ;
-
-        $form = $fb->build();
-
-        return $form;
-    }
-
-    private function internalCreateFirstLoginForm() {
-        $fb = FormBuilder::getTemporaryObject();
-
-        $fb ->setAction('?page=AnonymModule:LoginPage:findUser')->setMethod('POST')
-            ->addElement($fb->createLabel()->setText('Username')
-                                           ->setFor('username'))
-            ->addElement($fb->createInput()->setType('text')
-                                           ->setName('username')
-                                           ->setMaxLength('256')
-                                           ->require())
-            ->addElement($fb->createSubmit('Look up user'))
         ;
 
         $form = $fb->build();
