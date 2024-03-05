@@ -2,12 +2,15 @@
 
 namespace DMS\Modules\AnonymModule;
 
+use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
+use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
+use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
 use \DMS\UI\FormBuilder\FormBuilder;
@@ -113,7 +116,7 @@ class LoginPage extends APresenter {
 
             if(!in_array($user->getStatus(), array(UserStatus::ACTIVE))) {
                 $app->flashMessage('Password change for your account has been requested. Please create a new password!', FlashMessageTypes::WARNING);
-                $app->redirect('AnonymModule:LoginPage:showFirstLoginForm');
+                $app->redirect('AnonymModule:LoginPage:showUpdatePasswordForm', ['id_user' => $user->getId()]);
             }
 
             $generatedHash = CypherManager::createCypher(64);
@@ -130,6 +133,55 @@ class LoginPage extends APresenter {
         } else {
             $app->flashMessage('You have entered wrong credentials. Please log in again.', 'warn');
             $app->redirect('AnonymModule:LoginPage:showForm');
+        }
+    }
+
+    protected function showUpdatePasswordForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_user']);
+        $idUser = $this->get('id_user');
+        
+        $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
+        $valFromCache = $ucm->loadUserByIdFromCache($idUser);
+
+        $user = null;
+        if($valFromCache === NULL) {
+            $user = $app->userModel->getUserById($idUser);
+            $ucm->saveUserToCache($user);
+        } else {
+            $user = $valFromCache;
+        }
+        
+        $template = $this->loadTemplate(__DIR__ . '/templates/GeneralForm.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'Update password form for user <i>' . $user->getFullname() . '</i>',
+            '$LINKS$' => [],
+            '$FORM$' => $this->internalCreateUpdatePasswordForm($user)
+        ];
+
+        $this->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function processPasswordUpdateForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_user', 'password', 'password2']);
+
+        $idUser = $this->get('id_user');
+        $password = $this->post('password');
+        $password2 = $this->post('password2');
+
+        if($app->userAuthenticator->checkPasswordMatch([$password, $password2])) {
+            //ok
+
+            $app->userModel->updateUser($idUser, ['password' => CryptManager::hashPassword($password), 'password_change_status' => UserPasswordChangeStatus::OK, 'status' => UserStatus::ACTIVE]);
+        } else {
+            $app->flashMessage('Entered password do not match!', 'error');
+            $app->redirect('showUpdatePasswordForm', ['id_user' => $idUser]);
         }
     }
 
@@ -287,6 +339,21 @@ class LoginPage extends APresenter {
 
         $form = $fb->build();
         return $form;
+    }
+
+    private function internalCreateUpdatePasswordForm(User $user) {
+        $fb = FormBuilder::getTemporaryObject();
+
+        $fb ->setAction('?page=AnonymModule:LoginPage:processPasswordUpdateForm&id_user=' . $user->getId())->setMethod('POST')
+            ->addElement($fb->createLabel()->setText('Password')->setFor('password'))
+            ->addElement($fb->createInput()->setType('password')->setName('password')->require())
+
+            ->addElement($fb->createLabel()->setText('Password again')->setFor('password2'))
+            ->addElement($fb->createInput()->setType('password')->setName('password2')->require())
+
+            ->addElement($fb->createSubmit('Save'));
+
+        return $fb->build();
     }
 }
 
