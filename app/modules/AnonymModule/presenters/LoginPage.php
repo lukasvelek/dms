@@ -179,6 +179,9 @@ class LoginPage extends APresenter {
             //ok
 
             $app->userModel->updateUser($idUser, ['password' => CryptManager::hashPassword($password), 'password_change_status' => UserPasswordChangeStatus::OK, 'status' => UserStatus::ACTIVE]);
+
+            $app->flashMessage('Your password has been successfully updated!', 'success');
+            $app->redirect('showForm');
         } else {
             $app->flashMessage('Entered password do not match!', 'error');
             $app->redirect('showUpdatePasswordForm', ['id_user' => $idUser]);
