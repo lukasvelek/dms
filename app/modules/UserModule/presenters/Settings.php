@@ -568,7 +568,8 @@ class Settings extends APresenter {
         $app->logger->info('Inserted new folder #' . $idFolder, __METHOD__);
 
         if($parentFolder != '-1') {
-            $app->redirect('showFolders', array('id_folder' => $idFolder));
+            $idParentFolder = (int)$parentFolder;
+            $app->redirect('showFolders', array('id_folder' => $idParentFolder));
         } else {
             $app->redirect('showFolders');
         }
