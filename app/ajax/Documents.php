@@ -568,7 +568,7 @@ function searchDocumentsSharedWithMe() {
 }
 
 function generateDocuments() {
-    global $documentModel, $user;
+    global $documentModel, $user, $logger;
 
     if($user == null) {
         exit;
@@ -608,6 +608,11 @@ function generateDocuments() {
 
         if($result) {
             $inserted++;
+        }
+
+        if($inserted % 100 == 0) {
+            $documentModel->commitTran();
+            $documentModel->beginTran();
         }
     }
 
