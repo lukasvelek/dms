@@ -199,7 +199,7 @@ class ServiceManager {
         $this->services['PasswordPolicyService'] = new PasswordPolicyService($this->logger, $this->serviceModel, $this->cm, $this->userModel, $this->groupUserModel);
         $this->services['MailService'] = new MailService($this->logger, $this->serviceModel, $this->cm, $this->mailModel, $this->mailManager);
         $this->services['NotificationManagerService'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel);
-        $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator);
+        $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm);
         $this->services['DeclinedDocumentRemoverService'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm);
         $this->services['DocumentReportGeneratorService'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
     }
