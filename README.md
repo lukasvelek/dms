@@ -8,6 +8,7 @@ It also enables users to manage metadata and their values.
 - added database indexes
 - updated grid list render speed (SQL queries are now performed more efficiently)
 - updated speed of some operations when working with hundreds or thousands of entities (mostly documents)
+- updated redirect when a new folder is created (now user is redirected to the parent folder instead of being redirected to the newly created folder)
 - fixed a bug where if the user selects more than 100 documents and wants to perform a bulk action on them, no bulk actions are displayed
 - fixed bugs and potential bugs
 
