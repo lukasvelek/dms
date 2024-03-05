@@ -31,6 +31,7 @@ use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\ArchiveModel;
 use DMS\Models\CalendarModel;
 use DMS\Models\DocumentCommentModel;
+use DMS\Models\DocumentMetadataHistoryModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
 use DMS\Models\FilterModel;
@@ -119,6 +120,7 @@ class Application {
     public ArchiveModel $archiveModel;
     public FileStorageModel $fileStorageModel;
     public CalendarModel $calendarModel;
+    public DocumentMetadataHistoryModel $documentMetadataHistoryModel;
 
     public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
@@ -174,6 +176,7 @@ class Application {
 
         $this->userAuthenticator = new UserAuthenticator($this->conn, $this->logger);
 
+        $this->documentMetadataHistoryModel = new DocumentMetadataHistoryModel($this->conn, $this->logger);
         $this->userModel = new UserModel($this->conn, $this->logger);
         $this->userRightModel = new UserRightModel($this->conn, $this->logger);
         $this->documentModel = new DocumentModel($this->conn, $this->logger);

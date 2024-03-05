@@ -16,6 +16,8 @@ class GridBuilder {
     private mixed $renderRowCheckbox;
     private mixed $dataSourceCallback;
 
+    private bool $reverse;
+
     public function __construct() {
         $this->columns = [];
         $this->actions = [];
@@ -28,6 +30,11 @@ class GridBuilder {
         $this->renderRowCheckbox = null;
         $this->dataSourceCallback = null;
         $this->emptyDataSourceMessage = 'No data found';
+        $this->reverse = false;
+    }
+
+    public function reverseData() {
+        $this->reverse = true;
     }
 
     public function addHeaderCheckbox(string $id, string $onChange) {
@@ -99,6 +106,7 @@ class GridBuilder {
         // end of title
 
         // data
+        $entityRows = [];
         if(empty($this->dataSourceArray) && (is_null($this->dataSourceCallback) || !is_callable($this->dataSourceCallback))) {
             $entityRow = '<tr><td';
 
@@ -109,7 +117,7 @@ class GridBuilder {
             }
 
             $entityRow .= ' colspan="' . $colspan . '">' . $this->emptyDataSourceMessage . '</td></tr>';
-            $code .= $entityRow;
+            $entityRows[] = $entityRow;
         } else {
             if(empty($this->dataSourceArray)) {
                 $this->dataSourceArray = call_user_func($this->dataSourceCallback);
@@ -125,7 +133,7 @@ class GridBuilder {
                 }
 
                 $entityRow .= ' colspan="' . $colspan . '">' . $this->emptyDataSourceMessage . '</td></tr>';
-                $code .= $entityRow;
+                $entityRows[] = $entityRow;
             } else {
                 foreach($this->dataSourceArray as $entity) {
                     $entityRow = '<tr>';
@@ -157,9 +165,23 @@ class GridBuilder {
                     }
         
                     $entityRow .= '</tr>';
-                    $code .= $entityRow;
+                    $entityRows[] = $entityRow;
                 }
             }
+        }
+
+        if($this->reverse === TRUE) {
+            $tmp = [];
+
+            for($i = (count($entityRows) - 1); $i >= 0; $i--) {
+                $tmp[] = $entityRows[$i];
+            }
+
+            $entityRows = $tmp;
+        }
+
+        foreach($entityRows as $entityRow) {
+            $code .= $entityRow;
         }
         // end of data
 

@@ -12,10 +12,12 @@ use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Document;
+use DMS\Entities\DocumentMetadataHistoryEntity;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
@@ -26,6 +28,28 @@ class SingleDocument extends APresenter {
         parent::__construct('SingleDocument', 'Document');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function showMetadataHistory() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $idDocument = $this->get('id');
+
+        $template = $this->loadTemplate(__DIR__ . '/templates/documents/document-metadata-history-grid.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'Metadata history for document #' . $idDocument,
+            '$LINKS$' => [],
+            '$METADATA_GRID$' => $this->internalCreateMetadataHistoryGrid($idDocument)
+        ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showInfo', 'id' => $idDocument], '&larr;');
+
+        $this->fill($data, $template);
+
+        return $template;
     }
 
     protected function shareDocument() {
@@ -172,8 +196,18 @@ class SingleDocument extends APresenter {
             '$PAGE_TITLE$' => 'Document <i>' . $document->getName() . '</i>',
             '$DOCUMENT_GRID$' => $documentGrid,
             '$NEW_COMMENT_FORM$' => $this->internalCreateNewDocumentCommentForm($document),
-            '$DOCUMENT_COMMENTS$' => $documentComments
+            '$DOCUMENT_COMMENTS$' => $documentComments,
+            '$LINKS$' => []
         );
+
+        $backUrl = ['page' => 'Documents:showAll'];
+
+        if($document->getIdFolder() !== NULL) {
+            $backUrl['id_folder'] = $document->getIdFolder();
+        }
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink($backUrl, '&larr;') . '&nbsp;&nbsp;';
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showMetadataHistory', 'id' => $id], 'Metadata history');
 
         $this->templateManager->fill($data, $template);
 
@@ -253,6 +287,7 @@ class SingleDocument extends APresenter {
         $data = array_merge($data, $customMetadata);
 
         $app->documentModel->updateDocument($id, $data);
+        $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray($data, $id, $app->user->getId());
 
         $app->logger->info('Updated document #' . $id, __METHOD__);
 
@@ -760,6 +795,116 @@ class SingleDocument extends APresenter {
         ;
 
         return $fb->build();
+    }
+
+    private function internalCreateMetadataHistoryGrid(int $idDocument) {
+        global $app;
+
+        $userModel = $app->userModel;
+        $metadataHistoryModel = $app->documentMetadataHistoryModel;
+        $metadataModel = $app->metadataModel;
+
+        $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
+        
+        $users = [];
+
+        //$document = $app->documentModel->getDocumentById($idDocument);
+
+        $dataSource = function() use ($metadataHistoryModel, $idDocument) {
+            return $metadataHistoryModel->getAllEntriesForIdDocument($idDocument, 'ASC');
+        };
+
+        $gb = new GridBuilder();
+
+        $valueBefore = [];
+        $cachedMetadata = [];
+
+        $gb->addColumns(['user' => 'User', 'metadataName' => 'Metadata name', 'valueFrom' => 'Value before', 'valueTo' => 'Value to', 'dateCreated' => 'Date']);
+        $gb->addDataSourceCallback($dataSource);
+        $gb->addOnColumnRender('valueFrom', function(DocumentMetadataHistoryEntity $entity) use (&$valueBefore, $metadataModel, &$cachedMetadata) {
+            if(empty($valueBefore)) {
+                return '-';
+            } else {
+                if(!array_key_exists($entity->getMetadataName(), $valueBefore)) {
+                    return '-';
+                } else {
+                    $metadataValues = [];
+
+                    if(array_key_exists($entity->getMetadataName(), $cachedMetadata)) {
+                        $metadataValues = $cachedMetadata[$entity->getMetadataName()];
+                    } else {
+                        $metadataEntity = $metadataModel->getMetadataByName($entity->getMetadataName(), 'documents');
+                        
+                        if($metadataEntity === NULL) {
+                            return $valueBefore[$entity->getMetadataName()];
+                        }
+
+                        $metadataValues = $metadataModel->getAllValuesForIdMetadata($metadataEntity->getId());
+
+                        $cachedMetadata[$entity->getMetadataName()] = $metadataValues;
+                    }
+
+                    $value = $entity->getMetadataValue();
+                    foreach($metadataValues as $mv) {
+                        if($mv->getValue() == $entity->getMetadataValue()) {
+                            $value = $mv->getName();
+                        }
+                    }
+
+                    return $value;
+                }
+            }
+        });
+        $gb->addOnColumnRender('valueTo', function(DocumentMetadataHistoryEntity $entity) use (&$valueBefore, $metadataModel, &$cachedMetadata) {
+            $metadataValues = [];
+            
+            if(array_key_exists($entity->getMetadataName(), $cachedMetadata)) {
+                $metadataValues = $cachedMetadata[$entity->getMetadataName()];
+            } else {
+                $metadataEntity = $metadataModel->getMetadataByName($entity->getMetadataName(), 'documents');
+                        
+                if($metadataEntity === NULL) {
+                    $valueBefore[$entity->getMetadataName()] = $entity->getMetadataValue();
+                    return $entity->getMetadataValue();
+                }
+
+                $metadataValues = $metadataModel->getAllValuesForIdMetadata($metadataEntity->getId());
+
+                $cachedMetadata[$entity->getMetadataName()] = $metadataValues;
+            }
+
+            $value = $entity->getMetadataValue();
+            foreach($metadataValues as $mv) {
+                if($mv->getValue() == $entity->getMetadataValue()) {
+                    $value = $mv->getName();
+                }
+            }
+
+            $valueBefore[$entity->getMetadataName()] = $entity->getMetadataValue();
+            return $value;
+        });
+        $gb->addOnColumnRender('user', function(DocumentMetadataHistoryEntity $entity) use (&$users, $userModel, $ucm) {
+            if(array_key_exists($entity->getIdUser(), $users)) {
+                return $users[$entity->getIdUser()]->getFullname();
+            } else {
+                $valFromCache = $ucm->loadUserByIdFromCache($entity->getIdUser());
+
+                $user = null;
+
+                if($valFromCache === NULL) {
+                    $user = $userModel->getUserById($entity->getIdUser());
+
+                    $ucm->saveUserToCache($user);
+                } else {
+                    $user = $valFromCache;
+                }
+
+                return $user->getFullname();
+            }
+        });
+        $gb->reverseData();
+        
+        return $gb->build();
     }
 }
 

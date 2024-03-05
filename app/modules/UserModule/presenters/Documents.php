@@ -43,9 +43,13 @@ class Documents extends APresenter {
             $ids = [$ids];
         }
 
-        foreach($ids as $id) {
-            echo $app->documentModel->moveToArchiveDocument($id, $archiveDocument);
-        }
+        $app->documentModel->bulkMoveToArchiveDocument($ids, $archiveDocument);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['id_archive_document' => $archiveDocument], $ids, $app->user->getId());
+
+        /*foreach($ids as $id) {
+            $app->documentModel->moveToArchiveDocument($id, $archiveDocument);
+            $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['id_archive_document' => $archiveDocument], $id);
+        }*/
 
         $app->flashMessage('Documents moved to selected archive document', 'success');
         $app->redirect('showAll');
@@ -826,9 +830,11 @@ class Documents extends APresenter {
         // END OF CUSTOM OPERATION DEFINITION
         
         $app->documentModel->insertNewDocument($data);
-
+        
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
-
+        
+        $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray($data, $idDocument, $app->user->getId());
+        
         $app->logger->info('Created document #' . $idDocument, __METHOD__);
 
         $documentGroupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
@@ -845,6 +851,7 @@ class Documents extends APresenter {
             $app->redirect($app::URL_HOME_PAGE);
         }
 
+        $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['id_current_officer' => $documentIdManager], $idDocument, $app->user->getId());
         $app->documentModel->updateOfficer($idDocument, $documentIdManager);
 
         $app->flashMessage('Created new document', 'success');
@@ -876,9 +883,8 @@ class Documents extends APresenter {
     private function _move_from_archive_document(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        foreach($ids as $id) {
-            $app->documentModel->moveFromArchiveDocument($id);
-        }
+        $app->documentModel->bulkMoveFromArchiveDocument($ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['id_archive_document' => 'NULL'], $ids, $app->user->getId());
 
         $app->flashMessage('Documents moved from the archive document', 'success');
 
@@ -896,10 +902,10 @@ class Documents extends APresenter {
     private function _suggest_for_shredding(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
+        $app->documentModel->updateDocumentsBulk(['shredding_status' => DocumentShreddingStatus::IN_APPROVAL], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['shredding_status' => DocumentShreddingStatus::IN_APPROVAL], $ids, $app->user->getId());
+
         foreach($ids as $id) {
-            $app->documentModel->updateDocument($id, array(
-                'shredding_status' => DocumentShreddingStatus::IN_APPROVAL
-            ));
             $app->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $app->user->getId());
         }
 
@@ -940,6 +946,7 @@ class Documents extends APresenter {
         global $app;
 
         $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVATION_DECLINED], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVATION_DECLINED], $ids, $app->user->getId());
 
         if(count($ids) == 1) {
             $app->flashMessage('Declined archivation for selected document', 'success');
@@ -962,6 +969,7 @@ class Documents extends APresenter {
         global $app;
 
         $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVATION_APPROVED], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVATION_APPROVED], $ids, $app->user->getId());
 
         if(count($ids) == 1) {
             $app->flashMessage('Approved archivation for selected document', 'success');
@@ -984,6 +992,7 @@ class Documents extends APresenter {
         global $app;
 
         $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVED], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVED], $ids, $app->user->getId());
 
         if(count($ids) == 1) {
             $app->flashMessage('Archived selected document', 'success');

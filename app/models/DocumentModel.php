@@ -180,12 +180,29 @@ class DocumentModel extends AModel {
         return $this->updateDocument($id, $data);
     }
 
+    public function bulkMoveToArchiveDocument(array $ids, int $idArchiveDocument) {
+        $data = ['id_archive_document' => $idArchiveDocument];
+
+        return $this->bulkUpdateExisting($data, $ids, 'documents');
+    }
+
     public function moveFromArchiveDocument(int $id) {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('documents')
             ->setNull(['id_archive_document'])
             ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function bulkMoveFromArchiveDocument(array $ids) {
+        $qb = $this->qb(__METHOD__);
+        
+        $qb ->update('documents')
+            ->setNull(['id_archive_document'])
+            ->where($qb->getColumnInValues('id', $ids))
             ->execute();
 
         return $qb->fetchAll();
