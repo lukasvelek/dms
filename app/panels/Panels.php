@@ -61,7 +61,7 @@ class Panels {
 
         if(!is_null($app->user)) {
             $data['$USER_NOTIFICATIONS_LINK$'] = '<span class="toppanel-link" style="cursor: pointer" id="notificationsController" onclick="openNotifications()">Notifications (0)</span>';
-            $data['$USER_PROFILE_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id' => $app->user->getId(), 'id_ribbon' => '26'), $app->user->getFullname(), 'toppanel-link');
+            $data['$USER_PROFILE_LINK$'] = LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showProfile', 'id_ribbon' => '26'), $app->user->getFullname(), 'toppanel-link');
             $data['$USER_LOGOUT_LINK$'] = LinkBuilder::createLink('UserModule:UserLogout:logoutUser', 'Logout', 'toppanel-link');
 
             if(AppConfiguration::getEnableRelogin() && $app->actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN)) {

@@ -13,6 +13,7 @@ use DMS\Constants\WidgetLocations;
 use DMS\Core\AppConfiguration;
 use DMS\Core\Application;
 use DMS\Core\CacheManager;
+use DMS\Core\CryptManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Entities\Metadata;
@@ -936,12 +937,20 @@ class Settings extends APresenter {
 
         $data = [];
 
-        $required = array('firstname', 'lastname', 'username');
+        $required = array('firstname', 'lastname', 'username', 'password', 'password2');
         
         $app->flashMessageIfNotIsset($required);
 
         foreach($required as $r) {
             $data[$r] = $this->post($r);
+        }
+
+        if(!$app->userAuthenticator->checkPasswordMatch([$data['password'], $data['password2']])) {
+            $app->flashMessage('Passwords do not match!', 'error');
+            $app->redirect('showNewUserForm');
+        } else {
+            $data['password'] = CryptManager::hashPassword($data['password']);
+            unset($data['password2']);
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
@@ -963,8 +972,7 @@ class Settings extends APresenter {
             $data['address_country'] = $this->post('address_country');
         }
 
-        $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
-        $data['password_change_status'] = UserPasswordChangeStatus::FORCE;
+        $data['status'] = UserStatus::ACTIVE;
 
         $app->userModel->insertUser($data);
         $idUser = $app->userModel->getLastInsertedUser()->getId();
@@ -975,6 +983,15 @@ class Settings extends APresenter {
         $app->userRightModel->insertPanelRightsForIdUser($idUser);
         $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
         $app->userRightModel->insertMetadataRightsForIdUser($idUser, $app->metadataModel->getAllMetadata());
+
+        $ribbons = $app->ribbonModel->getAllRibbons();
+
+        $visibleRibbons = ['home', 'current_user', 'current_user.settings', 'current_user.document_reports'];
+        foreach($ribbons as $ribbon) {
+            if(in_array($ribbon->getCode(), $visibleRibbons)) {
+                $app->ribbonRightsModel->insertNewUserRibbonRight($ribbon->getId(), $idUser, ['can_see' => '1']);
+            }
+        }
 
         $app->redirect('Users:showProfile', array('id' => $idUser));
     }
@@ -1056,26 +1073,32 @@ class Settings extends APresenter {
             ->addElement($fb->createLabel()->setFor('lastname')->setText('Last name'))
             ->addElement($fb->createInput()->setType('text')->setName('lastname')->require())
 
-            ->addElement($fb->createlabel()->setFor('email')->setText('Email'))
+            ->addElement($fb->createLabel()->setFor('email')->setText('Email'))
             ->addElement($fb->createInput()->setType('email')->setName('email'))
 
-            ->addElement($fb->createlabel()->setFor('username')->setText('Username'))
+            ->addElement($fb->createLabel()->setFor('username')->setText('Username'))
             ->addElement($fb->createInput()->setType('text')->setName('username')->require())
 
-            ->addElement($fb->createlabel()->setText('Address'))
+            ->addElement($fb->createLabel()->setFor('password')->setText('Password'))
+            ->addElement($fb->createInput()->setType('password')->setName('password')->require())
+            
+            ->addElement($fb->createLabel()->setFor('password2')->setText('Password again'))
+            ->addElement($fb->createInput()->setType('password')->setName('password2')->require())
+
+            ->addElement($fb->createLabel()->setText('Address'))
             ->addElement($fb->createlabel()->setFor('address_street')->setText('Street'))
             ->addElement($fb->createInput()->setType('text')->setName('address_street'))
 
-            ->addElement($fb->createlabel()->setFor('address_house_number')->setText('House number'))
+            ->addElement($fb->createLabel()->setFor('address_house_number')->setText('House number'))
             ->addElement($fb->createInput()->setType('text')->setName('address_house_number'))
 
-            ->addElement($fb->createlabel()->setFor('address_city')->setText('City'))
+            ->addElement($fb->createLabel()->setFor('address_city')->setText('City'))
             ->addElement($fb->createInput()->setType('text')->setName('address_city'))
 
-            ->addElement($fb->createlabel()->setFor('address_zip_code')->setText('Zip code'))
+            ->addElement($fb->createLabel()->setFor('address_zip_code')->setText('Zip code'))
             ->addElement($fb->createInput()->setType('text')->setName('address_zip_code'))
 
-            ->addElement($fb->createlabel()->setFor('address_country')->setText('Country'))
+            ->addElement($fb->createLabel()->setFor('address_country')->setText('Country'))
             ->addElement($fb->createInput()->setType('text')->setName('address_country'))
 
             ->addElement($fb->createSubmit('Create'))
