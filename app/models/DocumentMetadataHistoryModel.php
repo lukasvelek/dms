@@ -11,6 +11,28 @@ class DocumentMetadataHistoryModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function bulkDeleteEntriesForIdDocuments(array $idDocuments) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->delete()
+            ->from('document_metadata_history')
+            ->where($qb->getColumnInValues('id_document', $idDocuments))
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function deleteEntriesForIdDocument(int $idDocument) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->delete()
+            ->from('document_metadata_history')
+            ->where('id_document = ?', [$idDocument])
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
     public function bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(array $data, array $ids, int $idUser) {
         foreach($ids as $id) {
             $this->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray($data, $id, $idUser);

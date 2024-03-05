@@ -6,6 +6,7 @@ use DMS\Components\ProcessComponent;
 use DMS\Constants\Groups;
 use DMS\Entities\Document;
 use DMS\Entities\Process;
+use DMS\Models\DocumentMetadataHistoryModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\GroupModel;
 use DMS\Models\GroupUserModel;
@@ -25,6 +26,7 @@ class DeleteProcess implements IProcessComponent {
     private ProcessModel $processModel;
     private GroupModel $groupModel;
     private GroupUserModel $groupUserModel;
+    private DocumentMetadataHistoryModel $dmhm;
 
     /**
      * Class constructor
@@ -41,12 +43,14 @@ class DeleteProcess implements IProcessComponent {
                                 DocumentModel $documentModel,
                                 ProcessModel $processModel,
                                 GroupModel $groupModel,
-                                GroupUserModel $groupUserModel) {
+                                GroupUserModel $groupUserModel,
+                                DocumentMetadataHistoryModel $dmhm) {
         $this->processComponent = $processComponent;
         $this->documentModel = $documentModel;
         $this->processModel = $processModel;
         $this->groupModel = $groupModel;
         $this->groupUserModel = $groupUserModel;
+        $this->dmhm = $dmhm;
 
         $this->process = $this->processModel->getProcessById($idProcess);
         $this->document = $this->documentModel->getDocumentById($this->process->getIdDocument());
@@ -63,6 +67,7 @@ class DeleteProcess implements IProcessComponent {
     public function work() {
         $this->processComponent->endProcess($this->process->getId());
         $this->documentModel->deleteDocument($this->document->getId());
+        $this->dmhm->deleteEntriesForIdDocument($this->document->getId());
         $this->documentModel->nullIdOfficer($this->document->getId());
         $this->documentModel->removeDocumentSharingForIdDocument($this->document->getId());
 
