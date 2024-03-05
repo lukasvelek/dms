@@ -130,7 +130,7 @@ abstract class ADocumentReport {
             if(array_key_exists('folders', $data) && array_key_exists($value, $data['folders'])) {
                 return $data['folders'][$value];
             } else {
-                $valFromCache = $fcm->loadFolderByIdFromCache();
+                $valFromCache = $fcm->loadFolderByIdFromCache($value);
 
                 if($valFromCache === NULL) {
                     $folder = $folderModel->getFolderById($value);

@@ -6,18 +6,21 @@ use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Constants\DocumentStatus;
 use DMS\Core\CacheManager;
 use DMS\Core\Logger\Logger;
+use DMS\Models\DocumentMetadataHistoryModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\ServiceModel;
 
 class DocumentArchivationService extends AService {
     private DocumentModel $documentModel;
     private DocumentAuthorizator $documentAuthorizator;
+    private DocumentMetadataHistoryModel $dmhm;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentModel $documentModel, DocumentAuthorizator $documentAuthorizator) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentModel $documentModel, DocumentAuthorizator $documentAuthorizator, DocumentMetadataHistoryModel $dmhm) {
         parent::__construct('DocumentArchivationService', $logger, $serviceModel, $cm);
 
         $this->documentModel = $documentModel;
         $this->documentAuthorizator = $documentAuthorizator;
+        $this->dmhm = $dmhm;
     }
 
     public function run() {
@@ -37,6 +40,7 @@ class DocumentArchivationService extends AService {
         $archived = count($ids);;
         if(count($ids) > 0) {
             $this->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVED], $ids);
+            $this->dmhm->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVED], $ids, $_SESSION['id_current_user']);
         }
 
         $this->log('Archived ' . $archived . ' documents', __METHOD__);

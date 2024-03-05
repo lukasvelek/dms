@@ -9,6 +9,7 @@ use DMS\Constants\DocumentStatus;
 use DMS\Entities\Document;
 use DMS\Entities\Process;
 use DMS\Models\DocumentCommentModel;
+use DMS\Models\DocumentMetadataHistoryModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\ProcessCommentModel;
 use DMS\Models\ProcessModel;
@@ -27,6 +28,7 @@ class ShreddingProcess implements IProcessComponent {
     private ProcessComponent $processComponent;
     private DocumentCommentModel $documentCommentModel;
     private ProcessCommentModel $processCommentModel;
+    private DocumentMetadataHistoryModel $dmhm;
 
     /**
      * Class constructor
@@ -43,12 +45,14 @@ class ShreddingProcess implements IProcessComponent {
                                 DocumentModel $documentModel,
                                 ProcessComponent $processComponent,
                                 DocumentCommentModel $documentCommentModel,
-                                ProcessCommentModel $processCommentModel) {
+                                ProcessCommentModel $processCommentModel,
+                                DocumentMetadataHistoryModel $dmhm) {
         $this->processModel = $processModel;
         $this->documentModel = $documentModel;
         $this->processComponent = $processComponent;
         $this->documentCommentModel = $documentCommentModel;
         $this->processCommentModel = $processCommentModel;
+        $this->dmhm = $dmhm;
         
         $this->process = $this->processModel->getProcessById($idProcess);
         $this->document = $this->documentModel->getDocumentById($this->process->getIdDocument());
@@ -66,21 +70,26 @@ class ShreddingProcess implements IProcessComponent {
         $this->processComponent->endProcess($this->process->getId());
 
         if($this->document->getAfterShredAction() !== DocumentAfterShredActions::TOTAL_DELETE) {
-            $this->documentModel->updateDocument($this->document->getId(), array(
+            $data = array(
                 'shredding_status' => DocumentShreddingStatus::SHREDDED,
                 'status' => DocumentStatus::SHREDDED
-            ));
+            );
+            $this->documentModel->updateDocument($this->document->getId(), $data);
             $this->documentModel->nullIdOfficer($this->document->getId());
+            $data['id_current_officer'] = 'NULL';
+            $this->dmhm->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray($data, $this->document->getId(), $_SESSION['id_current_user']);
         }
 
         switch($this->document->getAfterShredAction()) {
             case DocumentAfterShredActions::DELETE:
+                $this->dmhm->deleteEntriesForIdDocument($this->document->getId());
                 $this->documentModel->deleteDocument($this->document->getId());
                 break;
 
             case DocumentAfterShredActions::TOTAL_DELETE:
                 $this->documentModel->deleteDocument($this->document->getId(), false);
                 $this->documentCommentModel->removeCommentsForIdDocument($this->document->getId());
+                $this->dmhm->deleteEntriesForIdDocument($this->document->getId());
                 $this->processComponent->deleteProcessesForIdDocument($this->document->getId());
                 break;
 

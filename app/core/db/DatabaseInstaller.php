@@ -431,6 +431,14 @@ class DatabaseInstaller {
                 'is_enabled' => 'INT(2) NOT NULL DEFAULT 1',
                 'is_system' => 'INT(2) NOT NULL DEFAULT 0',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'document_metadata_history' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'id_document' => 'INT(32) NOT NULL',
+                'metadata_name' => 'VARCHAR(256) NOT NULL',
+                'metadata_value' => 'VARCHAR(256) NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 
@@ -552,6 +560,9 @@ class DatabaseInstaller {
             ],
             'users' => [
                 'last_login_hash'
+            ],
+            'document_metadata_history' => [
+                'id_document'
             ]
         ];
 

@@ -399,7 +399,7 @@ class Settings extends APresenter {
         $pageTitle = 'Document folders';
 
         $idFolder = null;
-        if(isset($_GET['id_folder'])) {
+        if(isset($_GET['id_folder']) && $this->get('id_folder') != '0') {
             $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
 
@@ -1293,6 +1293,10 @@ class Settings extends APresenter {
 
         if(isset($_GET['id_folder'])) {
             $idFolder = $this->get('id_folder');
+        }
+
+        if($idFolder == '0') {
+            $idFolder = null;
         }
 
         $data = function() use ($folderModel, $idFolder) {
