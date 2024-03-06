@@ -154,6 +154,12 @@ class ServiceManager {
         }
     }
 
+    public function updateRunDates() {
+        $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
+        $cm->invalidateCache();
+        $this->loadRunDates();
+    }
+
     /**
      * Loads run dates for services
      */

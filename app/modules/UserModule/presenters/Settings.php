@@ -266,11 +266,21 @@ class Settings extends APresenter {
             '$LINKS$' => []
         );
 
-        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showNewServiceForm'], 'New service');
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showNewServiceForm'], 'New service') . '&nbsp;&nbsp;';
+        $data['$LINKS$'][] = LinkBuilder::createLink('refreshServiceRunDates', 'Refresh');
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function refreshServiceRunDates() {
+        global $app;
+
+        $app->serviceManager->updateRunDates();
+
+        $app->flashMessage('Service grid refreshed');
+        $app->redirect('showServices');
     }
 
     protected function showNewServiceForm() {
