@@ -182,6 +182,7 @@ class Users extends APresenter {
 
         $requestPasswordChangeLink = '';
         $forcePasswordChangeLink = '';
+        $changePasswordLink = '';
 
         if($app->actionAuthorizator->checkActionRight(UserActionRights::REQUEST_PASSWORD_CHANGE_USER)) {
             $requestPasswordChangeLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
@@ -193,10 +194,16 @@ class Users extends APresenter {
                 'page' => 'forcePasswordChange',
                 'id' => $id
             ), 'Force password change');
+
+            if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_USER)) {
+                $changePasswordLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
+                    'page' => 'showChangePasswordForm',
+                    'id' => $id
+                ), 'Change password');
+            }
         }
 
         if($id == $app->user->getId()) {
-            // current user
             $changePasswordLink = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array(
                 'page' => 'showChangePasswordForm',
                 'id' => $id
@@ -204,12 +211,10 @@ class Users extends APresenter {
 
             $data['$LINKS$'][] = $changePasswordLink;
         } else {
+            $data['$LINKS$'][] = $changePasswordLink;
             $data['$LINKS$'][] = $requestPasswordChangeLink;
             $data['$LINKS$'][] = $forcePasswordChangeLink;
         }
-
-        /*$data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showSettingsForm', 'id' => $id), 'Settings');
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'DocumentReports:showAll'), 'My document reports');*/
 
         $this->templateManager->fill($data, $template);
 

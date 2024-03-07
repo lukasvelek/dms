@@ -583,8 +583,7 @@ class DocumentModel extends AModel {
         $qb ->update('documents')
             ->set($values)
             ->where('id = ?', [$id])
-            ->execute()
-            ->fetch();
+            ->execute();
 
         return $qb->fetchAll();
     }

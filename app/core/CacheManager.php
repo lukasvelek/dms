@@ -756,6 +756,10 @@ class CacheManager {
             }
         }
 
+        if($data === FALSE) {
+            return false;
+        }
+
         return $data;
     }
 
