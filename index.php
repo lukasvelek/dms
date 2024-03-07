@@ -47,6 +47,11 @@ if(isset($_SESSION['id_current_user'])) {
         }
 
         if(isset($_SESSION['last_login_hash'])) {
+            $isRelogin = false;
+            if(isset($_SESSION['is_relogin']) && $_SESSION['is_relogin'] === TRUE && isset($_SESSION['id_original_user'])) {
+                $loginHash = $app->userModel->getLastLoginHashForIdUser($_SESSION['id_original_user']);
+                $isRelogin = true;
+            }
             $loginHash = $app->userModel->getLastLoginHashForIdUser($_SESSION['id_current_user']);
 
             if($loginHash === NULL) {
@@ -56,8 +61,12 @@ if(isset($_SESSION['id_current_user'])) {
                 }
             }
 
-            if($_SESSION['last_login_hash'] == $loginHash) { // ok
-                $app->logger->info('Successfully authenticated user #' . $user->getId());
+            if($_SESSION['last_login_hash'] == $loginHash || $isRelogin === TRUE) { // ok
+                if($isRelogin === TRUE) {
+                    $app->logger->info('Successfully authenticated user #' . $_SESSION['id_original_user'] . ' as user #' . $user->getId());
+                } else {
+                    $app->logger->info('Successfully authenticated user #' . $user->getId());
+                }
                 $app->setCurrentUser($user);
             } else { // hash mismatch
                 $app->logger->warn('Login hash mismatch for user #' . $user->getId() . '. Requesting relogin!');
