@@ -12,6 +12,24 @@ class FolderModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getFolderByOrderAndParentFolder(?int $idFolder, int $order) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('folders')
+            ->where(FolderMetadata::ORDER . ' = ?', [$order]);
+
+        if($idFolder === NULL) {
+            $qb->andWhere(FolderMetadata::ID_PARENT_FOLDER . ' IS NULL');
+        } else {
+            $qb->andWhere(FolderMetadata::ID_PARENT_FOLDER . ' = ?', [$idFolder]);
+        }
+
+        $qb->execute();
+
+        return $qb->fetchAll();
+    }
+
     public function updateFolder(int $idFolder, array $data) {
         return $this->updateExisting('folders', $idFolder, $data);
     }
@@ -62,7 +80,7 @@ class FolderModel extends AModel {
         return $folders;
     }
 
-    public function getFoldersForIdParentFolder(?int $idFolder) {
+    public function getFoldersForIdParentFolder(?int $idFolder, bool $orderByOrder = false) {
         $qb = $this->qb(__METHOD__);
 
         $qb ->select(['*'])
@@ -72,6 +90,10 @@ class FolderModel extends AModel {
             $qb->where(FolderMetadata::ID_PARENT_FOLDER . ' IS NULL');
         } else {
             $qb->where(FolderMetadata::ID_PARENT_FOLDER . ' = ?', [$idFolder]);
+        }
+
+        if($orderByOrder === TRUE) {
+            $qb->orderBy(FolderMetadata::ORDER, 'ASC');
         }
 
         $qb->execute();

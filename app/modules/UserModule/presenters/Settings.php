@@ -569,7 +569,17 @@ class Settings extends APresenter {
             }
         }
 
+        $folders = $app->folderModel->getFoldersForIdParentFolder($parentFolder);
+
+        $maxOrder = 0;
+        foreach($folders as $folder) {
+            if($folder->getOrder() > $maxOrder) {
+                $maxOrder = $folder->getOrder();
+            }
+        }
+
         $data[FolderMetadata::NEST_LEVEL] = $nestLevel;
+        $data[FolderMetadata::ORDER] = $maxOrder + 1;
 
         if($create == true) {
             $app->folderModel->insertNewFolder($data);
@@ -585,6 +595,37 @@ class Settings extends APresenter {
         } else {
             $app->redirect('showFolders');
         }
+    }
+
+    protected function moveFolderOrder() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_folder', 'order', 'old_order', 'id_parent_folder']);
+
+        $idFolder = $this->get('id_folder');
+        $idParentFolder = $this->get('id_parent_folder');
+        $order = $this->get('order');
+        $oldOrder = $this->get('old_order');
+        
+        if($idParentFolder == 0) {
+            $parentFolder = null;
+        } else {
+            $parentFolder = $idParentFolder;
+        }
+
+        $oldFolder = $app->folderModel->getFolderByOrderAndParentFolder($parentFolder, $this->get('order'));
+        
+        $data[FolderMetadata::ORDER] = $oldOrder;
+
+        $data = [];
+        
+        $app->folderModel->updateFolder($oldFolder->getId(), $data);
+
+        $data[FolderMetadata::ORDER] = $order;
+
+        $app->folderModel->updateFolder($idFolder, $data);
+
+        $app->redirect('showFolders', ['id_folder' => $idParentFolder]);
     }
 
     protected function showDashboard() {
@@ -1331,7 +1372,7 @@ class Settings extends APresenter {
             $idFolder = null;
         }
 
-        $folders = $app->folderModel->getFoldersForIdParentFolder($idFolder);
+        $folders = $app->folderModel->getFoldersForIdParentFolder($idFolder, true);
 
         $maxOrder = 0;
         foreach($folders as $folder) {
@@ -1355,14 +1396,14 @@ class Settings extends APresenter {
         });
         $gb->addAction(function(Folder $folder) {
             if($folder->getOrder() > 1) {
-                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() - 1), 'id_folder' => $folder->getId()], '&uarr;');
+                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() - 1), 'old_order' => ($folder->getOrder()), 'id_folder' => $folder->getId(), 'id_parent_folder' => $folder->getIdParentFolder() ?? 0], '&uarr;');
             } else {
                 return '-';
             }
         });
         $gb->addAction(function(Folder $folder) use ($maxOrder) {
             if($folder->getOrder() < $maxOrder) {
-                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() + 1), 'id_folder' => $folder->getId()], '&darr;');
+                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() + 1), 'old_order' => ($folder->getOrder()), 'id_folder' => $folder->getId(), 'id_parent_folder' => $folder->getIdParentFolder() ?? 0], '&darr;');
             } else {
                 return '-';
             }

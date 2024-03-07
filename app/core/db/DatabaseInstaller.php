@@ -241,7 +241,7 @@ class DatabaseInstaller {
                 'description' => 'VARCHAR(256) NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'nest_level' => 'INT(32) NOT NULL',
-                'order' => 'INT(32) NOT NULL'
+                'ordering' => 'INT(32) NOT NULL'
             ),
             'service_config' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
