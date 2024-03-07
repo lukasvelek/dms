@@ -12,6 +12,7 @@ class Folder extends AEntity {
     private ?string $description;
     private ?int $idParentFolder;
     private int $nestLevel;
+    private int $order;
 
     /**
      * Class constructor
@@ -22,14 +23,16 @@ class Folder extends AEntity {
      * @param string $name Folder name
      * @param null|string $description Folder description
      * @param int $nestLevel Folder nest level
+     * @param int $order Folder order
      */
-    public function __construct(int $id, string $dateCreated, ?int $idParentFolder, string $name, ?string $description, int $nestLevel) {
+    public function __construct(int $id, string $dateCreated, ?int $idParentFolder, string $name, ?string $description, int $nestLevel, int $order) {
         parent::__construct($id, $dateCreated, null);
         
         $this->name = $name;
         $this->idParentFolder = $idParentFolder;
         $this->description = $description;
         $this->nestLevel = $nestLevel;
+        $this->order = $order;
     }
 
     /**
@@ -66,6 +69,15 @@ class Folder extends AEntity {
      */
     public function getNestLevel() {
         return $this->nestLevel;
+    }
+
+    /**
+     * Returns folder order
+     * 
+     * @return int Folder order
+     */
+    public function getOrder() {
+        return $this->order;
     }
 }
 
