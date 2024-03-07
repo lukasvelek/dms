@@ -72,6 +72,7 @@ class ServiceManager {
      * @param NotificationModel $notificationModel NotificationModel instance
      * @param DocumentReportGeneratorComponent $documentReportGeneratorComponent DocumentReportGeneratorComponent instance
      * @param NotificationComponent $notificationComponent NotificationComponent instance
+     * @param DocumentMetadataHistoryModel $dmhm DocumentMetadataHistoryModel instance
      */
     public function __construct(Logger $logger, 
                                 ServiceModel $serviceModel, 
@@ -154,6 +155,9 @@ class ServiceManager {
         }
     }
 
+    /**
+     * Updates run dates for services
+     */
     public function updateRunDates() {
         $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
         $cm->invalidateCache();
