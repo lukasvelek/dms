@@ -55,7 +55,7 @@ class CacheManager {
     public function loadGroupByIdFromCache(int $id) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -76,10 +76,6 @@ class CacheManager {
     public function saveServiceEntry(string $name, array $data) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
-            $cacheData = [];
-        }
-
         $cacheData[$name] = $data;
 
         $this->saveToCache($cacheData);
@@ -94,7 +90,7 @@ class CacheManager {
     public function loadServiceEntry(string $name) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -113,10 +109,6 @@ class CacheManager {
     public function saveFlashMessage(array $data) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
-            $cacheData = [];
-        }
-
         $cacheData[] = $data;
 
         $this->saveToCache($cacheData);
@@ -130,7 +122,7 @@ class CacheManager {
     public function loadFlashMessage() {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         } else {
             return $cacheData;
@@ -148,7 +140,7 @@ class CacheManager {
     public function loadRibbonById(int $idRibbon) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         } else {
             foreach($cacheData as $cd) {
@@ -197,7 +189,7 @@ class CacheManager {
     public function loadRibbons() {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -212,7 +204,7 @@ class CacheManager {
     public function loadTopRibbons() {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -232,7 +224,7 @@ class CacheManager {
     public function loadChildrenRibbons(int $idParentRibbon) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -252,7 +244,7 @@ class CacheManager {
     public function loadSiblingRibbons(int $idRibbon) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -301,7 +293,7 @@ class CacheManager {
     public function loadUserRibbonRight(int $idRibbon, int $idUser, string $category) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -344,7 +336,7 @@ class CacheManager {
     public function loadGroupRibbonRight(int $idRibbon, int $idGroup, string $category) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -395,7 +387,7 @@ class CacheManager {
     public function loadStringsFromCache() {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -424,7 +416,7 @@ class CacheManager {
     public function loadFoldersFromCache() {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -440,7 +432,7 @@ class CacheManager {
     public function loadFolderByIdFromCache(int $id) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -474,7 +466,7 @@ class CacheManager {
     public function loadUserByIdFromCache(int $id) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -511,7 +503,7 @@ class CacheManager {
     public function loadServiceConfigForService(string $serviceName) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -560,7 +552,7 @@ class CacheManager {
     public function loadActionRight(int $idUser, string $key) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -602,7 +594,7 @@ class CacheManager {
     public function loadBulkActionRight(int $idUser, string $key) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -644,7 +636,7 @@ class CacheManager {
     public function loadPanelRight(int $idUser, string $key) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -688,7 +680,7 @@ class CacheManager {
     public function loadMetadataRight(int $idUser, int $idMetadata, string $key) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -745,7 +737,7 @@ class CacheManager {
         $data = $this->fm->readCache($filename);
 
         if($data === FALSE) {
-            return false;
+            return [];
         }
 
         if(self::SERIALIZE) {
@@ -754,10 +746,6 @@ class CacheManager {
             } else {
                 $data = unserialize($data);
             }
-        }
-
-        if($data === FALSE) {
-            return false;
         }
 
         return $data;
