@@ -1321,8 +1321,6 @@ class Settings extends APresenter {
     private function internalCreateFolderGrid() {
         global $app;
 
-        $folderModel = $app->folderModel;
-
         $idFolder = null;
 
         if(isset($_GET['id_folder'])) {
@@ -1333,14 +1331,19 @@ class Settings extends APresenter {
             $idFolder = null;
         }
 
-        $data = function() use ($folderModel, $idFolder) {
-            return $folderModel->getFoldersForIdParentFolder($idFolder);
-        };
+        $folders = $app->folderModel->getFoldersForIdParentFolder($idFolder);
+
+        $maxOrder = 0;
+        foreach($folders as $folder) {
+            if($folder->getOrder() > $maxOrder) {
+                $maxOrder = $folder->getOrder();
+            }
+        }
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['name' => 'Name', 'description' => 'Description']);
-        $gb->addDataSourceCallback($data);
+        $gb->addColumns([FolderMetadata::NAME => 'Name', FolderMetadata::DESCRIPTION => 'Description']);
+        $gb->addDataSource($folders);
         $gb->addAction(function(Folder $folder) {
             return LinkBuilder::createAdvLink(array('page' => 'showFolders', 'id_folder' => $folder->getId()), 'Open');
         });
@@ -1349,6 +1352,20 @@ class Settings extends APresenter {
         });
         $gb->addAction(function(Folder $folder) {
             return LinkBuilder::createAdvLink(array('page' => 'askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete');
+        });
+        $gb->addAction(function(Folder $folder) {
+            if($folder->getOrder() > 1) {
+                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() - 1), 'id_folder' => $folder->getId()], '&uarr;');
+            } else {
+                return '-';
+            }
+        });
+        $gb->addAction(function(Folder $folder) use ($maxOrder) {
+            if($folder->getOrder() < $maxOrder) {
+                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() + 1), 'id_folder' => $folder->getId()], '&darr;');
+            } else {
+                return '-';
+            }
         });
 
         return $gb->build();
