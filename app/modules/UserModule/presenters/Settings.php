@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\Metadata\FolderMetadata;
 use DMS\Constants\MetadataAllowedTables;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
@@ -539,25 +540,25 @@ class Settings extends APresenter {
     protected function createNewFolder() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['name', 'parent_folder']);
+        $app->flashMessageIfNotIsset([FolderMetadata::NAME, FolderMetadata::ID_PARENT_FOLDER]);
 
         $data = [];
 
-        $parentFolder = $this->post('parent_folder');
+        $parentFolder = $this->post(FolderMetadata::ID_PARENT_FOLDER);
         $nestLevel = 0;
 
-        $data['name'] = $this->post('name');
+        $data[FolderMetadata::NAME] = $this->post(FolderMetadata::NAME);
 
         $create = true;
 
-        if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = $this->post('description');
+        if(isset($_POST[FolderMetadata::DESCRIPTION]) && $_POST[FolderMetadata::DESCRIPTION] != '') {
+            $data[FolderMetadata::DESCRIPTION] = $this->post(FolderMetadata::DESCRIPTION);
         }
 
         if($parentFolder == '-1') {
             $parentFolder = null;
         } else {
-            $data['id_parent_folder'] = $parentFolder;
+            $data[FolderMetadata::ID_PARENT_FOLDER] = $parentFolder;
 
             $nestLevelParentFolder = $app->folderModel->getFolderById($parentFolder);
 
@@ -568,7 +569,17 @@ class Settings extends APresenter {
             }
         }
 
-        $data['nest_level'] = $nestLevel;
+        $folders = $app->folderModel->getFoldersForIdParentFolder($parentFolder);
+
+        $maxOrder = 0;
+        foreach($folders as $folder) {
+            if($folder->getOrder() > $maxOrder) {
+                $maxOrder = $folder->getOrder();
+            }
+        }
+
+        $data[FolderMetadata::NEST_LEVEL] = $nestLevel;
+        $data[FolderMetadata::ORDER] = $maxOrder + 1;
 
         if($create == true) {
             $app->folderModel->insertNewFolder($data);
@@ -584,6 +595,37 @@ class Settings extends APresenter {
         } else {
             $app->redirect('showFolders');
         }
+    }
+
+    protected function moveFolderOrder() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_folder', 'order', 'old_order', 'id_parent_folder']);
+
+        $idFolder = $this->get('id_folder');
+        $idParentFolder = $this->get('id_parent_folder');
+        $order = $this->get('order');
+        $oldOrder = $this->get('old_order');
+        
+        if($idParentFolder == 0) {
+            $parentFolder = null;
+        } else {
+            $parentFolder = $idParentFolder;
+        }
+
+        $oldFolder = $app->folderModel->getFolderByOrderAndParentFolder($parentFolder, $this->get('order'));
+        
+        $data[FolderMetadata::ORDER] = $oldOrder;
+
+        $app->folderModel->updateFolder($oldFolder->getId(), $data);
+        
+        $data = [];
+        
+        $data[FolderMetadata::ORDER] = $order;
+
+        $app->folderModel->updateFolder($idFolder, $data);
+
+        $app->redirect('showFolders', ['id_folder' => $idParentFolder]);
     }
 
     protected function showDashboard() {
@@ -1320,8 +1362,6 @@ class Settings extends APresenter {
     private function internalCreateFolderGrid() {
         global $app;
 
-        $folderModel = $app->folderModel;
-
         $idFolder = null;
 
         if(isset($_GET['id_folder'])) {
@@ -1332,14 +1372,19 @@ class Settings extends APresenter {
             $idFolder = null;
         }
 
-        $data = function() use ($folderModel, $idFolder) {
-            return $folderModel->getFoldersForIdParentFolder($idFolder);
-        };
+        $folders = $app->folderModel->getFoldersForIdParentFolder($idFolder, true);
+
+        $maxOrder = 0;
+        foreach($folders as $folder) {
+            if($folder->getOrder() > $maxOrder) {
+                $maxOrder = $folder->getOrder();
+            }
+        }
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['name' => 'Name', 'description' => 'Description']);
-        $gb->addDataSourceCallback($data);
+        $gb->addColumns([FolderMetadata::NAME => 'Name', FolderMetadata::DESCRIPTION => 'Description']);
+        $gb->addDataSource($folders);
         $gb->addAction(function(Folder $folder) {
             return LinkBuilder::createAdvLink(array('page' => 'showFolders', 'id_folder' => $folder->getId()), 'Open');
         });
@@ -1348,6 +1393,20 @@ class Settings extends APresenter {
         });
         $gb->addAction(function(Folder $folder) {
             return LinkBuilder::createAdvLink(array('page' => 'askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete');
+        });
+        $gb->addAction(function(Folder $folder) {
+            if($folder->getOrder() > 1) {
+                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() - 1), 'old_order' => ($folder->getOrder()), 'id_folder' => $folder->getId(), 'id_parent_folder' => $folder->getIdParentFolder() ?? 0], '&uarr;');
+            } else {
+                return '-';
+            }
+        });
+        $gb->addAction(function(Folder $folder) use ($maxOrder) {
+            if($folder->getOrder() < $maxOrder) {
+                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() + 1), 'old_order' => ($folder->getOrder()), 'id_folder' => $folder->getId(), 'id_parent_folder' => $folder->getIdParentFolder() ?? 0], '&darr;');
+            } else {
+                return '-';
+            }
         });
 
         return $gb->build();
@@ -1393,20 +1452,20 @@ class Settings extends APresenter {
             $foldersArr[] = $temp;
         }
 
-        $textArea = $fb->createTextArea()->setName('description');
+        $textArea = $fb->createTextArea()->setName(FolderMetadata::DESCRIPTION);
         if($folder->getDescription() !== NULL) {
             $textArea->setText($folder->getDescription());
         }
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:processUpdateFolderForm&id_folder=' . $idFolder)
 
-            ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
-            ->addElement($fb->createInput()->setType('input')->setName('name')->setValue($folder->getName())->require())
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::NAME)->setText('Name'))
+            ->addElement($fb->createInput()->setType('input')->setName(FolderMetadata::NAME)->setValue($folder->getName())->require())
 
-            ->addElement($fb->createLabel()->setFor('parent_folder')->setText('Parent folder'))
-            ->addElement($fb->createSelect()->setName('parent_folder')->addOptionsBasedOnArray($foldersArr))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::ID_PARENT_FOLDER)->setText('Parent folder'))
+            ->addElement($fb->createSelect()->setName(FolderMetadata::ID_PARENT_FOLDER)->addOptionsBasedOnArray($foldersArr))
 
-            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::DESCRIPTION)->setText('Description'))
             ->addElement($textArea)
 
             ->addElement($fb->createSubmit('Save'))
@@ -1445,14 +1504,14 @@ class Settings extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewFolder')
 
-            ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
-            ->addElement($fb->createInput()->setType('input')->setName('name')->require())
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::NAME)->setText('Name'))
+            ->addElement($fb->createInput()->setType('input')->setName(FolderMetadata::NAME)->require())
 
-            ->addElement($fb->createLabel()->setFor('parent_folder')->setText('Parent folder'))
-            ->addElement($fb->createSelect()->setName('parent_folder')->addOptionsBasedOnArray($foldersArr))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::ID_PARENT_FOLDER)->setText('Parent folder'))
+            ->addElement($fb->createSelect()->setName(FolderMetadata::ID_PARENT_FOLDER)->addOptionsBasedOnArray($foldersArr))
 
-            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
-            ->addElement($fb->createTextArea()->setName('description'))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::DESCRIPTION)->setText('Description'))
+            ->addElement($fb->createTextArea()->setName(FolderMetadata::DESCRIPTION))
 
             ->addElement($fb->createSubmit('Create'))
         ;
