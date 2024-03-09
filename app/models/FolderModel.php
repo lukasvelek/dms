@@ -25,9 +25,10 @@ class FolderModel extends AModel {
             $qb->andWhere(FolderMetadata::ID_PARENT_FOLDER . ' = ?', [$idFolder]);
         }
 
-        $qb->execute();
+        $qb ->limit(1)
+            ->execute();
 
-        return $qb->fetchAll();
+        return $this->createFolderObjectFromDbRow($qb->fetch());
     }
 
     public function updateFolder(int $idFolder, array $data) {
@@ -70,6 +71,7 @@ class FolderModel extends AModel {
 
         $qb ->select(['*'])
             ->from('folders')
+            ->orderBy(FolderMetadata::ORDER)
             ->execute();
 
         $folders = [];
@@ -93,7 +95,7 @@ class FolderModel extends AModel {
         }
 
         if($orderByOrder === TRUE) {
-            $qb->orderBy(FolderMetadata::ORDER, 'ASC');
+            $qb->orderBy(FolderMetadata::ORDER);
         }
 
         $qb->execute();

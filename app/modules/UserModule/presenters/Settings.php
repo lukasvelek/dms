@@ -617,10 +617,10 @@ class Settings extends APresenter {
         
         $data[FolderMetadata::ORDER] = $oldOrder;
 
+        $app->folderModel->updateFolder($oldFolder->getId(), $data);
+        
         $data = [];
         
-        $app->folderModel->updateFolder($oldFolder->getId(), $data);
-
         $data[FolderMetadata::ORDER] = $order;
 
         $app->folderModel->updateFolder($idFolder, $data);
