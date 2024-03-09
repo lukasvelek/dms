@@ -13,6 +13,7 @@ use DMS\Constants\DatetimeFormats;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
 use DMS\Entities\EntityRight;
+use DMS\Entities\Ribbon;
 use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
@@ -317,6 +318,28 @@ class Users extends APresenter {
         $app->redirect('showProfile', array('id' => $id));
     }
 
+    protected function showRibbonRights() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $template = $this->loadTemplate(__DIR__ . '/templates/users/user-rights-grid.html');
+
+        $idUser = $this->get('id');
+        $user = $app->userModel->getUserById($idUser);
+        
+        $data = [
+            '$PAGE_TITLE$' => 'Ribbon rights for user <i>' . $user->getFullname() . '</i>',
+            '$BACK_LINK$' => '',
+            '$LINKS$' => [LinkBuilder::createAdvLink(['page' => 'Settings:showUsers'], '&larr;')],
+            '$USER_RIGHTS_GRID$' => $this->internalCreateRibbonRights($user)
+        ];
+
+        $this->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showUserRights() {
         global $app;
 
@@ -611,6 +634,95 @@ class Users extends APresenter {
         $cm->invalidateCache();
 
         $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'bulk_actions'), $name);
+    }
+
+    protected function enableRibbonRight() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_ribbon', 'id_user', 'action']);
+        $idRibbon = $this->get('id_ribbon_update');
+        $idUser = $this->get('id_user');
+        $action = $this->get('action');
+
+        $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, [$action => '1']);
+
+        $app->logger->info('Enabled ribbon right for ribbon #' . $idRibbon . ' to user #' . $idUser, __METHOD__);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_USER_RIGHTS);
+        $cm->invalidateCache();
+
+        $app->redirect('showRibbonRights', ['id' => $idUser]);
+    }
+
+    protected function disableRibbonRight() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_ribbon_update', 'id_user', 'action']);
+        $idRibbon = $this->get('id_ribbon_update');
+        $idUser = $this->get('id_user');
+        $action = $this->get('action');
+
+        $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, [$action => '0']);
+
+        $app->logger->info('Disabled ribbon right for ribbon #' . $idRibbon . ' to user #' . $idUser, __METHOD__);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_USER_RIGHTS);
+        $cm->invalidateCache();
+
+        $app->redirect('showRibbonRights', ['id' => $idUser]);
+    }
+
+    private function internalCreateRibbonRights(User $user) {
+        global $app;
+
+        $ribbonModel = $app->ribbonModel;
+
+        $dataSourceCallback = function() use ($ribbonModel) {
+            return $ribbonModel->getAllRibbons(true);
+        };
+
+        $enableLink = function(int $idRibbon, int $idUser, string $action) {
+            return LinkBuilder::createAdvLink(['page' => 'enableRibbonRight', 'id_ribbon_update' => $idRibbon, 'id_user' => $idUser, 'action' => $action], 'No', 'general-link', 'color: red');
+        };
+
+        $disableLink = function(int $idRibbon, int $idUser, string $action) {
+            return LinkBuilder::createAdvLink(['page' => 'disableRibbonRight', 'id_ribbon_update' => $idRibbon, 'id_user' => $idUser, 'action' => $action], 'Yes', 'general-link', 'color: green');
+        };
+
+        $allRibbonRights = $app->ribbonRightsModel->getRibbonRightsForAllRibbonsAndIdUser($user->getId());
+
+        $gb = new GridBuilder();
+        $gb->addDataSourceCallback($dataSourceCallback);
+        $gb->addColumns(['name' => 'Name', 'can_see' => 'View', 'can_edit' => 'Edit', 'can_delete' => 'Delete']);
+        $gb->addOnColumnRender('can_see', function(Ribbon $ribbon) use ($allRibbonRights, $user, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_see'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $user->getId(), 'can_see') : $enableLink($ribbon->getId(), $user->getId(), 'can_see');
+        });
+        $gb->addOnColumnRender('can_edit', function(Ribbon $ribbon) use ($allRibbonRights, $user, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_edit'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $user->getId(), 'can_edit') : $enableLink($ribbon->getId(), $user->getId(), 'can_edit');
+        });
+        $gb->addOnColumnRender('can_delete', function(Ribbon $ribbon) use ($allRibbonRights, $user, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_delete'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $user->getId(), 'can_delete') : $enableLink($ribbon->getId(), $user->getId(), 'can_delete');
+        });
+
+        return $gb->build();
     }
 
     private function internalCreateUserRightsGrid(int $idUser, string $filter) {
