@@ -693,7 +693,14 @@ class Users extends APresenter {
 
         $gb = new GridBuilder();
         $gb->addDataSourceCallback($dataSourceCallback);
-        $gb->addColumns(['name' => 'Name', 'can_see' => 'View', 'can_edit' => 'Edit', 'can_delete' => 'Delete']);
+        $gb->addColumns(['name' => 'Name', 'code' => 'Code', 'isSystem' => 'System', 'can_see' => 'View', 'can_edit' => 'Edit', 'can_delete' => 'Delete']);
+        $gb->addOnColumnRender('isSystem', function(Ribbon $ribbon) {
+            if($ribbon->isSystem()) {
+                return '<span style="color: green">Yes</span>';
+            } else {
+                return '<span style="color: red">No</span>';
+            }
+        });
         $gb->addOnColumnRender('can_see', function(Ribbon $ribbon) use ($allRibbonRights, $user, $enableLink, $disableLink) {
             $ok = false;
             foreach($allRibbonRights as $rr) {

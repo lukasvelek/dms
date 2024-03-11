@@ -9,7 +9,9 @@ use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
 use DMS\Entities\EntityRight;
+use DMS\Entities\Group;
 use DMS\Entities\GroupUser;
+use DMS\Entities\Ribbon;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
@@ -22,6 +24,28 @@ class Groups extends APresenter {
         parent::__construct('Groups');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function showRibbonRights() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $template = $this->loadTemplate(__DIR__ . '/templates/groups/group-rights-grid.html');
+
+        $idGroup = $this->get('id');
+        $group = $app->groupModel->getGroupById($idGroup);
+
+        $data = [
+            '$PAGE_TITLE$' => 'Ribbon rights for group <i>' . $group->getName() . '</i>',
+            '$BACK_LINK$' => '',
+            '$LINKS$' => [LinkBuilder::createAdvLink(['page' => 'Settings:showGroups'], '&larr;')],
+            '$GROUP_RIGHTS_GRID$' => $this->internalCreateRibbonRights($group)
+        ];
+
+        $this->fill($data, $template);
+
+        return $template;
     }
 
     protected function showNewUserForm() {
@@ -507,6 +531,66 @@ class Groups extends APresenter {
             return $gu->getIsManager() ? 'Yes' : 'No';
         });
         $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
+    }
+
+    private function internalCreateRibbonRights(Group $group) {
+        global $app;
+
+        $ribbonModel = $app->ribbonModel;
+
+        $dataSourceCallback = function() use ($ribbonModel) {
+            return $ribbonModel->getAllRibbons(true);
+        };
+
+        $enableLink = function(int $idRibbon, int $idGroup, string $action) {
+            return LinkBuilder::createAdvLink(['page' => 'enableRibbonRight', 'id_ribbon_update' => $idRibbon, 'id_group' => $idGroup, 'action' => $action], 'No', 'general-link', 'color: red');
+        };
+
+        $disableLink = function(int $idRibbon, int $idGroup, string $action) {
+            return LinkBuilder::createAdvLink(['page' => 'disableRibbonRight', 'id_ribbon_update' => $idRibbon, 'id_group' => $idGroup, 'action' => $action], 'Yes', 'general-link', 'color: green');
+        };
+
+        $allRibbonRights = $app->ribbonRightsModel->getRibbonRightsForAllRibbonsAndIdGroup($group->getId());
+
+        $gb = new GridBuilder();
+        $gb->addDataSourceCallback($dataSourceCallback);
+        $gb->addColumns(['name' => 'Name', 'code' => 'Code', 'isSystem' => 'System', 'can_see' => 'View', 'can_edit' => 'Edit', 'can_delete' => 'Delete']);
+        $gb->addOnColumnRender('isSystem', function(Ribbon $ribbon) {
+            if($ribbon->isSystem()) {
+                return '<span style="color: green">Yes</span>';
+            } else {
+                return '<span style="color: red">No</span>';
+            }
+        });
+        $gb->addOnColumnRender('can_see', function(Ribbon $ribbon) use ($allRibbonRights, $group, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_see'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $group->getId(), 'can_see') : $enableLink($ribbon->getId(), $group->getId(), 'can_see');
+        });
+        $gb->addOnColumnRender('can_edit', function(Ribbon $ribbon) use ($allRibbonRights, $group, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_edit'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $group->getId(), 'can_edit') : $enableLink($ribbon->getId(), $group->getId(), 'can_edit');
+        });
+        $gb->addOnColumnRender('can_delete', function(Ribbon $ribbon) use ($allRibbonRights, $group, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_delete'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $group->getId(), 'can_delete') : $enableLink($ribbon->getId(), $group->getId(), 'can_delete');
+        });
 
         return $gb->build();
     }

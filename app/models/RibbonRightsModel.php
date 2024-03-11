@@ -10,6 +10,17 @@ class RibbonRightsModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getRibbonRightsForAllRibbonsAndIdGroup(int $idGroup) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('ribbon_group_rights')
+            ->where('id_group = ?', [$idGroup])
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
     public function getRibbonRightsForAllRibbonsAndIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
