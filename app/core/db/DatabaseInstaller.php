@@ -10,7 +10,6 @@ use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\FileStorageSystemLocations;
-use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\Ribbons;
@@ -55,12 +54,10 @@ class DatabaseInstaller {
         $this->insertDefaultUserGroups();
         $this->insertDefaultMetadata();
 
-        $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
 
-        $this->insertDefaultGroupPanelRights();
         $this->insertDefaultGroupBulkActionRights();
         $this->insertDefaultGroupActionRights();
         $this->insertDefaultGroupMetadataRights();
@@ -80,7 +77,6 @@ class DatabaseInstaller {
      * Updates default user rights
      */
     public function updateDefaultUserRights() {
-        $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
@@ -113,12 +109,6 @@ class DatabaseInstaller {
                 'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'default_user_datetime_format' => 'VARCHAR(256) NULL',
                 'last_login_hash' => 'VARCHAR(256) NULL'
-            ),
-            'user_panel_rights' => array(
-                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'id_user' => 'INT(32) NOT NULL',
-                'panel_name' => 'VARCHAR(256) NOT NULL',
-                'is_visible' => 'INT(2) DEFAULT 0'
             ),
             'documents' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -185,12 +175,6 @@ class DatabaseInstaller {
                 'id_group' => 'INT(32) NOT NULL',
                 'action_name' => 'VARCHAR(256) NOT NULL',
                 'is_executable' => 'INT(2) DEFAULT 0'
-            ),
-            'group_panel_rights' => array(
-                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'id_group' => 'INT(32) NOT NULL',
-                'panel_name' => 'VARCHAR(256) NOT NULL',
-                'is_visible' => 'INT(2) DEFAULT 0'
             ),
             'group_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -476,110 +460,201 @@ class DatabaseInstaller {
      */
     private function createIndexes() {
         $indexes = [
-            'documents' => [
-                'id_folder'
+            [
+                'table_name' => 'documents',
+                'columns' => [
+                    'id_folder'
+                ]
             ],
-            'documents' => [
-                'status'
+            [
+                'table_name' => 'documents',
+                'columns' => [
+                    'status'
+                ]
             ],
-            'document_comments' => [
-                'id_document'
+            [
+                'table_name' => 'document_comments',
+                'columns' => [
+                    'id_document'
+                ]
             ],
-            'document_sharing' => [
-                'id_user',
-                'id_document'
+            [
+                'table_name' => 'document_sharing',
+                'columns' => [
+                    'id_user',
+                    'id_document'
+                ]
             ],
-            'document_filters' => [
-                'id_author'
+            [
+                'table_name' => 'document_filters',
+                'columns' => [
+                    'id_author'
+                ]
             ],
-            'document_reports' => [
-                'id_user'
+            [
+                'table_name' => 'document_reports',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'user_panel_rights' => [
-                'id_user'
+            [
+                'table_name' => 'user_bulk_rights',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'user_bulk_rights' => [
-                'id_user'
+            [
+                'table_name' => 'user_action_rights',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'user_action_rights' => [
-                'id_user'
+            [
+                'table_name' => 'user_metadata_rights',
+                'columns' => [
+                    'id_user',
+                    'id_metadata'
+                ]
             ],
-            'user_metadata_rights' => [
-                'id_user',
-                'id_metadata'
+            [
+                'table_name' => 'ribbon_user_rights',
+                'columns' => [
+                    'id_ribbon',
+                    'id_user'
+                ]
             ],
-            'ribbon_user_rights' => [
-                'id_ribbon',
-                'id_user'
+            [
+                'table_name' => 'group_bulk_rights',
+                'columns' => [
+                    'id_group'
+                ]
             ],
-            'group_panel_rights' => [
-                'id_group'
+            [
+                'table_name' => 'group_action_rights',
+                'columns' => [
+                    'id_group'
+                ]
             ],
-            'group_bulk_rights' => [
-                'id_group'
+            [
+                'table_name' => 'group_metadata_rights',
+                'columns' => [
+                    'id_group',
+                    'id_metadata'
+                ]
             ],
-            'group_action_rights' => [
-                'id_group'
+            [
+                'table_name' => 'ribbon_group_rights',
+                'columns' => [
+                    'id_ribbon',
+                    'id_group'
+                ]
             ],
-            'group_metadata_rights' => [
-                'id_group',
-                'id_metadata'
+            [
+                'table_name' => 'metadata_values',
+                'columns' => [
+                    'id_metadata'
+                ]
             ],
-            'ribbon_group_rights' => [
-                'id_ribbon',
-                'id_group'
+            [
+                'table_name' => 'folders',
+                'columns' => [
+                    'id_parent_folder'
+                ]
             ],
-            'metadata_values' => [
-                'id_metadata'
+            [
+                'table_name' => 'processes',
+                'columns' => [
+                    'id_document'
+                ]
             ],
-            'folders' => [
-                'id_parent_folder'
+            [
+                'table_name' => 'processes',
+                'columns' => [
+                    'id_author'
+                ]
             ],
-            'processes' => [
-                'id_document'
+            [
+                'table_name' => 'processes',
+                'columns' => [
+                    'workflow1',
+                    'workflow2',
+                    'workflow3',
+                    'workflow4'
+                ]
             ],
-            'process_comments' => [
-                'id_process'
+            [
+                'table_name' => 'process_comments',
+                'columns' => [
+                    'id_process'
+                ]
             ],
-            'notifications' => [
-                'id_user'
+            [
+                'table_name' => 'notifications',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'password_reset_hashes' => [
-                'id_user'
+            [
+                'table_name' => 'password_reset_hashes',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'ribbons' => [
-                'id_parent_ribbon'
+            [
+                'table_name' => 'ribbons',
+                'columns' => [
+                    'id_parent_ribbon'
+                ]
             ],
-            'file_storage_locations' => [
-                'type'
+            [
+                'table_name' => 'file_storage_locations',
+                'columns' => [
+                    'type'
+                ]
             ],
-            'file_storage_locations' => [
-                'name'
+            [
+                'table_name' => 'file_storage_locations',
+                'columns' => [
+                    'name'
+                ]
             ],
-            'services' => [
-                'system_name'
+            [
+                'table_name' => 'services',
+                'columns' => [
+                    'system_name'
+                ]
             ],
-            'users' => [
-                'last_login_hash'
+            [
+                'table_name' => 'users',
+                'columns' => [
+                    'last_login_hash'
+                ]
             ],
-            'document_metadata_history' => [
-                'id_document'
-            ]
+            [
+                'table_name' => 'document_metadata_history',
+                'columns' => [
+                    'id_document'
+                ]
+            ],
         ];
 
         $tables = [];
-        foreach($indexes as $tableName => $indexColumns) {
-            $i = 1;
+        foreach($indexes as $array) {
+            $tableName = $array['table_name'];
+            $columns = $array['columns'];
+
+            $c = 1;
             foreach($tables as $table) {
                 if($table == $tableName) {
-                    $i++;
+                    $c++;
                 }
             }
+            $tables[] = $tableName;
 
             $sql = 'CREATE INDEX `$INDEX_NAME$` ON `$TABLE_NAME$` (';
 
             $params = [
-                '$INDEX_NAME$' => $tableName . '_' . $i,
+                '$INDEX_NAME$' => $tableName . '_' . $c,
                 '$TABLE_NAME$' => $tableName
             ];
 
@@ -588,8 +663,8 @@ class DatabaseInstaller {
             }
 
             $i = 0;
-            foreach($indexColumns as $col) {
-                if(($i + 1) == count($indexColumns)) {
+            foreach($columns as $col) {
+                if(($i + 1) == count($columns)) {
                     $sql .= $col . ')';
                 } else {
                     $sql .= $col . ', ';
@@ -599,7 +674,6 @@ class DatabaseInstaller {
             }
 
             $this->logger->sql($sql, __METHOD__);
-
             $this->db->query($sql);
         }
 
@@ -751,123 +825,6 @@ class DatabaseInstaller {
                     $sql = "INSERT INTO `group_users` (`id_user`, `id_group`, `is_manager`) VALUES ('$idUser', '$idGroup', '$isManager')";
                     $result = $this->db->query($sql);
                 } 
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Inserts default group panel rights
-     * 
-     * @return true
-     */
-    private function insertDefaultGroupPanelRights() {
-        $idGroups = [];
-        $panels = PanelRights::$all;
-
-        $sql = "SELECT `id`, `code` FROM `groups`";
-
-        $this->logger->sql($sql, __METHOD__);
-
-        $rows = $this->db->query($sql);
-
-        $allowPanels = [];
-
-        foreach($rows as $row) {
-            $idGroups[] = $row['id'];
-
-            switch($row['code']) {
-                case 'ARCHMAN':
-                    $allowPanels[$row['id']] = array(
-                        PanelRights::DOCUMENTS,
-                        PanelRights::PROCESSES
-                    );
-                    break;
-                
-                case 'ADMINISTRATORS':
-                    $allowPanels[$row['id']] = $panels;
-                    break;
-            }
-        }
-
-        foreach($idGroups as $id) {
-            foreach($panels as $panel) {
-                if(in_array($panel, $allowPanels[$id])) {
-                    // allow
-                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '1')";
-                } else {
-                    // deny
-                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '0')";
-                }
-
-                $this->logger->sql($sql, __METHOD__);
-
-                $this->db->query($sql);
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Inserts default user panel rights
-     * 
-     * @return true
-     */
-    private function insertDefaultUserPanelRights() {
-        $idUsers = [];
-        $panels = PanelRights::$all;
-
-        $userPanels = [];
-        $dbUserPanels = [];
-
-        $sql = 'SELECT * FROM `users`';
-
-        $this->logger->sql($sql, __METHOD__);
-
-        $rows = $this->db->query($sql);
-
-        if($rows->num_rows > 0) {
-            foreach($rows as $row) {
-                if(in_array($row['username'], self::DEFAULT_USERS)) {
-                    $idUsers[] = $row['id'];
-                }
-            }
-        }
-
-        $sql = 'SELECT * FROM `user_panel_rights`';
-
-        $rows = $this->db->query($sql);
-
-        if($rows->num_rows > 0) {
-            foreach($rows as $row) {
-                $dbUserPanels[$row['id_user']][] = $row['panel_name'];
-            }
-        }
-
-        foreach($panels as $panel) {
-            if(empty($dbUserPanels)) {
-                foreach($idUsers as $id) {
-                    $userPanels[$id][] = $panel;
-                }
-            } else {
-                foreach($dbUserPanels as $id => $dupanels) {
-                    if(!in_array($panel, $dupanels)) {
-                        $userPanels[$id][] = $panel;
-                    }
-                }
-            }
-        }
-
-        foreach($userPanels as $id => $upanels) {
-            foreach($upanels as $upanel) {
-                $sql = "INSERT INTO `user_panel_rights` (`id_user`, `panel_name`, `is_visible`)
-                VALUES ('$id', '$upanel', '1')";
-
-                $this->logger->sql($sql, __METHOD__);
-
-                $this->db->query($sql);
             }
         }
 

@@ -4,12 +4,13 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
-use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
 use DMS\Entities\EntityRight;
+use DMS\Entities\Group;
 use DMS\Entities\GroupUser;
+use DMS\Entities\Ribbon;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
@@ -22,6 +23,64 @@ class Groups extends APresenter {
         parent::__construct('Groups');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function showRibbonRights() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $template = $this->loadTemplate(__DIR__ . '/templates/groups/group-rights-grid.html');
+
+        $idGroup = $this->get('id');
+        $group = $app->groupModel->getGroupById($idGroup);
+
+        $data = [
+            '$PAGE_TITLE$' => 'Ribbon rights for group <i>' . $group->getName() . '</i>',
+            '$BACK_LINK$' => '',
+            '$LINKS$' => [LinkBuilder::createAdvLink(['page' => 'Settings:showGroups'], '&larr;')],
+            '$GROUP_RIGHTS_GRID$' => $this->internalCreateRibbonRights($group)
+        ];
+
+        $this->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function enableRibbonRight() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_ribbon_update', 'id_group', 'action']);
+        $idRibbon = $this->get('id_ribbon_update');
+        $idGroup = $this->get('id_group');
+        $action = $this->get('action');
+
+        $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, [$action => '1']);
+
+        $app->logger->info('Enabled ribbon right for ribbon #' . $idRibbon . ' to group #' . $idGroup, __METHOD__);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_GROUP_RIGHTS);
+        $cm->invalidateCache();
+
+        $app->redirect('showRibbonRights', ['id' => $idGroup]);
+    }
+
+    protected function disableRibbonRight() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_ribbon_update', 'id_group', 'action']);
+        $idRibbon = $this->get('id_ribbon_update');
+        $idGroup = $this->get('id_group');
+        $action = $this->get('action');
+
+        $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, [$action => '0']);
+
+        $app->logger->info('Enabled ribbon right for ribbon #' . $idRibbon . ' to group #' . $idGroup, __METHOD__);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_GROUP_RIGHTS);
+        $cm->invalidateCache();
+
+        $app->redirect('showRibbonRights', ['id' => $idGroup]);
     }
 
     protected function showNewUserForm() {
@@ -57,8 +116,11 @@ class Groups extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Users in group <i>' . $group->getName() . '</i>',
             '$GROUP_GRID$' => $this->internalCreateGroupGrid($id),
-            '$NEW_ENTITY_LINK$' => '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createAdvLink(array('page' => 'showNewUserForm', 'id' => $id), 'Add user') . '</div></div>'
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('Settings:showGroups', '&larr;') . '&nbsp;&nbsp;';
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'showNewUserForm', 'id' => $id), 'Add user');
 
         $this->templateManager->fill($data, $template);
 
@@ -129,50 +191,6 @@ class Groups extends APresenter {
         $cm->invalidateCache();
 
         $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'actions'), $name);
-    }
-
-    protected function allowPanelRight() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['id', 'name']);
-
-        $name = $this->get('name');
-        $idGroup = $this->get('id');
-
-        if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
-            $app->groupRightModel->updatePanelRight($idGroup, $name, true);
-        } else {
-            $app->groupRightModel->insertPanelRightForIdGroup($idGroup, $name, true);
-        }
-
-        $app->logger->info('Allowed panel right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
-
-        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-        $cm->invalidateCache();
-
-        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
-    }
-
-    protected function denyPanelRight() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['id', 'name']);
-
-        $name = $this->get('name');
-        $idGroup = $this->get('id');
-
-        if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
-            $app->groupRightModel->updatePanelRight($idGroup, $name, false);
-        } else {
-            $app->groupRightModel->insertPanelRightForIdGroup($idGroup, $name, false);
-        }
-
-        $app->logger->info('Denied panel right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
-
-        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-        $cm->invalidateCache();
-
-        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -373,22 +391,6 @@ class Groups extends APresenter {
                     }
     
                     break;
-    
-                case 'panels':
-                    $defaultPanelRights = PanelRights::$all;
-                    $panelRights = $groupRightModel->getPanelRightsForIdGroup($idGroup);
-    
-                    foreach($defaultPanelRights as $dpr) {
-                        $rights[$dpr] = new EntityRight('panel', $dpr, false);
-                    }
-    
-                    foreach($panelRights as $name => $value) {
-                        if(array_key_exists($name, $rights)) {
-                            $rights[$name]->setValue(($value == '1'));
-                        }
-                    }
-    
-                    break;
             }
 
             return $rights;
@@ -421,11 +423,6 @@ class Groups extends APresenter {
                 case 'action':
                     $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
                     $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
-                    break;
-
-                case 'panel':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
                     break;
     
                 case 'bulk':
@@ -507,6 +504,66 @@ class Groups extends APresenter {
             return $gu->getIsManager() ? 'Yes' : 'No';
         });
         $gb->addDataSourceCallback($dataSourceCallback);
+
+        return $gb->build();
+    }
+
+    private function internalCreateRibbonRights(Group $group) {
+        global $app;
+
+        $ribbonModel = $app->ribbonModel;
+
+        $dataSourceCallback = function() use ($ribbonModel) {
+            return $ribbonModel->getAllRibbons(true);
+        };
+
+        $enableLink = function(int $idRibbon, int $idGroup, string $action) {
+            return LinkBuilder::createAdvLink(['page' => 'enableRibbonRight', 'id_ribbon_update' => $idRibbon, 'id_group' => $idGroup, 'action' => $action], 'No', 'general-link', 'color: red');
+        };
+
+        $disableLink = function(int $idRibbon, int $idGroup, string $action) {
+            return LinkBuilder::createAdvLink(['page' => 'disableRibbonRight', 'id_ribbon_update' => $idRibbon, 'id_group' => $idGroup, 'action' => $action], 'Yes', 'general-link', 'color: green');
+        };
+
+        $allRibbonRights = $app->ribbonRightsModel->getRibbonRightsForAllRibbonsAndIdGroup($group->getId());
+
+        $gb = new GridBuilder();
+        $gb->addDataSourceCallback($dataSourceCallback);
+        $gb->addColumns(['name' => 'Name', 'code' => 'Code', 'isSystem' => 'System', 'can_see' => 'View', 'can_edit' => 'Edit', 'can_delete' => 'Delete']);
+        $gb->addOnColumnRender('isSystem', function(Ribbon $ribbon) {
+            if($ribbon->isSystem()) {
+                return '<span style="color: green">Yes</span>';
+            } else {
+                return '<span style="color: red">No</span>';
+            }
+        });
+        $gb->addOnColumnRender('can_see', function(Ribbon $ribbon) use ($allRibbonRights, $group, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_see'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $group->getId(), 'can_see') : $enableLink($ribbon->getId(), $group->getId(), 'can_see');
+        });
+        $gb->addOnColumnRender('can_edit', function(Ribbon $ribbon) use ($allRibbonRights, $group, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_edit'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $group->getId(), 'can_edit') : $enableLink($ribbon->getId(), $group->getId(), 'can_edit');
+        });
+        $gb->addOnColumnRender('can_delete', function(Ribbon $ribbon) use ($allRibbonRights, $group, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_delete'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $group->getId(), 'can_delete') : $enableLink($ribbon->getId(), $group->getId(), 'can_delete');
+        });
 
         return $gb->build();
     }

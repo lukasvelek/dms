@@ -5,7 +5,6 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
-use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
@@ -13,6 +12,7 @@ use DMS\Constants\DatetimeFormats;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
 use DMS\Entities\EntityRight;
+use DMS\Entities\Ribbon;
 use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Modules\APresenter;
@@ -317,6 +317,28 @@ class Users extends APresenter {
         $app->redirect('showProfile', array('id' => $id));
     }
 
+    protected function showRibbonRights() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $template = $this->loadTemplate(__DIR__ . '/templates/users/user-rights-grid.html');
+
+        $idUser = $this->get('id');
+        $user = $app->userModel->getUserById($idUser);
+        
+        $data = [
+            '$PAGE_TITLE$' => 'Ribbon rights for user <i>' . $user->getFullname() . '</i>',
+            '$BACK_LINK$' => '',
+            '$LINKS$' => [LinkBuilder::createAdvLink(['page' => 'Settings:showUsers'], '&larr;')],
+            '$USER_RIGHTS_GRID$' => $this->internalCreateRibbonRights($user)
+        ];
+
+        $this->fill($data, $template);
+
+        return $template;
+    }
+
     protected function showUserRights() {
         global $app;
 
@@ -400,20 +422,6 @@ class Users extends APresenter {
                 $bacm->invalidateCache();
 
                 break;
-
-            case 'panels':
-                foreach(PanelRights::$all as $pr) {
-                    if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
-                        $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
-                    } else {
-                        $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
-                    }
-                }
-
-                $pcm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-                $pcm->invalidateCache();
-
-                break;
         }
 
         $app->getConn()->commit();
@@ -458,20 +466,6 @@ class Users extends APresenter {
 
                 $bacm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
                 $bacm->invalidateCache();
-
-                break;
-
-            case 'panels':
-                foreach(PanelRights::$all as $pr) {
-                    if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
-                        $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
-                    } else {
-                        $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
-                    }
-                }
-
-                $pcm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-                $pcm->invalidateCache();
 
                 break;
         }
@@ -525,50 +519,6 @@ class Users extends APresenter {
         $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'actions'), $name);
     }
 
-    protected function allowPanelRight() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['id', 'name']);
-
-        $name = $this->get('name');
-        $idUser = $this->get('id');
-
-        if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
-            $app->userRightModel->updatePanelRight($idUser, $name, true);
-        } else {
-            $app->userRightModel->insertPanelRightForIdUser($idUser, $name, true);
-        }
-
-        $app->logger->info('Allowed panel right to user #' . $idUser, __METHOD__);
-
-        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-        $cm->invalidateCache();
-
-        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
-    }
-
-    protected function denyPanelRight() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['id', 'name']);
-
-        $name = $this->get('name');
-        $idUser = $this->get('id');
-
-        if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
-            $app->userRightModel->updatePanelRight($idUser, $name, false);
-        } else {
-            $app->userRightModel->insertPanelRightForIdUser($idUser, $name, false);
-        }
-
-        $app->logger->info('Denied panel right to user #' . $idUser, __METHOD__);
-
-        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-        $cm->invalidateCache();
-
-        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
-    }
-
     protected function allowBulkActionRight() {
         global $app;
 
@@ -613,6 +563,102 @@ class Users extends APresenter {
         $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'bulk_actions'), $name);
     }
 
+    protected function enableRibbonRight() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_ribbon_update', 'id_user', 'action']);
+        $idRibbon = $this->get('id_ribbon_update');
+        $idUser = $this->get('id_user');
+        $action = $this->get('action');
+
+        $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, [$action => '1']);
+
+        $app->logger->info('Enabled ribbon right for ribbon #' . $idRibbon . ' to user #' . $idUser, __METHOD__);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_USER_RIGHTS);
+        $cm->invalidateCache();
+
+        $app->redirect('showRibbonRights', ['id' => $idUser]);
+    }
+
+    protected function disableRibbonRight() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_ribbon_update', 'id_user', 'action']);
+        $idRibbon = $this->get('id_ribbon_update');
+        $idUser = $this->get('id_user');
+        $action = $this->get('action');
+
+        $app->ribbonRightsModel->updateUserRights($idRibbon, $idUser, [$action => '0']);
+
+        $app->logger->info('Disabled ribbon right for ribbon #' . $idRibbon . ' to user #' . $idUser, __METHOD__);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_USER_RIGHTS);
+        $cm->invalidateCache();
+
+        $app->redirect('showRibbonRights', ['id' => $idUser]);
+    }
+
+    private function internalCreateRibbonRights(User $user) {
+        global $app;
+
+        $ribbonModel = $app->ribbonModel;
+
+        $dataSourceCallback = function() use ($ribbonModel) {
+            return $ribbonModel->getAllRibbons(true);
+        };
+
+        $enableLink = function(int $idRibbon, int $idUser, string $action) {
+            return LinkBuilder::createAdvLink(['page' => 'enableRibbonRight', 'id_ribbon_update' => $idRibbon, 'id_user' => $idUser, 'action' => $action], 'No', 'general-link', 'color: red');
+        };
+
+        $disableLink = function(int $idRibbon, int $idUser, string $action) {
+            return LinkBuilder::createAdvLink(['page' => 'disableRibbonRight', 'id_ribbon_update' => $idRibbon, 'id_user' => $idUser, 'action' => $action], 'Yes', 'general-link', 'color: green');
+        };
+
+        $allRibbonRights = $app->ribbonRightsModel->getRibbonRightsForAllRibbonsAndIdUser($user->getId());
+
+        $gb = new GridBuilder();
+        $gb->addDataSourceCallback($dataSourceCallback);
+        $gb->addColumns(['name' => 'Name', 'code' => 'Code', 'isSystem' => 'System', 'can_see' => 'View', 'can_edit' => 'Edit', 'can_delete' => 'Delete']);
+        $gb->addOnColumnRender('isSystem', function(Ribbon $ribbon) {
+            if($ribbon->isSystem()) {
+                return '<span style="color: green">Yes</span>';
+            } else {
+                return '<span style="color: red">No</span>';
+            }
+        });
+        $gb->addOnColumnRender('can_see', function(Ribbon $ribbon) use ($allRibbonRights, $user, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_see'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $user->getId(), 'can_see') : $enableLink($ribbon->getId(), $user->getId(), 'can_see');
+        });
+        $gb->addOnColumnRender('can_edit', function(Ribbon $ribbon) use ($allRibbonRights, $user, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_edit'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $user->getId(), 'can_edit') : $enableLink($ribbon->getId(), $user->getId(), 'can_edit');
+        });
+        $gb->addOnColumnRender('can_delete', function(Ribbon $ribbon) use ($allRibbonRights, $user, $enableLink, $disableLink) {
+            $ok = false;
+            foreach($allRibbonRights as $rr) {
+                if($rr['id_ribbon'] == $ribbon->getId()) {
+                    $ok = $rr['can_delete'];
+                }
+            }
+            return $ok ? $disableLink($ribbon->getId(), $user->getId(), 'can_delete') : $enableLink($ribbon->getId(), $user->getId(), 'can_delete');
+        });
+
+        return $gb->build();
+    }
+
     private function internalCreateUserRightsGrid(int $idUser, string $filter) {
         global $app;
 
@@ -652,22 +698,6 @@ class Users extends APresenter {
                     }
     
                     break;
-    
-                case 'panels':
-                    $defaultPanelRights = PanelRights::$all;
-                    $panelRights = $userRightModel->getPanelRightsForIdUser($idUser);
-    
-                    foreach($defaultPanelRights as $dpr) {
-                        $rights[$dpr] = new EntityRight('panel', $dpr, false);
-                    }
-    
-                    foreach($panelRights as $name => $value) {
-                        if(array_key_exists($name, $rights)) {
-                            $rights[$name]->setValue(($value == '1'));
-                        }
-                    }
-    
-                    break;
             }
 
             return $rights;
@@ -700,11 +730,6 @@ class Users extends APresenter {
                 case 'action':
                     $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
                     $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
-                    break;
-
-                case 'panel':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
                     break;
     
                 case 'bulk':

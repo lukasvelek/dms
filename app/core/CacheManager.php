@@ -612,48 +612,6 @@ class CacheManager {
     }
 
     /**
-     * Saves a panel right to cache
-     * 
-     * @param int $idUser ID user
-     * @param string $key Panel name
-     * @param int $value 1 if panel right is allowed and 0 if not
-     */
-    public function savePanelRight(int $idUser, string $key, int $value) {
-        $cacheData = $this->loadFromCache();
-
-        $cacheData[$idUser][$key] = $value;
-
-        $this->saveToCache($cacheData);
-    }
-
-    /**
-     * Loads the panel right from cache
-     * 
-     * @param int $idUser ID user
-     * @param string $key Panel name
-     * @return bool|null True if panel right is allowed, false if it is not allowed, null if the entry does not exist
-     */
-    public function loadPanelRight(int $idUser, string $key) {
-        $cacheData = $this->loadFromCache();
-
-        if(empty($cacheData)) {
-            return null;
-        }
-
-        if(!array_key_exists($idUser, $cacheData)) {
-            return null;
-        }
-
-        foreach($cacheData as $idUser => $keys) {
-            if(!array_key_exists($key, $keys)) {
-                return null;
-            } else {
-                return $keys[$key] ? true : false;
-            }
-        }
-    }
-
-    /**
      * Saves a metadata right to cache
      * 
      * @param int $idUser ID user

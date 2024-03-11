@@ -10,6 +10,28 @@ class RibbonRightsModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getRibbonRightsForAllRibbonsAndIdGroup(int $idGroup) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('ribbon_group_rights')
+            ->where('id_group = ?', [$idGroup])
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function getRibbonRightsForAllRibbonsAndIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('ribbon_user_rights')
+            ->where('id_user = ?', [$idUser])
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
     public function getAllEditableRibbonsForIdGroups(array $idGroups) {
         $qb = $this->qb(__METHOD__);
 
@@ -118,6 +140,8 @@ class RibbonRightsModel extends AModel {
 
         // update
 
+        $qb = $this->qb(__METHOD__);
+
         $qb ->update('ribbon_group_rights')
             ->set($rights)
             ->where('id_ribbon = ?', [$idRibbon])
@@ -144,6 +168,8 @@ class RibbonRightsModel extends AModel {
         }
 
         // update
+
+        $qb = $this->qb(__METHOD__);
 
         $qb ->update('ribbon_user_rights')
             ->set($rights)

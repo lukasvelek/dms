@@ -6,7 +6,6 @@ use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
-use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
@@ -205,7 +204,6 @@ if(isset($_SESSION['id_current_user'])) {
 
 }
 
-$panelAuthorizator = new PanelAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);

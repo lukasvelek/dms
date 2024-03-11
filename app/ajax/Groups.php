@@ -70,7 +70,7 @@ function search() {
     });
     $gb->addAction(function(Group $group) use ($canManagerGroupUsers) {
         if($canManagerGroupUsers) {
-            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showGroupRights', 'id' => $group->getId(), 'filter' => 'panels'), 'Panel rights');
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Groups:showRibbonRights', 'id' => $group->getId()), 'Ribbon rights');
         } else {
             return '-';
         }

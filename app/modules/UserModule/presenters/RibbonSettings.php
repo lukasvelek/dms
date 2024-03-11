@@ -844,10 +844,20 @@ class RibbonSettings extends APresenter {
                 continue;
             }
 
+            $canSee = 0;
+            $canEdit = 0;
+            $canDelete = 0;
+            foreach($userRights as $ur) {
+                $canSee = $ur['can_see'];
+                $canEdit = $ur['can_edit'];
+                $canDelete = $ur['can_delete'];
+                break;
+            }
+
             $userRightsArr[$user->getId()] = array(
-                'can_see' => $userRights['can_see'],
-                'can_edit' => $userRights['can_edit'],
-                'can_delete' => $userRights['can_delete']
+                'can_see' => $canSee,
+                'can_edit' => $canEdit,
+                'can_delete' => $canDelete
             );
         }
 
@@ -909,10 +919,20 @@ class RibbonSettings extends APresenter {
                 continue;
             }
 
+            $canSee = 0;
+            $canEdit = 0;
+            $canDelete = 0;
+            foreach($groupRights as $gr) {
+                $canSee = $gr['can_see'];
+                $canEdit = $gr['can_edit'];
+                $canDelete = $gr['can_delete'];
+                break;
+            }
+
             $groupRightsArr[$group->getId()] = array(
-                'can_see' => $groupRights['can_see'],
-                'can_edit' => $groupRights['can_edit'],
-                'can_delete' => $groupRights['can_delete']
+                'can_see' => $canSee,
+                'can_edit' => $canEdit,
+                'can_delete' => $canDelete
             );
         }
 
