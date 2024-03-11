@@ -5,6 +5,7 @@ namespace DMS\Models;
 use DMS\Constants\ArchiveStatus;
 use DMS\Constants\ArchiveType;
 use DMS\Constants\Metadata\ArchiveMetadata;
+use DMS\Constants\Metadata\DocumentMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Archive;
@@ -230,7 +231,7 @@ class ArchiveModel extends AModel {
         switch($parentType) {
             case ArchiveType::DOCUMENT:
                 $qb->from('documents')
-                   ->where('id_archive_document = ?', [$id]);
+                   ->where(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' = ?', [$id]);
                 break;
 
             case ArchiveType::BOX:

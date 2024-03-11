@@ -2,6 +2,7 @@
 
 namespace DMS\Core\DB;
 
+use DMS\Constants\Metadata\DbTransactionLogMetadata;
 use DMS\Core\Logger\Logger;
 use QueryBuilder\IDbQueriable;
 
@@ -181,9 +182,9 @@ class Database implements IDbQueriable {
     private function insertTransactionLogEntry(int $timeTaken) {
         if(isset($_SESSION['id_current_user'])) {
             $idUser = $_SESSION['id_current_user'];
-            $sql = "INSERT INTO `db_transaction_log` (`time_taken`, `id_calling_user`) VALUES ('$timeTaken', '$idUser')";
+            $sql = "INSERT INTO `db_transaction_log` (`" . DbTransactionLogMetadata::TIME_TAKEN . "`, `" . DbTransactionLogMetadata::ID_CALLING_USER . "`) VALUES ('$timeTaken', '$idUser')";
         } else {
-            $sql = "INSERT INTO `db_transaction_log` (`time_taken`) VALUES ('$timeTaken')";
+            $sql = "INSERT INTO `db_transaction_log` (`" . DbTransactionLogMetadata::TIME_TAKEN . "`) VALUES ('$timeTaken')";
         }
 
         return $this->query($sql);

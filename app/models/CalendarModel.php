@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\CalendarEventsMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\CalendarEventEntity;
@@ -16,7 +17,7 @@ class CalendarModel extends AModel {
 
         $qb ->select(['*'])
             ->from('calendar_events')
-            ->where("`date_from` LIKE ?", [$year . '-' . $month . '-%'])
+            ->where("`" . CalendarEventsMetadata::DATE_FROM . "` LIKE ?", [$year . '-' . $month . '-%'])
             ->execute();
 
         $events = [];
@@ -32,7 +33,7 @@ class CalendarModel extends AModel {
 
         $qb ->select(['*'])
             ->from('calendar_events')
-            ->where('`date_from` BETWEEN ? AND ?', [$dateFrom, $dateTo])
+            ->where('`' . CalendarEventsMetadata::DATE_FROM . '` BETWEEN ? AND ?', [$dateFrom, $dateTo])
             ->execute();
 
         $events = [];
@@ -52,21 +53,21 @@ class CalendarModel extends AModel {
     }
 
     private function createCalendarEventObjectFromDbRow($row) {
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $title = $row['title'];
-        $color = $row['color'];
-        $dateFrom = $row['date_from'];
-        $time = $row['time'];
+        $id = $row[CalendarEventsMetadata::ID];
+        $dateCreated = $row[CalendarEventsMetadata::DATE_CREATED];
+        $title = $row[CalendarEventsMetadata::TITLE];
+        $color = $row[CalendarEventsMetadata::COLOR];
+        $dateFrom = $row[CalendarEventsMetadata::DATE_FROM];
+        $time = $row[CalendarEventsMetadata::TIME];
         $tag = null;
         $dateTo = null;
 
-        if(isset($row['tag'])) {
-            $tag = $row['tag'];
+        if(isset($row[CalendarEventsMetadata::TAG])) {
+            $tag = $row[CalendarEventsMetadata::TAG];
         }
 
-        if(isset($row['date_to'])) {
-            $dateTo = $row['date_to'];
+        if(isset($row[CalendarEventsMetadata::DATE_TO])) {
+            $dateTo = $row[CalendarEventsMetadata::DATE_TO];
         }
 
         return new CalendarEventEntity($id, $dateCreated, $title, $color, $tag, $dateFrom, $dateTo, $time);
