@@ -4,6 +4,7 @@ namespace DMS\Models;
 
 use DMS\Constants\ArchiveStatus;
 use DMS\Constants\ArchiveType;
+use DMS\Constants\Metadata\ArchiveMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Archive;
@@ -18,7 +19,7 @@ class ArchiveModel extends AModel {
 
         $qb ->select(['*'])
             ->from('archive_documents')
-            ->where('id_parent_archive_entity = ?', [$idBox])
+            ->where(ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY . ' = ?', [$idBox])
             ->limit($limit)
             ->offset($offset)
             ->execute();
@@ -36,7 +37,7 @@ class ArchiveModel extends AModel {
 
         $qb ->select(['*'])
             ->from('archive_boxes')
-            ->where('id_parent_archive_entity = ?', [$idArchive])
+            ->where(ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY . ' = ?', [$idArchive])
             ->limit($limit)
             ->offset($offset)
             ->execute();
@@ -104,7 +105,7 @@ class ArchiveModel extends AModel {
 
         $qb ->select(['*'])
             ->from('archive_boxes')
-            ->where('id_parent_archive_entity = ?', [$idParent])
+            ->where(ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY . ' = ?', [$idParent])
             ->execute();
 
         $entities = [];
@@ -120,7 +121,7 @@ class ArchiveModel extends AModel {
 
         $qb ->select(['*'])
             ->from('archive_boxes')
-            ->where('id_parent_archive_entity = ?', [$idParent])
+            ->where(ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY . ' = ?', [$idParent])
             ->execute();
 
         $entities = [];
@@ -141,8 +142,8 @@ class ArchiveModel extends AModel {
 
     public function moveBoxToArchive(int $idBox, int $idArchive) {
         $data = [
-            'id_parent_archive_entity' => $idArchive,
-            'status' => ArchiveStatus::IN_ARCHIVE
+            ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY => $idArchive,
+            ArchiveMetadata::STATUS => ArchiveStatus::IN_ARCHIVE
         ];
 
         return $this->updateBox($idBox, $data);
@@ -154,15 +155,15 @@ class ArchiveModel extends AModel {
         ];
 
         $this->updateBox($idBox, $data);
-        $this->updateToNull('archive_boxes', $idBox, ['id_parent_archive_entity']);
+        $this->updateToNull('archive_boxes', $idBox, [ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY]);
 
         return true;
     }
 
     public function moveDocumentToBox(int $idDocument, int $idBox) {
         $data = [
-            'id_parent_archive_entity' => $idBox,
-            'status' => ArchiveStatus::IN_BOX
+            ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY => $idBox,
+            ArchiveMetadata::STATUS => ArchiveStatus::IN_BOX
         ];
 
         return $this->updateDocument($idDocument, $data);
@@ -170,11 +171,11 @@ class ArchiveModel extends AModel {
 
     public function moveDocumentFromBox(int $idDocument) {
         $data = [
-            'status' => ArchiveStatus::NEW
+            ArchiveMetadata::STATUS => ArchiveStatus::NEW
         ];
 
         $this->updateDocument($idDocument, $data);
-        $this->updateToNull('archive_documents', $idDocument, ['id_parent_archive_entity']);
+        $this->updateToNull('archive_documents', $idDocument, [ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY]);
 
         return true;
     }
@@ -210,7 +211,7 @@ class ArchiveModel extends AModel {
                 break;
         }
 
-        $qb ->where('id_parent_archive_entity IS NULL')
+        $qb ->where(ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY . ' IS NULL')
             ->execute();
 
         $entities = [];
@@ -234,12 +235,12 @@ class ArchiveModel extends AModel {
 
             case ArchiveType::BOX:
                 $qb->from('archive_documents')
-                   ->where('id_parent_archive_entity = ?', [$id]);
+                   ->where(ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY . ' = ?', [$id]);
                 break;
 
             case ArchiveType::ARCHIVE:
                 $qb->from('archive_boxes')
-                   ->where('id_parent_archive_entity = ?', [$id]);
+                   ->where(ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY . ' = ?', [$id]);
                 break;
         }
 
@@ -253,7 +254,7 @@ class ArchiveModel extends AModel {
 
         $qb ->select(['*'])
             ->from('archive_documents')
-            ->where('id = ?', [$id])
+            ->where(ArchiveMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createArchiveObjectFromDbRow($qb->fetch(), ArchiveType::DOCUMENT);
@@ -264,7 +265,7 @@ class ArchiveModel extends AModel {
 
         $qb ->select(['*'])
             ->from('archive_boxes')
-            ->where('id = ?', [$id])
+            ->where(ArchiveMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createArchiveObjectFromDbRow($qb->fetch(), ArchiveType::BOX);
@@ -275,7 +276,7 @@ class ArchiveModel extends AModel {
 
         $qb ->select(['*'])
             ->from('archive_archives')
-            ->where('id = ?', [$id])
+            ->where(ArchiveMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createArchiveObjectFromDbRow($qb->fetch(), ArchiveType::ARCHIVE);
@@ -294,24 +295,23 @@ class ArchiveModel extends AModel {
     }
 
     public function getDocumentCount() {
-        return $this->getRowCount('archive_documents', 'id');
+        return $this->getRowCount('archive_documents', ArchiveMetadata::ID);
     }
 
     public function getBoxCount() {
-        return $this->getRowCount('archive_boxes', 'id');
+        return $this->getRowCount('archive_boxes', ArchiveMetadata::ID);
     }
 
     public function getArchiveCount() {
-        return $this->getRowCount('archive_archives', 'id');
+        return $this->getRowCount('archive_archives', ArchiveMetadata::ID);
     }
 
     public function getAllDocuments() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select(['*'])
-                   ->from('archive_documents')
-                   ->execute()
-                   ->fetchAll();
+        $qb ->select(['*'])
+            ->from('archive_documents')
+            ->execute();
 
         $entities = [];
         while($row = $qb->fetchAssoc()) {
@@ -324,10 +324,9 @@ class ArchiveModel extends AModel {
     public function getAllBoxes() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select(['*'])
-                   ->from('archive_boxes')
-                   ->execute()
-                   ->fetchAll();
+        $qb ->select(['*'])
+            ->from('archive_boxes')
+            ->execute();
 
         $entities = [];
         while($row = $qb->fetchAssoc()) {
@@ -340,10 +339,9 @@ class ArchiveModel extends AModel {
     public function getAllArchives() {
         $qb = $this->qb(__METHOD__);
 
-        $rows = $qb->select(['*'])
-                   ->from('archive_archives')
-                   ->execute()
-                   ->fetchAll();
+        $qb ->select(['*'])
+            ->from('archive_archives')
+            ->execute();
 
         $entities = [];
         while($row = $qb->fetchAssoc()) {
@@ -354,14 +352,14 @@ class ArchiveModel extends AModel {
     }
 
     private function createArchiveObjectFromDbRow($row, int $type) {
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $name = $row['name'];
+        $id = $row[ArchiveMetadata::ID];
+        $dateCreated = $row[ArchiveMetadata::DATE_CREATED];
+        $name = $row[ArchiveMetadata::NAME];
         $idParentArchiveEntity = null;
-        $status = $row['status'];
+        $status = $row[ArchiveMetadata::STATUS];
         
-        if(isset($row['id_parent_archive_entity'])) {
-            $idParentArchiveEntity = $row['id_parent_archive_entity'];
+        if(isset($row[ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY])) {
+            $idParentArchiveEntity = $row[ArchiveMetadata::ID_PARENT_ARCHIVE_ENTITY];
         }
 
         return new Archive($id, $dateCreated, $name, $type, $idParentArchiveEntity, $status);

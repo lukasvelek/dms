@@ -5,6 +5,7 @@ namespace DMS\Authorizators;
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\Metadata\DocumentMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
@@ -68,13 +69,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status = ?', [DocumentStatus::ARCHIVED])
-            ->andWhere('id_archive_document IS NOT NULL')
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' IS NOT NULL')
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
 
         return $ids;
@@ -115,13 +116,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status = ?', [DocumentStatus::ARCHIVED])
-            ->andWhere('id_archive_document IS NULL')
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' IS NULL')
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
         
         return $ids;
@@ -162,12 +163,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status = ?', [DocumentStatus::NEW])
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::NEW])
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
         
         return $ids;
@@ -208,12 +209,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status = ?', [DocumentStatus::NEW])
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::NEW])
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
         
         return $ids;
@@ -254,12 +255,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status = ?', [DocumentStatus::ARCHIVATION_APPROVED])
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVATION_APPROVED])
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
         
         return $ids;
@@ -300,12 +301,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere($qb->getColumnInValues('status', [DocumentStatus::ARCHIVED, DocumentStatus::SHREDDED]))
+        $qb ->andWhere($qb->getColumnInValues(DocumentMetadata::STATUS, [DocumentStatus::ARCHIVED, DocumentStatus::SHREDDED]))
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
 
         return $ids;
@@ -346,14 +347,14 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status = ?', [DocumentStatus::ARCHIVED])
-            ->andWhere('shredding_status = ?', [DocumentShreddingStatus::IN_APPROVAL])
-            ->andWhere('shred_year >= ?', [date('Y')])
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::SHREDDING_STATUS . ' = ?', [DocumentShreddingStatus::IN_APPROVAL])
+            ->andWhere(DocumentMetadata::SHRED_YEAR . ' >= ?', [date('Y')])
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
 
         return $ids;
@@ -394,13 +395,13 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status = ?', [DocumentStatus::ARCHIVED])
-            ->andWhere('shredding_status = ?', [DocumentShreddingStatus::IN_APPROVAL])
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::SHREDDING_STATUS . ' = ?', [DocumentShreddingStatus::IN_APPROVAL])
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
 
         return $ids;
@@ -441,14 +442,14 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status = ?', [DocumentStatus::ARCHIVED])
-            ->andWhere('shredding_status = ?', [DocumentShreddingStatus::NO_STATUS])
-            ->andWhere('shred_year >= ?', [date('Y')])
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::SHREDDING_STATUS . ' = ?', [DocumentShreddingStatus::NO_STATUS])
+            ->andWhere(DocumentMetadata::SHRED_YEAR . ' >= ?', [date('Y')])
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
 
         return $ids;
@@ -489,14 +490,14 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         $qb = $dm->composeQueryStandardDocuments();
-        $qb ->andWhere('status = ?', [DocumentStatus::ARCHIVED])
-            ->andWhere('shredding_status = ?', [DocumentShreddingStatus::APPROVED])
-            ->andWhere('shred_year >= ?', [date('Y')])
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::SHREDDING_STATUS . ' = ?', [DocumentShreddingStatus::APPROVED])
+            ->andWhere(DocumentMetadata::SHRED_YEAR . ' >= ?', [date('Y')])
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[DocumentMetadata::ID];
         }
 
         return $ids;

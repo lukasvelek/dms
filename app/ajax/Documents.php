@@ -3,6 +3,7 @@
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\Metadata\DocumentMetadata;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
@@ -587,21 +588,21 @@ function generateDocuments() {
     $inserted = 0;
     while($inserted < $count) {
         $data = array(
-            'name' => 'DG_' . CypherManager::createCypher(8),
-            'id_author' => $user->getId(),
-            'id_officer' => $user->getId(),
-            'status' => '1',
-            'id_manager' => '2',
-            'id_group' => '1',
-            'is_deleted' => '0',
-            'rank' => 'public',
-            'shred_year' => date('Y'),
-            'after_shred_action' => 'showAsShredded',
-            'shredding_status' => '5'
+            DocumentMetadata::NAME => 'DG_' . CypherManager::createCypher(8),
+            DocumentMetadata::ID_AUTHOR => $user->getId(),
+            DocumentMetadata::ID_OFFICER => $user->getId(),
+            DocumentMetadata::STATUS => '1',
+            DocumentMetadata::ID_MANAGER => '2',
+            DocumentMetadata::ID_GROUP => '1',
+            DocumentMetadata::IS_DELETED => '0',
+            DocumentMetadata::RANK => 'public',
+            DocumentMetadata::SHRED_YEAR => date('Y'),
+            DocumentMetadata::AFTER_SHRED_ACTION => 'showAsShredded',
+            DocumentMetadata::SHREDDING_STATUS => '5'
         );
 
         if($id_folder != '0') {
-            $data['id_folder'] = $id_folder;
+            $data[DocumentMetadata::ID_FOLDER] = $id_folder;
         }
 
         $result = $documentModel->insertNewDocument($data);
@@ -622,21 +623,21 @@ function generateDocuments() {
     if($inserted < $count) {
         for($i = 0; $i < ($count - $inserted); $i++) {
             $data = array(
-                'name' => 'DG_' . CypherManager::createCypher(8),
-                'id_author' => $user->getId(),
-                'id_officer' => $user->getId(),
-                'status' => '1',
-                'id_manager' => '2',
-                'id_group' => '1',
-                'is_deleted' => '0',
-                'rank' => 'public',
-                'shred_year' => '2023',
-                'after_shred_action' => 'showAsShredded',
-                'shredding_status' => '5'
+                DocumentMetadata::NAME => 'DG_' . CypherManager::createCypher(8),
+                DocumentMetadata::ID_AUTHOR => $user->getId(),
+                DocumentMetadata::ID_OFFICER => $user->getId(),
+                DocumentMetadata::STATUS => '1',
+                DocumentMetadata::ID_MANAGER => '2',
+                DocumentMetadata::ID_GROUP => '1',
+                DocumentMetadata::IS_DELETED => '0',
+                DocumentMetadata::RANK => 'public',
+                DocumentMetadata::SHRED_YEAR => date('Y'),
+                DocumentMetadata::AFTER_SHRED_ACTION => 'showAsShredded',
+                DocumentMetadata::SHREDDING_STATUS => '5'
             );
     
             if($id_folder != '0') {
-                $data['id_folder'] = $id_folder;
+                $data[DocumentMetadata::ID_FOLDER] = $id_folder;
             }
     
             $documentModel->insertNewDocument($data);
