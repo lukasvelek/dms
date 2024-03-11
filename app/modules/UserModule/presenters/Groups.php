@@ -117,8 +117,11 @@ class Groups extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Users in group <i>' . $group->getName() . '</i>',
             '$GROUP_GRID$' => $this->internalCreateGroupGrid($id),
-            '$NEW_ENTITY_LINK$' => '<div class="row"><div class="col-md" id="right">' . LinkBuilder::createAdvLink(array('page' => 'showNewUserForm', 'id' => $id), 'Add user') . '</div></div>'
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('Settings:showGroups', '&larr;') . '&nbsp;&nbsp;';
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'showNewUserForm', 'id' => $id), 'Add user');
 
         $this->templateManager->fill($data, $template);
 

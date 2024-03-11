@@ -639,7 +639,7 @@ class Users extends APresenter {
     protected function enableRibbonRight() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['id_ribbon', 'id_user', 'action']);
+        $app->flashMessageIfNotIsset(['id_ribbon_update', 'id_user', 'action']);
         $idRibbon = $this->get('id_ribbon_update');
         $idUser = $this->get('id_user');
         $action = $this->get('action');
