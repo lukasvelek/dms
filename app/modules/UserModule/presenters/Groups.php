@@ -48,6 +48,42 @@ class Groups extends APresenter {
         return $template;
     }
 
+    protected function enableRibbonRight() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_ribbon_update', 'id_group', 'action']);
+        $idRibbon = $this->get('id_ribbon_update');
+        $idGroup = $this->get('id_group');
+        $action = $this->get('action');
+
+        $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, [$action => '1']);
+
+        $app->logger->info('Enabled ribbon right for ribbon #' . $idRibbon . ' to group #' . $idGroup, __METHOD__);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_GROUP_RIGHTS);
+        $cm->invalidateCache();
+
+        $app->redirect('showRibbonRights', ['id' => $idGroup]);
+    }
+
+    protected function disableRibbonRight() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_ribbon_update', 'id_group', 'action']);
+        $idRibbon = $this->get('id_ribbon_update');
+        $idGroup = $this->get('id_group');
+        $action = $this->get('action');
+
+        $app->ribbonRightsModel->updateGroupRights($idRibbon, $idGroup, [$action => '0']);
+
+        $app->logger->info('Enabled ribbon right for ribbon #' . $idRibbon . ' to group #' . $idGroup, __METHOD__);
+
+        $cm = CacheManager::getTemporaryObject(CacheCategories::RIBBON_GROUP_RIGHTS);
+        $cm->invalidateCache();
+
+        $app->redirect('showRibbonRights', ['id' => $idGroup]);
+    }
+
     protected function showNewUserForm() {
         global $app;
 
