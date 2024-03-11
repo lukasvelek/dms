@@ -460,104 +460,201 @@ class DatabaseInstaller {
      */
     private function createIndexes() {
         $indexes = [
-            'documents' => [
-                'id_folder'
+            [
+                'table_name' => 'documents',
+                'columns' => [
+                    'id_folder'
+                ]
             ],
-            'documents' => [
-                'status'
+            [
+                'table_name' => 'documents',
+                'columns' => [
+                    'status'
+                ]
             ],
-            'document_comments' => [
-                'id_document'
+            [
+                'table_name' => 'document_comments',
+                'columns' => [
+                    'id_document'
+                ]
             ],
-            'document_sharing' => [
-                'id_user',
-                'id_document'
+            [
+                'table_name' => 'document_sharing',
+                'columns' => [
+                    'id_user',
+                    'id_document'
+                ]
             ],
-            'document_filters' => [
-                'id_author'
+            [
+                'table_name' => 'document_filters',
+                'columns' => [
+                    'id_author'
+                ]
             ],
-            'document_reports' => [
-                'id_user'
+            [
+                'table_name' => 'document_reports',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'user_bulk_rights' => [
-                'id_user'
+            [
+                'table_name' => 'user_bulk_rights',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'user_action_rights' => [
-                'id_user'
+            [
+                'table_name' => 'user_action_rights',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'user_metadata_rights' => [
-                'id_user',
-                'id_metadata'
+            [
+                'table_name' => 'user_metadata_rights',
+                'columns' => [
+                    'id_user',
+                    'id_metadata'
+                ]
             ],
-            'ribbon_user_rights' => [
-                'id_ribbon',
-                'id_user'
+            [
+                'table_name' => 'ribbon_user_rights',
+                'columns' => [
+                    'id_ribbon',
+                    'id_user'
+                ]
             ],
-            'group_bulk_rights' => [
-                'id_group'
+            [
+                'table_name' => 'group_bulk_rights',
+                'columns' => [
+                    'id_group'
+                ]
             ],
-            'group_action_rights' => [
-                'id_group'
+            [
+                'table_name' => 'group_action_rights',
+                'columns' => [
+                    'id_group'
+                ]
             ],
-            'group_metadata_rights' => [
-                'id_group',
-                'id_metadata'
+            [
+                'table_name' => 'group_metadata_rights',
+                'columns' => [
+                    'id_group',
+                    'id_metadata'
+                ]
             ],
-            'ribbon_group_rights' => [
-                'id_ribbon',
-                'id_group'
+            [
+                'table_name' => 'ribbon_group_rights',
+                'columns' => [
+                    'id_ribbon',
+                    'id_group'
+                ]
             ],
-            'metadata_values' => [
-                'id_metadata'
+            [
+                'table_name' => 'metadata_values',
+                'columns' => [
+                    'id_metadata'
+                ]
             ],
-            'folders' => [
-                'id_parent_folder'
+            [
+                'table_name' => 'folders',
+                'columns' => [
+                    'id_parent_folder'
+                ]
             ],
-            'processes' => [
-                'id_document'
+            [
+                'table_name' => 'processes',
+                'columns' => [
+                    'id_document'
+                ]
             ],
-            'process_comments' => [
-                'id_process'
+            [
+                'table_name' => 'processes',
+                'columns' => [
+                    'id_author'
+                ]
             ],
-            'notifications' => [
-                'id_user'
+            [
+                'table_name' => 'processes',
+                'columns' => [
+                    'workflow1',
+                    'workflow2',
+                    'workflow3',
+                    'workflow4'
+                ]
             ],
-            'password_reset_hashes' => [
-                'id_user'
+            [
+                'table_name' => 'process_comments',
+                'columns' => [
+                    'id_process'
+                ]
             ],
-            'ribbons' => [
-                'id_parent_ribbon'
+            [
+                'table_name' => 'notifications',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'file_storage_locations' => [
-                'type'
+            [
+                'table_name' => 'password_reset_hashes',
+                'columns' => [
+                    'id_user'
+                ]
             ],
-            'file_storage_locations' => [
-                'name'
+            [
+                'table_name' => 'ribbons',
+                'columns' => [
+                    'id_parent_ribbon'
+                ]
             ],
-            'services' => [
-                'system_name'
+            [
+                'table_name' => 'file_storage_locations',
+                'columns' => [
+                    'type'
+                ]
             ],
-            'users' => [
-                'last_login_hash'
+            [
+                'table_name' => 'file_storage_locations',
+                'columns' => [
+                    'name'
+                ]
             ],
-            'document_metadata_history' => [
-                'id_document'
-            ]
+            [
+                'table_name' => 'services',
+                'columns' => [
+                    'system_name'
+                ]
+            ],
+            [
+                'table_name' => 'users',
+                'columns' => [
+                    'last_login_hash'
+                ]
+            ],
+            [
+                'table_name' => 'document_metadata_history',
+                'columns' => [
+                    'id_document'
+                ]
+            ],
         ];
 
         $tables = [];
-        foreach($indexes as $tableName => $indexColumns) {
-            $i = 1;
+        foreach($indexes as $array) {
+            $tableName = $array['table_name'];
+            $columns = $array['columns'];
+
+            $c = 1;
             foreach($tables as $table) {
                 if($table == $tableName) {
-                    $i++;
+                    $c++;
                 }
             }
+            $tables[] = $tableName;
 
             $sql = 'CREATE INDEX `$INDEX_NAME$` ON `$TABLE_NAME$` (';
 
             $params = [
-                '$INDEX_NAME$' => $tableName . '_' . $i,
+                '$INDEX_NAME$' => $tableName . '_' . $c,
                 '$TABLE_NAME$' => $tableName
             ];
 
@@ -566,8 +663,8 @@ class DatabaseInstaller {
             }
 
             $i = 0;
-            foreach($indexColumns as $col) {
-                if(($i + 1) == count($indexColumns)) {
+            foreach($columns as $col) {
+                if(($i + 1) == count($columns)) {
                     $sql .= $col . ')';
                 } else {
                     $sql .= $col . ', ';
@@ -577,10 +674,7 @@ class DatabaseInstaller {
             }
 
             $this->logger->sql($sql, __METHOD__);
-
             $this->db->query($sql);
-
-            $tables[] = $tableName;
         }
 
         return true;
