@@ -4,7 +4,6 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
-use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
@@ -192,50 +191,6 @@ class Groups extends APresenter {
         $cm->invalidateCache();
 
         $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'actions'), $name);
-    }
-
-    protected function allowPanelRight() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['id', 'name']);
-
-        $name = $this->get('name');
-        $idGroup = $this->get('id');
-
-        if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
-            $app->groupRightModel->updatePanelRight($idGroup, $name, true);
-        } else {
-            $app->groupRightModel->insertPanelRightForIdGroup($idGroup, $name, true);
-        }
-
-        $app->logger->info('Allowed panel right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
-
-        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-        $cm->invalidateCache();
-
-        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
-    }
-
-    protected function denyPanelRight() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['id', 'name']);
-
-        $name = $this->get('name');
-        $idGroup = $this->get('id');
-
-        if($app->groupRightModel->checkPanelRightExists($idGroup, $name) === TRUE) {
-            $app->groupRightModel->updatePanelRight($idGroup, $name, false);
-        } else {
-            $app->groupRightModel->insertPanelRightForIdGroup($idGroup, $name, false);
-        }
-
-        $app->logger->info('Denied panel right \'' . $name . '\' to group #' . $idGroup, __METHOD__);
-
-        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-        $cm->invalidateCache();
-
-        $app->redirect('showGroupRights', array('id' => $idGroup, 'filter' => 'panels'), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -436,22 +391,6 @@ class Groups extends APresenter {
                     }
     
                     break;
-    
-                case 'panels':
-                    $defaultPanelRights = PanelRights::$all;
-                    $panelRights = $groupRightModel->getPanelRightsForIdGroup($idGroup);
-    
-                    foreach($defaultPanelRights as $dpr) {
-                        $rights[$dpr] = new EntityRight('panel', $dpr, false);
-                    }
-    
-                    foreach($panelRights as $name => $value) {
-                        if(array_key_exists($name, $rights)) {
-                            $rights[$name]->setValue(($value == '1'));
-                        }
-                    }
-    
-                    break;
             }
 
             return $rights;
@@ -484,11 +423,6 @@ class Groups extends APresenter {
                 case 'action':
                     $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
                     $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyActionRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
-                    break;
-
-                case 'panel':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyPanelRight', 'name' => $right->getName(), 'id' => $idGroup), 'Deny');
                     break;
     
                 case 'bulk':

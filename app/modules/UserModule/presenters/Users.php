@@ -5,7 +5,6 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
-use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
@@ -423,20 +422,6 @@ class Users extends APresenter {
                 $bacm->invalidateCache();
 
                 break;
-
-            case 'panels':
-                foreach(PanelRights::$all as $pr) {
-                    if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
-                        $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
-                    } else {
-                        $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
-                    }
-                }
-
-                $pcm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-                $pcm->invalidateCache();
-
-                break;
         }
 
         $app->getConn()->commit();
@@ -481,20 +466,6 @@ class Users extends APresenter {
 
                 $bacm = CacheManager::getTemporaryObject(CacheCategories::BULK_ACTIONS);
                 $bacm->invalidateCache();
-
-                break;
-
-            case 'panels':
-                foreach(PanelRights::$all as $pr) {
-                    if($app->userRightModel->checkPanelRightExists($idUser, $pr)) {
-                        $app->userRightModel->updatePanelRight($idUser, $pr, $allow);
-                    } else {
-                        $app->userRightModel->insertPanelRightForIdUser($idUser, $pr, $allow);
-                    }
-                }
-
-                $pcm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-                $pcm->invalidateCache();
 
                 break;
         }
@@ -546,50 +517,6 @@ class Users extends APresenter {
         $cm->invalidateCache();
 
         $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'actions'), $name);
-    }
-
-    protected function allowPanelRight() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['id', 'name']);
-
-        $name = $this->get('name');
-        $idUser = $this->get('id');
-
-        if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
-            $app->userRightModel->updatePanelRight($idUser, $name, true);
-        } else {
-            $app->userRightModel->insertPanelRightForIdUser($idUser, $name, true);
-        }
-
-        $app->logger->info('Allowed panel right to user #' . $idUser, __METHOD__);
-
-        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-        $cm->invalidateCache();
-
-        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
-    }
-
-    protected function denyPanelRight() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['id', 'name']);
-
-        $name = $this->get('name');
-        $idUser = $this->get('id');
-
-        if($app->userRightModel->checkPanelRightExists($idUser, $name) === TRUE) {
-            $app->userRightModel->updatePanelRight($idUser, $name, false);
-        } else {
-            $app->userRightModel->insertPanelRightForIdUser($idUser, $name, false);
-        }
-
-        $app->logger->info('Denied panel right to user #' . $idUser, __METHOD__);
-
-        $cm = CacheManager::getTemporaryObject(CacheCategories::PANELS);
-        $cm->invalidateCache();
-
-        $app->redirect('showUserRights', array('id' => $idUser, 'filter' => 'panels'), $name);
     }
 
     protected function allowBulkActionRight() {
@@ -771,22 +698,6 @@ class Users extends APresenter {
                     }
     
                     break;
-    
-                case 'panels':
-                    $defaultPanelRights = PanelRights::$all;
-                    $panelRights = $userRightModel->getPanelRightsForIdUser($idUser);
-    
-                    foreach($defaultPanelRights as $dpr) {
-                        $rights[$dpr] = new EntityRight('panel', $dpr, false);
-                    }
-    
-                    foreach($panelRights as $name => $value) {
-                        if(array_key_exists($name, $rights)) {
-                            $rights[$name]->setValue(($value == '1'));
-                        }
-                    }
-    
-                    break;
             }
 
             return $rights;
@@ -819,11 +730,6 @@ class Users extends APresenter {
                 case 'action':
                     $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
                     $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyActionRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
-                    break;
-
-                case 'panel':
-                    $allowLink = LinkBuilder::createAdvLink(array('page' => 'allowPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Allow');
-                    $denyLink = LinkBuilder::createAdvLink(array('page' => 'denyPanelRight', 'name' => $right->getName(), 'id' => $idUser), 'Deny');
                     break;
     
                 case 'bulk':

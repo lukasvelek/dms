@@ -12,7 +12,6 @@ use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
-use DMS\Authorizators\PanelAuthorizator;
 use DMS\Authorizators\RibbonAuthorizator;
 use DMS\Components\CalendarComponent;
 use DMS\Components\DocumentReportGeneratorComponent;
@@ -122,7 +121,6 @@ class Application {
     public CalendarModel $calendarModel;
     public DocumentMetadataHistoryModel $documentMetadataHistoryModel;
 
-    public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
     public DocumentAuthorizator $documentAuthorizator;
     public ActionAuthorizator $actionAuthorizator;
@@ -224,7 +222,6 @@ class Application {
             'calendarModel' => $this->calendarModel
         );
 
-        $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user, $this->userModel, $this->groupUserModel);
@@ -546,7 +543,6 @@ class Application {
         $this->bulkActionAuthorizator->setIdUser($this->user->getId());
         $this->documentAuthorizator->setIdUser($this->user->getId());
         $this->metadataAuthorizator->setIdUser($this->user->getId());
-        $this->panelAuthorizator->setIdUser($this->user->getId());
     }
 
     /**
