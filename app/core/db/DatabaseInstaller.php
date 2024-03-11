@@ -579,6 +579,8 @@ class DatabaseInstaller {
             $this->logger->sql($sql, __METHOD__);
 
             $this->db->query($sql);
+
+            $tables[] = $tableName;
         }
 
         return true;
