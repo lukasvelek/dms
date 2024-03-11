@@ -10,7 +10,6 @@ use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\FileStorageSystemLocations;
-use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\Ribbons;
@@ -55,12 +54,10 @@ class DatabaseInstaller {
         $this->insertDefaultUserGroups();
         $this->insertDefaultMetadata();
 
-        $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
 
-        $this->insertDefaultGroupPanelRights();
         $this->insertDefaultGroupBulkActionRights();
         $this->insertDefaultGroupActionRights();
         $this->insertDefaultGroupMetadataRights();
@@ -80,7 +77,6 @@ class DatabaseInstaller {
      * Updates default user rights
      */
     public function updateDefaultUserRights() {
-        $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
@@ -113,12 +109,6 @@ class DatabaseInstaller {
                 'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'default_user_datetime_format' => 'VARCHAR(256) NULL',
                 'last_login_hash' => 'VARCHAR(256) NULL'
-            ),
-            'user_panel_rights' => array(
-                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'id_user' => 'INT(32) NOT NULL',
-                'panel_name' => 'VARCHAR(256) NOT NULL',
-                'is_visible' => 'INT(2) DEFAULT 0'
             ),
             'documents' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -185,12 +175,6 @@ class DatabaseInstaller {
                 'id_group' => 'INT(32) NOT NULL',
                 'action_name' => 'VARCHAR(256) NOT NULL',
                 'is_executable' => 'INT(2) DEFAULT 0'
-            ),
-            'group_panel_rights' => array(
-                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'id_group' => 'INT(32) NOT NULL',
-                'panel_name' => 'VARCHAR(256) NOT NULL',
-                'is_visible' => 'INT(2) DEFAULT 0'
             ),
             'group_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -495,9 +479,6 @@ class DatabaseInstaller {
             'document_reports' => [
                 'id_user'
             ],
-            'user_panel_rights' => [
-                'id_user'
-            ],
             'user_bulk_rights' => [
                 'id_user'
             ],
@@ -511,9 +492,6 @@ class DatabaseInstaller {
             'ribbon_user_rights' => [
                 'id_ribbon',
                 'id_user'
-            ],
-            'group_panel_rights' => [
-                'id_group'
             ],
             'group_bulk_rights' => [
                 'id_group'
@@ -751,123 +729,6 @@ class DatabaseInstaller {
                     $sql = "INSERT INTO `group_users` (`id_user`, `id_group`, `is_manager`) VALUES ('$idUser', '$idGroup', '$isManager')";
                     $result = $this->db->query($sql);
                 } 
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Inserts default group panel rights
-     * 
-     * @return true
-     */
-    private function insertDefaultGroupPanelRights() {
-        $idGroups = [];
-        $panels = PanelRights::$all;
-
-        $sql = "SELECT `id`, `code` FROM `groups`";
-
-        $this->logger->sql($sql, __METHOD__);
-
-        $rows = $this->db->query($sql);
-
-        $allowPanels = [];
-
-        foreach($rows as $row) {
-            $idGroups[] = $row['id'];
-
-            switch($row['code']) {
-                case 'ARCHMAN':
-                    $allowPanels[$row['id']] = array(
-                        PanelRights::DOCUMENTS,
-                        PanelRights::PROCESSES
-                    );
-                    break;
-                
-                case 'ADMINISTRATORS':
-                    $allowPanels[$row['id']] = $panels;
-                    break;
-            }
-        }
-
-        foreach($idGroups as $id) {
-            foreach($panels as $panel) {
-                if(in_array($panel, $allowPanels[$id])) {
-                    // allow
-                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '1')";
-                } else {
-                    // deny
-                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '0')";
-                }
-
-                $this->logger->sql($sql, __METHOD__);
-
-                $this->db->query($sql);
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Inserts default user panel rights
-     * 
-     * @return true
-     */
-    private function insertDefaultUserPanelRights() {
-        $idUsers = [];
-        $panels = PanelRights::$all;
-
-        $userPanels = [];
-        $dbUserPanels = [];
-
-        $sql = 'SELECT * FROM `users`';
-
-        $this->logger->sql($sql, __METHOD__);
-
-        $rows = $this->db->query($sql);
-
-        if($rows->num_rows > 0) {
-            foreach($rows as $row) {
-                if(in_array($row['username'], self::DEFAULT_USERS)) {
-                    $idUsers[] = $row['id'];
-                }
-            }
-        }
-
-        $sql = 'SELECT * FROM `user_panel_rights`';
-
-        $rows = $this->db->query($sql);
-
-        if($rows->num_rows > 0) {
-            foreach($rows as $row) {
-                $dbUserPanels[$row['id_user']][] = $row['panel_name'];
-            }
-        }
-
-        foreach($panels as $panel) {
-            if(empty($dbUserPanels)) {
-                foreach($idUsers as $id) {
-                    $userPanels[$id][] = $panel;
-                }
-            } else {
-                foreach($dbUserPanels as $id => $dupanels) {
-                    if(!in_array($panel, $dupanels)) {
-                        $userPanels[$id][] = $panel;
-                    }
-                }
-            }
-        }
-
-        foreach($userPanels as $id => $upanels) {
-            foreach($upanels as $upanel) {
-                $sql = "INSERT INTO `user_panel_rights` (`id_user`, `panel_name`, `is_visible`)
-                VALUES ('$id', '$upanel', '1')";
-
-                $this->logger->sql($sql, __METHOD__);
-
-                $this->db->query($sql);
             }
         }
 

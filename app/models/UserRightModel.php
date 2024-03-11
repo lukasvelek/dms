@@ -3,11 +3,9 @@
 namespace DMS\Models;
 
 use DMS\Constants\BulkActionRights;
-use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
-use DMS\Panels\Panels;
 
 class UserRightModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
@@ -22,10 +20,6 @@ class UserRightModel extends AModel {
         return $this->deleteByCol('id_user', $idUser, 'user_bulk_rights');
     }
 
-    public function removeAllPanelRightsForIdUser(int $idUser) {
-        return $this->deleteByCol('id_user', $idUser, 'user_panel_rights');
-    }
-
     public function removeAllMetadataRightsForIdUser(int $idUser) {
         return $this->deleteByCol('id_user', $idUser, 'user_metadata_rights');
     }
@@ -33,7 +27,6 @@ class UserRightModel extends AModel {
     public function removeAllUserRightsForIdUser(int $idUser) {
         return ($this->removeAllActionRightsForIdUser($idUser) &&
                 $this->removeAllBulkActionRightsForIdUser($idUser) &&
-                $this->removeAllPanelRightsForIdUser($idUser) &&
                 $this->removeAllMetadataRightsForIdUser($idUser));
     }
 
@@ -43,10 +36,6 @@ class UserRightModel extends AModel {
 
     public function checkBulkActionRightExists(int $idUser, string $bulkActionName) {
         return $this->checkRightExists('bulk', $idUser, $bulkActionName);
-    }
-
-    public function checkPanelRightExists(int $idUser, string $panelName) {
-        return $this->checkRightExists('panel', $idUser, $panelName);
     }
 
     public function insertActionRightForIdUser(int $idUser, string $actionName, bool $status) {
@@ -63,14 +52,6 @@ class UserRightModel extends AModel {
             'action_name' => $bulkActionName,
             'is_executable' => $status ? '1' : '0'
             ), 'user_bulk_rights');
-    }
-
-    public function insertPanelRightForIdUser(int $idUser, string $panelName, bool $status) {
-        return $this->insertNew(array(
-            'id_user' => $idUser,
-            'panel_name' => $panelName,
-            'is_visible' => $status ? '1' : '0'
-            ), 'user_panel_rights');
     }
 
     public function insertMetadataRight(int $idUser, int $idMetadata) {
@@ -179,18 +160,6 @@ class UserRightModel extends AModel {
         return $qb->fetchAll();
     }
 
-    public function updatePanelRight(int $idUser, string $rightName, bool $status) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->update('user_panel_rights')
-            ->set(['is_visible' => ($status ? '1' : '0')])
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('panel_name = ?', [$rightName])
-            ->execute();
-
-        return $qb->fetchAll();
-    }
-
     public function updateActionRight(int $idUser, string $rightName, bool $status) {
         $qb = $this->qb(__METHOD__);
 
@@ -213,18 +182,6 @@ class UserRightModel extends AModel {
         }
 
         return true;
-    }
-
-    public function insertPanelRightsForIdUser(int $idUser) {
-        foreach(PanelRights::$all as $r) {
-            $qb = $this->qb(__METHOD__);
-
-            $qb ->insert('user_panel_rights', ['id_user', 'panel_name', 'is_visible'])
-                ->values([$idUser, $r, '0'])
-                ->execute();
-        }
-
-        return true;           
     }
 
     public function insertBulkActionRightsForIdUser(int $idUser) {
@@ -262,22 +219,6 @@ class UserRightModel extends AModel {
         $rights = [];
         while($row = $qb->fetchAssoc()) {
             $rights[$row['action_name']] = $row['is_executable'];
-        }
-
-        return $rights;
-    }
-
-    public function getPanelRightsForIdUser(int $idUser) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('user_panel_rights')
-            ->where('id_user = ?', [$idUser])
-            ->execute();
-
-        $rights = [];
-        while($row = $qb->fetchAssoc()) {
-            $rights[$row['panel_name']] = $row['is_visible'];
         }
 
         return $rights;
@@ -330,11 +271,6 @@ class UserRightModel extends AModel {
             case 'bulk':
                 $tableName = 'user_bulk_rights';
                 $columnName = 'action_name';
-                break;
-
-            case 'panel':
-                $tableName = 'user_panel_rights';
-                $columnName = 'panel_name';
                 break;
         }
 

@@ -978,7 +978,6 @@ class Settings extends APresenter {
         $app->logger->info('Created new group #' . $idGroup, __METHOD__);
 
         $app->groupRightModel->insertActionRightsForIdGroup($idGroup);
-        $app->groupRightModel->insertPanelRightsForIdGroup($idGroup);
         $app->groupRightModel->insertBulkActionRightsForIdGroup($idGroup);
 
         $app->redirect('Groups:showUsers', array('id' => $idGroup));
@@ -1032,7 +1031,6 @@ class Settings extends APresenter {
         $app->logger->info('Created new user #' . $idUser, __METHOD__);
 
         $app->userRightModel->insertActionRightsForIdUser($idUser);
-        $app->userRightModel->insertPanelRightsForIdUser($idUser);
         $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
         $app->userRightModel->insertMetadataRightsForIdUser($idUser, $app->metadataModel->getAllMetadata());
 

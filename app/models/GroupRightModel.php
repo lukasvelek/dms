@@ -3,7 +3,6 @@
 namespace DMS\Models;
 
 use DMS\Constants\BulkActionRights;
-use DMS\Constants\PanelRights;
 use DMS\Constants\UserActionRights;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -20,11 +19,7 @@ class GroupRightModel extends AModel {
     public function removeAllBulkActionRightsForIdGroup(int $idGroup) {
         return $this->deleteByCol('id_group', $idGroup, 'group_bulk_rights');
     }
-
-    public function removeAllPanelRightsForIdGroup(int $idGroup) {
-        return $this->deleteByCol('id_group', $idGroup, 'group_panel_rights');
-    }
-
+    
     public function removeAllMetadataRightsForIdGroup(int $idGroup) {
         return $this->deleteByCol('id_group', $idGroup, 'group_metadata_rights');
     }
@@ -32,7 +27,6 @@ class GroupRightModel extends AModel {
     public function removeAllGroupRightsForIdGroup(int $idGroup) {
         return ($this->removeAllActionRightsForIdGroup($idGroup) &&
                 $this->removeAllBulkActionRightsForIdGroup($idGroup) &&
-                $this->removeAllPanelRightsForIdGroup($idGroup) &&
                 $this->removeAllMetadataRightsForIdGroup($idGroup));
     }
 
@@ -42,10 +36,6 @@ class GroupRightModel extends AModel {
 
     public function checkBulkActionRightExists(int $idGroup, string $bulkActionName) {
         return $this->checkRightExists('bulk', $idGroup, $bulkActionName);
-    }
-
-    public function checkPanelRightExists(int $idGroup, string $panelName) {
-        return $this->checkRightExists('panel', $idGroup, $panelName);
     }
 
     public function insertActionRightForIdGroup(int $idGroup, string $actionName, bool $status) {
@@ -64,14 +54,6 @@ class GroupRightModel extends AModel {
             ), 'group_bulk_rights');
     }
 
-    public function insertPanelRightForIdGroup(int $idGroup, string $panelName, bool $status) {
-        return $this->insertNew(array(
-            'id_group' => $idGroup,
-            'panel_name' => $panelName,
-            'is_visible' => $status ? '1' : '0'
-            ), 'group_panel_rights');
-    }
-
     public function insertActionRightsForIdGroup(int $idGroup) {
         $totalResult = true;
 
@@ -82,27 +64,6 @@ class GroupRightModel extends AModel {
                 ->values([$idGroup, $r, '0'])
                 ->execute();
             
-            if($totalResult === TRUE) {
-                $totalResult = $qb->fetchAll();
-            }
-
-            $qb->clean();
-            unset($qb);
-        }
-
-        return $totalResult;
-    }
-
-    public function insertPanelRightsForIdGroup(int $idGroup) {
-        $totalResult = true;
-
-        foreach(PanelRights::$all as $r) {
-            $qb = $this->qb(__METHOD__);
-
-            $qb ->insert('group_panel_rights', ['id_group', 'panel_name', 'is_visible'])
-                ->values([$idGroup, $r, '0'])
-                ->execute();
-
             if($totalResult === TRUE) {
                 $totalResult = $qb->fetchAll();
             }
@@ -134,18 +95,6 @@ class GroupRightModel extends AModel {
         }
 
         return $totalResult;
-    }
-
-    public function updatePanelRight(int $idGroup, string $rightName, bool $status) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->update('group_panel_rights')
-            ->set(['is_visible' => ($status ? '1' : '0')])
-            ->where('id_group = ?', [$idGroup])
-            ->andWhere('panel_name = ?', [$rightName])
-            ->execute();
-
-        return $qb->fetchAll();
     }
 
     public function updateBulkActionRight(int $idGroup, string $rightName, bool $status) {
@@ -183,22 +132,6 @@ class GroupRightModel extends AModel {
         $rights = [];
         while($row = $qb->fetchAssoc()) {
             $rights[$row['action_name']] = $row['is_executable'];
-        }
-
-        return $rights;
-    }
-
-    public function getPanelRightsForIdGroup(int $idGroup) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('group_panel_rights')
-            ->where('id_group = ?', [$idGroup])
-            ->execute();
-
-        $rights = [];
-        while($row = $qb->fetchAssoc()) {
-            $rights[$row['panel_name']] = $row['is_visible'];
         }
 
         return $rights;
@@ -244,11 +177,6 @@ class GroupRightModel extends AModel {
             case 'bulk':
                 $tableName = 'group_bulk_rights';
                 $columnName = 'action_name';
-                break;
-
-            case 'panel':
-                $tableName = 'group_panel_rights';
-                $columnName = 'panel_name';
                 break;
         }
 
