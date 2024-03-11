@@ -2,7 +2,7 @@
 
 namespace DMS\Constants\Metadata;
 
-class GroupBulkRightMetadata {
+class GroupMetadataRightMetadata {
     public const ID = 'id';
     public const ID_GROUP = 'id_group';
     public const ID_METADATA = 'id_metadata';
