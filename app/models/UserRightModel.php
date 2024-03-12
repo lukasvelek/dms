@@ -3,6 +3,7 @@
 namespace DMS\Models;
 
 use DMS\Constants\BulkActionRights;
+use DMS\Constants\Metadata\UserActionRightMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -13,7 +14,7 @@ class UserRightModel extends AModel {
     }
 
     public function removeAllActionRightsForIdUser(int $idUser) {
-        return $this->deleteByCol('id_user', $idUser, 'user_action_rights');
+        return $this->deleteByCol(UserActionRightMetadata::ID_USER, $idUser, 'user_action_rights');
     }
 
     public function removeAllBulkActionRightsForIdUser(int $idUser) {

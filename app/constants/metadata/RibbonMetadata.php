@@ -5,6 +5,7 @@ namespace DMS\Constants\Metadata;
 class RibbonMetadata {
     public const ID = 'id';
     public const ID_PARENT_RIBBON = 'id_parent_ribbon';
+    public const NAME = 'name';
     public const CODE = 'code';
     public const TITLE = 'title';
     public const IMAGE = 'image';

@@ -2,6 +2,10 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\UserConnectionMetadata;
+use DMS\Constants\Metadata\UserMetadata;
+use DMS\Constants\Metadata\UserPasswordResetHashMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\User;
@@ -31,20 +35,20 @@ class UserModel extends AModel {
     public function getAllUsersPresentInDocuments() {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id_author', 'id_officer', 'id_manager'])
+        $qb ->select([DocumentMetadata::ID_AUTHOR, DocumentMetadata::ID_OFFICER, DocumentMetadata::ID_MANAGER])
             ->from('documents')
             ->execute();
 
         $docuUsers = [];
         while($row = $qb->fetchAssoc()) {
-            if(!in_array($row['id_author'], $docuUsers)) {
-                $docuUsers[] = $row['id_author'];
+            if(!in_array($row[DocumentMetadata::ID_AUTHOR], $docuUsers)) {
+                $docuUsers[] = $row[DocumentMetadata::ID_AUTHOR];
             }
-            if(!in_array($row['id_officer'], $docuUsers)) {
-                $docuUsers[] = $row['id_officer'];
+            if(!in_array($row[DocumentMetadata::ID_OFFICER], $docuUsers)) {
+                $docuUsers[] = $row[DocumentMetadata::ID_OFFICER];
             }
-            if(!in_array($row['id_manager'], $docuUsers)) {
-                $docuUsers[] = $row['id_manager'];
+            if(!in_array($row[DocumentMetadata::ID_MANAGER], $docuUsers)) {
+                $docuUsers[] = $row[DocumentMetadata::ID_MANAGER];
             }
         }
 
@@ -52,7 +56,7 @@ class UserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('users')
-            ->where($qb->getColumnInValues('id', $docuUsers))
+            ->where($qb->getColumnInValues(UserMetadata::ID, $docuUsers))
             ->execute();
 
         $users = [];
@@ -67,8 +71,8 @@ class UserModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('users')
-            ->set(['last_login_hash' => $hash])
-            ->where('id = ?', [$id])
+            ->set([UserMetadata::LAST_LOGIN_HASH => $hash])
+            ->where(UserMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -77,16 +81,16 @@ class UserModel extends AModel {
     public function getLastLoginHashForIdUser(int $id) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['last_login_hash'])
+        $qb ->select([UserMetadata::LAST_LOGIN_HASH])
             ->from('users')
-            ->where('id = ?', [$id])
+            ->where(UserMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetch('last_login_hash');
     }
 
     public function deleteConnectionsForIdUser(int $id) {
-        return $this->deleteByCol('id_user1', $id, 'user_connections') && $this->deleteByCol('id_user2', $id, 'user_connections');
+        return $this->deleteByCol(UserConnectionMetadata::ID_USER1, $id, 'user_connections') && $this->deleteByCol(UserConnectionMetadata::ID_USER2, $id, 'user_connections');
     }
 
     public function deleteUserById(int $id) {
@@ -100,13 +104,13 @@ class UserModel extends AModel {
             ->from('user_connections')
             ->where('WHERE ' . $this->xb()
                                     ->lb()
-                                        ->where('id_user1 = ?', [$idUser1])
-                                        ->andWhere('id_user2 = ?', [$idUser2])
+                                        ->where(UserConnectionMetadata::ID_USER1 . ' = ?', [$idUser1])
+                                        ->andWhere(UserConnectionMetadata::ID_USER2 . ' = ?', [$idUser2])
                                     ->rb()
                                     ->or()
                                     ->lb()
-                                        ->where('id_user1 = ?', [$idUser2])
-                                        ->andWhere('id_user2 = ?', [$idUser1])
+                                        ->where(UserConnectionMetadata::ID_USER1 . ' = ?', [$idUser2])
+                                        ->andWhere(UserConnectionMetadata::ID_USER2 . ' = ?', [$idUser1])
                                     ->rb()
                                     ->build())
             ->execute();
@@ -129,7 +133,7 @@ class UserModel extends AModel {
         $qb = $this->qb(__METHOD__);
         $qb ->select(['*'])
             ->from('users')
-            ->where($qb->getColumnInValues('id', $ids))
+            ->where($qb->getColumnInValues(UserMetadata::ID, $ids))
             ->execute();
 
         while($row = $qb->fetchAssoc()) {
@@ -148,10 +152,10 @@ class UserModel extends AModel {
 
         $idConnectedUsers = [];
         foreach($rows as $row) {
-            if($row['id_user1'] == $idUser) {
-                $idConnectedUsers[] = $row['id_user2'];
-            } else if($row['id_user2'] == $idUser) {
-                $idConnectedUsers[] = $row['id_user1'];
+            if($row[UserConnectionMetadata::ID_USER1] == $idUser) {
+                $idConnectedUsers[] = $row[UserConnectionMetadata::ID_USER2];
+            } else if($row[UserConnectionMetadata::ID_USER2] == $idUser) {
+                $idConnectedUsers[] = $row[UserConnectionMetadata::ID_USER1];
             }
         }
 
@@ -163,8 +167,8 @@ class UserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('user_connections')
-            ->where('id_user1 = ?', [$idUser])
-            ->orWhere('id_user2 = ?', [$idUser])
+            ->where(UserConnectionMetadata::ID_USER1 . ' = ?', [$idUser])
+            ->orWhere(UserConnectionMetadata::ID_USER2 . ' = ?', [$idUser])
             ->execute();
 
         return $qb->fetchAll();
@@ -175,7 +179,7 @@ class UserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('users')
-            ->where('username = ?', [$username])
+            ->where(UserMetadata::USERNAME . ' = ?', [$username])
             ->limit(1)
             ->execute();
 
@@ -187,7 +191,7 @@ class UserModel extends AModel {
     }
 
     public function deletePasswordResetHashByIdHash(string $hash) {
-        return $this->deleteByCol('hash', $hash, 'password_reset_hashes');
+        return $this->deleteByCol(UserPasswordResetHashMetadata::HASH, $hash, 'password_reset_hashes');
     }
 
     public function insertPasswordResetHash(array $data) {
@@ -214,9 +218,9 @@ class UserModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('users')
-            ->setNull(['password'])
-            ->set(['date_updated' => date(Database::DB_DATE_FORMAT)])
-            ->where('id = ?', [$id])
+            ->setNull([UserMetadata::PASSWORD])
+            ->set([UserMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)])
+            ->where(UserMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -225,13 +229,13 @@ class UserModel extends AModel {
     public function updateUser(int $id, array $data) {
         $qb = $this->qb(__METHOD__);
 
-        if(!array_key_exists('date_updated', $data)) {
-            $data['date_updated'] = date(Database::DB_DATE_FORMAT);
+        if(!array_key_exists(UserMetadata::DATE_UPDATED, $data)) {
+            $data[UserMetadata::DATE_UPDATED] = date(Database::DB_DATE_FORMAT);
         }
 
         $qb ->update('users')
             ->set($data)
-            ->where('id = ?', [$id])
+            ->where(UserMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -241,8 +245,8 @@ class UserModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('users')
-            ->set(['status' => $status, 'date_updated' => date(Database::DB_DATE_FORMAT)])
-            ->where('id = ?', [$id])
+            ->set([UserMetadata::STATUS => $status, UserMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)])
+            ->where(UserMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -254,8 +258,8 @@ class UserModel extends AModel {
         $date = date(Database::DB_DATE_FORMAT);
 
         $qb ->update('users')
-            ->set(array('password' => $hashedPassword, 'date_password_changed' => $date, 'date_updated' => $date))
-            ->where('id = ?', [$id])
+            ->set(array(UserMetadata::PASSWORD => $hashedPassword, UserMetadata::DATE_PASSWORD_CHANGED => $date, UserMetadata::DATE_UPDATED => $date))
+            ->where(UserMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -266,7 +270,7 @@ class UserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('users')
-            ->where('username = ?', [$username])
+            ->where(UserMetadata::USERNAME . ' = ?', [$username])
             ->execute();
 
         return $this->getUserObjectFromDbRow($qb->fetch());
@@ -277,7 +281,7 @@ class UserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('users')
-            ->orderBy('id', 'DESC')
+            ->orderBy(UserMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -293,7 +297,7 @@ class UserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('users')
-            ->where('id = ?', [$id])
+            ->where(UserMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->getUserObjectFromDbRow($qb->fetch());
@@ -326,38 +330,38 @@ class UserModel extends AModel {
 
         $values = array();
 
-        $values['id'] = $row['id'];
-        $values['dateCreated'] = $row['date_created'];
-        $values['Firstname'] = $row['firstname'];
-        $values['Lastname'] = $row['lastname'];
-        $values['Username'] = $row['username'];
-        $values['Status'] = $row['status'];
-        $values['DatePasswordChanged'] = $row['date_password_changed'];
-        $values['PasswordChangeStatus'] = $row['password_change_status'];
+        $values['id'] = $row[UserMetadata::ID];
+        $values['dateCreated'] = $row[UserMetadata::DATE_CREATED];
+        $values['Firstname'] = $row[UserMetadata::FIRSTNAME];
+        $values['Lastname'] = $row[UserMetadata::LASTNAME];
+        $values['Username'] = $row[UserMetadata::USERNAME];
+        $values['Status'] = $row[UserMetadata::STATUS];
+        $values['DatePasswordChanged'] = $row[UserMetadata::DATE_PASSWORD_CHANGED];
+        $values['PasswordChangeStatus'] = $row[UserMetadata::PASSWORD_CHANGE_STATUS];
         
-        if(isset($row['email'])) {
-            $values['Email'] = $row['email'];    
+        if(isset($row[UserMetadata::EMAIL])) {
+            $values['Email'] = $row[UserMetadata::EMAIL];    
         }
-        if(isset($row['address_street'])) {
-            $values['AdreesStreet'] = $row['address_street'];
+        if(isset($row[UserMetadata::ADDRESS_STREET])) {
+            $values['AdreesStreet'] = $row[UserMetadata::ADDRESS_STREET];
         }
-        if(isset($row['address_house_number'])) {
-            $values['AddressHouseNumber'] = $row['address_house_number'];
+        if(isset($row[UserMetadata::ADDRESS_HOUSE_NUMBER])) {
+            $values['AddressHouseNumber'] = $row[UserMetadata::ADDRESS_HOUSE_NUMBER];
         }
-        if(isset($row['address_city'])) {
-            $values['AddressCity'] = $row['address_city'];
+        if(isset($row[UserMetadata::ADDRESS_CITY])) {
+            $values['AddressCity'] = $row[UserMetadata::ADDRESS_CITY];
         }
-        if(isset($row['address_zip_code'])) {
-            $values['AddressZipCode'] = $row['address_zip_code'];
+        if(isset($row[UserMetadata::ADDRESS_ZIP_CODE])) {
+            $values['AddressZipCode'] = $row[UserMetadata::ADDRESS_ZIP_CODE];
         }
-        if(isset($row['address_country'])) {
-            $values['AddressCountry'] = $row['address_country'];
+        if(isset($row[UserMetadata::ADDRESS_COUNTRY])) {
+            $values['AddressCountry'] = $row[UserMetadata::ADDRESS_COUNTRY];
         }
-        if(isset($row['default_user_page_url'])) {
-            $values['DefaultUserPageUrl'] = $row['default_user_page_url'];
+        if(isset($row[UserMetadata::DEFAULT_USER_PAGE_URL])) {
+            $values['DefaultUserPageUrl'] = $row[UserMetadata::DEFAULT_USER_PAGE_URL];
         }
-        if(isset($row['default_user_datetime_format'])) {
-            $values['DefaultUserDateTimeFormat'] = $row['default_user_datetime_format'];
+        if(isset($row[UserMetadata::DEFAULT_USER_DATETIME_FORMAT])) {
+            $values['DefaultUserDateTimeFormat'] = $row[UserMetadata::DEFAULT_USER_DATETIME_FORMAT];
         }
 
         $user = User::createUserObjectFromArrayValues($values);

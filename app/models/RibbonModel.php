@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\RibbonMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Ribbon;
@@ -14,10 +15,10 @@ class RibbonModel extends AModel {
     public function getSplitterCountForIdParent(int $idParent) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['COUNT(id) AS cnt'])
+        $qb ->select(['COUNT(' . RibbonMetadata::ID . ') AS cnt'])
             ->from('ribbons')
-            ->where('id_parent_ribbon = ?', [$idParent])
-            ->andWhere('name = ?', ['SPLITTER'])
+            ->where(RibbonMetadata::ID_PARENT_RIBBON . ' = ?', [$idParent])
+            ->andWhere(RibbonMetadata::NAME . ' = ?', ['SPLITTER'])
             ->execute();
 
         return $qb->fetch('cnt');
@@ -30,7 +31,7 @@ class RibbonModel extends AModel {
 
         $qb ->delete()
             ->from('ribbons')
-            ->where('code = ?', [$code])
+            ->where(RibbonMetadata::CODE . ' = ?', [$code])
             ->execute();
 
         return $qb->fetchAll();
@@ -41,12 +42,12 @@ class RibbonModel extends AModel {
 
         $code = 'documents.custom_filter.%';
 
-        $qb ->andWhere('code LIKE ?', [$code])
+        $qb ->andWhere(RibbonMetadata::CODE . ' LIKE ?', [$code])
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $code = $row['code'];
+            $code = $row[RibbonMetadata::CODE];
 
             $id = explode('.', $code)[2];
             $ids[] = $id;
@@ -60,7 +61,7 @@ class RibbonModel extends AModel {
 
         $code = 'documents.custom_filter.' . $idFilter;
 
-        $qb ->andWhere('code = ?', [$code])
+        $qb ->andWhere(RibbonMetadata::CODE . ' = ?', [$code])
             ->execute();
 
         return $this->createRibbonObjectFromDbRow($qb->fetch());
@@ -81,7 +82,7 @@ class RibbonModel extends AModel {
             return false;
         }
 
-        return $row['id'];
+        return $row[RibbonMetadata::ID];
     }
 
     public function insertNewRibbon(array $data) {
@@ -91,7 +92,7 @@ class RibbonModel extends AModel {
     public function getRibbonById(int $id) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
-        $qb ->andWhere('id = ?', [$id])
+        $qb ->andWhere(RibbonMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createRibbonObjectFromDbRow($qb->fetch());
@@ -100,7 +101,7 @@ class RibbonModel extends AModel {
     public function getRibbonByCode(string $code) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
-        $qb ->andWhere('code = ?', [$code])
+        $qb ->andWhere(RibbonMetadata::CODE . ' = ?', [$code])
             ->execute();
 
         return $this->createRibbonObjectFromDbRow($qb->fetch());
@@ -109,7 +110,7 @@ class RibbonModel extends AModel {
     public function getRibbonsForIdParentRibbon(int $idParentRibbon) {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
-        $qb ->andWhere('id_parent_ribbon = ?', [$idParentRibbon])
+        $qb ->andWhere(RibbonMetadata::ID_PARENT_RIBBON . ' = ?', [$idParentRibbon])
             ->execute();
 
         return $this->createRibbonObjectsFromDbRows($qb->fetchAll());
@@ -118,7 +119,7 @@ class RibbonModel extends AModel {
     public function getToppanelRibbons() {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
-        $qb ->andWhere('id_parent_ribbon IS NULL')
+        $qb ->andWhere(RibbonMetadata::ID_PARENT_RIBBON . ' IS NULL')
             ->execute();
 
         return $this->createRibbonObjectsFromDbRows($qb->fetchAll());
@@ -128,7 +129,7 @@ class RibbonModel extends AModel {
         $qb = $this->composeStandardRibbonQuery(__METHOD__);
 
         if(!$includeInvisibleRibbons) {
-            $qb ->andWhere('is_visible = 1');
+            $qb ->andWhere(RibbonMetadata::IS_VISIBLE . ' = 1');
         }
 
         $qb->execute();
@@ -158,30 +159,30 @@ class RibbonModel extends AModel {
             return null;
         }
 
-        $id = $row['id'];
-        $name = $row['name'];
+        $id = $row[RibbonMetadata::ID];
+        $name = $row[RibbonMetadata::NAME];
         $visible = false;
-        $pageUrl = $row['page_url'];
+        $pageUrl = $row[RibbonMetadata::PAGE_URL];
         $idParentRibbon = null;
         $image = null;
         $title = null;
-        $code = $row['code'];
-        $system = $row['is_system'] ? true : false;
+        $code = $row[RibbonMetadata::CODE];
+        $system = $row[RibbonMetadata::IS_SYSTEM] ? true : false;
 
-        if($row['is_visible'] == 1) {
+        if($row[RibbonMetadata::IS_VISIBLE] == 1) {
             $visible = true;
         }
 
-        if(isset($row['id_parent_ribbon'])) {
-            $idParentRibbon = $row['id_parent_ribbon'];
+        if(isset($row[RibbonMetadata::ID_PARENT_RIBBON])) {
+            $idParentRibbon = $row[RibbonMetadata::ID_PARENT_RIBBON];
         }
 
-        if(isset($row['image'])) {
-            $image = $row['image'];
+        if(isset($row[RibbonMetadata::IMAGE])) {
+            $image = $row[RibbonMetadata::IMAGE];
         }
 
-        if(isset($row['title'])) {
-            $title = $row['title'];
+        if(isset($row[RibbonMetadata::TITLE])) {
+            $title = $row[RibbonMetadata::TITLE];
         }
 
         return new Ribbon($id, $name, $title, $idParentRibbon, $image, $visible, $pageUrl, $code, $system);

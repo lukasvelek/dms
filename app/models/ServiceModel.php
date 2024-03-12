@@ -2,6 +2,9 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\ServiceConfigMetadata;
+use DMS\Constants\Metadata\ServiceLogMetadata;
+use DMS\Constants\Metadata\ServiceMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\ServiceEntity;
@@ -20,7 +23,7 @@ class ServiceModel extends AModel {
 
         $qb ->select(['*'])
             ->from('services')
-            ->where('system_name = ?', [$name])
+            ->where(ServiceMetadata::SYSTEM_NAME . ' = ?', [$name])
             ->execute();
 
         return $this->createServiceObjectFromDbRow($qb->fetch());
@@ -31,7 +34,7 @@ class ServiceModel extends AModel {
 
         $qb ->select(['*'])
             ->from('services')
-            ->where('id = ?', [$id])
+            ->where(ServiceMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createServiceObjectFromDbRow($qb->fetch());
@@ -63,7 +66,7 @@ class ServiceModel extends AModel {
         $i = 0;
         foreach($serviceNames as $sn) {
             $xb ->lb()
-                    ->where('system_name <> ?', [$sn])
+                    ->where(ServiceMetadata::SYSTEM_NAME . ' <> ?', [$sn])
                 ->rb();
 
             if(($i + 1) != count($serviceNames)) {
@@ -105,8 +108,8 @@ class ServiceModel extends AModel {
 
         $qb ->select(['*'])
             ->from('service_log')
-            ->where('name = ?', [$serviceName])
-            ->orderBy('id', 'DESC')
+            ->where(ServiceLogMetadata::NAME . ' = ?', [$serviceName])
+            ->orderBy(ServiceLogMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -121,9 +124,9 @@ class ServiceModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('service_config')
-            ->set(['value' => $value])
-            ->where('name = ?', [$name])
-            ->andWhere('`key` = ?', [$key])
+            ->set([ServiceConfigMetadata::VALUE => $value])
+            ->where(ServiceConfigMetadata::NAME . ' = ?', [$name])
+            ->andWhere('`' . ServiceConfigMetadata::KEY . '` = ?', [$key])
             ->execute();
 
         return $qb->fetchAll();
@@ -134,25 +137,25 @@ class ServiceModel extends AModel {
 
         $qb ->select(['*'])
             ->from('service_config')
-            ->where('name = ?', [$name])
+            ->where(ServiceConfigMetadata::NAME . ' = ?', [$name])
             ->execute();
 
         $cfg = [];
         while($row = $qb->fetchAssoc()) {
-            $cfg[$row['key']] = $row['value'];
+            $cfg[$row[ServiceConfigMetadata::KEY]] = $row[ServiceConfigMetadata::VALUE];
         }
 
         return $cfg;
     }
 
     private function createServiceObjectFromDbRow($row) {
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $systemName = $row['system_name'];
-        $displayName = $row['display_name'];
-        $description = $row['description'];
-        $isEnabled = $row['is_enabled'];
-        $isSystem = $row['is_system'];
+        $id = $row[ServiceMetadata::ID];
+        $dateCreated = $row[ServiceMetadata::DATE_CREATED];
+        $systemName = $row[ServiceMetadata::SYSTEM_NAME];
+        $displayName = $row[ServiceMetadata::DISPLAY_NAME];
+        $description = $row[ServiceMetadata::DESCRIPTION];
+        $isEnabled = $row[ServiceMetadata::IS_ENABLED];
+        $isSystem = $row[ServiceMetadata::IS_SYSTEM];
 
         if($isEnabled == '1') {
             $isEnabled = true;
