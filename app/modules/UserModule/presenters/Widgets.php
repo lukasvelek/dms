@@ -3,6 +3,8 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\Metadata\DocumentStatsMetadata;
+use DMS\Constants\Metadata\ProcessStatsMetadata;
 use DMS\Constants\ProcessStatus;
 use DMS\Modules\APresenter;
 
@@ -44,9 +46,9 @@ class Widgets extends APresenter {
         global $app;
 
         $data = array(
-            'total_count' => $app->processModel->getProcessCountByStatus(),
-            'finished_count' => $app->processModel->getProcessCountByStatus(ProcessStatus::FINISHED),
-            'in_progress_count' => $app->processModel->getProcessCountByStatus(ProcessStatus::IN_PROGRESS)
+            ProcessStatsMetadata::TOTAL_COUNT => $app->processModel->getProcessCountByStatus(),
+            ProcessStatsMetadata::FINISHED_COUNT => $app->processModel->getProcessCountByStatus(ProcessStatus::FINISHED),
+            ProcessStatsMetadata::IN_PROGRESS_COUNT => $app->processModel->getProcessCountByStatus(ProcessStatus::IN_PROGRESS)
         );
 
         $app->processModel->beginTran();
@@ -58,11 +60,11 @@ class Widgets extends APresenter {
         global $app;
 
         $data = array(
-            'total_count' => $app->documentModel->getTotalDocumentCount(null),
-            'shredded_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
-            'archived_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
-            'new_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
-            'waiting_for_archivation_count' => $app->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED)
+            DocumentStatsMetadata::TOTAL_COUNT => $app->documentModel->getTotalDocumentCount(null),
+            DocumentStatsMetadata::SHREDDED_COUNT => $app->documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
+            DocumentStatsMetadata::ARCHIVED_COUNT => $app->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
+            DocumentStatsMetadata::NEW_COUNT => $app->documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
+            DocumentStatsMetadata::WAITING_FOR_ARCHIVATION_COUNT => $app->documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED)
         );
 
         $app->documentModel->beginTran();

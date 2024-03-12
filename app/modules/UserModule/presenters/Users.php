@@ -9,6 +9,7 @@ use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Constants\DatetimeFormats;
+use DMS\Constants\Metadata\UserMetadata;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
 use DMS\Entities\EntityRight;
@@ -294,22 +295,22 @@ class Users extends APresenter {
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
-            $data['email'] = $this->post('email');
+            $data[UserMetadata::EMAIL] = $this->post('email');
         }
         if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
-            $data['address_street'] = $this->post('address_street');
+            $data[UserMetadata::ADDRESS_STREET] = $this->post('address_street');
         }
         if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
-            $data['address_house_number'] = $this->post('address_house_number');
+            $data[UserMetadata::ADDRESS_HOUSE_NUMBER] = $this->post('address_house_number');
         }
         if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
-            $data['address_city'] = $this->post('address_city');
+            $data[UserMetadata::ADDRESS_CITY] = $this->post('address_city');
         }
         if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
-            $data['address_zip_code'] = $this->post('address_zip_code');
+            $data[UserMetadata::ADDRESS_ZIP_CODE] = $this->post('address_zip_code');
         }
         if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
-            $data['address_country'] = $this->post('address_country');
+            $data[UserMetadata::ADDRESS_COUNTRY] = $this->post('address_country');
         }
 
         $app->userModel->updateUser($id, $data);
