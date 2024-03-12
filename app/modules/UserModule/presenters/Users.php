@@ -40,7 +40,11 @@ class Users extends APresenter {
         $defaultUserPageUrl = $this->post('default_user_page_url');
         $defaultUserDatetimeFormat = $this->post('default_user_datetime_format');
 
-        $data = array('default_user_page_url' => $defaultUserPageUrl);
+        $data = array();
+
+        if($defaultUserPageUrl != 'null') {
+            $data['default_user_page_url'] = $defaultUserPageUrl;
+        }
 
         if($defaultUserDatetimeFormat != 'Y-m-d H:i:s') {
             $data['default_user_datetime_format'] = $defaultUserDatetimeFormat;
@@ -855,7 +859,12 @@ class Users extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
         
-        $pages = array();
+        $pages = array(
+            [
+                'value' => 'null',
+                'text' => '-'
+            ]
+        );
 
         foreach($app->pageList as $realLink => $fakeLink) {
             $page = array(
