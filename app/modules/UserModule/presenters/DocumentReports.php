@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentReportStatus;
+use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Modules\APresenter;
 use DMS\UI\GridBuilder;
@@ -48,10 +49,10 @@ class DocumentReports extends APresenter {
             $entries = [];
             foreach($rows as $row) {
                 $fileSrc = null;
-                if(isset($row['file_src'])) {
-                    $fileSrc = $row['file_src'];
+                if(isset($row[DocumentReportMetadata::FILE_SRC])) {
+                    $fileSrc = $row[DocumentReportMetadata::FILE_SRC];
                 }
-                $entry = new class($row['id'], $row['id_user'], $row['date_created'], $row['date_updated'], $row['status'], $row['sql_string'], $fileSrc, $row['file_name'], $row['id_file_storage_location']) {
+                $entry = new class($row[DocumentReportMetadata::ID], $row[DocumentReportMetadata::ID_USER], $row[DocumentReportMetadata::DATE_CREATED], $row[DocumentReportMetadata::DATE_UPDATED], $row[DocumentReportMetadata::STATUS], $row[DocumentReportMetadata::SQL_STRING], $fileSrc, $row[DocumentReportMetadata::FILE_NAME], $row[DocumentReportMetadata::ID_FILE_STORAGE_LOCATION]) {
                     private int $id;
                     private int $idUser;
                     private string $dateCreated;
@@ -140,7 +141,6 @@ class DocumentReports extends APresenter {
                 $realServerPath = $location->getPath() . $obj->getFilename();
 
                 if($fileManager->fileExists($realServerPath)) {
-                    //return '<a class="general-link" href="' . $obj->getFileSrc() . '">Download</a>';
                     return LinkBuilder::createAdvLink(['page' => 'downloadReport', 'path' => base64_encode($realServerPath)], 'Download');
                 } else {
                     return '-';
@@ -150,8 +150,7 @@ class DocumentReports extends APresenter {
             }
         });
         $gb->addAction(function(object $obj) use ($canDeleteDocumentReportQueueEntry) {
-            if($canDeleteDocumentReportQueueEntry /*&&
-                in_array($obj->getStatus(), [DocumentReportStatus::FINISHED, DocumentReportStatus::IN_PROGRESS])*/) {
+            if($canDeleteDocumentReportQueueEntry) {
                 return LinkBuilder::createAdvLink(['page' => 'deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
             } else {
                 return '-';

@@ -63,6 +63,10 @@ class QueryBuilder
      * @return string SQL code
      */
     public function getColumnInValues(string $column, array $values) {
+        if(count($values) == 0) {
+            return '1=1';
+        }
+
         $code = $column . ' IN (';
 
         $i = 0;
@@ -89,6 +93,10 @@ class QueryBuilder
      * @return string SQL code
      */
     public function getColumnNotInValues(string $column, array $values) {
+        if(count($values) == 0) {
+            return '1=1';
+        }
+        
         $code = $column . ' NOT IN (';
 
         $i = 0;

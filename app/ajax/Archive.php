@@ -2,7 +2,6 @@
 
 use DMS\Constants\ArchiveStatus;
 use DMS\Constants\ArchiveType;
-use DMS\Constants\BulkActionRights;
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\UserActionRights;

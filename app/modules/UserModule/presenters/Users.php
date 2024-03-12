@@ -9,12 +9,14 @@ use DMS\Constants\UserActionRights;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Constants\DatetimeFormats;
+use DMS\Constants\Metadata\UserMetadata;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
 use DMS\Entities\EntityRight;
 use DMS\Entities\Ribbon;
 use DMS\Entities\User;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Helpers\GridDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
@@ -38,7 +40,11 @@ class Users extends APresenter {
         $defaultUserPageUrl = $this->post('default_user_page_url');
         $defaultUserDatetimeFormat = $this->post('default_user_datetime_format');
 
-        $data = array('default_user_page_url' => $defaultUserPageUrl);
+        $data = array();
+
+        if($defaultUserPageUrl != 'null') {
+            $data['default_user_page_url'] = $defaultUserPageUrl;
+        }
 
         if($defaultUserDatetimeFormat != 'Y-m-d H:i:s') {
             $data['default_user_datetime_format'] = $defaultUserDatetimeFormat;
@@ -293,22 +299,22 @@ class Users extends APresenter {
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
-            $data['email'] = $this->post('email');
+            $data[UserMetadata::EMAIL] = $this->post('email');
         }
         if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
-            $data['address_street'] = $this->post('address_street');
+            $data[UserMetadata::ADDRESS_STREET] = $this->post('address_street');
         }
         if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
-            $data['address_house_number'] = $this->post('address_house_number');
+            $data[UserMetadata::ADDRESS_HOUSE_NUMBER] = $this->post('address_house_number');
         }
         if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
-            $data['address_city'] = $this->post('address_city');
+            $data[UserMetadata::ADDRESS_CITY] = $this->post('address_city');
         }
         if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
-            $data['address_zip_code'] = $this->post('address_zip_code');
+            $data[UserMetadata::ADDRESS_ZIP_CODE] = $this->post('address_zip_code');
         }
         if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
-            $data['address_country'] = $this->post('address_country');
+            $data[UserMetadata::ADDRESS_COUNTRY] = $this->post('address_country');
         }
 
         $app->userModel->updateUser($id, $data);
@@ -622,11 +628,7 @@ class Users extends APresenter {
         $gb->addDataSourceCallback($dataSourceCallback);
         $gb->addColumns(['name' => 'Name', 'code' => 'Code', 'isSystem' => 'System', 'can_see' => 'View', 'can_edit' => 'Edit', 'can_delete' => 'Delete']);
         $gb->addOnColumnRender('isSystem', function(Ribbon $ribbon) {
-            if($ribbon->isSystem()) {
-                return '<span style="color: green">Yes</span>';
-            } else {
-                return '<span style="color: red">No</span>';
-            }
+            return GridDataHelper::renderBooleanValueWithColors($ribbon->isSystem(), 'Yes', 'No');
         });
         $gb->addOnColumnRender('can_see', function(Ribbon $ribbon) use ($allRibbonRights, $user, $enableLink, $disableLink) {
             $ok = false;
@@ -857,7 +859,12 @@ class Users extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
         
-        $pages = array();
+        $pages = array(
+            [
+                'value' => 'null',
+                'text' => '-'
+            ]
+        );
 
         foreach($app->pageList as $realLink => $fakeLink) {
             $page = array(

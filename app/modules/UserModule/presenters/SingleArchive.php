@@ -3,7 +3,6 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\ArchiveType;
-use DMS\Core\AppConfiguration;
 use DMS\Modules\APresenter;
 use DMS\UI\LinkBuilder;
 

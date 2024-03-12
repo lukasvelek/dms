@@ -2,6 +2,7 @@
 
 namespace DMS\Authenticators;
 
+use DMS\Constants\Metadata\UserMetadata;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -32,15 +33,15 @@ class UserAuthenticator extends AAuthenticator {
     public function authUser(string $username, string $password) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id', 'username', 'password'])
+        $qb ->select([UserMetadata::ID, UserMetadata::USERNAME, UserMetadata::PASSWORD])
             ->from('users')
-            ->where('username = ?', [$username])
+            ->where(UserMetadata::USERNAME . ' = ?', [$username])
             ->execute();
 
         $row = $qb->fetch();
 
         if($row !== NULL) {
-            if(password_verify($password, $row['password'])) {
+            if(password_verify($password, $row[UserMetadata::PASSWORD])) {
                 $this->logger->info('Successfully authenticated user #' . $row['id']);
                 return $row['id'];
             } else {

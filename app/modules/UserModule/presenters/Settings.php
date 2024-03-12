@@ -4,15 +4,16 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\Metadata\FolderMetadata;
+use DMS\Constants\Metadata\MetadataMetadata;
+use DMS\Constants\Metadata\ServiceMetadata as MetadataServiceMetadata;
+use DMS\Constants\Metadata\UserMetadata;
 use DMS\Constants\MetadataAllowedTables;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
 use DMS\Constants\UserActionRights;
-use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Constants\WidgetLocations;
 use DMS\Core\AppConfiguration;
-use DMS\Core\Application;
 use DMS\Core\CacheManager;
 use DMS\Core\CryptManager;
 use DMS\Core\ScriptLoader;
@@ -304,16 +305,16 @@ class Settings extends APresenter {
         $app->flashMessageIfNotIsset(['system_name', 'display_name', 'description']);
 
         $data = [
-            'system_name' => $this->post('system_name'),
-            'display_name' => $this->post('display_name'),
-            'description' => $this->post('description'),
-            'is_system' => '0'
+            MetadataServiceMetadata::SYSTEM_NAME => $this->post('system_name'),
+            MetadataServiceMetadata::DISPLAY_NAME => $this->post('display_name'),
+            MetadataServiceMetadata::DESCRIPTION => $this->post('description'),
+            MetadataServiceMetadata::IS_SYSTEM => '0'
         ];
 
         if(isset($_POST['is_enabled'])) {
-            $data['is_enabled'] = '1';
+            $data[MetadataServiceMetadata::IS_ENABLED] = '1';
         } else {
-            $data['is_enabled'] = '0';
+            $data[MetadataServiceMetadata::IS_ENABLED] = '0';
         }
 
         $app->serviceModel->insertNewService($data);
@@ -329,15 +330,15 @@ class Settings extends APresenter {
         $app->flashMessageIfNotIsset(['id', 'system_name', 'display_name', 'description']);
 
         $data = [
-            'system_name' => $this->post('system_name'),
-            'display_name' => $this->post('display_name'),
-            'description' => $this->post('description')
+            MetadataServiceMetadata::SYSTEM_NAME => $this->post('system_name'),
+            MetadataServiceMetadata::DISPLAY_NAME => $this->post('display_name'),
+            MetadataServiceMetadata::DESCRIPTION => $this->post('description')
         ];
 
         if(isset($_POST['is_enabled'])) {
-            $data['is_enabled'] = '1';
+            $data[MetadataServiceMetadata::IS_ENABLED] = '1';
         } else {
-            $data['is_enabled'] = '0';
+            $data[MetadataServiceMetadata::IS_ENABLED] = '0';
         }
 
         $app->serviceModel->updateService($this->get('id'), $data);
@@ -498,29 +499,29 @@ class Settings extends APresenter {
         $parentFolder = $this->post('parent_folder');
         $nestLevel = 0;
 
-        $data['name'] = $this->post('name');
+        $data[FolderMetadata::NAME] = $this->post('name');
 
         $create = true;
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = $this->post('description');
+            $data[FolderMetadata::DESCRIPTION] = $this->post('description');
         }
 
         if($parentFolder == '-1') {
             $parentFolder = null;
         } else {
-            $data['id_parent_folder'] = $parentFolder;
+            $data[FolderMetadata::ID_PARENT_FOLDER] = $parentFolder;
 
             $nestLevelParentFolder = $app->folderModel->getFolderById($parentFolder);
 
             $nestLevel = $nestLevelParentFolder->getNestLevel() + 1;
 
-            if($nestLevel == 6) {
+            if($nestLevel == AppConfiguration::getFolderMaxNestLevel()) {
                 $create = false;
             }
         }
 
-        $data['nest_level'] = $nestLevel;
+        $data[FolderMetadata::NEST_LEVEL] = $nestLevel;
 
         if($create == true) {
             $app->folderModel->updateFolder($idFolder, $data);
@@ -887,21 +888,21 @@ class Settings extends APresenter {
 
         $data = [];
 
-        $data['name'] = $name = $this->post('name');
-        $data['table_name'] = $tableName = $this->post('table_name');
+        $data[MetadataMetadata::NAME] = $name = $this->post('name');
+        $data[MetadataMetadata::TABLE_NAME] = $tableName = $this->post('table_name');
         $length = $this->post('length');
         $inputType = $this->post('input_type');
 
         if(isset($_POST['select_external_enum']) && $inputType == 'select_external') {
-            $data['select_external_enum_name'] = $this->post('select_external_enum');
+            $data[MetadataMetadata::SELECT_EXTERNAL_ENUM_NAME] = $this->post('select_external_enum');
         }
 
         if(isset($_POST['readonly'])) {
-            $data['is_readonly'] = '1';
+            $data[MetadataMetadata::IS_READONLY] = '1';
         }
 
-        $data['text'] = $this->post('text');
-        $data['input_type'] = $inputType;
+        $data[MetadataMetadata::TEXT] = $this->post('text');
+        $data[MetadataMetadata::INPUT_TYPE] = $inputType;
 
         if($inputType == 'boolean') {
             $length = '2';
@@ -911,7 +912,7 @@ class Settings extends APresenter {
             $length = '10';
         }
 
-        $data['length'] = $length;
+        $data[MetadataMetadata::LENGTH] = $length;
 
         $app->metadataModel->insertNewMetadata($data);
 
@@ -996,34 +997,34 @@ class Settings extends APresenter {
             $data[$r] = $this->post($r);
         }
 
-        if(!$app->userAuthenticator->checkPasswordMatch([$data['password'], $data['password2']])) {
+        if(!$app->userAuthenticator->checkPasswordMatch([$data[UserMetadata::PASSWORD], $data['password2']])) {
             $app->flashMessage('Passwords do not match!', 'error');
             $app->redirect('showNewUserForm');
         } else {
-            $data['password'] = CryptManager::hashPassword($data['password']);
+            $data[UserMetadata::PASSWORD] = CryptManager::hashPassword($data[UserMetadata::PASSWORD]);
             unset($data['password2']);
         }
 
         if(isset($_POST['email']) && !empty($_POST['email'])) {
-            $data['email'] = $this->post('email');
+            $data[UserMetadata::EMAIL] = $this->post('email');
         }
         if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
-            $data['address_street'] = $this->post('address_street');
+            $data[UserMetadata::ADDRESS_STREET] = $this->post('address_street');
         }
         if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
-            $data['address_house_number'] = $this->post('address_house_number');
+            $data[UserMetadata::ADDRESS_HOUSE_NUMBER] = $this->post('address_house_number');
         }
         if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
-            $data['address_city'] = $this->post('address_city');
+            $data[UserMetadata::ADDRESS_CITY] = $this->post('address_city');
         }
         if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
-            $data['address_zip_code'] = $this->post('address_zip_code');
+            $data[UserMetadata::ADDRESS_ZIP_CODE] = $this->post('address_zip_code');
         }
         if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
-            $data['address_country'] = $this->post('address_country');
+            $data[UserMetadata::ADDRESS_COUNTRY] = $this->post('address_country');
         }
 
-        $data['status'] = UserStatus::ACTIVE;
+        $data[UserMetadata::STATUS] = UserStatus::ACTIVE;
 
         $app->userModel->insertUser($data);
         $idUser = $app->userModel->getLastInsertedUser()->getId();

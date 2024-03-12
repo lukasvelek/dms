@@ -26,8 +26,11 @@ body {
     font-size: 16px;
 }
 
-#form button {
+#form button, #form input[type=submit] {
     border: 1px solid black;
+
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 #form textarea {
@@ -238,7 +241,7 @@ div[id^="dropdownmenu-ribbon-"] {
 }
 
 #grid-first-page-control-btn, #grid-previous-page-control-btn, #grid-next-page-control-btn, #grid-last-page-control-btn {
-    border: 1px solid black;
+    border: 1px solid grey;
 
     border-radius: 5px;
 
@@ -250,4 +253,11 @@ div[id^="dropdownmenu-ribbon-"] {
 
     top: 50%;
     left: 49%;
+}
+
+#grid-empty-message {
+    border: 1px solid darkblue;
+    color: darkblue;
+    background-color: lightblue;
+    padding: 10px;
 }

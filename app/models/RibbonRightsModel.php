@@ -2,6 +2,8 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\RibbonGroupRightMetadata;
+use DMS\Constants\Metadata\RibbonUserRightMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 
@@ -15,7 +17,7 @@ class RibbonRightsModel extends AModel {
 
         $qb ->select(['*'])
             ->from('ribbon_group_rights')
-            ->where('id_group = ?', [$idGroup])
+            ->where(RibbonGroupRightMetadata::ID_GROUP . ' = ?', [$idGroup])
             ->execute();
 
         return $qb->fetchAll();
@@ -26,7 +28,7 @@ class RibbonRightsModel extends AModel {
 
         $qb ->select(['*'])
             ->from('ribbon_user_rights')
-            ->where('id_user = ?', [$idUser])
+            ->where(RibbonUserRightMetadata::ID_USER . ' = ?', [$idUser])
             ->execute();
 
         return $qb->fetchAll();
@@ -35,10 +37,10 @@ class RibbonRightsModel extends AModel {
     public function getAllEditableRibbonsForIdGroups(array $idGroups) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id_ribbon'])
+        $qb ->select([RibbonGroupRightMetadata::ID_RIBBON])
             ->from('ribbon_group_rights')
-            ->where($qb->getColumnInValues('id_group', $idGroups))
-            ->andWhere('can_edit = 1')
+            ->where($qb->getColumnInValues(RibbonGroupRightMetadata::ID_GROUP, $idGroups))
+            ->andWhere(RibbonGroupRightMetadata::CAN_EDIT . ' = 1')
             ->execute();
 
         return $qb->fetchAll();
@@ -47,10 +49,10 @@ class RibbonRightsModel extends AModel {
     public function getAllDeletableRibbonsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id_ribbon'])
+        $qb ->select([RibbonUserRightMetadata::ID_RIBBON])
             ->from('ribbon_user_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('can_delete = 1')
+            ->where(RibbonUserRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(RibbonUserRightMetadata::CAN_DELETE . ' = 1')
             ->execute();
 
         return $qb->fetchAll();
@@ -59,21 +61,21 @@ class RibbonRightsModel extends AModel {
     public function getAllEditableRibbonsForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id_ribbon'])
+        $qb ->select([RibbonUserRightMetadata::ID_RIBBON])
             ->from('ribbon_user_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('can_edit = 1')
+            ->where(RibbonUserRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(RibbonUserRightMetadata::CAN_EDIT . ' = 1')
             ->execute();
 
         return $qb->fetchAll();
     }
 
     public function deleteAllRibonRightsForIdUser(int $idUser) {
-        return $this->deleteByCol('id_user', $idUser, 'ribbon_user_rights');
+        return $this->deleteByCol(RibbonUserRightMetadata::ID_USER, $idUser, 'ribbon_user_rights');
     }
 
     public function deleteAllRibbonRightsForIdGroup(int $idGroup) {
-        return $this->deleteByCol('id_group', $idGroup, 'ribbon_group_rights');
+        return $this->deleteByCol(RibbonGroupRightMetadata::ID_GROUP, $idGroup, 'ribbon_group_rights');
     }
 
     public function deleteAllGroupRibbonRights(int $idRibbon) {
@@ -81,7 +83,7 @@ class RibbonRightsModel extends AModel {
 
         $qb ->delete()
             ->from('ribbon_group_rights')
-            ->where('id_ribbon = ?', [$idRibbon])
+            ->where(RibbonGroupRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
             ->execute();
 
         return $qb->fetchAll();
@@ -92,7 +94,7 @@ class RibbonRightsModel extends AModel {
 
         $qb ->delete()
             ->from('ribbon_user_rights')
-            ->where('id_ribbon = ?', [$idRibbon])
+            ->where(RibbonUserRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
             ->execute();
 
         return $qb->fetchAll();
@@ -103,8 +105,8 @@ class RibbonRightsModel extends AModel {
 
         $qb ->select(['*'])
             ->from('ribbon_group_rights')
-            ->where('id_ribbon = ?', [$idRibbon])
-            ->andWhere('id_group = ?', [$idGroup])
+            ->where(RibbonGroupRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
+            ->andWhere(RibbonGroupRightMetadata::ID_GROUP . ' = ?', [$idGroup])
             ->execute();
 
         return $qb->fetchAll();
@@ -115,8 +117,8 @@ class RibbonRightsModel extends AModel {
 
         $qb ->select(['*'])
             ->from('ribbon_user_rights')
-            ->where('id_ribbon = ?', [$idRibbon])
-            ->andWhere('id_user = ?', [$idUser])
+            ->where(RibbonUserRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
+            ->andWhere(RibbonUserRightMetadata::ID_USER . ' = ?', [$idUser])
             ->execute();
 
         return $qb->fetchAll();
@@ -127,8 +129,8 @@ class RibbonRightsModel extends AModel {
 
         $row = $qb->select(['*'])
                   ->from('ribbon_group_rights')
-                  ->where('id_ribbon = ?', [$idRibbon])
-                  ->andWhere('id_group = ?', [$idGroup])
+                  ->where(RibbonGroupRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
+                  ->andWhere(RibbonGroupRightMetadata::ID_GROUP . ' = ?', [$idGroup])
                   ->execute()
                   ->fetch();
 
@@ -144,8 +146,8 @@ class RibbonRightsModel extends AModel {
 
         $qb ->update('ribbon_group_rights')
             ->set($rights)
-            ->where('id_ribbon = ?', [$idRibbon])
-            ->andWhere('id_group = ?', [$idGroup])
+            ->where(RibbonGroupRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
+            ->andWhere(RibbonGroupRightMetadata::ID_GROUP . ' = ?', [$idGroup])
             ->execute();
 
         return $qb->fetchAll();
@@ -156,8 +158,8 @@ class RibbonRightsModel extends AModel {
 
         $row = $qb->select(['*'])
                   ->from('ribbon_user_rights')
-                  ->where('id_ribbon = ?', [$idRibbon])
-                  ->andWhere('id_user = ?', [$idUser])
+                  ->where(RibbonUserRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
+                  ->andWhere(RibbonUserRightMetadata::ID_USER . ' = ?', [$idUser])
                   ->execute()
                   ->fetch();
 
@@ -173,8 +175,8 @@ class RibbonRightsModel extends AModel {
 
         $qb ->update('ribbon_user_rights')
             ->set($rights)
-            ->where('id_ribbon = ?', [$idRibbon])
-            ->andWhere('id_user = ?', [$idUser])
+            ->where(RibbonUserRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
+            ->andWhere(RibbonUserRightMetadata::ID_USER . ' = ?', [$idUser])
             ->execute();
 
         return $qb->fetchAll();
@@ -185,7 +187,7 @@ class RibbonRightsModel extends AModel {
 
         $qb ->select(['*'])
             ->from('ribbon_group_rights')
-            ->where('id_ribbon = ?', [$idRibbon])
+            ->where(RibbonGroupRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
             ->execute();
 
         return $qb->fetchAll();
@@ -196,7 +198,7 @@ class RibbonRightsModel extends AModel {
 
         $qb ->select(['*'])
             ->from('ribbon_user_rights')
-            ->where('id_ribbon = ?', [$idRibbon])
+            ->where(RibbonUserRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
             ->execute();
 
         return $qb->fetchAll();
@@ -212,8 +214,8 @@ class RibbonRightsModel extends AModel {
 
     public function insertNewUserRibbonRight(int $idRibbon, int $idUser, array $rights) {
         $data = array(
-            'id_ribbon' => $idRibbon,
-            'id_user' => $idUser
+            RibbonUserRightMetadata::ID_RIBBON => $idRibbon,
+            RibbonUserRightMetadata::ID_USER => $idUser
         );
 
         foreach($rights as $key => $value) {
@@ -225,8 +227,8 @@ class RibbonRightsModel extends AModel {
 
     public function insertNewGroupRibbonRight(int $idRibbon, int $idGroup, array $rights) {
         $data = array(
-            'id_ribbon' => $idRibbon,
-            'id_group' => $idGroup
+            RibbonGroupRightMetadata::ID_RIBBON => $idRibbon,
+            RibbonGroupRightMetadata::ID_GROUP => $idGroup
         );
 
         foreach($rights as $key => $value) {
@@ -241,8 +243,8 @@ class RibbonRightsModel extends AModel {
 
         $qb ->select([$colname])
             ->from('ribbon_user_rights')
-            ->where('id_ribbon = ?', [$idRibbon])
-            ->andWhere('id_user = ?', [$idUser])
+            ->where(RibbonUserRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
+            ->andWhere(RibbonUserRightMetadata::ID_USER . ' = ?', [$idUser])
             ->execute();
 
         if($qb->fetch($colname) == '1') {
@@ -257,8 +259,8 @@ class RibbonRightsModel extends AModel {
 
         $qb ->select([$colname])
             ->from('ribbon_group_rights')
-            ->where('id_ribbon = ?', [$idRibbon])
-            ->andWhere('id_group = ?', [$idGroup])
+            ->where(RibbonGroupRightMetadata::ID_RIBBON . ' = ?', [$idRibbon])
+            ->andWhere(RibbonGroupRightMetadata::ID_GROUP . ' = ?', [$idGroup])
             ->execute();
 
         if($qb->fetch($colname) == '1') {

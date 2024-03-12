@@ -6,6 +6,7 @@ use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
+use DMS\Constants\Metadata\DocumentMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
@@ -251,13 +252,13 @@ class SingleDocument extends APresenter {
         $idGroup = $this->post('group');
         $idFolder = $this->post('folder');
         
-        $data['name'] = $this->post('name');
-        $data['id_manager'] = $this->post('manager');
-        $data['status'] = $this->post('status');
-        $data['id_group'] = $idGroup;
+        $data[DocumentMetadata::NAME] = $this->post('name');
+        $data[DocumentMetadata::ID_MANAGER] = $this->post('manager');
+        $data[DocumentMetadata::STATUS] = $this->post('status');
+        $data[DocumentMetadata::ID_GROUP] = $idGroup;
 
         if($idFolder != '-1') {
-            $data['id_folder'] = $idFolder;
+            $data[DocumentMetadata::ID_FOLDER] = $idFolder;
         }
 
         unset($_POST['name']);
@@ -296,8 +297,6 @@ class SingleDocument extends APresenter {
 
     private function internalCreateDocumentEditForm(Document $document) {
         global $app;
-
-        $idFolder = $document->getIdFolder();
 
         $managers = array(
             array(

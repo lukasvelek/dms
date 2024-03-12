@@ -669,6 +669,10 @@ class CacheManager {
     public function createFilename() {
         $name = date('Y-m-d') . $this->category;
 
+        if(isset($_SESSION['id_current_user'])) {
+            $name .= $_SESSION['id_current_user'];
+        }
+
         $dirname = 'dmsCache';
 
         if(!is_dir($this->fm->cacheFolder . $dirname)) {

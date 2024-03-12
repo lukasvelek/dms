@@ -4,6 +4,9 @@ namespace DMS\Models;
 
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\DocumentReportMetadata;
+use DMS\Constants\Metadata\DocumentSharingMetadata;
+use DMS\Constants\Metadata\DocumentStatsMetadata;
 use DMS\Core\AppConfiguration;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -27,9 +30,9 @@ class DocumentModel extends AModel {
             ->from('document_reports');
 
         if($like === TRUE) {
-            $qb->where('file_src LIKE \'?\'', [$filename]);
+            $qb->where(DocumentReportMetadata::FILE_SRC . ' LIKE \'?\'', [$filename]);
         } else {
-            $qb->where('file_src = ?', [$filename]);
+            $qb->where(DocumentReportMetadata::FILE_SRC . ' = ?', [$filename]);
         }
 
         return $qb->fetch();
@@ -66,10 +69,10 @@ class DocumentModel extends AModel {
     public function getLastInsertedDocumentReportQueueEntryForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id'])
+        $qb ->select([DocumentReportMetadata::ID])
             ->from('document_reports')
-            ->where('id_user = ?', [$idUser])
-            ->orderBy('date_updated', 'DESC')
+            ->where(DocumentReportMetadata::ID_USER . ' = ?', [$idUser])
+            ->orderBy(DocumentReportMetadata::DATE_UPDATED, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -81,8 +84,8 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_reports')
-            ->where('id_user = ?', [$idUser])
-            ->orderBy('date_updated', 'DESC')
+            ->where(DocumentReportMetadata::ID_USER . ' = ?', [$idUser])
+            ->orderBy(DocumentReportMetadata::DATE_UPDATED, 'DESC')
             ->execute();
 
         return $qb->fetchAll();
@@ -93,8 +96,8 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_reports')
-            ->where('status = ?', [$status])
-            ->orderBy('date_updated', 'DESC')
+            ->where(DocumentReportMetadata::STATUS . ' = ?', [$status])
+            ->orderBy(DocumentReportMetadata::DATE_UPDATED, 'DESC')
             ->execute();
 
         return $qb->fetchAll();
@@ -105,7 +108,7 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_reports')
-            ->where('id = ?', [$id])
+            ->where(DocumentReportMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetch();
@@ -275,7 +278,7 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_stats')
-            ->orderBy('id', 'DESC')
+            ->orderBy(DocumentStatsMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -319,7 +322,7 @@ class DocumentModel extends AModel {
 
         $qb ->delete()
             ->from('document_sharing')
-            ->where('id_document = ?', [$idDocument])
+            ->where(DocumentSharingMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         return $qb->fetchAll();
@@ -351,15 +354,15 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_sharing')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('id_document = ?', [$idDocument])
+            ->where(DocumentSharingMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(DocumentSharingMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         return $qb->fetch();
     }
 
     public function getCountDocumentsSharedWithUser(int $idUser) {
-        return $this->getRowCount('document_sharing', 'id', "WHERE `id_user`='" . $idUser . "' AND (`date_from` < current_timestamp AND `date_to` > current_timestamp)");
+        return $this->getRowCount('document_sharing', DocumentSharingMetadata::ID, "WHERE `" . DocumentSharingMetadata::ID_USER . "`='" . $idUser . "' AND (`" . DocumentSharingMetadata::DATE_FROM . "` < current_timestamp AND `" . DocumentSharingMetadata::DATE_TO . "` > current_timestamp)");
     }
 
     public function getDocumentSharingsSharedWithUser(int $idUser) {
@@ -367,8 +370,8 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_sharing')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('(date_from < current_timestamp AND date_to > current_timestamp)')
+            ->where(DocumentSharingMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere('(`' . DocumentSharingMetadata::DATE_FROM . '` < current_timestamp AND `' . DocumentSharingMetadata::DATE_TO .  '` > current_timestamp)')
             ->execute();
 
         return $qb->fetchAll();
@@ -405,15 +408,15 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_sharing')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('id_document = ?', [$idDocument])
+            ->where(DocumentSharingMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(DocumentSharingMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         $result = false;
 
         while($row = $qb->fetchAssoc()) {
-            $dateFrom = $row['date_from'];
-            $dateTo = $row['date_to'];
+            $dateFrom = $row[DocumentSharingMetadata::DATE_FROM];
+            $dateTo = $row[DocumentSharingMetadata::DATE_TO];
 
             if(strtotime($dateFrom) < time() && strtotime($dateTo) > time()) {
                 $result = true;
@@ -430,7 +433,7 @@ class DocumentModel extends AModel {
 
         $qb ->delete()
             ->from('document_sharing')
-            ->where('id = ?', [$idShare])
+            ->where(DocumentSharingMetadata::ID . ' = ?', [$idShare])
             ->execute();
 
         return $qb->fetchAll();

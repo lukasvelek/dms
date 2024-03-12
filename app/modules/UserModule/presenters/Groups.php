@@ -11,6 +11,7 @@ use DMS\Entities\EntityRight;
 use DMS\Entities\Group;
 use DMS\Entities\GroupUser;
 use DMS\Entities\Ribbon;
+use DMS\Helpers\GridDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
@@ -531,11 +532,7 @@ class Groups extends APresenter {
         $gb->addDataSourceCallback($dataSourceCallback);
         $gb->addColumns(['name' => 'Name', 'code' => 'Code', 'isSystem' => 'System', 'can_see' => 'View', 'can_edit' => 'Edit', 'can_delete' => 'Delete']);
         $gb->addOnColumnRender('isSystem', function(Ribbon $ribbon) {
-            if($ribbon->isSystem()) {
-                return '<span style="color: green">Yes</span>';
-            } else {
-                return '<span style="color: red">No</span>';
-            }
+            return GridDataHelper::renderBooleanValueWithColors($ribbon->isSystem(), 'Yes', 'No');
         });
         $gb->addOnColumnRender('can_see', function(Ribbon $ribbon) use ($allRibbonRights, $group, $enableLink, $disableLink) {
             $ok = false;

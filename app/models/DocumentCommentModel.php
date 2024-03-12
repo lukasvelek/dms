@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\DocumentCommentsMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\DocumentComment;
@@ -16,7 +17,7 @@ class DocumentCommentModel extends AModel {
 
         $qb ->delete()
             ->from('document_comments')
-            ->where('id_document = ?', [$idDocument])
+            ->where(DocumentCommentsMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         return $qb->fetchAll();
@@ -27,7 +28,7 @@ class DocumentCommentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_comments')
-            ->where('id = ?', [$id])
+            ->where(DocumentCommentsMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createCommentObjectFromDbRow($qb->fetch());
@@ -38,9 +39,9 @@ class DocumentCommentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_comments')
-            ->where('id_author = ?', [$idAuthor])
-            ->andWhere('id_document = ?', [$idDocument])
-            ->orderBy('id', 'DESC')
+            ->where(DocumentCommentsMetadata::ID_AUTHOR . ' = ?', [$idAuthor])
+            ->andWhere(DocumentCommentsMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
+            ->orderBy(DocumentCommentsMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -52,7 +53,7 @@ class DocumentCommentModel extends AModel {
 
         $qb ->delete()
             ->from('document_comments')
-            ->where('id = ?', [$id])
+            ->where(DocumentCommentsMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -67,8 +68,8 @@ class DocumentCommentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_comments')
-            ->where('id_document = ?', [$id])
-            ->orderBy('id', 'DESC')
+            ->where(DocumentCommentsMetadata::ID_DOCUMENT . ' = ?', [$id])
+            ->orderBy(DocumentCommentsMetadata::ID, 'DESC')
             ->execute();
 
         $comments = [];
@@ -84,11 +85,11 @@ class DocumentCommentModel extends AModel {
             return null;
         }
         
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $idAuthor = $row['id_author'];
-        $idDocument = $row['id_document'];
-        $text = $row['text'];
+        $id = $row[DocumentCommentsMetadata::ID];
+        $dateCreated = $row[DocumentCommentsMetadata::DATE_CREATED];
+        $idAuthor = $row[DocumentCommentsMetadata::ID_AUTHOR];
+        $idDocument = $row[DocumentCommentsMetadata::ID_DOCUMENT];
+        $text = $row[DocumentCommentsMetadata::TEXT];
 
         return new DocumentComment($id, $dateCreated, $idAuthor, $text, $idDocument);
     }

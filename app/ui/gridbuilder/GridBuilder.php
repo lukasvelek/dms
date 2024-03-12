@@ -116,7 +116,7 @@ class GridBuilder {
                 $colspan += 1;
             }
 
-            $entityRow .= ' colspan="' . $colspan . '">' . $this->emptyDataSourceMessage . '</td></tr>';
+            $entityRow .= ' colspan="' . $colspan . '" id="grid-empty-message">' . $this->emptyDataSourceMessage . '</td></tr>';
             $entityRows[] = $entityRow;
         } else {
             if(empty($this->dataSourceArray)) {
@@ -132,7 +132,7 @@ class GridBuilder {
                     $colspan += 1;
                 }
 
-                $entityRow .= ' colspan="' . $colspan . '">' . $this->emptyDataSourceMessage . '</td></tr>';
+                $entityRow .= ' colspan="' . $colspan . '" id="grid-empty-message">' . $this->emptyDataSourceMessage . '</td></tr>';
                 $entityRows[] = $entityRow;
             } else {
                 foreach($this->dataSourceArray as $entity) {

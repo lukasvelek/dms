@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\Metadata\UserConnectionMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
@@ -71,8 +72,8 @@ class UserRelogin extends APresenter {
         $user = $this->post('user'); // id user
 
         $data = array(
-            'id_user1' => $app->user->getId(),
-            'id_user2' => $user
+            UserConnectionMetadata::ID_USER1 => $app->user->getId(),
+            UserConnectionMetadata::ID_USER2 => $user
         );
 
         $app->userModel->insertNewUserConnect($data);

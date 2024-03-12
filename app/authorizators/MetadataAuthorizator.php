@@ -3,6 +3,7 @@
 namespace DMS\Authorizators;
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\Metadata\UserMetadataRightMetadata;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -42,13 +43,13 @@ class MetadataAuthorizator extends AAuthorizator {
     public function getViewMetadataForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id_metadata'])
+        $qb ->select([UserMetadataRightMetadata::ID_METADATA])
             ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('view_values = 1')
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::VIEW_VALUES . ' = 1')
             ->execute();
 
-        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), [UserMetadataRightMetadata::ID_METADATA]);
 
         return $rows;
     }
@@ -62,13 +63,13 @@ class MetadataAuthorizator extends AAuthorizator {
     public function getEditableMatadataValuesForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id_metadata'])
+        $qb ->select([UserMetadataRightMetadata::ID_METADATA])
             ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('edit_values = 1')
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::EDIT_VALUES . ' = 1')
             ->execute();
 
-        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), [UserMetadataRightMetadata::ID_METADATA]);
 
         return $rows;
     }
@@ -82,13 +83,13 @@ class MetadataAuthorizator extends AAuthorizator {
     public function getViewableMetadataForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id_metadata'])
+        $qb ->select([UserMetadataRightMetadata::ID_METADATA])
             ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('view = 1')
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::VIEW . ' = 1')
             ->execute();
 
-        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), [UserMetadataRightMetadata::ID_METADATA]);
 
         return $rows;
     }
@@ -102,13 +103,13 @@ class MetadataAuthorizator extends AAuthorizator {
     public function getEditableMetadataForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id_metadata'])
+        $qb ->select([UserMetadataRightMetadata::ID_METADATA])
             ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('edit = 1')
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::EDIT . ' = 1')
             ->execute();
 
-        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
+        $rows = Database::convertMysqliResultToArray($qb->fetchAll(), [UserMetadataRightMetadata::ID_METADATA]);
 
         return $rows;
     }
@@ -232,8 +233,8 @@ class MetadataAuthorizator extends AAuthorizator {
 
             $row = $qb->select(['*'])
                       ->from('user_metadata_rights')
-                      ->where('id_user = ?', [$idUser])
-                      ->andWhere('id_metadata = ?', [$idMetadata])
+                      ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+                      ->andWhere(UserMetadataRightMetadata::ID_METADATA . ' = ?', [$idMetadata])
                       ->execute()
                       ->fetch();
 
@@ -253,8 +254,8 @@ class MetadataAuthorizator extends AAuthorizator {
         } else {
             $row = $qb->select('*')
                       ->from('user_metadata_rights')
-                      ->where('id_user = ?', [$idUser])
-                      ->andWhere('id_metadata = ?', [$idMetadata])
+                      ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+                      ->andWhere(UserMetadataRightMetadata::ID_METADATA . ' = ?', [$idMetadata])
                       ->execute()
                       ->fetch();
 

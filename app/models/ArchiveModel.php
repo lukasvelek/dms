@@ -5,6 +5,7 @@ namespace DMS\Models;
 use DMS\Constants\ArchiveStatus;
 use DMS\Constants\ArchiveType;
 use DMS\Constants\Metadata\ArchiveMetadata;
+use DMS\Constants\Metadata\DocumentMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Archive;
@@ -151,7 +152,7 @@ class ArchiveModel extends AModel {
 
     public function moveBoxFromArchive(int $idBox){
         $data = [
-            'status' => ArchiveStatus::NEW
+            ArchiveMetadata::STATUS => ArchiveStatus::NEW
         ];
 
         $this->updateBox($idBox, $data);
@@ -225,12 +226,12 @@ class ArchiveModel extends AModel {
     public function getChildrenCount(int $id, int $parentType) {
         $qb = $this->qb(__METHOD__);
 
-        $qb->select(['id']);
+        $qb->select([ArchiveMetadata::ID]);
 
         switch($parentType) {
             case ArchiveType::DOCUMENT:
                 $qb->from('documents')
-                   ->where('id_archive_document = ?', [$id]);
+                   ->where(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' = ?', [$id]);
                 break;
 
             case ArchiveType::BOX:
