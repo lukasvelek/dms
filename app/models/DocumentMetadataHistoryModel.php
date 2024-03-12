@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\DocumentMetadataHistoryMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\DocumentMetadataHistoryEntity;
@@ -16,7 +17,7 @@ class DocumentMetadataHistoryModel extends AModel {
 
         $qb ->delete()
             ->from('document_metadata_history')
-            ->where($qb->getColumnInValues('id_document', $idDocuments))
+            ->where($qb->getColumnInValues(DocumentMetadataHistoryMetadata::ID_DOCUMENT, $idDocuments))
             ->execute();
 
         return $qb->fetchAll();
@@ -27,7 +28,7 @@ class DocumentMetadataHistoryModel extends AModel {
 
         $qb ->delete()
             ->from('document_metadata_history')
-            ->where('id_document = ?', [$idDocument])
+            ->where(DocumentMetadataHistoryMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         return $qb->fetchAll();
@@ -44,10 +45,10 @@ class DocumentMetadataHistoryModel extends AModel {
     public function insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(array $data, int $idDocument, int $idUser) {
         foreach($data as $metadata => $value) {
             $tmp = [
-                'metadata_name' => $metadata,
-                'metadata_value' => $value,
-                'id_document' => $idDocument,
-                'id_user' => $idUser
+                DocumentMetadataHistoryMetadata::METADATA_NAME => $metadata,
+                DocumentMetadataHistoryMetadata::METADATA_VALUE => $value,
+                DocumentMetadataHistoryMetadata::ID_DOCUMENT => $idDocument,
+                DocumentMetadataHistoryMetadata::ID_USER => $idUser
             ];
 
             $this->insertNewMetadataHistoryEntry($tmp);
@@ -65,8 +66,8 @@ class DocumentMetadataHistoryModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_metadata_history')
-            ->where('id_document = ?', [$idDocument])
-            ->orderBy('date_created', $orderByDateCreated)
+            ->where(DocumentMetadataHistoryMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
+            ->orderBy(DocumentMetadataHistoryMetadata::DATE_CREATED, $orderByDateCreated)
             ->execute();
 
         $entities = [];
@@ -78,12 +79,12 @@ class DocumentMetadataHistoryModel extends AModel {
     }
 
     private function createObjectFromDbRow($row) {
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $idDocument = $row['id_document'];
-        $idUser = $row['id_user'];
-        $metadataName = $row['metadata_name'];
-        $metadataValue = $row['metadata_value'];
+        $id = $row[DocumentMetadataHistoryMetadata::ID];
+        $dateCreated = $row[DocumentMetadataHistoryMetadata::DATE_CREATED];
+        $idDocument = $row[DocumentMetadataHistoryMetadata::ID_DOCUMENT];
+        $idUser = $row[DocumentMetadataHistoryMetadata::ID_USER];
+        $metadataName = $row[DocumentMetadataHistoryMetadata::METADATA_NAME];
+        $metadataValue = $row[DocumentMetadataHistoryMetadata::METADATA_VALUE];
 
         return new DocumentMetadataHistoryEntity($id, $dateCreated, $idDocument, $idUser, $metadataName, $metadataValue);
     }

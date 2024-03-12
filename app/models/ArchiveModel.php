@@ -152,7 +152,7 @@ class ArchiveModel extends AModel {
 
     public function moveBoxFromArchive(int $idBox){
         $data = [
-            'status' => ArchiveStatus::NEW
+            ArchiveMetadata::STATUS => ArchiveStatus::NEW
         ];
 
         $this->updateBox($idBox, $data);
@@ -226,7 +226,7 @@ class ArchiveModel extends AModel {
     public function getChildrenCount(int $id, int $parentType) {
         $qb = $this->qb(__METHOD__);
 
-        $qb->select(['id']);
+        $qb->select([ArchiveMetadata::ID]);
 
         switch($parentType) {
             case ArchiveType::DOCUMENT:

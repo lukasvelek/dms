@@ -2,6 +2,8 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\MetadataMetadata;
+use DMS\Constants\Metadata\MetadataValueMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Metadata;
@@ -17,7 +19,7 @@ class MetadataModel extends AModel {
 
         $qb ->select(['*'])
             ->from('metadata')
-            ->where($qb->getColumnInValues('id', $ids))
+            ->where($qb->getColumnInValues(MetadataMetadata::ID, $ids))
             ->execute();
 
         return $qb->fetchAll()->num_rows;
@@ -28,7 +30,7 @@ class MetadataModel extends AModel {
 
         $qb ->select(['*'])
             ->from('metadata')
-            ->where($qb->getColumnInValues('id', $ids))
+            ->where($qb->getColumnInValues(MetadataMetadata::ID, $ids))
             ->limit($limit)
             ->offset($offset)
             ->execute();
@@ -57,9 +59,9 @@ class MetadataModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('metadata_values')
-            ->set(['is_default' => ($isDefault ? '1' : '0')])
-            ->where('id_metadata = ?', [$idMetadata])
-            ->andWhere('id = ?', [$idMetadataValue])
+            ->set([MetadataValueMetadata::IS_DEFAULT => ($isDefault ? '1' : '0')])
+            ->where(MetadataValueMetadata::ID_METADATA . ' = ?', [$idMetadata])
+            ->andWhere(MetadataValueMetadata::ID . ' = ?', [$idMetadataValue])
             ->execute();
 
         return $qb->fetchAll();
@@ -68,14 +70,14 @@ class MetadataModel extends AModel {
     public function hasMetadataDefaultValue(int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id'])
+        $qb ->select([MetadataValueMetadata::ID])
             ->from('metadata_values')
-            ->where('id_metadata = ?', [$idMetadata])
-            ->andWhere('is_default = ?', ['1'])
+            ->where(MetadataValueMetadata::ID_METADATA . ' = ?', [$idMetadata])
+            ->andWhere(MetadataValueMetadata::IS_DEFAULT . ' = ?', ['1'])
             ->limit(1)
             ->execute();
 
-        return $qb->fetch('id');
+        return $qb->fetch(MetadataValueMetadata::ID);
     }
 
     public function deleteMetadataValueByIdMetadataValue(int $idMetadataValue) {
@@ -83,7 +85,7 @@ class MetadataModel extends AModel {
 
         $qb ->delete()
             ->from('metadata_values')
-            ->where('id = ?', [$idMetadataValue])
+            ->where(MetadataValueMetadata::ID . ' = ?', [$idMetadataValue])
             ->execute();
 
         return $qb->fetchAll();
@@ -94,7 +96,7 @@ class MetadataModel extends AModel {
 
         $qb ->delete()
             ->from('metadata')
-            ->where('id = ?', [$idMetadata])
+            ->where(MetadataMetadata::ID . ' = ?', [$idMetadata])
             ->execute();
 
         return $qb->fetchAll();
@@ -105,7 +107,7 @@ class MetadataModel extends AModel {
 
         $qb ->delete()
             ->from('metadata_values')
-            ->where('id_metadata = ?', [$idMetadata])
+            ->where(MetadataValueMetadata::ID_METADATA . ' = ?', [$idMetadata])
             ->execute();
 
         return $qb->fetchAll();
@@ -116,8 +118,8 @@ class MetadataModel extends AModel {
 
         $qb ->select(['*'])
             ->from('metadata')
-            ->where('name = ?', [$name])
-            ->andWhere('table_name = ?', [$tableName])
+            ->where(MetadataMetadata::NAME . ' = ?', [$name])
+            ->andWhere(MetadataMetadata::TABLE_NAME . ' = ?', [$tableName])
             ->execute();
 
         return $this->createMetadataObjectFromDbRow($qb->fetch());
@@ -128,7 +130,7 @@ class MetadataModel extends AModel {
 
         $qb ->select(['*'])
             ->from('metadata')
-            ->where('table_name = ?', [$tableName])
+            ->where(MetadataMetadata::TABLE_NAME . ' = ?', [$tableName])
             ->execute();
 
         $metadata = [];
@@ -142,7 +144,7 @@ class MetadataModel extends AModel {
     public function insertMetadataValueForIdMetadata(int $idMetadata, string $name, string $value) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->insert('metadata_values', ['id_metadata', 'name', 'value'])
+        $qb ->insert('metadata_values', [MetadataValueMetadata::ID_METADATA, MetadataValueMetadata::NAME, MetadataValueMetadata::VALUE])
             ->values([$idMetadata, $name, $value])
             ->execute();
 
@@ -154,7 +156,7 @@ class MetadataModel extends AModel {
 
         $qb ->select(['*'])
             ->from('metadata')
-            ->where('id = ?', [$id])
+            ->where(MetadataMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createMetadataObjectFromDbRow($qb->fetch());
@@ -169,7 +171,7 @@ class MetadataModel extends AModel {
 
         $qb ->select(['*'])
             ->from('metadata')
-            ->orderBy('id', 'DESC')
+            ->orderBy(MetadataMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -196,7 +198,7 @@ class MetadataModel extends AModel {
 
         $qb ->select(['*'])
             ->from('metadata_values')
-            ->where('id_metadata = ?', [$idMetadata])
+            ->where(MetadataValueMetadata::ID_METADATA . ' = ?', [$idMetadata])
             ->execute();
 
         $values = [];
@@ -212,18 +214,18 @@ class MetadataModel extends AModel {
             return null;
         }
         
-        $id = $row['id'];
-        $name = $row['name'];
-        $text = $row['text'];
-        $tableName = $row['table_name'];
-        $isSystem = $row['is_system'];
-        $inputType = $row['input_type'];
-        $inputLength = $row['length'];
+        $id = $row[MetadataMetadata::ID];
+        $name = $row[MetadataMetadata::NAME];
+        $text = $row[MetadataMetadata::TEXT];
+        $tableName = $row[MetadataMetadata::TABLE_NAME];
+        $isSystem = $row[MetadataMetadata::IS_SYSTEM];
+        $inputType = $row[MetadataMetadata::INPUT_TYPE];
+        $inputLength = $row[MetadataMetadata::LENGTH];
         $selectExternalEnumName = null;
-        $isReadonly = $row['is_readonly'];
+        $isReadonly = $row[MetadataMetadata::IS_READONLY];
 
-        if(isset($row['select_external_enum_name']) && $row['select_external_enum_name'] != NULL) {
-            $selectExternalEnumName = $row['select_external_enum_name'];
+        if(isset($row[MetadataMetadata::SELECT_EXTERNAL_ENUM_NAME]) && $row[MetadataMetadata::SELECT_EXTERNAL_ENUM_NAME] != NULL) {
+            $selectExternalEnumName = $row[MetadataMetadata::SELECT_EXTERNAL_ENUM_NAME];
         }
 
         if($isSystem == '1') {
@@ -246,11 +248,11 @@ class MetadataModel extends AModel {
             return null;
         }
 
-        $id = $row['id'];
-        $idMetadata = $row['id_metadata'];
-        $name = $row['name'];
-        $value = $row['value'];
-        $isDefault = $row['is_default'];
+        $id = $row[MetadataValueMetadata::ID];
+        $idMetadata = $row[MetadataValueMetadata::ID_METADATA];
+        $name = $row[MetadataValueMetadata::NAME];
+        $value = $row[MetadataValueMetadata::VALUE];
+        $isDefault = $row[MetadataValueMetadata::IS_DEFAULT];
 
         if($isDefault == '1') {
             $isDefault = true;

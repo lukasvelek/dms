@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\GroupUserMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\GroupUser;
@@ -16,11 +17,11 @@ class GroupUserModel extends AModel {
     }
 
     public function removeAllGroupUsersForIdGroup(int $idGroup) {
-        return $this->deleteByCol('id_group', $idGroup, 'group_users');
+        return $this->deleteByCol(GroupUserMetadata::ID_GROUP, $idGroup, 'group_users');
     }
 
     public function removeUserFromAllGroups(int $idUser) {
-        return $this->deleteByCol('id_user', $idUser, 'group_users');
+        return $this->deleteByCol(GroupUserMetadata::ID_USER, $idUser, 'group_users');
     }
 
     public function isIdUserInAdministratorsGroup(int $idUser) {
@@ -30,8 +31,8 @@ class GroupUserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('group_users')
-            ->where('id_group = ?', [$idGroup])
-            ->andWhere('id_user = ?', [$idUser])
+            ->where(GroupUserMetadata::ID_GROUP . ' = ?', [$idGroup])
+            ->andWhere(GroupUserMetadata::ID_USER . ' = ?', [$idUser])
             ->execute();
 
         if(is_null($qb->fetch())) {
@@ -46,7 +47,7 @@ class GroupUserModel extends AModel {
 
         $qb ->update('group_users')
             ->set($data)
-            ->where('id_group = ? AND id_user = ?', [$idGroup, $idUser])
+            ->where(GroupUserMetadata::ID_GROUP . ' = ? AND ' . GroupUserMetadata::ID_USER . ' = ?', [$idGroup, $idUser])
             ->execute();
 
         return $qb->fetchAll();
@@ -57,7 +58,7 @@ class GroupUserModel extends AModel {
 
         $qb ->delete()
             ->from('group_users')
-            ->where('id_group = ? AND id_user = ?', [$idGroup, $idUser])
+            ->where(GroupUserMetadata::ID_GROUP . ' = ? AND ' . GroupUserMetadata::ID_USER . ' = ?', [$idGroup, $idUser])
             ->execute();
 
         return $qb->fetchAll();
@@ -66,7 +67,7 @@ class GroupUserModel extends AModel {
     public function insertUserToGroup(int $idGroup, int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->insert('group_users', ['id_user', 'id_group'])
+        $qb ->insert('group_users', [GroupUserMetadata::ID_USER, GroupUserMetadata::ID_GROUP])
             ->values([$idUser, $idGroup])
             ->execute();
 
@@ -78,7 +79,7 @@ class GroupUserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('group_users')
-            ->where('id_group = ?', [$idGroup])
+            ->where(GroupUserMetadata::ID_GROUP . ' = ?', [$idGroup])
             ->limit(1)
             ->execute();
 
@@ -90,7 +91,7 @@ class GroupUserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('group_users')
-            ->where('id_group = ?', [$idGroup])
+            ->where(GroupUserMetadata::ID_GROUP . ' = ?', [$idGroup])
             ->execute();
 
         $groups = [];
@@ -106,29 +107,13 @@ class GroupUserModel extends AModel {
 
         $qb ->select(['*'])
             ->from('group_users')
-            ->where('id_user = ?', [$idUser])
+            ->where(GroupUserMetadata::ID_USER . ' = ?', [$idUser])
             ->execute();
 
         $groups = [];
         while($row = $qb->fetchAssoc()) {
             $groups[] = $this->createGroupUserObjectFromDbRow($row);
         }
-        return $groups;
-    }
-
-    public function getGroupsWhereIdUserIsManager(int $idUser) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('group_users')
-            ->where('id_manager = ?', [$idUser])
-            ->execute();
-
-        $groups = [];
-        while($row = $qb->fetchAssoc()) {
-            $groups[] = $this->createGroupUserObjectFromDbRow($row);
-        }
-
         return $groups;
     }
 
@@ -137,10 +122,10 @@ class GroupUserModel extends AModel {
             return null;
         }
         
-        $id = $row['id'];
-        $idGroup = $row['id_group'];
-        $idUser = $row['id_user'];
-        $isManager = $row['is_manager'];
+        $id = $row[GroupUserMetadata::ID];
+        $idGroup = $row[GroupUserMetadata::ID_GROUP];
+        $idUser = $row[GroupUserMetadata::ID_USER];
+        $isManager = $row[GroupUserMetadata::IS_MANAGER];
 
         return new GroupUser($id, $idGroup, $idUser, ($isManager ? true : false));
     }

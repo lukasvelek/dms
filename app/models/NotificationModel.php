@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\NotificationMetadata;
 use DMS\Constants\NotificationStatus;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -17,7 +18,7 @@ class NotificationModel extends AModel {
 
         $qb ->delete()
             ->from('notifications')
-            ->where('id = ?', [$id])
+            ->where(NotificationMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -28,7 +29,7 @@ class NotificationModel extends AModel {
 
         $qb ->select(['*'])
             ->from('notifications')
-            ->where('status = ?', [NotificationStatus::SEEN])
+            ->where(NotificationMetadata::STATUS . ' = ?', [NotificationStatus::SEEN])
             ->execute();
 
         $notifications = [];
@@ -51,8 +52,8 @@ class NotificationModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('notifications')
-            ->set(['status' => $status])
-            ->where('id = ?', [$id])
+            ->set([NotificationMetadata::STATUS => $status])
+            ->where(NotificationMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -63,9 +64,9 @@ class NotificationModel extends AModel {
 
         $qb ->select(['*'])
             ->from('notifications')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('status = ?', [NotificationStatus::UNSEEN])
-            ->orderBy('id', 'DESC')
+            ->where(NotificationMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(NotificationMetadata::STATUS . ' = ?', [NotificationStatus::UNSEEN])
+            ->orderBy(NotificationMetadata::ID, 'DESC')
             ->execute();
 
         $notifications = [];
@@ -81,11 +82,11 @@ class NotificationModel extends AModel {
             return null;
         }
         
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $idUser = $row['id_user'];
-        $text = $row['text'];
-        $action = $row['action'];
+        $id = $row[NotificationMetadata::ID];
+        $dateCreated = $row[NotificationMetadata::DATE_CREATED];
+        $idUser = $row[NotificationMetadata::ID_USER];
+        $text = $row[NotificationMetadata::TEXT];
+        $action = $row[NotificationMetadata::ACTION];
 
         return new Notification($id, $dateCreated, $idUser, $text, $action);
     }

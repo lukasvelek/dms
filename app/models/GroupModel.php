@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\GroupMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Group;
@@ -41,7 +42,7 @@ class GroupModel extends AModel {
 
         $qb ->select(['*'])
             ->from('groups')
-            ->orderBy('id', 'DESC')
+            ->orderBy(GroupMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -51,11 +52,11 @@ class GroupModel extends AModel {
     public function insertNewGroup(string $name, ?string $code) {
         $qb = $this->qb(__METHOD__);
 
-        $keys = ['name'];
+        $keys = [GroupMetadata::NAME];
         $values = [$name];
 
         if($code !== NULL) {
-            $keys[] = 'code';
+            $keys[] = GroupMetadata::CODE;
             $values[] = $code;
         }
 
@@ -71,7 +72,7 @@ class GroupModel extends AModel {
 
         $qb ->select(['*'])
             ->from('groups')
-            ->where('code LIKE ?', [$code])
+            ->where(GroupMetadata::CODE . ' LIKE ?', [$code])
             ->limit(1)
             ->execute();
 
@@ -83,7 +84,7 @@ class GroupModel extends AModel {
 
         $qb ->select(['*'])
             ->from('groups')
-            ->where('id = ?', [$id])
+            ->where(GroupMetadata::ID . ' = ?', [$id])
             ->execute();
         
         return $this->createGroupObjectFromDbRow($qb->fetch());
@@ -109,12 +110,12 @@ class GroupModel extends AModel {
             return null;
         }
 
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $name = $row['name'];
+        $id = $row[GroupMetadata::ID];
+        $dateCreated = $row[GroupMetadata::DATE_CREATED];
+        $name = $row[GroupMetadata::NAME];
         
-        if(isset($row['code'])) {
-            $code = $row['code'];
+        if(isset($row[GroupMetadata::CODE])) {
+            $code = $row[GroupMetadata::CODE];
         } else {
             $code = null;
         }

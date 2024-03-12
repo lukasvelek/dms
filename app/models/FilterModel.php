@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\DocumentFilterMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\DocumentFilter;
@@ -22,7 +23,7 @@ class FilterModel extends AModel {
     public function getDocumentFilterById(int $id) {
         $qb = $this->composeStandardDocumentFilterQuery();
 
-        $qb ->where('id = ?', [$id])
+        $qb ->where(DocumentFilterMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createDocumentFilterFromDbRow($qb->fetch());
@@ -35,7 +36,7 @@ class FilterModel extends AModel {
     public function getAllDocumentFiltersForIdUser(int $idUser) {
         $qb = $this->composeStandardDocumentFilterQuery();
 
-        $qb ->where('id_author = ?', [$idUser])
+        $qb ->where(DocumentFilterMetadata::ID_AUTHOR . ' = ?', [$idUser])
             ->execute();
 
         return $this->createDocumentsFiltersFromDbRows($qb->fetchAll());
@@ -45,13 +46,13 @@ class FilterModel extends AModel {
         $qb = $this->composeStandardDocumentFilterQuery();
 
         if($appendOtherUsersResults === TRUE) {
-            $qb ->orWhere('id_author IS NOT NULL');
+            $qb ->orWhere(DocumentFilterMetadata::ID_AUTHOR . ' IS NOT NULL');
         }
         if($appendSystemFilters === TRUE) {
-            $qb ->orWhere('id_author IS NULL');
+            $qb ->orWhere(DocumentFilterMetadata::ID_AUTHOR . ' IS NULL');
         }
         if($idUser !== NULL) {
-            $qb ->orWhere('id_author = ?', [$idUser]);
+            $qb ->orWhere(DocumentFilterMetadata::ID_AUTHOR . ' = ?', [$idUser]);
         }
         
         $qb->execute();
@@ -79,24 +80,24 @@ class FilterModel extends AModel {
     }
 
     private function createDocumentFilterFromDbRow($row) {
-        $id = $row['id'];
-        $name = $row['name'];
-        $sql = $row['filter_sql'];
+        $id = $row[DocumentFilterMetadata::ID];
+        $name = $row[DocumentFilterMetadata::NAME];
+        $sql = $row[DocumentFilterMetadata::FILTER_SQL];
         $hasOrdering = false;
 
-        if($row['has_ordering'] == '1') {
+        if($row[DocumentFilterMetadata::HAS_ORDERING] == '1') {
             $hasOrdering = true;
         }
 
         $description = null;
         $idAuthor = null;
 
-        if(isset($row['id_author'])) {
-            $idAuthor = $row['id_author'];
+        if(isset($row[DocumentFilterMetadata::ID_AUTHOR])) {
+            $idAuthor = $row[DocumentFilterMetadata::ID_AUTHOR];
         }
 
-        if(isset($row['description'])) {
-            $description = $row['description'];
+        if(isset($row[DocumentFilterMetadata::DESCRIPTION])) {
+            $description = $row[DocumentFilterMetadata::DESCRIPTION];
         }
 
         return new DocumentFilter($id, $idAuthor, $name, $description, $sql, $hasOrdering);
