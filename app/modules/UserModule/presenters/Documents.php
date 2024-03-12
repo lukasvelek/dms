@@ -9,6 +9,9 @@ use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\FileStorageTypes;
+use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\DocumentMetadataHistoryMetadata;
+use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
@@ -44,7 +47,7 @@ class Documents extends APresenter {
         }
 
         $app->documentModel->bulkMoveToArchiveDocument($ids, $archiveDocument);
-        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['id_archive_document' => $archiveDocument], $ids, $app->user->getId());
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::ID_ARCHIVE_DOCUMENT => $archiveDocument], $ids, $app->user->getId());
 
         /*foreach($ids as $id) {
             $app->documentModel->moveToArchiveDocument($id, $archiveDocument);
@@ -99,21 +102,21 @@ class Documents extends APresenter {
         $qb = $app->documentModel->composeQueryStandardDocuments(false);
 
         if($idFolder > 0) {
-            $qb->where('id_folder = ?', [$idFolder]);
+            $qb->where(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         }
 
         if(!is_numeric($filter)) {
             switch($filter) {
                 case 'shredded':
-                    $qb->andWhere('status = ?', [DocumentStatus::SHREDDED]);
+                    $qb->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::SHREDDED]);
                     break;
     
                 case 'waitingForArchivation':
-                    $qb->andWhere('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
+                    $qb->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
                     break;
     
                 case 'archived':
-                    $qb->andWhere('status = ?', [DocumentStatus::ARCHIVED]);
+                    $qb->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED]);
                     break;
     
                 default:
@@ -126,7 +129,7 @@ class Documents extends APresenter {
             }
     
             if($order == 'desc') {
-                $qb->orderBy('id', $order);
+                $qb->orderBy(DocumentMetadata::ID, $order);
             }
         } else {
             $filterEntity = $app->filterModel->getDocumentFilterById($filter);
@@ -139,7 +142,7 @@ class Documents extends APresenter {
                 }
                 
                 if($order == 'desc') {
-                    $qb->orderBy('id', $order);
+                    $qb->orderBy(DocumentMetadata::ID, $order);
                 }
             }
         }
@@ -156,9 +159,9 @@ class Documents extends APresenter {
         if($rows->num_rows > 1000) {
             // use background export
             $data = [
-                'id_user' => $app->user->getId(),
-                'sql_string' => $qb->getSQL(),
-                'file_format' => $fileFormat
+                DocumentReportMetadata::ID_USER => $app->user->getId(),
+                DocumentReportMetadata::SQL_STRING => $qb->getSQL(),
+                DocumentReportMetadata::FILE_FORMAT => $fileFormat
             ];
 
             $app->documentModel->insertDocumentReportQueueEntry($data);
@@ -776,21 +779,21 @@ class Documents extends APresenter {
         $idFolder = $this->post('folder');
         $fileStorageDirectory = $this->post('file_storage_directory');
         
-        $data['name'] = $this->post('name');
-        $data['id_manager'] = $this->post('manager');
-        $data['status'] = $this->post('status');
-        $data['id_group'] = $idGroup;
-        $data['id_author'] = $app->user->getId();
-        $data['shred_year'] = $this->post('shred_year');
-        $data['after_shred_action'] = $this->post('after_shred_action');
-        $data['shredding_status'] = DocumentShreddingStatus::NO_STATUS;
+        $data[DocumentMetadata::NAME] = $this->post('name');
+        $data[DocumentMetadata::ID_MANAGER] = $this->post('manager');
+        $data[DocumentMetadata::STATUS] = $this->post('status');
+        $data[DocumentMetadata::ID_GROUP] = $idGroup;
+        $data[DocumentMetadata::ID_AUTHOR] = $app->user->getId();
+        $data[DocumentMetadata::SHRED_YEAR] = $this->post('shred_year');
+        $data[DocumentMetadata::AFTER_SHRED_ACTION] = $this->post('after_shred_action');
+        $data[DocumentMetadata::SHREDDING_STATUS] = DocumentShreddingStatus::NO_STATUS;
 
         if($idFolder != '-1') {
-            $data['id_folder'] = $idFolder;
+            $data[DocumentMetadata::ID_FOLDER] = $idFolder;
         }
 
         if(isset($_FILES['file'])) {
-            $data['file'] = $_FILES['file']['name'];
+            $data[DocumentMetadata::FILE] = $_FILES['file']['name'];
         }
 
         ArrayHelper::deleteKeysFromArray($_POST, [
@@ -817,8 +820,8 @@ class Documents extends APresenter {
         $data = array_merge($data, $customMetadata);
 
         $fileUpload = true;
-        if(isset($data['file']) && !empty($data['file'])) {
-            $fileUpload = $app->fsManager->uploadFile($_FILES['file'], $data['file'], $fileStorageDirectory); // filepath is converted here
+        if(isset($data[DocumentMetadata::FILE]) && !empty($data[DocumentMetadata::FILE])) {
+            $fileUpload = $app->fsManager->uploadFile($_FILES['file'], $data[DocumentMetadata::FILE], $fileStorageDirectory); // filepath is converted here
         }
 
         if($fileUpload !== TRUE) {
@@ -851,15 +854,15 @@ class Documents extends APresenter {
             $app->redirect($app::URL_HOME_PAGE);
         }
 
-        $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['id_current_officer' => $documentIdManager], $idDocument, $app->user->getId());
+        $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::ID_OFFICER => $documentIdManager], $idDocument, $app->user->getId());
         $app->documentModel->updateOfficer($idDocument, $documentIdManager);
 
         $app->flashMessage('Created new document', 'success');
         
         $url = 'showAll';
 
-        if(isset($data['id_folder'])) {
-            $app->redirect($url, array('id_folder' => $data['id_folder']));
+        if(isset($data[DocumentMetadata::ID_FOLDER])) {
+            $app->redirect($url, array('id_folder' => $data[DocumentMetadata::ID_FOLDER]));
         } else {
             $app->redirect($url);
         }
@@ -884,7 +887,7 @@ class Documents extends APresenter {
         global $app;
 
         $app->documentModel->bulkMoveFromArchiveDocument($ids);
-        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['id_archive_document' => 'NULL'], $ids, $app->user->getId());
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::ID_ARCHIVE_DOCUMENT => 'NULL'], $ids, $app->user->getId());
 
         $app->flashMessage('Documents moved from the archive document', 'success');
 
@@ -902,8 +905,8 @@ class Documents extends APresenter {
     private function _suggest_for_shredding(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        $app->documentModel->updateDocumentsBulk(['shredding_status' => DocumentShreddingStatus::IN_APPROVAL], $ids);
-        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['shredding_status' => DocumentShreddingStatus::IN_APPROVAL], $ids, $app->user->getId());
+        $app->documentModel->updateDocumentsBulk([DocumentMetadata::SHREDDING_STATUS => DocumentShreddingStatus::IN_APPROVAL], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::SHREDDING_STATUS => DocumentShreddingStatus::IN_APPROVAL], $ids, $app->user->getId());
 
         foreach($ids as $id) {
             $app->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $app->user->getId());
@@ -945,8 +948,8 @@ class Documents extends APresenter {
     private function _decline_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVATION_DECLINED], $ids);
-        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVATION_DECLINED], $ids, $app->user->getId());
+        $app->documentModel->updateDocumentsBulk([DocumentMetadata::STATUS => DocumentStatus::ARCHIVATION_DECLINED], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::STATUS => DocumentStatus::ARCHIVATION_DECLINED], $ids, $app->user->getId());
 
         if(count($ids) == 1) {
             $app->flashMessage('Declined archivation for selected document', 'success');
@@ -968,8 +971,8 @@ class Documents extends APresenter {
     private function _approve_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVATION_APPROVED], $ids);
-        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVATION_APPROVED], $ids, $app->user->getId());
+        $app->documentModel->updateDocumentsBulk([DocumentMetadata::STATUS => DocumentStatus::ARCHIVATION_APPROVED], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::STATUS => DocumentStatus::ARCHIVATION_APPROVED], $ids, $app->user->getId());
 
         if(count($ids) == 1) {
             $app->flashMessage('Approved archivation for selected document', 'success');
@@ -991,8 +994,8 @@ class Documents extends APresenter {
     private function _archive(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        $app->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVED], $ids);
-        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVED], $ids, $app->user->getId());
+        $app->documentModel->updateDocumentsBulk([DocumentMetadata::STATUS => DocumentStatus::ARCHIVED], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::STATUS => DocumentStatus::ARCHIVED], $ids, $app->user->getId());
 
         if(count($ids) == 1) {
             $app->flashMessage('Archived selected document', 'success');

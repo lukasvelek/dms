@@ -4,7 +4,6 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\FlashMessageTypes;
 use DMS\Core\AppConfiguration;
-use DMS\Core\Application;
 use DMS\Modules\APresenter;
 
 class DocumentGenerator extends APresenter {
