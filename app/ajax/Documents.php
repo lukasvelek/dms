@@ -4,6 +4,7 @@ use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\DocumentStatsMetadata;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
@@ -651,11 +652,11 @@ function generateDocuments() {
     }
 
     $data = array(
-        'total_count' => $documentModel->getTotalDocumentCount($id_folder),
-        'shredded_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
-        'archived_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
-        'new_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
-        'waiting_for_archivation_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED)
+        DocumentStatsMetadata::TOTAL_COUNT => $documentModel->getTotalDocumentCount($id_folder),
+        DocumentStatsMetadata::SHREDDED_COUNT => $documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
+        DocumentStatsMetadata::ARCHIVED_COUNT => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
+        DocumentStatsMetadata::NEW_COUNT => $documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
+        DocumentStatsMetadata::WAITING_FOR_ARCHIVATION_COUNT => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED)
     );
 
     $documentModel->beginTran();
