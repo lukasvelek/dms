@@ -251,3 +251,10 @@ div[id^="dropdownmenu-ribbon-"] {
     top: 50%;
     left: 49%;
 }
+
+#grid-empty-message {
+    border: 1px solid darkblue;
+    color: darkblue;
+    background-color: lightblue;
+    padding: 10px;
+}
