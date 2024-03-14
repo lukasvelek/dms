@@ -21,6 +21,7 @@ use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Helpers\DocumentFolderListHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
@@ -1038,15 +1039,17 @@ class Documents extends APresenter {
             $link = 'showFiltered';
         }
         
+        $dflh = new DocumentFolderListHelper($app->folderModel);
+        
         $list = array(
-            'null1' => '&nbsp;&nbsp;' . $createLink($link, 'Main folder' . (AppConfiguration::getGridMainFolderHasAllComments() ? ' (all documents)' : ''), null, $filter) . '<br>',
+            'null1' => '&nbsp;&nbsp;' . $dflh->createFolderLink($link, 'Main folder' . (AppConfiguration::getGridMainFolderHasAllDocuments() ? ' (all documents)' : ''), null, $filter) . '<br>',
             'null2' => '<hr>'
         );
         
         $folders = $app->folderModel->getAllFolders();
 
         foreach($folders as $folder) {
-            $this->_createFolderList($folder, $list, 0, $filter, $createLink, $folders);
+            $dflh->createFolderList($folder, $list, 0, $filter, $link, $folders);
         }
 
         if(count($folders) > 0) {
@@ -1057,52 +1060,6 @@ class Documents extends APresenter {
 
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }
-
-    private function _createFolderList(Folder $folder, array &$list, int $level, ?string $filter, callable $linkCreationMethod, array $folderArray = []) {
-        global $app;
-
-        $link = 'showAll';
-        if($filter != null) {
-            $link = 'showFiltered';
-        }
-
-        if(empty($folderArray)) {
-            $folderArray = $app->folderModel->getAllFolders();
-        }
-
-        $getFoldersForIdParentFolder = function(int $idParentFolder) use($folderArray) {
-            $return = [];
-            foreach($folderArray as $fa) {
-                if($fa->getIdParentFolder() == $idParentFolder) {
-                    $return[] = $fa;
-                }
-            }
-            return $return;
-        };
-
-        $childFolders = $getFoldersForIdParentFolder($folder->getId());
-
-        $folderLink = $linkCreationMethod($link, $folder->getName(), $folder->getId(), $filter);
-        
-        $spaces = '&nbsp;&nbsp;';
-
-        if($level > 0) {
-            for($i = 0; $i < $level; $i++) {
-                $spaces .= '&nbsp;&nbsp;';
-            }
-        }
-
-        if(!array_key_exists($folder->getId(), $list)) {
-            $list[$folder->getId()] = $spaces . $folderLink . '<br>';
-        }
-
-        if(count($childFolders) > 0) {
-            foreach($childFolders as $cf) {
-                $this->_createFolderList($cf, $list, $level + 1, $filter, $linkCreationMethod, $folderArray);
-            }
-        }
-    }
-
     private function internalCreateSharedWithMeDocumentGrid(int $page) {
         return '
             <script type="text/javascript">

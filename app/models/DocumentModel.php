@@ -131,7 +131,7 @@ class DocumentModel extends AModel {
         if($idFolder !== NULL) {
             $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
                 $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
@@ -155,7 +155,7 @@ class DocumentModel extends AModel {
         if($idFolder !== NULL) {
             $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
                 $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
@@ -295,7 +295,7 @@ class DocumentModel extends AModel {
         if($idFolder !== NULL) {
             $cond = 'WHERE ' . DocumentMetadata::ID_FOLDER . ' = ' . $idFolder;
         } else {
-            if($useConfigValueToShowAll === TRUE && AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+            if($useConfigValueToShowAll === TRUE && AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
                 $cond = 'WHERE ' . DocumentMetadata::ID_FOLDER . ' IS NULL';
             }
         }
@@ -489,7 +489,7 @@ class DocumentModel extends AModel {
         if($idFolder != null) {
             $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
                 $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
@@ -512,7 +512,7 @@ class DocumentModel extends AModel {
         if($idFolder != null) {
             $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
                 $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
@@ -683,7 +683,7 @@ class DocumentModel extends AModel {
         if($idFolder != null) {
             $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
                 $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
