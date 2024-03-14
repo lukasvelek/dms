@@ -17,7 +17,7 @@ class UserLogout extends APresenter {
     protected function logoutUser() {
         global $app;
         if($app->userAuthenticator->logoutCurrentUser()) {
-            CacheManager::invalidateAllCache();
+            //CacheManager::invalidateAllCache();
             $app->clearFlashMessage();
             $app->redirect($app::URL_LOGIN_PAGE);
         }
