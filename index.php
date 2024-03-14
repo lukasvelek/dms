@@ -143,7 +143,7 @@ $title = 'DMS | ' . $app->currentPresenter->getTitle();
         <div id="cover">
             <img style="position: fixed; top: 50%; left: 49%;" src='img/loading.gif' width='32' height='32'>
         </div>
-        <div id="notifications" style="display: none;">Notifications (0)</div>
+        <div id="notifications" style="display: none;"><?php if(isset($_SESSION['user_notification_count'])) { echo('Notifications (' . $_SESSION['user_notification_count'] . ')'); } else { echo('Notifications (0)'); } ?></div>
         <?php
 
         $app->showPage();
