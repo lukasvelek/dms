@@ -1061,13 +1061,14 @@ class Documents extends APresenter {
 
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }
+
     private function internalCreateSharedWithMeDocumentGrid(int $page) {
-        return '
-            <script type="text/javascript">
-            loadDocumentsSharedWithMe("' . $page . '");
-            </script> 
-            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
-        ';
+        $code = '<script type="text/javascript">';
+        $code .= 'loadDocumentsSharedWithMe("' . $page . '");';
+        $code .= '</script>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div>' . GridBuilder::createEmptyGrid(['Actions', 'Name', 'Author', 'Status', 'Folder', 'Shared from', 'Shared to', 'Shared by'], true, 'select-all', 'selectAllDocumentEntries()');
+
+        return $code;
     }
 
     private function internalCreateCustomFilterDocumentsGrid(int $idFilter) {
