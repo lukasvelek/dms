@@ -17,6 +17,7 @@ class GridBuilder {
     private mixed $dataSourceCallback;
 
     private bool $reverse;
+    private bool $alwaysDrawHeaderCheckbox;
 
     public function __construct() {
         $this->columns = [];
@@ -31,14 +32,16 @@ class GridBuilder {
         $this->dataSourceCallback = null;
         $this->emptyDataSourceMessage = 'No data found';
         $this->reverse = false;
+        $this->alwaysDrawHeaderCheckbox = false;
     }
 
     public function reverseData() {
         $this->reverse = true;
     }
 
-    public function addHeaderCheckbox(string $id, string $onChange) {
+    public function addHeaderCheckbox(string $id, string $onChange, bool $drawAlways = false) {
         $this->headerCheckbox = '<input type="checkbox" id="' . $id . '" onchange="' . $onChange . '">';
+        $this->alwaysDrawHeaderCheckbox = $drawAlways;
     }
 
     public function addRowCheckbox(callable $renderRowCheckbox) {
@@ -84,7 +87,7 @@ class GridBuilder {
 
         // title
         $headerRow = '<tr>';
-        if(!is_null($this->headerCheckbox) && is_callable($this->renderRowCheckbox)) {
+        if(!is_null($this->headerCheckbox) && (is_callable($this->renderRowCheckbox) || $this->alwaysDrawHeaderCheckbox)) {
             $headerRow .= '<th>' . $this->headerCheckbox . '</th>';
         }
         if(!empty($this->actions)) {
@@ -188,6 +191,16 @@ class GridBuilder {
         $code .= '</table>';
 
         return $code;
+    }
+
+    public static function createEmptyGrid(array $columns, bool $addHeaderCheckbox = false, string $headerCheckboxId = '', string $headerCheckboxAction = '') {
+        $gb = new self();
+        $gb->addColumns($columns);
+        $gb->addDataSource([]);
+        if($addHeaderCheckbox === TRUE) {
+            $gb->addHeaderCheckbox($headerCheckboxId, $headerCheckboxAction, true);
+        }
+        return $gb->build();
     }
 }
 

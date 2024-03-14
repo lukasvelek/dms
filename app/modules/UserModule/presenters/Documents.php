@@ -24,6 +24,7 @@ use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DocumentFolderListHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
+use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
 class Documents extends APresenter {
@@ -404,7 +405,7 @@ class Documents extends APresenter {
         }
 
         $code .= '</script>';
-        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div>' . GridBuilder::createEmptyGrid(['Actions', 'Name', 'Author', 'Status', 'Folder', 'Date created', 'Date updated'], true, 'select-all', 'selectAllDocumentEntries(\'' . ($idFolder ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')');
 
         return $code;
     }
