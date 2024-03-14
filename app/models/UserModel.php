@@ -15,6 +15,15 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function composeStandardUserQuery(array $selects = ['*']) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select($selects)
+            ->from('users');
+
+        return $qb;
+    }
+
     public function getUsersWithOffset(int $limit, int $offset) {
         $qb = $this->qb(__METHOD__);
 

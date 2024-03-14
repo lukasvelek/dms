@@ -54,6 +54,7 @@ use DMS\Modules\IPresenter;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserRepository;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -140,6 +141,7 @@ class Application {
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
+    public UserRepository $userRepository;
 
     public MailManager $mailManager;
 
@@ -254,6 +256,7 @@ class Application {
         
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
+        $this->userRepository = new UserRepository($this->conn, $this->logger, $this->userModel, $this->actionAuthorizator);
         
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
         $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager, $this->externalEnumComponent, $this->fsManager);

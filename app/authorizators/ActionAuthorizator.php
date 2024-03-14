@@ -3,6 +3,7 @@
 namespace DMS\Authorizators;
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -147,6 +148,10 @@ class ActionAuthorizator extends AAuthorizator {
         }
 
         return $result ? true : false;
+    }
+
+    public function canEditUser(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::EDIT_USER, $idCallingUser, $checkCache);
     }
 }
 
