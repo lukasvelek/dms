@@ -406,7 +406,7 @@ class Application {
 
         // User is allowed to visit specific pages before logging in
         if($this->currentPresenter->allowWhenLoginProcess === false && isset($_SESSION['login_in_process'])) {
-            $this->flashMessage('You must login first!', 'warn');
+            $this->flashMessage('You have to be logged in in order to visit this page.', 'warn');
             $this->redirect(self::URL_LOGIN_PAGE);
         }
 

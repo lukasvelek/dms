@@ -98,9 +98,9 @@ if(isset($_SESSION['id_current_user'])) {
 if(!is_null($app->user)) {
     if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::WARNING) {
         $changeLink = '<a style="color: red; text-decoration: underline" href="?page=UserModule:Users:showChangePasswordForm&id=' . $app->user->getId() . '">here</a>';
-        $app->flashMessage('Your password is outdated. You should update it! Click ' . $changeLink . ' to update password.', FlashMessageTypes::WARNING);
+        $app->flashMessage('Your password is outdated. You should update it. Click ' . $changeLink . ' to update password.', FlashMessageTypes::WARNING);
     } else if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::FORCE) {
-        $app->flashMessage('Your password is outdated. You must update it!', FlashMessageTypes::ERROR);
+        $app->flashMessage('Your password is outdated. You must update it.', FlashMessageTypes::ERROR);
         
         if($app->currentUrl != 'UserModule:UserLogout:logoutUser') {
             $app->redirect($app::URL_LOGOUT_PAGE);
