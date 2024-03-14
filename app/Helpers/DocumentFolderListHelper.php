@@ -6,13 +6,33 @@ use DMS\Entities\Folder;
 use DMS\Models\FolderModel;
 use DMS\UI\LinkBuilder;
 
+/**
+ * DocumentFolderListHelper helps with creating folder list
+ * 
+ * @author Lukas Velek
+ */
 class DocumentFolderListHelper {
     private FolderModel $folderModel;
 
+    /**
+     * Class constructor
+     * 
+     * @param FolderModel $folderModel FolderModel
+     */
     public function __construct(FolderModel $folderModel) {
         $this->folderModel = $folderModel;
     }
 
+    /**
+     * Creates a folder list
+     * 
+     * @param Folder $folder Current folder
+     * @param array $list Folder link list
+     * @param int $level Current folder nest level
+     * @param null|string $filter Current filter
+     * @param string $defaultLink Default action used in folder links
+     * @param array $folderArray Array of folders
+     */
     public function createFolderList(Folder $folder, array &$list, int $level, ?string $filter, string $defaultLink = 'showAll', array $folderArray = []) {
         $link = 'showAll';
         if($filter !== NULL) {
@@ -46,6 +66,15 @@ class DocumentFolderListHelper {
         }
     }
 
+    /**
+     * Creates a folder link
+     * 
+     * @param string $action Page to redirect to
+     * @param string $text Link text
+     * @param null|int $idFolder Folder ID
+     * @param null|string $filter Filter
+     * @return string HTML link code
+     */
     public function createFolderLink(string $action, string $text, ?int $idFolder, ?string $filter) {
         $url = [
             'page' => $action
@@ -62,6 +91,13 @@ class DocumentFolderListHelper {
         return LinkBuilder::createAdvLink($url, $text);
     }
 
+    /**
+     * Gets all folders for a parent folder
+     * 
+     * @param int $idParentFolder Parent Folder ID
+     * @param array $folderArray Array of folders
+     * @return array Found folders that are childer of the given parent folder ID
+     */
     private function getFoldersForIdParentFolder(int $idParentFolder, array $folderArray) {
         $folders = [];
         foreach($folderArray as $fa) {
