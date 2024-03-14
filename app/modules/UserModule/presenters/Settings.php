@@ -23,6 +23,7 @@ use DMS\Entities\ServiceEntity;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Helpers\DocumentFolderListHelper;
 use DMS\Helpers\GridDataHelper;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
@@ -730,7 +731,9 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Metadata manager',
-            '$SETTINGS_GRID$' => $metadataGrid
+            '$SETTINGS_GRID$' => $metadataGrid/*,
+            '$CURRENT_FOLDER_TITLE$' => '',
+            '$FOLDER_LIST$' => DocumentFolderListHelper::getFolderList($app->folderModel, 'showMetadata') ''*/
         );
 
         $data['$LINKS$'][] = LinkBuilder::createLink('ExternalEnumViewer:showList', 'External enums') . '&nbsp;&nbsp;';

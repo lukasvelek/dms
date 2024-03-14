@@ -2,6 +2,7 @@
 
 namespace DMS\Helpers;
 
+use DMS\Core\AppConfiguration;
 use DMS\Entities\Folder;
 use DMS\Models\FolderModel;
 use DMS\UI\LinkBuilder;
@@ -34,9 +35,8 @@ class DocumentFolderListHelper {
      * @param array $folderArray Array of folders
      */
     public function createFolderList(Folder $folder, array &$list, int $level, ?string $filter, string $defaultLink = 'showAll', array $folderArray = []) {
-        $link = 'showAll';
         if($filter !== NULL) {
-            $link = 'showFiltered';
+            $defaultLink = 'showFiltered';
         }
 
         if(empty($folderArray)) {
@@ -45,7 +45,7 @@ class DocumentFolderListHelper {
 
         $childFolders = $this->getFoldersForIdParentFolder($folder->getId(), $folderArray);
 
-        $folderLink = $this->createFolderLink($link, $folder->getName(), $folder->getId(), $filter);
+        $folderLink = $this->createFolderLink($defaultLink, $folder->getName(), $folder->getId(), $filter);
 
         $spaces = '&nbsp;&nbsp;';
 
@@ -106,6 +106,27 @@ class DocumentFolderListHelper {
             }
         }
         return $folders;
+    }
+
+    /**
+     * Static method that generates a list from all folders
+     * 
+     * @param FolderModel $folderModel FolderModel
+     * @param string $action Action to be used in folder links
+     * @return string List of folder links
+     */
+    public static function getFolderList(FolderModel $folderModel, string $action) {
+        $dflh = new self($folderModel);
+
+        $list = [
+            '&nbsp;&nbsp;' . $dflh->createFolderLink($action, 'Main folder' . (AppConfiguration::getGridMainFolderHasAllDocuments() ? ' (all documents)' : ''), null, null) . '<br>'
+        ];
+        $folders = $dflh->folderModel->getAllFolders();
+        foreach($folders as $folder) {
+            $dflh->createFolderList($folder, $list, 0, null, $action, $folders);
+        }
+
+        return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }
 }
 
