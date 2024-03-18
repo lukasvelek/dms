@@ -55,6 +55,7 @@ use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
 use DMS\Repositories\UserRepository;
+use Exception;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -414,7 +415,12 @@ class Application {
         }
 
         // Load page body
-        $pageBody = $module->currentPresenter->performAction($action);
+        try {
+            $pageBody = $module->currentPresenter->performAction($action);
+        } catch(Exception $e) {
+            $this->flashMessage($e->getMessage(), 'error');
+            $this->redirect(self::URL_HOME_PAGE);
+        }
 
 
         // --- PAGE CONTENT CREATION ---
@@ -656,6 +662,11 @@ class Application {
                 }
             }
         }
+    }
+
+    public function throwError(string $message, array $redirectUrl = ['page' => 'UserModule:HomePage:showHomepage']) {
+        $this->flashMessage($message, 'error');
+        $this->redirect($redirectUrl['page'], $redirectUrl);
     }
 
     /**

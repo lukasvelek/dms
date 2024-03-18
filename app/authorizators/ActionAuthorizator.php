@@ -11,6 +11,7 @@ use DMS\Entities\User;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\UserRightModel;
+use Exception;
 
 /**
  * ActionAuthorizator checks if an entity is allowed to perform an action.
@@ -176,6 +177,12 @@ class ActionAuthorizator extends AAuthorizator {
 
     public function canCreateDocument(?int $idCallingUser = null, bool $checkCache = true) {
         return $this->checkActionRight(UserActionRights::CREATE_DOCUMENT, $idCallingUser, $checkCache);
+    }
+
+    public function throwExceptionIfCannotGenerateDocumentReports(?int $idCallingUser = null, bool $checkCache = true) {
+        if($this->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT, $idCallingUser, $checkCache) === TRUE) {
+            throw new Exception('You are not authorized to generate document reports.');
+        }
     }
 }
 

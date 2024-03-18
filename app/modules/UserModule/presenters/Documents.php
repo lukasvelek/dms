@@ -21,6 +21,7 @@ use DMS\Helpers\DocumentFolderListHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
+use Exception;
 
 class Documents extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -204,6 +205,12 @@ class Documents extends APresenter {
 
     protected function showReportForm() {
         global $app;
+
+        try {
+            $app->actionAuthorizator->throwExceptionIfCannotGenerateDocumentReports();
+        } catch (Exception $e) {
+            $app->throwError($e->getMessage(), ['page' => 'showAll']);
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
 
