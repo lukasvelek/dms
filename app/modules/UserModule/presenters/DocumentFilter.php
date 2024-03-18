@@ -31,7 +31,7 @@ class DocumentFilter extends APresenter {
     protected function unpinFilter() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_filter'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, ['page' => 'showFilters']);
 
         $idFilter = $this->get('id_filter');
         $ribbon = $app->ribbonModel->getRibbonForIdDocumentFilter($idFilter);
@@ -57,7 +57,7 @@ class DocumentFilter extends APresenter {
     protected function pinFilter() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_filter'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, ['page' => 'showFilters']);
 
         $idFilter = $this->get('id_filter');
         $filter = $app->filterModel->getDocumentFilterById($idFilter);

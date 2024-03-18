@@ -23,6 +23,11 @@ class DocumentGenerator extends APresenter {
             $app->redirect('HomePage:showHomepage');
         }
 
+        if(!$app->actionAuthorizator->canUseDocumentGenerator()) {
+            $app->flashMessage('You are not authorized to use document generator.', 'error');
+            $app->redirect('Documents:showAll');
+        }
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/document-generator.html');
 
         $data = array(

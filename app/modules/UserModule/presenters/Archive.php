@@ -24,7 +24,7 @@ class Archive extends APresenter {
     protected function performBulkAction() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['select', 'action']);
+        $app->flashMessageIfNotIsset(['select', 'action'], true, ['page' => 'showDocuments']);
 
         $ids = $this->get('select', false);
         $action = $this->get('action');

@@ -153,6 +153,30 @@ class ActionAuthorizator extends AAuthorizator {
     public function canEditUser(?int $idCallingUser = null, bool $checkCache = true) {
         return $this->checkActionRight(UserActionRights::EDIT_USER, $idCallingUser, $checkCache);
     }
+
+    public function canUseDocumentGenerator(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::USE_DOCUMENT_GENERATOR, $idCallingUser, $checkCache);
+    }
+
+    public function canDeleteDocumentReports(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::DELETE_DOCUMENT_REPORT_QUEUE_ENTRY, $idCallingUser, $checkCache);
+    }
+
+    public function canMoveEntitiesFromToArchive(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::MOVE_ENTITIES_FROM_TO_ARCHIVE, $idCallingUser, $checkCache);
+    }
+
+    public function canMoveEntitiesWithinArchive(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::MOVE_ENTITIES_WITHIN_ARCHIVE, $idCallingUser, $checkCache);
+    }
+
+    public function canGenerateDocumentReports(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT, $idCallingUser, $checkCache);
+    }
+
+    public function canCreateDocument(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::CREATE_DOCUMENT, $idCallingUser, $checkCache);
+    }
 }
 
 ?>

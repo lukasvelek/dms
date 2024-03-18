@@ -36,6 +36,11 @@ class Documents extends APresenter {
 
         $app->flashMessageIfNotIsset(['ids', 'archive_document'], true, ['page' => 'showAll']);
 
+        if(!$app->actionAuthorizator->canMoveEntitiesFromToArchive()) {
+            $app->flashMessage('You are not authorized to move entities to archive.', 'error');
+            $app->redirect('showAll');
+        }
+
         $ids = $this->get('ids', false);
         $archiveDocument = $this->post('archive_document');
 
@@ -86,6 +91,11 @@ class Documents extends APresenter {
         global $app;
 
         $app->flashMessageIfNotIsset(['id_folder', 'filter', 'limit_range', 'order', 'total_count', 'file_format']);
+
+        if(!$app->actionAuthorizator->canGenerateDocumentReports()) {
+            $app->flashMessage('You are not authorized to generate document reports.', 'error');
+            $app->redirect('showAll');
+        }
 
         $idFolder = $this->get('id_folder');
         $totalCount = $this->get('total_count');
@@ -193,7 +203,14 @@ class Documents extends APresenter {
     }
 
     protected function showReportForm() {
+        global $app;
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
+
+        if(!$app->actionAuthorizator->canGenerateDocumentReports()) {
+            $app->flashMessage('You are not authorized to generate document reports.', 'error');
+            $app->redirect('showAll');
+        }
 
         $data = array(
             '$PAGE_TITLE$' => 'Document report generator',
@@ -439,6 +456,11 @@ class Documents extends APresenter {
 
     protected function showNewForm() {
         global $app;
+
+        if(!$app->actionAuthorizator->canCreateDocument()) {
+            $app->flashMessage('You are not authorized to create a new document.', 'error');
+            $app->redirect('showAll');
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
 

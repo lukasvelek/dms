@@ -172,7 +172,12 @@ class DocumentReports extends APresenter {
     protected function deleteGeneratedReport() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['id']);
+        $app->flashMessageIfNotIsset(['id'], true, ['page' => 'showAll']);
+
+        if(!$app->actionAuthorizator->canDeleteDocumentReports()) {
+            $app->flashMessage('You are not authorized to delete document reports.', 'error');
+            $app->redirect('showAll');
+        }
 
         $id = $this->get('id');
 

@@ -346,7 +346,7 @@ class Application {
         $page .= $hashtag;
 
         header('Location: ' . $page);
-        die();
+        exit;
     }
 
     /**
