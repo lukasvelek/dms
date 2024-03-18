@@ -18,6 +18,7 @@ class GridBuilder {
 
     private bool $reverse;
     private bool $alwaysDrawHeaderCheckbox;
+    private bool $displayNoEntriesMessage;
 
     public function __construct() {
         $this->columns = [];
@@ -33,6 +34,7 @@ class GridBuilder {
         $this->emptyDataSourceMessage = 'No data found';
         $this->reverse = false;
         $this->alwaysDrawHeaderCheckbox = false;
+        $this->displayNoEntriesMessage = true;
     }
 
     public function reverseData() {
@@ -82,6 +84,10 @@ class GridBuilder {
         $this->tableBorder = $border;
     }
 
+    public function setDisplayNoEntriesMessage(bool $display = true) {
+        $this->displayNoEntriesMessage = $display;
+    }
+
     public function build() {
         $code = '<table border="' . $this->tableBorder . '" id="tablebuilder-table">';
 
@@ -120,7 +126,10 @@ class GridBuilder {
             }
 
             $entityRow .= ' colspan="' . $colspan . '" id="grid-empty-message">' . $this->emptyDataSourceMessage . '</td></tr>';
-            $entityRows[] = $entityRow;
+
+            if($this->displayNoEntriesMessage === TRUE) {
+                $entityRows[] = $entityRow;
+            }
         } else {
             if(empty($this->dataSourceArray)) {
                 $this->dataSourceArray = call_user_func($this->dataSourceCallback);
@@ -136,7 +145,9 @@ class GridBuilder {
                 }
 
                 $entityRow .= ' colspan="' . $colspan . '" id="grid-empty-message">' . $this->emptyDataSourceMessage . '</td></tr>';
-                $entityRows[] = $entityRow;
+                if($this->displayNoEntriesMessage === TRUE) {
+                    $entityRows[] = $entityRow;
+                }
             } else {
                 foreach($this->dataSourceArray as $entity) {
                     $entityRow = '<tr>';
@@ -193,13 +204,14 @@ class GridBuilder {
         return $code;
     }
 
-    public static function createEmptyGrid(array $columns, bool $addHeaderCheckbox = false, string $headerCheckboxId = '', string $headerCheckboxAction = '') {
+    public static function createEmptyGrid(array $columns, bool $displayNoDataMessage = false, bool $addHeaderCheckbox = false, string $headerCheckboxId = '', string $headerCheckboxAction = '') {
         $gb = new self();
         $gb->addColumns($columns);
         $gb->addDataSource([]);
         if($addHeaderCheckbox === TRUE) {
             $gb->addHeaderCheckbox($headerCheckboxId, $headerCheckboxAction, true);
         }
+        $gb->setDisplayNoEntriesMessage($displayNoDataMessage);
         return $gb->build();
     }
 }

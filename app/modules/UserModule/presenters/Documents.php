@@ -4,27 +4,22 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Components\DocumentReports\ADocumentReport;
 use DMS\Constants\ArchiveType;
-use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\FileStorageTypes;
 use DMS\Constants\Metadata\DocumentMetadata;
-use DMS\Constants\Metadata\DocumentMetadataHistoryMetadata;
 use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
-use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
-use DMS\Entities\Folder;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DocumentFolderListHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
-use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
 class Documents extends APresenter {
@@ -405,7 +400,7 @@ class Documents extends APresenter {
         }
 
         $code .= '</script>';
-        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div>' . GridBuilder::createEmptyGrid(['Actions', 'Name', 'Author', 'Status', 'Folder', 'Date created', 'Date updated'], true, 'select-all', 'selectAllDocumentEntries(\'' . ($idFolder ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')');
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
     }
@@ -1066,18 +1061,18 @@ class Documents extends APresenter {
         $code = '<script type="text/javascript">';
         $code .= 'loadDocumentsSharedWithMe("' . $page . '");';
         $code .= '</script>';
-        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div>' . GridBuilder::createEmptyGrid(['Actions', 'Name', 'Author', 'Status', 'Folder', 'Shared from', 'Shared to', 'Shared by'], true, 'select-all', 'selectAllDocumentEntries()');
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
 
         return $code;
     }
 
     private function internalCreateCustomFilterDocumentsGrid(int $idFilter) {
-        return '
-            <script type="text/javascript">
-            loadDocumentsCustomFilter("' . $idFilter . '");
-            </script> 
-            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
-        ';
+        $code = '<script type="text/javascript">';
+        $code .= 'loadDocumentsCustomFilter("' . $idFilter . '");';
+        $code .= '</script>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
+
+        return $code;
     }
 
     private function internalCreateGridPageControl(int $page, ?string $idFolder, string $action = 'showAll') {
