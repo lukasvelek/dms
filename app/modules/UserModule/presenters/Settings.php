@@ -440,9 +440,16 @@ class Settings extends APresenter {
         
         $data = array(
             '$PAGE_TITLE$' => $pageTitle,
-            '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>',
+            '$LINKS$' => [],
             '$FOLDERS_GRID$' => $foldersGrid
         );
+
+        if($backLink !== '') {
+            $data['$LINKS$'][] = $backLink . '&nbsp;&nbsp;';
+        }
+        if($newEntityLink !== '') {
+            $data['$LINKS$'][] = $newEntityLink;
+        }
 
         $this->templateManager->fill($data, $template);
 
