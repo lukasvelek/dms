@@ -345,7 +345,7 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns([/*'lock' => 'Lock'*/, 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addColumns([/*'lock' => 'Lock',*/ 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
         /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
             return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked');
         });*/
@@ -412,7 +412,7 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns([/*'lock' => 'Lock'*/, 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addColumns([/*'lock' => 'Lock',*/ 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
         /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
             return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked', 'red', 'green');
         });*/
