@@ -7,6 +7,7 @@ use DMS\Constants\DocumentLockType;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\DocumentLockEntity;
+use DMS\Helpers\TextHelper;
 use DMS\Models\DocumentLockModel;
 use DMS\UI\LinkBuilder;
 
@@ -71,15 +72,13 @@ class DocumentLockComponent extends AComponent {
     }
 
     public function createLockText(DocumentLockEntity $lock, int $idCallingUser) {
-        $html = '<span style="color: $COLOR$">$TEXT$</span>';
-
         switch($lock->getType()) {
             case DocumentLockType::PROCESS_LOCK:
-                $html = str_replace(['$COLOR$', '$TEXT$'], ['orange', DocumentLockType::$texts[$lock->getType()]], $html);
+                $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()], 'orange');
                 break;
 
             case DocumentLockType::USER_LOCK:
-                $html = str_replace(['$COLOR$', '$TEXT$'], ['blue', DocumentLockType::$texts[$lock->getType()]], $html);
+                $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()], 'blue');
                 
                 if($lock->getIdUser() == $idCallingUser) {
                     $html = LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:unlockDocumentForUser', 'id_document' => $lock->getIdDocument(), 'id_user' => $lock->getIdUser()], $html);

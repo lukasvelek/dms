@@ -4,9 +4,11 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
+use DMS\Constants\DocumentLockType;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
@@ -16,6 +18,7 @@ use DMS\Entities\Document;
 use DMS\Entities\DocumentMetadataHistoryEntity;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Helpers\TextHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
@@ -570,6 +573,25 @@ class SingleDocument extends APresenter {
         $dateUpdated = $document->getDateUpdated();
         $dateUpdated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateUpdated, $app->user);
         $form = 'Physical';
+        $lockedBy = 'Unlocked';
+
+        $lock = $app->documentLockComponent->isDocumentLocked($document->getId());
+
+        if($lock !== FALSE) {
+            if($lock->getType() == DocumentLockType::USER_LOCK) {
+                $user = $app->userModel->getUserById($lock->getIdUser());
+
+                $text = TextHelper::colorText($user->getFullname(), 'blue');
+
+                $lockedBy = LinkBuilder::createAdvLink(['page' => 'UserModule:Users:showProfile', 'id' => $lock->getIdUser()], $text);
+            } else {
+                $process = $app->processModel->getProcessById($lock->getIdProcess());
+
+                $text = TextHelper::colorText('#' . $process->getId() . ' - ' . ProcessTypes::$texts[$process->getType()], 'orange');
+
+                $lockedBy = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleProcess:showProcess', 'id' => $lock->getIdProcess()], $text);
+            }
+        }
 
         if($document->getFile() !== NULL) {
             $form = 'Electronic';
@@ -586,7 +608,8 @@ class SingleDocument extends APresenter {
             'Folder' => $folder,
             'Date created' => $dateCreated,
             'Date updated' => $dateUpdated,
-            'Form' => $form
+            'Form' => $form,
+            'Document lock' => $lockedBy
         );
 
         foreach($document->getMetadata() as $k => $v) {
