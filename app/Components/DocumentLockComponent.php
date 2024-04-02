@@ -9,15 +9,18 @@ use DMS\Core\Logger\Logger;
 use DMS\Entities\DocumentLockEntity;
 use DMS\Helpers\TextHelper;
 use DMS\Models\DocumentLockModel;
+use DMS\Models\UserModel;
 use DMS\UI\LinkBuilder;
 
 class DocumentLockComponent extends AComponent {
     private DocumentLockModel $dlm;
+    private UserModel $userModel;
 
-    public function __construct(Database $db, Logger $logger, DocumentLockModel $dlm) {
+    public function __construct(Database $db, Logger $logger, DocumentLockModel $dlm, UserModel $userModel) {
         parent::__construct($db, $logger);
 
         $this->dlm = $dlm;
+        $this->userModel = $userModel;
     }
 
     public function unlockDocument(int $idDocument) {
@@ -78,10 +81,13 @@ class DocumentLockComponent extends AComponent {
                 break;
 
             case DocumentLockType::USER_LOCK:
-                $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()], DocumentLockType::$colors[$lock->getType()]);
+                $user = $this->userModel->getUserById($idCallingUser);
                 
                 if($lock->getIdUser() == $idCallingUser) {
+                    $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()] . ' (Me)', DocumentLockType::$colors[$lock->getType()]);
                     $html = LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:unlockDocumentForUser', 'id_document' => $lock->getIdDocument(), 'id_user' => $lock->getIdUser()], $html);
+                } else {
+                    $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()] . ' (' . $user->getFullname() . ')', DocumentLockType::$colors[$lock->getType()]);
                 }
 
                 break;

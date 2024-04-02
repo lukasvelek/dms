@@ -231,7 +231,7 @@ class Application {
             'documentLockModel' => $this->documentLockModel
         );
         
-        $this->documentLockComponent = new DocumentLockComponent($this->conn, $this->logger, $this->documentLockModel);
+        $this->documentLockComponent = new DocumentLockComponent($this->conn, $this->logger, $this->documentLockModel, $this->userModel);
 
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);

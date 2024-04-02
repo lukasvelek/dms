@@ -233,7 +233,7 @@ if(isset($_SESSION['id_current_user'])) {
 
 }
 
-$documentLockComponent = new DocumentLockComponent($db, $logger, $documentLockModel);
+$documentLockComponent = new DocumentLockComponent($db, $logger, $documentLockModel, $userModel);
 
 $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
