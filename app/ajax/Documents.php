@@ -13,6 +13,7 @@ use DMS\Core\CypherManager;
 use DMS\Entities\Document;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Helpers\GridDataHelper;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
@@ -308,7 +309,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user;
+    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user, $processComponent;
 
     $returnArray = [];
 
@@ -344,7 +345,10 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addColumns([/*'lock' => 'Lock'*/, 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
+            return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked');
+        });*/
         $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
         });
@@ -408,7 +412,10 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addColumns([/*'lock' => 'Lock'*/, 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
+            return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked', 'red', 'green');
+        });*/
         $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
         });
