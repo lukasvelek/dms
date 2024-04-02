@@ -184,6 +184,7 @@ class ProcessComponent extends AComponent {
         }
 
         if($start) {
+            // process
             $this->models['processModel']->insertNewProcess($data);
             $this->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
             
@@ -193,10 +194,16 @@ class ProcessComponent extends AComponent {
                 $idProcess = $this->models['processModel']->getLastInsertedIdProcess();
             }, __METHOD__);
 
-            $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
-                'id_process' => $idProcess,
-                'id_user' => $_SESSION['id_current_user']
-            ));
+            if($idProcess !== NULL) {
+                // notification
+                $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
+                    'id_process' => $idProcess,
+                    'id_user' => $_SESSION['id_current_user']
+                ));
+
+                // document lock
+                $this->documentLockComponent->lockDocumentForProcess($idDocument, $idProcess);
+            }
 
             return true;
         } else {

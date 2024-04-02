@@ -573,7 +573,7 @@ class SingleDocument extends APresenter {
         $dateUpdated = $document->getDateUpdated();
         $dateUpdated = DatetimeFormatHelper::formatDateByUserDefaultFormat($dateUpdated, $app->user);
         $form = 'Physical';
-        $lockedBy = 'Unlocked';
+        $lockedBy = TextHelper::colorText('Unlock', 'green');
 
         $lock = $app->documentLockComponent->isDocumentLocked($document->getId());
 
@@ -581,13 +581,13 @@ class SingleDocument extends APresenter {
             if($lock->getType() == DocumentLockType::USER_LOCK) {
                 $user = $app->userModel->getUserById($lock->getIdUser());
 
-                $text = TextHelper::colorText($user->getFullname(), 'blue');
+                $text = TextHelper::colorText($user->getFullname(), DocumentLockType::$colors[$lock->getType()]);
 
                 $lockedBy = LinkBuilder::createAdvLink(['page' => 'UserModule:Users:showProfile', 'id' => $lock->getIdUser()], $text);
             } else {
                 $process = $app->processModel->getProcessById($lock->getIdProcess());
 
-                $text = TextHelper::colorText('#' . $process->getId() . ' - ' . ProcessTypes::$texts[$process->getType()], 'orange');
+                $text = TextHelper::colorText('#' . $process->getId() . ' - ' . ProcessTypes::$texts[$process->getType()], DocumentLockType::$colors[$lock->getType()]);
 
                 $lockedBy = LinkBuilder::createAdvLink(['page' => 'UserModule:SingleProcess:showProcess', 'id' => $lock->getIdProcess()], $text);
             }

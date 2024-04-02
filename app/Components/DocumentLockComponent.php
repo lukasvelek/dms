@@ -74,11 +74,11 @@ class DocumentLockComponent extends AComponent {
     public function createLockText(DocumentLockEntity $lock, int $idCallingUser) {
         switch($lock->getType()) {
             case DocumentLockType::PROCESS_LOCK:
-                $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()], 'orange');
+                $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()], DocumentLockType::$colors[$lock->getType()]);
                 break;
 
             case DocumentLockType::USER_LOCK:
-                $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()], 'blue');
+                $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()], DocumentLockType::$colors[$lock->getType()]);
                 
                 if($lock->getIdUser() == $idCallingUser) {
                     $html = LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:unlockDocumentForUser', 'id_document' => $lock->getIdDocument(), 'id_user' => $lock->getIdUser()], $html);

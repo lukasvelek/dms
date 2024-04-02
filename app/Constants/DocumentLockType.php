@@ -13,6 +13,11 @@ class DocumentLockType {
         self::USER_LOCK => 'User',
         self::PROCESS_LOCK => 'Process'
     ];
+
+    public static $colors = [
+        self::USER_LOCK => 'blue',
+        self::PROCESS_LOCK => 'brown'
+    ];
 }
 
 ?>
