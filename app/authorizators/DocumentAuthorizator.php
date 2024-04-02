@@ -51,7 +51,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the action is allowed or false if not
      */
     public function canMoveToArchiveDocument(Document $document, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }
@@ -76,7 +76,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the action is allowed or false if not
      */
     public function canMoveFromArchiveDocument(Document $document, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }
@@ -101,7 +101,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the document can be archived and false if not
      */
     public function canArchive(Document $document, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }
@@ -122,7 +122,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the document can be approved for archivation and false if not
      */
     public function canApproveArchivation(Document $document, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }
@@ -144,7 +144,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the document can be declined for archivation and false if not
      */
     public function canDeclineArchivation(Document $document, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }
@@ -166,7 +166,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the document can be deleted and false if not
      */
     public function canDeleteDocument(Document $document, bool $checkStatus = true, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }
@@ -192,7 +192,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the document can be shredded and false if not
      */
     public function canShred(Document $document, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }
@@ -221,7 +221,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the action is allowed
      */
     public function canSuggestForShredding(Document $document, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }
@@ -250,7 +250,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the action is allowed
      */
     public function canApproveShredding(Document $document, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }
@@ -279,7 +279,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @return bool True if the action is allowed
      */
     public function canDeclineShredding(Document $document, bool $checkForExistingProcess = false) {
-        if($checkForExistingProcess) {
+        if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
             }

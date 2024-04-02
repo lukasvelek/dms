@@ -2,33 +2,42 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\ProcessMetadata;
+use DMS\Constants\Metadata\ProcessStatsMetadata;
 use DMS\Constants\ProcessStatus;
-use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Process;
-use DMS\Widgets\HomeDashboard\ProcessStats;
 
 class ProcessModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
     }
 
+    public function composeStandardProcessQuery(array $selectValues = ['*']) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select($selectValues)
+            ->from('processes');
+
+        return $qb;
+    }
+
     public function getFinishedProcessesWithUserCount(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['*'])
+        $qb ->select([ProcessMetadata::ID])
             ->from('processes')
             ->where('WHERE ' . $this->xb()
                                     ->lb()
-                                        ->where('status = ?', [ProcessStatus::FINISHED])
+                                        ->where(ProcessMetadata::STATUS . ' = ?', [ProcessStatus::FINISHED])
                                     ->rb()
                                     ->and()
                                     ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
+                                        ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
                                     ->rb()
                                     ->build())
             ->execute();
@@ -39,18 +48,18 @@ class ProcessModel extends AModel {
     public function getProcessesWithUserCount(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['*'])
+        $qb ->select([ProcessMetadata::ID])
             ->from('processes')
             ->where('WHERE ' . $this->xb()
                                     ->lb()
-                                        ->where('status <> ?', [ProcessStatus::FINISHED])
+                                        ->where(ProcessMetadata::STATUS . ' <> ?', [ProcessStatus::FINISHED])
                                     ->rb()
                                     ->and()
                                     ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
+                                        ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
                                     ->rb()
                                     ->build())
             ->execute();
@@ -61,18 +70,18 @@ class ProcessModel extends AModel {
     public function getProcessesWhereUserIsAuthorCount(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['*'])
+        $qb ->select([ProcessMetadata::ID])
             ->from('processes')
             ->where('WHERE ' . $this->xb()
                                     ->lb()
-                                        ->where('status = ?', [ProcessStatus::FINISHED])
+                                        ->where(ProcessMetadata::STATUS . ' = ?', [ProcessStatus::FINISHED])
                                     ->rb()
                                     ->and()
                                     ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
+                                        ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
                                     ->rb()
                                     ->build())
             ->execute();
@@ -87,14 +96,14 @@ class ProcessModel extends AModel {
             ->from('processes')
             ->where('WHERE ' . $this->xb()
                                     ->lb()
-                                        ->where('status = ?', [ProcessStatus::FINISHED])
+                                        ->where(ProcessMetadata::STATUS . ' = ?', [ProcessStatus::FINISHED])
                                     ->rb()
                                     ->and()
                                     ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
+                                        ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
                                     ->rb()
                                     ->build())
             ->limit($limit)
@@ -116,14 +125,14 @@ class ProcessModel extends AModel {
             ->from('processes')
             ->where('WHERE ' . $this->xb()
                                     ->lb()
-                                        ->where('status <> ?', [ProcessStatus::FINISHED])
+                                        ->where(ProcessMetadata::STATUS . ' <> ?', [ProcessStatus::FINISHED])
                                     ->rb()
                                     ->and()
                                     ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
+                                        ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
                                     ->rb()
                                     ->build())
             ->limit($limit)
@@ -145,14 +154,14 @@ class ProcessModel extends AModel {
             ->from('processes')
             ->where('WHERE ' . $this->xb()
                                     ->lb()
-                                        ->where('status = ?', [ProcessStatus::FINISHED])
+                                        ->where(ProcessMetadata::STATUS . ' = ?', [ProcessStatus::FINISHED])
                                     ->rb()
                                     ->and()
                                     ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
+                                        ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
                                     ->rb()
                                     ->build())
             ->limit($limit)
@@ -170,32 +179,32 @@ class ProcessModel extends AModel {
     public function getCountProcessesWaitingForUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['COUNT(id) AS cnt'])
+        $qb ->select(['COUNT(' . ProcessMetadata::ID . ') AS cnt'])
             ->from('processes')
             ->where('WHERE ' . $this->xb()
                         ->lb()
                             ->lb()
-                                ->where('workflow1 = ?', [$idUser])
-                                ->andWhere('workflow_status = 1')
+                                ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                ->andWhere(ProcessMetadata::WORKFLOW_STATUS . ' = 1')
                             ->rb()
                             ->or()
                             ->lb()
-                                ->where('workflow2 = ?', [$idUser])
-                                ->andWhere('workflow_status = 2')
+                                ->where(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                ->andWhere(ProcessMetadata::WORKFLOW_STATUS . ' = 2')
                             ->rb()
                             ->or()
                             ->lb()
-                                ->where('workflow3 = ?', [$idUser])
-                                ->andWhere('workflow_status = 3')
+                                ->where(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                ->andWhere(ProcessMetadata::WORKFLOW_STATUS . ' = 3')
                             ->rb()
                             ->or()
                             ->lb()
-                                ->where('workflow4 = ?', [$idUser])
-                                ->andWhere('workflow_status = 4')
+                                ->where(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
+                                ->andWhere(ProcessMetadata::WORKFLOW_STATUS . ' = 4')
                             ->rb()
                         ->rb()
                         ->build())
-            ->andWhere('status = ?', [ProcessStatus::IN_PROGRESS])
+            ->andWhere(ProcessMetadata::STATUS . ' = ?', [ProcessStatus::IN_PROGRESS])
             ->execute();
 
         return $qb->fetch('cnt');
@@ -204,9 +213,9 @@ class ProcessModel extends AModel {
     public function getCountProcessesStartedByUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['COUNT(id) AS cnt'])
+        $qb ->select(['COUNT(' . ProcessMetadata::ID . ') AS cnt'])
             ->from('processes')
-            ->where('id_author = ?', [$idUser])
+            ->where(ProcessMetadata::ID_AUTHOR . ' = ?', [$idUser])
             ->execute();
 
         return $qb->fetch('cnt');
@@ -215,17 +224,12 @@ class ProcessModel extends AModel {
     public function getCountFinishedProcesses() {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['COUNT(id) AS cnt'])
+        $qb ->select(['COUNT(' . ProcessMetadata::ID . ') AS cnt'])
             ->from('processes')
-            ->where('status = ?', [ProcessStatus::FINISHED])
+            ->where(ProcessMetadata::STATUS . ' = ?', [ProcessStatus::FINISHED])
             ->execute();
 
         return $qb->fetch('cnt');
-    }
-
-    public function getFirstIdProcessOnAGridPage(int $gridPage) {
-        if($gridPage == 0) $gridPage = 1;
-        return $this->getFirstRowWithCount($gridPage, 'processes', ['id']);
     }
 
     public function getLastProcessStatsEntry() {
@@ -233,7 +237,7 @@ class ProcessModel extends AModel {
 
         $qb ->select(['*'])
             ->from('process_stats')
-            ->orderBy('id', 'DESC')
+            ->orderBy(ProcessStatsMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -247,13 +251,13 @@ class ProcessModel extends AModel {
     public function getAllProcessIds() {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id'])
+        $qb ->select([ProcessMetadata::ID])
             ->from('processes')
             ->execute();
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $ids[] = $row[ProcessMetadata::ID];
         }
 
         return $ids;
@@ -279,7 +283,7 @@ class ProcessModel extends AModel {
 
         $qb ->select(['*'])
             ->from('processes')
-            ->where('id_document = ?', [$idDocument])
+            ->where(ProcessMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         $processes = [];
@@ -295,7 +299,7 @@ class ProcessModel extends AModel {
 
         $qb ->delete()
             ->from('processes')
-            ->where('id = ?', [$idProcess])
+            ->where(ProcessMetadata::ID . ' = ?', [$idProcess])
             ->execute();
 
         return $qb->fetchAll();
@@ -306,7 +310,7 @@ class ProcessModel extends AModel {
 
         $qb ->delete()
             ->from('processes')
-            ->where('id_document = ?', [$idDocument])
+            ->where(ProcessMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         return $qb->fetchAll();
@@ -320,27 +324,27 @@ class ProcessModel extends AModel {
             ->where('WHERE ' . $this->xb()
                         ->lb()
                             ->lb()
-                                ->where('workflow1 = ?', [$idUser])
-                                ->andWhere('workflow_status = 1')
+                                ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                ->andWhere(ProcessMetadata::WORKFLOW_STATUS . ' = 1')
                             ->rb()
                             ->or()
                             ->lb()
-                                ->where('workflow2 = ?', [$idUser])
-                                ->andWhere('workflow_status = 2')
+                                ->where(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                ->andWhere(ProcessMetadata::WORKFLOW_STATUS . ' = 2')
                             ->rb()
                             ->or()
                             ->lb()
-                                ->where('workflow3 = ?', [$idUser])
-                                ->andWhere('workflow_status = 3')
+                                ->where(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                ->andWhere(ProcessMetadata::WORKFLOW_STATUS . ' = 3')
                             ->rb()
                             ->or()
                             ->lb()
-                                ->where('workflow4 = ?', [$idUser])
-                                ->andWhere('workflow_status = 4')
+                                ->where(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
+                                ->andWhere(ProcessMetadata::WORKFLOW_STATUS . ' = 4')
                             ->rb()
                         ->rb()
                         ->build())
-            ->andWhere('status = ?', [ProcessStatus::IN_PROGRESS]);
+            ->andWhere(ProcessMetadata::STATUS . ' = ?', [ProcessStatus::IN_PROGRESS]);
 
         if($limit > 0) {
             $qb->limit($limit);
@@ -359,7 +363,7 @@ class ProcessModel extends AModel {
     public function getProcessCountByStatus(int $status = 0) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['COUNT(id) AS cnt'])
+        $qb ->select(['COUNT(' . ProcessMetadata::ID . ') AS cnt'])
             ->from('processes');
 
         switch($status) {
@@ -367,7 +371,7 @@ class ProcessModel extends AModel {
                 break;
 
             default:
-                $qb->where('status = ?', [$status]);
+                $qb->where(ProcessMetadata::STATUS . ' = ?', [$status]);
                 break;
         }
 
@@ -383,14 +387,14 @@ class ProcessModel extends AModel {
             ->from('processes')
             ->where('WHERE ' . $this->xb()
                                     ->lb()
-                                        ->where('status = ?', [ProcessStatus::FINISHED])
+                                        ->where(ProcessMetadata::STATUS . ' = ?', [ProcessStatus::FINISHED])
                                     ->rb()
                                     ->and()
                                     ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
+                                        ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
                                     ->rb()
                                     ->build())
             ->limit($limit)
@@ -409,8 +413,8 @@ class ProcessModel extends AModel {
 
         $qb ->select(['*'])
             ->from('processes')
-            ->where('id_author = ?', [$idUser])
-            ->andWhere('status <> ?', [ProcessStatus::FINISHED])
+            ->where(ProcessMetadata::ID_AUTHOR . ' = ?', [$idUser])
+            ->andWhere(ProcessMetadata::STATUS . ' <> ?', [ProcessStatus::FINISHED])
             ->limit($limit)
             ->execute();
 
@@ -426,8 +430,8 @@ class ProcessModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('processes')
-            ->set(['status' => $status, 'date_updated' => date(Database::DB_DATE_FORMAT)])
-            ->where('id = ?', [$idProcess])
+            ->set([ProcessMetadata::STATUS => $status, ProcessMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)])
+            ->where(ProcessMetadata::ID . ' = ?', [$idProcess])
             ->execute();
 
         return $qb->fetchAll();
@@ -437,8 +441,8 @@ class ProcessModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('processes')
-            ->set(['workflow_status' => $status, 'date_updated' => date(Database::DB_DATE_FORMAT)])
-            ->where('id = ?', [$idProcess])
+            ->set([ProcessMetadata::WORKFLOW_STATUS => $status, ProcessMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)])
+            ->where(ProcessMetadata::ID . ' = ?', [$idProcess])
             ->execute();
 
         return $qb->fetchAll();
@@ -449,7 +453,7 @@ class ProcessModel extends AModel {
 
         $qb ->select(['*'])
             ->from('processes')
-            ->where('id = ?', [$id])
+            ->where(ProcessMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createProcessObjectFromDbRow($qb->fetch());
@@ -462,14 +466,14 @@ class ProcessModel extends AModel {
             ->from('processes')
             ->where('WHERE ' . $this->xb()
                                     ->lb()
-                                        ->where('status <> ?', [ProcessStatus::FINISHED])
+                                        ->where(ProcessMetadata::STATUS . ' <> ?', [ProcessStatus::FINISHED])
                                     ->rb()
                                     ->and()
                                     ->lb()
-                                        ->where('workflow1 = ?', [$idUser])
-                                        ->orWhere('workflow2 = ?', [$idUser])
-                                        ->orWhere('workflow3 = ?', [$idUser])
-                                        ->orWhere('workflow4 = ?', [$idUser])
+                                        ->where(ProcessMetadata::WORKFLOW1 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW2 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW3 . ' = ?', [$idUser])
+                                        ->orWhere(ProcessMetadata::WORKFLOW4 . ' = ?', [$idUser])
                                     ->rb()
                                     ->build())
             ->limit($limit)
@@ -486,7 +490,7 @@ class ProcessModel extends AModel {
     public function insertEmptyProcess(int $type) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->insert('processes', ['type'])
+        $qb ->insert('processes', [ProcessMetadata::TYPE])
             ->values([$type])
             ->execute();
 
@@ -498,7 +502,7 @@ class ProcessModel extends AModel {
 
         $qb ->update('processes')
             ->set($data)
-            ->where('id = ?', [$id])
+            ->where(ProcessMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -507,13 +511,13 @@ class ProcessModel extends AModel {
     public function getLastInsertedIdProcess() {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id'])
+        $qb ->select([ProcessMetadata::ID])
             ->from('processes')
-            ->orderBy('id', 'DESC')
+            ->orderBy(ProcessMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
-        return $qb->fetch('id');
+        return $qb->fetch(ProcessMetadata::ID);
     }
 
     public function insertNewProcess(array $data) {
@@ -525,15 +529,15 @@ class ProcessModel extends AModel {
 
         $qb ->select(['*'])
             ->from('processes')
-            ->where('id_document = ?', [$idDocument]);
+            ->where(ProcessMetadata::ID_DOCUMENT . ' = ?', [$idDocument]);
 
         if($isArchive) {
-            $qb->andWhere('is_archive = 1');
+            $qb->andWhere(ProcessMetadata::IS_ARCHIVE . ' = 1');
         } else {
-            $qb->andWhere('is_archive = 0');
+            $qb->andWhere(ProcessMetadata::IS_ARCHIVE . ' = 0');
         }
 
-        $qb ->orderBy('id', 'DESC')
+        $qb ->orderBy(ProcessMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -545,19 +549,19 @@ class ProcessModel extends AModel {
             return null;
         }
 
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $idDocument = $row['id_document'];
-        $type = $row['type'];
-        $status = $row['status'];
-        $workflow1 = $row['workflow1'];
-        $workflow2 = $row['workflow2'];
-        $workflow3 = $row['workflow3'];
-        $workflow4 = $row['workflow4'];
-        $workflowStatus = $row['workflow_status'];
-        $idAuthor = $row['id_author'];
-        $dateUpdated = $row['date_updated'];
-        $isArchive = $row['is_archive'];
+        $id = $row[ProcessMetadata::ID];
+        $dateCreated = $row[ProcessMetadata::DATE_CREATED];
+        $idDocument = $row[ProcessMetadata::ID_DOCUMENT];
+        $type = $row[ProcessMetadata::TYPE];
+        $status = $row[ProcessMetadata::STATUS];
+        $workflow1 = $row[ProcessMetadata::WORKFLOW1];
+        $workflow2 = $row[ProcessMetadata::WORKFLOW2];
+        $workflow3 = $row[ProcessMetadata::WORKFLOW3];
+        $workflow4 = $row[ProcessMetadata::WORKFLOW4];
+        $workflowStatus = $row[ProcessMetadata::WORKFLOW_STATUS];
+        $idAuthor = $row[ProcessMetadata::ID_AUTHOR];
+        $dateUpdated = $row[ProcessMetadata::DATE_UPDATED];
+        $isArchive = $row[ProcessMetadata::IS_ARCHIVE];
         
         if($isArchive == '1') {
             $isArchive = true;

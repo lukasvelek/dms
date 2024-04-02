@@ -12,7 +12,7 @@ class NotificationManagerService extends AService {
     private NotificationModel $notificationModel;
 
     public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cacheManager, NotificationModel $notificationModel) {
-        parent::__construct('NotificationManagerService', 'Service responsible for deleting old notifications', $logger, $serviceModel, $cacheManager);
+        parent::__construct('NotificationManagerService', $logger, $serviceModel, $cacheManager);
 
         $this->notificationModel = $notificationModel;
 

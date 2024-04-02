@@ -4,6 +4,7 @@ namespace DMS\Core;
 
 use DMS\Constants\CacheCategories;
 use DMS\Entities\Folder;
+use DMS\Entities\Group;
 use DMS\Entities\Ribbon;
 use DMS\Entities\User;
 
@@ -32,6 +33,40 @@ class CacheManager {
     }
 
     /**
+     * Saves group to cache
+     * 
+     * @param Group $group Group instance
+     * @return void
+     */
+    public function saveGroupToCache(Group $group) {
+        $cacheData = $this->loadFromCache();
+
+        $cacheData[$this->category][$group->getId()] = $group;
+
+        $this->saveToCache($cacheData);
+    }
+
+    /**
+     * Loads group from cache
+     * 
+     * @param int $id Group ID
+     * @return null|Group Group instance or null
+     */
+    public function loadGroupByIdFromCache(int $id) {
+        $cacheData = $this->loadFromCache();
+
+        if(empty($cacheData)) {
+            return null;
+        }
+
+        if(array_key_exists($id, $cacheData[$this->category])) {
+            return $cacheData[$this->category][$id];
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Saves a service cache entry
      * 
      * @param string $name Service name
@@ -40,10 +75,6 @@ class CacheManager {
      */
     public function saveServiceEntry(string $name, array $data) {
         $cacheData = $this->loadFromCache();
-
-        if($cacheData === FALSE) {
-            $cacheData = [];
-        }
 
         $cacheData[$name] = $data;
 
@@ -59,7 +90,7 @@ class CacheManager {
     public function loadServiceEntry(string $name) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -78,10 +109,6 @@ class CacheManager {
     public function saveFlashMessage(array $data) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
-            $cacheData = [];
-        }
-
         $cacheData[] = $data;
 
         $this->saveToCache($cacheData);
@@ -95,7 +122,7 @@ class CacheManager {
     public function loadFlashMessage() {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         } else {
             return $cacheData;
@@ -113,7 +140,7 @@ class CacheManager {
     public function loadRibbonById(int $idRibbon) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         } else {
             foreach($cacheData as $cd) {
@@ -162,7 +189,7 @@ class CacheManager {
     public function loadRibbons() {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -177,7 +204,7 @@ class CacheManager {
     public function loadTopRibbons() {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -197,7 +224,7 @@ class CacheManager {
     public function loadChildrenRibbons(int $idParentRibbon) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -217,7 +244,7 @@ class CacheManager {
     public function loadSiblingRibbons(int $idRibbon) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -266,7 +293,7 @@ class CacheManager {
     public function loadUserRibbonRight(int $idRibbon, int $idUser, string $category) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -309,7 +336,7 @@ class CacheManager {
     public function loadGroupRibbonRight(int $idRibbon, int $idGroup, string $category) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -360,7 +387,7 @@ class CacheManager {
     public function loadStringsFromCache() {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -382,6 +409,21 @@ class CacheManager {
     }
 
     /**
+     * Loads all folders from cache
+     * 
+     * @return null|array Folder array or null
+     */
+    public function loadFoldersFromCache() {
+        $cacheData = $this->loadFromCache();
+
+        if(empty($cacheData)) {
+            return null;
+        }
+
+        return $cacheData[$this->category];
+    }
+
+    /**
      * Loads folder from cache
      * 
      * @param int $id Folder ID
@@ -390,7 +432,7 @@ class CacheManager {
     public function loadFolderByIdFromCache(int $id) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -424,7 +466,7 @@ class CacheManager {
     public function loadUserByIdFromCache(int $id) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -461,7 +503,7 @@ class CacheManager {
     public function loadServiceConfigForService(string $serviceName) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -510,7 +552,7 @@ class CacheManager {
     public function loadActionRight(int $idUser, string $key) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -552,49 +594,7 @@ class CacheManager {
     public function loadBulkActionRight(int $idUser, string $key) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
-            return null;
-        }
-
-        if(!array_key_exists($idUser, $cacheData)) {
-            return null;
-        }
-
-        foreach($cacheData as $idUser => $keys) {
-            if(!array_key_exists($key, $keys)) {
-                return null;
-            } else {
-                return $keys[$key] ? true : false;
-            }
-        }
-    }
-
-    /**
-     * Saves a panel right to cache
-     * 
-     * @param int $idUser ID user
-     * @param string $key Panel name
-     * @param int $value 1 if panel right is allowed and 0 if not
-     */
-    public function savePanelRight(int $idUser, string $key, int $value) {
-        $cacheData = $this->loadFromCache();
-
-        $cacheData[$idUser][$key] = $value;
-
-        $this->saveToCache($cacheData);
-    }
-
-    /**
-     * Loads the panel right from cache
-     * 
-     * @param int $idUser ID user
-     * @param string $key Panel name
-     * @return bool|null True if panel right is allowed, false if it is not allowed, null if the entry does not exist
-     */
-    public function loadPanelRight(int $idUser, string $key) {
-        $cacheData = $this->loadFromCache();
-
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -638,7 +638,7 @@ class CacheManager {
     public function loadMetadataRight(int $idUser, int $idMetadata, string $key) {
         $cacheData = $this->loadFromCache();
 
-        if($cacheData === FALSE) {
+        if(empty($cacheData)) {
             return null;
         }
 
@@ -669,6 +669,10 @@ class CacheManager {
     public function createFilename() {
         $name = date('Y-m-d') . $this->category;
 
+        if(isset($_SESSION['id_current_user'])) {
+            $name .= $_SESSION['id_current_user'];
+        }
+
         $dirname = 'dmsCache';
 
         if(!is_dir($this->fm->cacheFolder . $dirname)) {
@@ -695,7 +699,7 @@ class CacheManager {
         $data = $this->fm->readCache($filename);
 
         if($data === FALSE) {
-            return false;
+            return [];
         }
 
         if(self::SERIALIZE) {

@@ -2,6 +2,7 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Constants\Metadata\UserConnectionMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
@@ -71,8 +72,8 @@ class UserRelogin extends APresenter {
         $user = $this->post('user'); // id user
 
         $data = array(
-            'id_user1' => $app->user->getId(),
-            'id_user2' => $user
+            UserConnectionMetadata::ID_USER1 => $app->user->getId(),
+            UserConnectionMetadata::ID_USER2 => $user
         );
 
         $app->userModel->insertNewUserConnect($data);
@@ -108,6 +109,21 @@ class UserRelogin extends APresenter {
 
         $_SESSION['id_current_user'] = $idUser;
         $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60)));
+
+        if(isset($_SESSION['is_relogin']) && isset($_SESSION['id_original_user'])) {
+            if($_SESSION['id_original_user'] == $idUser) {
+                // logging back
+                unset($_SESSION['is_relogin']);
+                unset($_SESSION['id_original_user']);
+            } else {
+                // relogging as different user (again)
+                $_SESSION['id_original_user'] = $app->user->getId();
+                $_SESSION['is_relogin'] = true;
+            }
+        } else {
+            $_SESSION['is_relogin'] = true;
+            $_SESSION['id_original_user'] = $app->user->getId();
+        }
 
         CacheManager::invalidateAllCache();
 
@@ -183,7 +199,7 @@ class UserRelogin extends APresenter {
             return $user->getFullname();
         });
         $gb->addAction(function(User $user) use ($actionAuthorizator) {
-            if($actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN)) {
+            if($actionAuthorizator->checkActionRight(UserActionRights::ALLOW_RELOGIN) || (isset($_SESSION['id_original_user']) && $user->getId() == $_SESSION['id_original_user'])) {
                 return LinkBuilder::createAdvLink(array('page' => 'reloginAsUser', 'id_user' => $user->getId()), 'Login');
             } else {
                 return '-';

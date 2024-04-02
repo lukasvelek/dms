@@ -3,6 +3,10 @@
 namespace DMS\Models;
 
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\DocumentReportMetadata;
+use DMS\Constants\Metadata\DocumentSharingMetadata;
+use DMS\Constants\Metadata\DocumentStatsMetadata;
 use DMS\Core\AppConfiguration;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -15,6 +19,10 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function updateDocumentsBulk(array $data, array $ids) {
+        return $this->bulkUpdateExisting($data, $ids, 'documents');
+    }
+
     public function deleteDocumentReportQueueEntryByFilename(string $filename, bool $like = false) {
         $qb = $this->qb(__METHOD__);
 
@@ -22,9 +30,9 @@ class DocumentModel extends AModel {
             ->from('document_reports');
 
         if($like === TRUE) {
-            $qb->where('file_src LIKE \'?\'', [$filename]);
+            $qb->where(DocumentReportMetadata::FILE_SRC . ' LIKE \'?\'', [$filename]);
         } else {
-            $qb->where('file_src = ?', [$filename]);
+            $qb->where(DocumentReportMetadata::FILE_SRC . ' = ?', [$filename]);
         }
 
         return $qb->fetch();
@@ -35,7 +43,7 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('documents')
-            ->where('file LIKE "?%"', [$path])
+            ->where(DocumentMetadata::FILE . ' LIKE "?%"', [$path])
             ->execute();
 
         $documents = array();
@@ -61,10 +69,10 @@ class DocumentModel extends AModel {
     public function getLastInsertedDocumentReportQueueEntryForIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id'])
+        $qb ->select([DocumentReportMetadata::ID])
             ->from('document_reports')
-            ->where('id_user = ?', [$idUser])
-            ->orderBy('date_updated', 'DESC')
+            ->where(DocumentReportMetadata::ID_USER . ' = ?', [$idUser])
+            ->orderBy(DocumentReportMetadata::DATE_UPDATED, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -76,8 +84,8 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_reports')
-            ->where('id_user = ?', [$idUser])
-            ->orderBy('date_updated', 'DESC')
+            ->where(DocumentReportMetadata::ID_USER . ' = ?', [$idUser])
+            ->orderBy(DocumentReportMetadata::DATE_UPDATED, 'DESC')
             ->execute();
 
         return $qb->fetchAll();
@@ -88,8 +96,8 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_reports')
-            ->where('status = ?', [$status])
-            ->orderBy('date_updated', 'DESC')
+            ->where(DocumentReportMetadata::STATUS . ' = ?', [$status])
+            ->orderBy(DocumentReportMetadata::DATE_UPDATED, 'DESC')
             ->execute();
 
         return $qb->fetchAll();
@@ -100,7 +108,7 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_reports')
-            ->where('id = ?', [$id])
+            ->where(DocumentReportMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetch();
@@ -117,14 +125,14 @@ class DocumentModel extends AModel {
     public function getDocumentCountForStatus(?int $idFolder, ?string $filter) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['COUNT(id) AS cnt'])
+        $qb ->select(['COUNT(' . DocumentMetadata::ID . ') AS cnt'])
             ->from('documents');
 
         if($idFolder !== NULL) {
-            $qb ->andWhere('id_folder = ?', [$idFolder]);
+            $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
-                $qb ->andWhere('id_folder IS NULL');
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
+                $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
 
@@ -140,15 +148,15 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('documents')
-            ->orderBy('date_updated', 'DESC')
+            ->orderBy(DocumentMetadata::DATE_UPDATED, 'DESC')
             ->limit($limit)
             ->offset($offset);
 
         if($idFolder !== NULL) {
-            $qb ->andWhere('id_folder = ?', [$idFolder]);
+            $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
-                $qb ->andWhere('id_folder IS NULL');
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
+                $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
 
@@ -167,21 +175,38 @@ class DocumentModel extends AModel {
     }
 
     public function getDocumentCountInArchiveDocument(int $idArchiveDocument) {
-        return $this->getRowCount('documents', 'id', 'WHERE `id_archive_document` = ' . $idArchiveDocument);
+        return $this->getRowCount('documents', DocumentMetadata::ID, 'WHERE `' . DocumentMetadata::ID_ARCHIVE_DOCUMENT . '` = ' . $idArchiveDocument);
     }
 
     public function moveToArchiveDocument(int $id, int $idArchiveDocument) {
-        $data = ['id_archive_document' => $idArchiveDocument];
+        $data = [DocumentMetadata::ID_ARCHIVE_DOCUMENT => $idArchiveDocument];
 
         return $this->updateDocument($id, $data);
+    }
+
+    public function bulkMoveToArchiveDocument(array $ids, int $idArchiveDocument) {
+        $data = [DocumentMetadata::ID_ARCHIVE_DOCUMENT => $idArchiveDocument];
+
+        return $this->bulkUpdateExisting($data, $ids, 'documents');
     }
 
     public function moveFromArchiveDocument(int $id) {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('documents')
-            ->setNull(['id_archive_document'])
-            ->where('id = ?', [$id])
+            ->setNull([DocumentMetadata::ID_ARCHIVE_DOCUMENT])
+            ->where(DocumentMetadata::ID . ' = ?', [$id])
+            ->execute();
+
+        return $qb->fetchAll();
+    }
+
+    public function bulkMoveFromArchiveDocument(array $ids) {
+        $qb = $this->qb(__METHOD__);
+        
+        $qb ->update('documents')
+            ->setNull([DocumentMetadata::ID_ARCHIVE_DOCUMENT])
+            ->where($qb->getColumnInValues(DocumentMetadata::ID, $ids))
             ->execute();
 
         return $qb->fetchAll();
@@ -190,7 +215,7 @@ class DocumentModel extends AModel {
     public function getDocumentForIdArchiveEntity(int $idArchiveEntity) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('id_archive_document = ? OR id_archive_box = ? OR id_archive_archive = ?', [$idArchiveEntity, $idArchiveEntity, $idArchiveEntity])
+        $qb ->andWhere(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' = ? OR ' . DocumentMetadata::ID_ARCHIVE_BOX . ' = ? OR ' . DocumentMetadata::ID_ARCHIVE_ARCHIVE . ' = ?', [$idArchiveEntity, $idArchiveEntity, $idArchiveEntity])
             ->execute();
 
         $documents = array();
@@ -219,7 +244,7 @@ class DocumentModel extends AModel {
     public function getAllDocumentsByStatus(int $status) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('status = ?', [$status])
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [$status])
             ->execute();
 
         $documents = array();
@@ -235,7 +260,7 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('documents')
-            ->where('id_archive_document = ?', [$idArchiveDocument])
+            ->where(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' = ?', [$idArchiveDocument])
             ->limit($limit)
             ->offset($offset)
             ->execute();
@@ -253,7 +278,7 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_stats')
-            ->orderBy('id', 'DESC')
+            ->orderBy(DocumentStatsMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -264,23 +289,23 @@ class DocumentModel extends AModel {
         return $this->insertNew($data, 'document_stats');
     }
 
-    public function getTotalDocumentCount(?int $idFolder) {
+    public function getTotalDocumentCount(?int $idFolder, bool $useConfigValueToShowAll = true) {
         $cond = null;
 
         if($idFolder !== NULL) {
-            $cond = 'WHERE id_folder = ' . $idFolder;
+            $cond = 'WHERE ' . DocumentMetadata::ID_FOLDER . ' = ' . $idFolder;
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
-                $cond = 'WHERE id_folder IS NULL';
+            if($useConfigValueToShowAll === TRUE && AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
+                $cond = 'WHERE ' . DocumentMetadata::ID_FOLDER . ' IS NULL';
             }
         }
-        return $this->getRowCount('documents', 'id', $cond);
+        return $this->getRowCount('documents', DocumentMetadata::ID, $cond);
     }
 
     public function getAllDocumentIds() {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['id'])
+        $qb ->select([DocumentMetadata::ID])
             ->from('documents')
             ->execute();
 
@@ -297,7 +322,7 @@ class DocumentModel extends AModel {
 
         $qb ->delete()
             ->from('document_sharing')
-            ->where('id_document = ?', [$idDocument])
+            ->where(DocumentSharingMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         return $qb->fetchAll();
@@ -309,16 +334,16 @@ class DocumentModel extends AModel {
         if($keepInDb) {
             $qb ->update('documents')
                 ->set([
-                    'status' => DocumentStatus::DELETED,
-                    'is_deleted' => '1',
-                    'date_updated' => date(Database::DB_DATE_FORMAT)
+                    DocumentMetadata::STATUS => DocumentStatus::DELETED,
+                    DocumentMetadata::IS_DELETED => '1',
+                    DocumentMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)
                 ]);
         } else {
             $qb ->delete()
                 ->from('documents');
         }
 
-        $qb ->where('id = ?', [$id])
+        $qb ->where(DocumentMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -329,15 +354,15 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_sharing')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('id_document = ?', [$idDocument])
+            ->where(DocumentSharingMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(DocumentSharingMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         return $qb->fetch();
     }
 
     public function getCountDocumentsSharedWithUser(int $idUser) {
-        return $this->getRowCount('document_sharing', 'id', "WHERE `id_user`='" . $idUser . "' AND (`date_from` < current_timestamp AND `date_to` > current_timestamp)");
+        return $this->getRowCount('document_sharing', DocumentSharingMetadata::ID, "WHERE `" . DocumentSharingMetadata::ID_USER . "`='" . $idUser . "' AND (`" . DocumentSharingMetadata::DATE_FROM . "` < current_timestamp AND `" . DocumentSharingMetadata::DATE_TO . "` > current_timestamp)");
     }
 
     public function getDocumentSharingsSharedWithUser(int $idUser) {
@@ -345,8 +370,8 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_sharing')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('(date_from < current_timestamp AND date_to > current_timestamp)')
+            ->where(DocumentSharingMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere('(`' . DocumentSharingMetadata::DATE_FROM . '` < current_timestamp AND `' . DocumentSharingMetadata::DATE_TO .  '` > current_timestamp)')
             ->execute();
 
         return $qb->fetchAll();
@@ -363,7 +388,7 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('documents')
-            ->where($qb->getColumnInValues('id', $documentSharings))
+            ->where($qb->getColumnInValues(DocumentMetadata::ID, $documentSharings))
             ->execute();
 
         $documents = [];
@@ -383,15 +408,15 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('document_sharing')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('id_document = ?', [$idDocument])
+            ->where(DocumentSharingMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(DocumentSharingMetadata::ID_DOCUMENT . ' = ?', [$idDocument])
             ->execute();
 
         $result = false;
 
         while($row = $qb->fetchAssoc()) {
-            $dateFrom = $row['date_from'];
-            $dateTo = $row['date_to'];
+            $dateFrom = $row[DocumentSharingMetadata::DATE_FROM];
+            $dateTo = $row[DocumentSharingMetadata::DATE_TO];
 
             if(strtotime($dateFrom) < time() && strtotime($dateTo) > time()) {
                 $result = true;
@@ -408,7 +433,7 @@ class DocumentModel extends AModel {
 
         $qb ->delete()
             ->from('document_sharing')
-            ->where('id = ?', [$idShare])
+            ->where(DocumentSharingMetadata::ID . ' = ?', [$idShare])
             ->execute();
 
         return $qb->fetchAll();
@@ -417,7 +442,7 @@ class DocumentModel extends AModel {
     public function getDocumentCountByStatus(int $status = 0) {
         $qb = $this->qb(__METHOD__);
 
-        $qb = $qb->select(['COUNT(id) AS cnt'])
+        $qb = $qb->select(['COUNT(' . DocumentMetadata::ID . ') AS cnt'])
                  ->from('documents');
 
         switch($status) {
@@ -425,7 +450,7 @@ class DocumentModel extends AModel {
                 break;
             
             default:
-                $qb->where('status = ?', [$status]);
+                $qb->where(DocumentMetadata::STATUS . ' = ?', [$status]);
 
                 break;
         }
@@ -438,10 +463,10 @@ class DocumentModel extends AModel {
     public function getFilteredDocumentsForName(string $name, ?int $idFolder, string $filter) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('name LIKE \'%?%\'', [$name]);
+        $qb ->andWhere(DocumentMetadata::NAME . ' LIKE \'%?%\'', [$name]);
 
         if(!is_null($idFolder)) {
-            $qb ->andWhere('id_folder = ?', [$idFolder]);
+            $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         }
 
         $this->addFilterCondition($filter, $qb);
@@ -459,13 +484,13 @@ class DocumentModel extends AModel {
     public function getDocumentsForNameCount(string $name, ?int $idFolder, ?string $filter) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('name LIKE \'%?%\'', [$name], false);
+        $qb ->andWhere(DocumentMetadata::NAME . ' LIKE \'%?%\'', [$name], false);
 
         if($idFolder != null) {
-            $qb ->andWhere('id_folder = ?', [$idFolder]);
+            $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
-                $qb ->andWhere('id_folder IS NULL');
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
+                $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
 
@@ -473,7 +498,7 @@ class DocumentModel extends AModel {
             $this->addFilterCondition($filter, $qb);
         }
         
-        $qb ->orderBy('date_created', 'DESC')
+        $qb ->orderBy(DocumentMetadata::DATE_CREATED, 'DESC')
             ->execute();
 
         return $qb->fetchAll()->num_rows;
@@ -482,13 +507,13 @@ class DocumentModel extends AModel {
     public function getDocumentsForName(string $name, ?int $idFolder, ?string $filter, int $limit, int $offset) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('name LIKE \'%?%\'', [$name], false);
+        $qb ->andWhere(DocumentMetadata::NAME . ' LIKE \'%?%\'', [$name], false);
 
         if($idFolder != null) {
-            $qb ->andWhere('id_folder = ?', [$idFolder]);
+            $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
-                $qb ->andWhere('id_folder IS NULL');
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
+                $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
         
@@ -501,7 +526,7 @@ class DocumentModel extends AModel {
             $this->addFilterCondition($filter, $qb);
         }
         
-        $qb ->orderBy('date_created', 'DESC')
+        $qb ->orderBy(DocumentMetadata::DATE_CREATED, 'DESC')
             ->execute();
 
         $documents = [];
@@ -517,7 +542,7 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('documents')
-            ->where('file = ?', [$filename])
+            ->where(DocumentMetadata::FILE . ' = ?', [$filename])
             ->execute();
 
         $documents = [];
@@ -532,9 +557,9 @@ class DocumentModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('documents')
-            ->setNull(['id_folder'])
-            ->set(['date_updated' => date(Database::DB_DATE_FORMAT)])
-            ->where('id = ?', [$id])
+            ->setNull([DocumentMetadata::ID_FOLDER])
+            ->set([DocumentMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)])
+            ->where(DocumentMetadata::ID . '= ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -545,10 +570,10 @@ class DocumentModel extends AModel {
 
         $qb ->update('documents')
             ->set([
-                'date_updated' => date(Database::DB_DATE_FORMAT),
-                'id_officer' => 'NULL'
+                DocumentMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT),
+                DocumentMetadata::ID_OFFICER => 'NULL'
             ])
-            ->where('id = ?', [$id])
+            ->where(DocumentMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -557,13 +582,12 @@ class DocumentModel extends AModel {
     public function updateDocument(int $id, array $values) {
         $qb = $this->qb(__METHOD__);
 
-        $values['date_updated'] = date(Database::DB_DATE_FORMAT);
+        $values[DocumentMetadata::DATE_UPDATED] = date(Database::DB_DATE_FORMAT);
 
         $qb ->update('documents')
             ->set($values)
-            ->where('id = ?', [$id])
-            ->execute()
-            ->fetch();
+            ->where(DocumentMetadata::ID . ' = ?', [$id])
+            ->execute();
 
         return $qb->fetchAll();
     }
@@ -588,7 +612,7 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('documents')
-            ->where('id = ?', [$id])
+            ->where(DocumentMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $this->createDocumentObjectFromDbRow($qb->fetch());
@@ -599,10 +623,10 @@ class DocumentModel extends AModel {
 
         $qb ->update('documents')
             ->set([
-                    'status' => $status,
-                    'date_updated' => date(Database::DB_DATE_FORMAT)
+                    DocumentMetadata::STATUS => $status,
+                    DocumentMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)
             ])
-            ->where('id = ?', [$id])
+            ->where(DocumentMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -613,8 +637,8 @@ class DocumentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('documents')
-            ->where('id_author = ?', [$idUser])
-            ->orderBy('id', 'DESC')
+            ->where(DocumentMetadata::ID_AUTHOR . ' = ?', [$idUser])
+            ->orderBy(DocumentMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -626,10 +650,10 @@ class DocumentModel extends AModel {
 
         $qb ->update('documents')
             ->set([
-                    'id_officer' => $idOfficer,
-                    'date_updated' => date(Database::DB_DATE_FORMAT)
+                    DocumentMetadata::ID_OFFICER => $idOfficer,
+                    DocumentMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)
             ])
-            ->where('id = ?', [$id])
+            ->where(DocumentMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -657,10 +681,10 @@ class DocumentModel extends AModel {
         $qb = $this->composeQueryStandardDocuments();
 
         if($idFolder != null) {
-            $qb ->andWhere('id_folder = ?', [$idFolder]);
+            $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         } else {
-            if(AppConfiguration::getGridMainFolderHasAllComments() === FALSE) {
-                $qb ->andWhere('id_folder IS NULL');
+            if(AppConfiguration::getGridMainFolderHasAllDocuments() === FALSE) {
+                $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' IS NULL');
             }
         }
 
@@ -682,7 +706,7 @@ class DocumentModel extends AModel {
     public function getStandardDocumentsInIdFolder(int $idFolder) {
         $qb = $this->composeQueryStandardDocuments();
 
-        $qb ->andWhere('id_folder = ?', [$idFolder])
+        $qb ->andWhere(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder])
             ->execute();
 
         $documents = array();
@@ -700,58 +724,76 @@ class DocumentModel extends AModel {
             ->from('documents');
 
         if($ignoreDeleted) {
-            $qb ->where('is_deleted = ?', ['0']);
+            $qb ->where(DocumentMetadata::IS_DELETED . ' = ?', ['0']);
         }
 
         return $qb;
     }
 
-    private function createDocumentObjectFromDbRow($row) {
+    public function createDocumentObjectFromDbRow($row) {
         if($row === NULL) {
             return null;
         }
         
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $idAuthor = $row['id_author'];
-        $idOfficer = $row['id_officer'];
-        $name = $row['name'];
-        $status = $row['status'];
-        $idManager = $row['id_manager'];
-        $idGroup = $row['id_group'];
-        $isDeleted = $row['is_deleted'];
-        $rank = $row['rank'];
+        $id = $row[DocumentMetadata::ID];
+        $dateCreated = $row[DocumentMetadata::DATE_CREATED];
+        $idAuthor = $row[DocumentMetadata::ID_AUTHOR];
+        $idOfficer = $row[DocumentMetadata::ID_OFFICER];
+        $name = $row[DocumentMetadata::NAME];
+        $status = $row[DocumentMetadata::STATUS];
+        $idManager = $row[DocumentMetadata::ID_MANAGER];
+        $idGroup = $row[DocumentMetadata::ID_GROUP];
+        $isDeleted = $row[DocumentMetadata::IS_DELETED];
+        $rank = $row[DocumentMetadata::RANK];
         $idFolder = null;
         $file = null;
-        $shredYear = $row['shred_year'];
-        $afterShredAction = $row['after_shred_action'];
-        $shreddingStatus = $row['shredding_status'];
-        $dateUpdated = $row['date_updated'];
+        $shredYear = $row[DocumentMetadata::SHRED_YEAR];
+        $afterShredAction = $row[DocumentMetadata::AFTER_SHRED_ACTION];
+        $shreddingStatus = $row[DocumentMetadata::SHREDDING_STATUS];
+        $dateUpdated = $row[DocumentMetadata::DATE_UPDATED];
         $idArchiveDocument = null;
         $idArchiveBox = null;
         $idArchiveArchive = null;
 
-        if(isset($row['id_folder'])) {
-            $idFolder = $row['id_folder'];
+        if(isset($row[DocumentMetadata::ID_FOLDER])) {
+            $idFolder = $row[DocumentMetadata::ID_FOLDER];
         }
 
-        if(isset($row['file'])) {
-            $file = $row['file'];
+        if(isset($row[DocumentMetadata::FILE])) {
+            $file = $row[DocumentMetadata::FILE];
         }
 
-        if(isset($row['id_archive_document'])) {
-            $idArchiveDocument = $row['id_archive_document'];
+        if(isset($row[DocumentMetadata::ID_ARCHIVE_DOCUMENT])) {
+            $idArchiveDocument = $row[DocumentMetadata::ID_ARCHIVE_DOCUMENT];
         }
 
-        if(isset($row['id_archive_box'])) {
-            $idArchiveBox = $row['id_archive_box'];
+        if(isset($row[DocumentMetadata::ID_ARCHIVE_BOX])) {
+            $idArchiveBox = $row[DocumentMetadata::ID_ARCHIVE_BOX];
         }
 
-        if(isset($row['id_archive_archive'])) {
-            $idArchiveArchive = $row['id_archive_archive'];
+        if(isset($row[DocumentMetadata::ID_ARCHIVE_ARCHIVE])) {
+            $idArchiveArchive = $row[DocumentMetadata::ID_ARCHIVE_ARCHIVE];
         }
 
-        ArrayHelper::deleteKeysFromArray($row, array('id', 'date_created', 'id_author', 'id_officer', 'name', 'status', 'id_manager', 'id_group', 'is_deleted', 'rank', 'id_folder', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'date_updated', 'id_archive_document', 'id_archive_box', 'id_archive_archive'));
+        ArrayHelper::deleteKeysFromArray($row, array(DocumentMetadata::ID,
+                                                     DocumentMetadata::DATE_CREATED,
+                                                     DocumentMetadata::ID_AUTHOR,
+                                                     DocumentMetadata::ID_OFFICER,
+                                                     DocumentMetadata::NAME,
+                                                     DocumentMetadata::STATUS,
+                                                     DocumentMetadata::ID_MANAGER,
+                                                     DocumentMetadata::ID_GROUP,
+                                                     DocumentMetadata::IS_DELETED,
+                                                     DocumentMetadata::RANK,
+                                                     DocumentMetadata::ID_FOLDER,
+                                                     DocumentMetadata::FILE,
+                                                     DocumentMetadata::SHRED_YEAR,
+                                                     DocumentMetadata::AFTER_SHRED_ACTION,
+                                                     DocumentMetadata::SHREDDING_STATUS,
+                                                     DocumentMetadata::DATE_UPDATED,
+                                                     DocumentMetadata::ID_ARCHIVE_DOCUMENT,
+                                                     DocumentMetadata::ID_ARCHIVE_BOX,
+                                                     DocumentMetadata::ID_ARCHIVE_ARCHIVE));
 
         $document = new Document($id, $dateCreated, $idAuthor, $idOfficer, $name, $status, $idManager, $idGroup, $isDeleted, $rank, $idFolder, $file, $shredYear, $afterShredAction, $shreddingStatus, $dateUpdated, $idArchiveDocument, $idArchiveBox, $idArchiveArchive);
         $document->setMetadata($row);
@@ -762,11 +804,11 @@ class DocumentModel extends AModel {
     private function addFilterCondition(string $filter, QueryBuilder &$qb) {
         switch($filter) {
             case 'waitingForArchivation':
-                $qb ->andWhere('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
+                $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
                 break;
 
             case 'new':
-                $qb ->andWhere('status = ?', [DocumentStatus::NEW]);
+                $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::NEW]);
                 break;
         }
     }

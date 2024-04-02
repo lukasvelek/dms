@@ -111,7 +111,7 @@ class AppConfiguration {
         return self::loadParam('folder_max_nest_level');
     }
 
-    public static function getGridMainFolderHasAllComments() {
+    public static function getGridMainFolderHasAllDocuments() {
         return self::loadParam('grid_main_folder_has_all_documents');
     }
 

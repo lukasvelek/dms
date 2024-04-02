@@ -170,6 +170,14 @@ class Input implements IBuildable {
     return $this;
   }
 
+  public function disableIfBoolTrue(bool $result) {
+    if($result === TRUE) {
+      $this->disabled = 'disabled';
+    }
+
+    return $this;
+  }
+
   /**
    * Adds special setting to the form element
    * 
@@ -221,6 +229,14 @@ class Input implements IBuildable {
   public function readonly() {
     $this->readonly = 'readonly';
     
+    return $this;
+  }
+
+  public function readonlyIfBoolTrue(bool $result) {
+    if($result === TRUE) {
+      $this->readonly = 'readonly';
+    }
+
     return $this;
   }
 

@@ -3,6 +3,8 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\FileStorageTypes;
+use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\FileStorageLocationMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Entities\FileStorageLocation;
@@ -50,16 +52,16 @@ class FileStorageSettings extends APresenter {
         }
 
         $data = [
-            'name' => $name,
-            'path' => $path,
-            'is_active' => $active,
-            'type' => $type,
-            'absolute_path' => $absolutePath
+            FileStorageLocationMetadata::NAME => $name,
+            FileStorageLocationMetadata::PATH => $path,
+            FileStorageLocationMetadata::IS_ACTIVE => $active,
+            FileStorageLocationMetadata::TYPE => $type,
+            FileStorageLocationMetadata::ABSOLUTE_PATH => $absolutePath
         ];
 
         $lastOrder = $app->fileStorageModel->getLastLocationOrder();
 
-        $data['order'] = $lastOrder + 1;
+        $data[FileStorageLocationMetadata::ORDER] = $lastOrder + 1;
 
         $app->fileStorageModel->insertNewLocation($data);
 
@@ -170,7 +172,7 @@ class FileStorageSettings extends APresenter {
         foreach($documents as $document) {
             $newLoc = str_replace($location->getPath(), $newLocation->getPath(), $document->getFile());
 
-            $app->documentModel->updateDocument($document->getId(), ['file' => $newLoc]);
+            $app->documentModel->updateDocument($document->getId(), [DocumentMetadata::FILE => $newLoc]);
         }
 
         // delete location from db

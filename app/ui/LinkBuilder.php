@@ -80,9 +80,9 @@ class LinkBuilder {
      */
     private function getTemplate(bool $style = false) {
         if(!$style) {
-            return '<span class="$CLASS$" style="cursor: pointer" onclick="location.replace(\'$URL$\');">$NAME$</span>';
+            return '<span class="$CLASS$" style="cursor: pointer" onclick="location.href = \'$URL$\';">$NAME$</span>';
         } else {
-            return '<span class="$CLASS$" style="cursor: pointer; $STYLE$" onclick="location.replace(\'$URL$\');">$NAME$</span>';
+            return '<span class="$CLASS$" style="cursor: pointer; $STYLE$" onclick="location.href = \'$URL$\';">$NAME$</span>';
         }
     }
 
@@ -92,7 +92,7 @@ class LinkBuilder {
      * @return string HTML image link template
      */
     private function getImgTemplate(int $width) {
-        return '<img src="$IMG_PATH$" width="' . $width . '" loading="lazy"><span class="$CLASS$" style="cursor: pointer" onclick="location.replace(\'$URL$\');">$NAME$</span>';
+        return '<img src="$IMG_PATH$" width="' . $width . '" loading="lazy"><span class="$CLASS$" style="cursor: pointer" onclick="location.href = \'$URL$\';">$NAME$</span>';
     }
 
     /**

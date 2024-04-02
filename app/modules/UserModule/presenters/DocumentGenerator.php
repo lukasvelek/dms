@@ -4,7 +4,6 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\FlashMessageTypes;
 use DMS\Core\AppConfiguration;
-use DMS\Core\Application;
 use DMS\Modules\APresenter;
 
 class DocumentGenerator extends APresenter {
@@ -22,6 +21,11 @@ class DocumentGenerator extends APresenter {
         if(!AppConfiguration::getIsDebug()) {
             $app->flashMessage('Debug is not enabled!', FlashMessageTypes::ERROR);
             $app->redirect('HomePage:showHomepage');
+        }
+
+        if(!$app->actionAuthorizator->canUseDocumentGenerator()) {
+            $app->flashMessage('You are not authorized to use document generator.', 'error');
+            $app->redirect('Documents:showAll');
         }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/document-generator.html');

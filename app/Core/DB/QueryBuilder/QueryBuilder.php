@@ -63,6 +63,10 @@ class QueryBuilder
      * @return string SQL code
      */
     public function getColumnInValues(string $column, array $values) {
+        if(count($values) == 0) {
+            return '1=1';
+        }
+
         $code = $column . ' IN (';
 
         $i = 0;
@@ -86,9 +90,13 @@ class QueryBuilder
      * 
      * @param string $column Column name
      * @param array $values Column allowed values
-     * @return self
+     * @return string SQL code
      */
     public function getColumnNotInValues(string $column, array $values) {
+        if(count($values) == 0) {
+            return '1=1';
+        }
+        
         $code = $column . ' NOT IN (';
 
         $i = 0;
@@ -707,7 +715,11 @@ class QueryBuilder
         $i = 0;
         foreach($this->queryData['values'] as $key => $value) {
             if($value == 'NULL') {
-                $sql .= $key . ' = ' . $value;
+                if(($i + 1) == count($this->queryData['values'])) {
+                    $sql .= $key . ' = ' . $value;
+                } else {
+                    $sql .= $key . ' = ' . $value . ', ';
+                }
             } else {
                 if(($i + 1) == count($this->queryData['values'])) {
                     $sql .= $key . ' = \'' . $value . '\'';

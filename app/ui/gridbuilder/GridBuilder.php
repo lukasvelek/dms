@@ -16,6 +16,10 @@ class GridBuilder {
     private mixed $renderRowCheckbox;
     private mixed $dataSourceCallback;
 
+    private bool $reverse;
+    private bool $alwaysDrawHeaderCheckbox;
+    private bool $displayNoEntriesMessage;
+
     public function __construct() {
         $this->columns = [];
         $this->actions = [];
@@ -28,10 +32,18 @@ class GridBuilder {
         $this->renderRowCheckbox = null;
         $this->dataSourceCallback = null;
         $this->emptyDataSourceMessage = 'No data found';
+        $this->reverse = false;
+        $this->alwaysDrawHeaderCheckbox = false;
+        $this->displayNoEntriesMessage = true;
     }
 
-    public function addHeaderCheckbox(string $id, string $onChange) {
+    public function reverseData() {
+        $this->reverse = true;
+    }
+
+    public function addHeaderCheckbox(string $id, string $onChange, bool $drawAlways = false) {
         $this->headerCheckbox = '<input type="checkbox" id="' . $id . '" onchange="' . $onChange . '">';
+        $this->alwaysDrawHeaderCheckbox = $drawAlways;
     }
 
     public function addRowCheckbox(callable $renderRowCheckbox) {
@@ -72,12 +84,16 @@ class GridBuilder {
         $this->tableBorder = $border;
     }
 
+    public function setDisplayNoEntriesMessage(bool $display = true) {
+        $this->displayNoEntriesMessage = $display;
+    }
+
     public function build() {
         $code = '<table border="' . $this->tableBorder . '" id="tablebuilder-table">';
 
         // title
         $headerRow = '<tr>';
-        if(!is_null($this->headerCheckbox) && is_callable($this->renderRowCheckbox)) {
+        if(!is_null($this->headerCheckbox) && (is_callable($this->renderRowCheckbox) || $this->alwaysDrawHeaderCheckbox)) {
             $headerRow .= '<th>' . $this->headerCheckbox . '</th>';
         }
         if(!empty($this->actions)) {
@@ -99,6 +115,7 @@ class GridBuilder {
         // end of title
 
         // data
+        $entityRows = [];
         if(empty($this->dataSourceArray) && (is_null($this->dataSourceCallback) || !is_callable($this->dataSourceCallback))) {
             $entityRow = '<tr><td';
 
@@ -108,8 +125,11 @@ class GridBuilder {
                 $colspan += 1;
             }
 
-            $entityRow .= ' colspan="' . $colspan . '">' . $this->emptyDataSourceMessage . '</td></tr>';
-            $code .= $entityRow;
+            $entityRow .= ' colspan="' . $colspan . '" id="grid-empty-message">' . $this->emptyDataSourceMessage . '</td></tr>';
+
+            if($this->displayNoEntriesMessage === TRUE) {
+                $entityRows[] = $entityRow;
+            }
         } else {
             if(empty($this->dataSourceArray)) {
                 $this->dataSourceArray = call_user_func($this->dataSourceCallback);
@@ -124,8 +144,10 @@ class GridBuilder {
                     $colspan += 1;
                 }
 
-                $entityRow .= ' colspan="' . $colspan . '">' . $this->emptyDataSourceMessage . '</td></tr>';
-                $code .= $entityRow;
+                $entityRow .= ' colspan="' . $colspan . '" id="grid-empty-message">' . $this->emptyDataSourceMessage . '</td></tr>';
+                if($this->displayNoEntriesMessage === TRUE) {
+                    $entityRows[] = $entityRow;
+                }
             } else {
                 foreach($this->dataSourceArray as $entity) {
                     $entityRow = '<tr>';
@@ -157,15 +179,40 @@ class GridBuilder {
                     }
         
                     $entityRow .= '</tr>';
-                    $code .= $entityRow;
+                    $entityRows[] = $entityRow;
                 }
             }
+        }
+
+        if($this->reverse === TRUE) {
+            $tmp = [];
+
+            for($i = (count($entityRows) - 1); $i >= 0; $i--) {
+                $tmp[] = $entityRows[$i];
+            }
+
+            $entityRows = $tmp;
+        }
+
+        foreach($entityRows as $entityRow) {
+            $code .= $entityRow;
         }
         // end of data
 
         $code .= '</table>';
 
         return $code;
+    }
+
+    public static function createEmptyGrid(array $columns, bool $displayNoDataMessage = false, bool $addHeaderCheckbox = false, string $headerCheckboxId = '', string $headerCheckboxAction = '') {
+        $gb = new self();
+        $gb->addColumns($columns);
+        $gb->addDataSource([]);
+        if($addHeaderCheckbox === TRUE) {
+            $gb->addHeaderCheckbox($headerCheckboxId, $headerCheckboxAction, true);
+        }
+        $gb->setDisplayNoEntriesMessage($displayNoDataMessage);
+        return $gb->build();
     }
 }
 

@@ -4,6 +4,18 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.10
+- added database indexes
+- added option to manage ribbon rights for a user or a group
+- updated grid list render speed (SQL queries are now performed more efficiently)
+- updated speed of some operations when working with hundreds or thousands of entities (mostly documents)
+- updated redirect when a new folder is created (now user is redirected to the parent folder instead of being redirected to the newly created folder)
+- deprecated panels (ribbon predecessor)
+- fixed not working user relogin
+- fixed deprecated warnings
+- fixed a bug where if the user selects more than 100 documents and wants to perform a bulk action on them, no bulk actions are displayed
+- fixed bugs and potential bugs
+
 ### v1.9
 - added calendar support
 - added ajax grid page controls
@@ -20,6 +32,7 @@ It also enables users to manage metadata and their values.
 - updated document filter
 - updated FileManagerService service
 - updated grid loading across the application
+- updated design
 - fixed bugs and potential bugs
 - fixed a bug where the document report limit would not show integer values but rather float values
 - fixed ajax slowdown (AJAX JS sleep constant update: 250ms -> 0ms)

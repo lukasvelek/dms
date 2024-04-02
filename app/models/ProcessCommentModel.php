@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\ProcessCommentMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\ProcessComment;
@@ -16,7 +17,7 @@ class ProcessCommentModel extends AModel {
 
         $qb ->delete()
             ->from('process_comments')
-            ->where('id_process = ?', [$idProcess])
+            ->where(ProcessCommentMetadata::ID_PROCESS . ' = ?', [$idProcess])
             ->execute();
 
         return $qb->fetchAll();
@@ -27,9 +28,9 @@ class ProcessCommentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('process_comments')
-            ->where('id_author = ?', [$idAuthor])
-            ->andWhere('id_process = ?', [$idProcess])
-            ->orderBy('id', 'DESC')
+            ->where(ProcessCommentMetadata::ID_AUTHOR . ' = ?', [$idAuthor])
+            ->andWhere(ProcessCommentMetadata::ID_PROCESS . ' = ?', [$idProcess])
+            ->orderBy(ProcessCommentMetadata::ID, 'DESC')
             ->limit(1)
             ->execute();
 
@@ -41,7 +42,7 @@ class ProcessCommentModel extends AModel {
 
         $qb ->delete()
             ->from('process_comments')
-            ->where('id = ?', [$id])
+            ->where(ProcessCommentMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();
@@ -56,8 +57,8 @@ class ProcessCommentModel extends AModel {
 
         $qb ->select(['*'])
             ->from('process_comments')
-            ->where('id_process = ?', [$id])
-            ->orderBy('id', 'DESC')
+            ->where(ProcessCommentMetadata::ID_PROCESS . ' = ?', [$id])
+            ->orderBy(ProcessCommentMetadata::ID, 'DESC')
             ->execute();
 
         $comments = [];
@@ -73,11 +74,11 @@ class ProcessCommentModel extends AModel {
             return null;
         }
 
-        $id = $row['id'];
-        $dateCreated = $row['date_created'];
-        $idAuthor = $row['id_author'];
-        $idProcess = $row['id_process'];
-        $text = $row['text'];
+        $id = $row[ProcessCommentMetadata::ID];
+        $dateCreated = $row[ProcessCommentMetadata::DATE_CREATED];
+        $idAuthor = $row[ProcessCommentMetadata::ID_AUTHOR];
+        $idProcess = $row[ProcessCommentMetadata::ID_PROCESS];
+        $text = $row[ProcessCommentMetadata::TEXT];
 
         return new ProcessComment($id, $dateCreated, $idAuthor, $text, $idProcess);
     }

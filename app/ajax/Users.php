@@ -8,7 +8,6 @@ use DMS\Core\CacheManager;
 use DMS\Entities\User;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
-use DMS\UI\TableBuilder\TableBuilder;
 
 require_once('Ajax.php');
 
@@ -85,7 +84,7 @@ function search() {
     });
     $gb->addAction(function(User $user) use ($canManageUserRights) {
         if($canManageUserRights) {
-            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showUserRights', 'id' => $user->getId(), 'filter' => 'panels'), 'Panel rights');
+            return LinkBuilder::createAdvLink(array('page' => 'UserModule:Users:showRibbonRights', 'id' => $user->getId()), 'Ribbon rights');
         } else {
             return '-';
         }

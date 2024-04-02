@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\FileStorageLocationMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\FileStorageLocation;
@@ -14,15 +15,15 @@ class FileStorageModel extends AModel {
     public function getLocationById(int $id) {
         $qb = $this->composeCommonQuery(__METHOD__);
 
-        $qb ->where('`id` = ?', [$id])
+        $qb ->where('`' . FileStorageLocationMetadata::ID . '` = ?', [$id])
             ->execute();
 
         return $this->createFileStorageLocationObjectFromDbRow($qb->fetch());
     }
 
     public function switchLocationOrder(int $id1, int $order1, int $id2, int $order2) {
-        $result1 = $this->updateLocation($id1, ['`order`' => $order1]);
-        $result2 = $this->updateLocation($id2, ['`order`' => $order2]);
+        $result1 = $this->updateLocation($id1, ['`' . FileStorageLocationMetadata::ORDER . '`' => $order1]);
+        $result2 = $this->updateLocation($id2, ['`' . FileStorageLocationMetadata::ORDER . '`' => $order2]);
 
         return $result1 && $result2;
     }
@@ -30,7 +31,7 @@ class FileStorageModel extends AModel {
     public function getLocationByOrder(int $order) {
         $qb = $this->composeCommonQuery(__METHOD__);
 
-        $qb ->where('`order` = ?', [$order])
+        $qb ->where('`' . FileStorageLocationMetadata::ORDER . '` = ?', [$order])
             ->execute();
 
         return $this->createFileStorageLocationObjectFromDbRow($qb->fetch());
@@ -44,16 +45,16 @@ class FileStorageModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('file_storage_locations')
-            ->set(['is_default' => '0'])
-            ->where('is_default = 1')
-            ->andWhere('type = ?', [$type])
+            ->set([FileStorageLocationMetadata::IS_DEFAULT => '0'])
+            ->where(FileStorageLocationMetadata::IS_DEFAULT . ' = 1')
+            ->andWhere(FileStorageLocationMetadata::TYPE . ' = ?', [$type])
             ->execute();
 
         return $qb->fetchAll();
     }
 
     public function setLocationAsDefault(int $id) {
-        return $this->updateLocation($id, ['is_default' => '1']);
+        return $this->updateLocation($id, [FileStorageLocationMetadata::IS_DEFAULT => '1']);
     }
 
     public function updateLocation(int $id, array $data) {
@@ -67,22 +68,22 @@ class FileStorageModel extends AModel {
     public function getLastLocationOrder() {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->select(['order'])
+        $qb ->select([FileStorageLocationMetadata::ORDER])
             ->from('file_storage_locations')
-            ->orderBy('order', 'DESC')
+            ->orderBy(FileStorageLocationMetadata::ORDER, 'DESC')
             ->limit(1)
             ->execute();
 
-        return $qb->fetch('order');
+        return $qb->fetch(FileStorageLocationMetadata::ORDER);
     }
 
     public function getAllActiveFileOnlyStorageLocations(bool $order = false) {
         $qb = $this->composeCommonQuery(__METHOD__)
-            ->where('is_active = 1')
-            ->andWhere('type = ?', ['files']);
+            ->where(FileStorageLocationMetadata::IS_ACTIVE . ' = 1')
+            ->andWhere(FileStorageLocationMetadata::TYPE . ' = ?', ['files']);
 
         if($order === TRUE) {
-            $qb->orderBy('order');
+            $qb->orderBy(FileStorageLocationMetadata::ORDER);
         }
 
         $qb->execute();
@@ -97,11 +98,11 @@ class FileStorageModel extends AModel {
 
     public function getAllActiveDocumentReportStorageLocations(bool $order = false) {
         $qb = $this->composeCommonQuery(__METHOD__)
-            ->where('is_active = 1')
-            ->andWhere('type = ?', ['document_reports']);
+            ->where(FileStorageLocationMetadata::IS_ACTIVE . ' = 1')
+            ->andWhere(FileStorageLocationMetadata::TYPE . ' = ?', ['document_reports']);
 
         if($order === TRUE) {
-            $qb->orderBy('order');
+            $qb->orderBy(FileStorageLocationMetadata::ORDER);
         }
 
         $qb->execute();
@@ -116,10 +117,10 @@ class FileStorageModel extends AModel {
     
     public function getAllActiveFileStorageLocations(bool $order = false) {
         $qb = $this->composeCommonQuery(__METHOD__)
-            ->where('is_active = 1');
+            ->where(FileStorageLocationMetadata::IS_ACTIVE . ' = 1');
 
         if($order === TRUE) {
-            $qb->orderBy('order');
+            $qb->orderBy(FileStorageLocationMetadata::ORDER);
         }
 
         $qb->execute();
@@ -136,7 +137,7 @@ class FileStorageModel extends AModel {
         $qb = $this->composeCommonQuery(__METHOD__);
 
         if($order === TRUE) {
-            $qb->orderBy('order');
+            $qb->orderBy(FileStorageLocationMetadata::ORDER);
         }
 
         $qb->execute();
@@ -159,15 +160,15 @@ class FileStorageModel extends AModel {
     }
 
     private function createFileStorageLocationObjectFromDbRow($row) {
-        $id = $row['id'];
-        $name = $row['name'];
-        $path = $row['path'];
-        $isDefault = $row['is_default'];
-        $isActive = $row['is_active'];
-        $order = $row['order'];
-        $isSystem = $row['is_system'];
-        $type = $row['type'];
-        $absolutePath = $row['absolute_path'];
+        $id = $row[FileStorageLocationMetadata::ID];
+        $name = $row[FileStorageLocationMetadata::NAME];
+        $path = $row[FileStorageLocationMetadata::PATH];
+        $isDefault = $row[FileStorageLocationMetadata::IS_DEFAULT];
+        $isActive = $row[FileStorageLocationMetadata::IS_ACTIVE];
+        $order = $row[FileStorageLocationMetadata::ORDER];
+        $isSystem = $row[FileStorageLocationMetadata::IS_SYSTEM];
+        $type = $row[FileStorageLocationMetadata::TYPE];
+        $absolutePath = $row[FileStorageLocationMetadata::ABSOLUTE_PATH];
 
         if($isDefault == '1') {
             $isDefault = true;

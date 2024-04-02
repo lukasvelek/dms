@@ -198,13 +198,17 @@ function drawDocumentBulkActions(_idFolder, _filter) {
             ids[i] = this.value;
         });
 
-        $.get('app/ajax/Documents.php', {
-            idDocuments: ids,
-            action: "getBulkActions",
-            id_folder: _idFolder,
-            filter: _filter
-        },
-        async function(data) {
+        $.ajax({
+            url: 'app/ajax/Documents.php',
+            type: 'POST',
+            data: {
+                idDocuments: ids,
+                action: "getBulkActions",
+                id_folder: _idFolder,
+                filter: _filter
+            }
+        })
+        .done(async function(data) {
             await sleep(general_sleep_length);
             $('#bulk_actions').html(data);
         });

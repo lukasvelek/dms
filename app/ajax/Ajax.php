@@ -6,7 +6,6 @@ use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
-use DMS\Authorizators\PanelAuthorizator;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
@@ -44,6 +43,12 @@ session_start();
 
 $dependencies = array();
 
+/**
+ * Creates a list of dependencies with their paths in a given directory
+ * 
+ * @param array $dependencies Array of dependencies
+ * @param string $dir Directory to search in
+ */
 function loadDependencies2(array &$dependencies, string $dir) {
     $content = scandir($dir);
 
@@ -51,11 +56,10 @@ function loadDependencies2(array &$dependencies, string $dir) {
     unset($content[1]);
 
     $skip = array(
-        $dir . '\\dependencies.php',
         $dir . '\\dms_loader.php',
         $dir . '\\install',
-        $dir . '\\modules',
-        $dir . '\\ajax',
+        $dir . '\\Modules',
+        $dir . '\\Ajax',
         $dir . '\\PHPMailer'
     );
 
@@ -94,6 +98,14 @@ function loadDependencies2(array &$dependencies, string $dir) {
     }
 }
 
+/**
+ * Sorts dependencies based on their type:
+ *  1. Interfaces
+ *  2. Abstract classes
+ *  3. General classes
+ * 
+ * @param array $dependencies Array of dependencies
+ */
 function sortDependencies2(array &$dependencies) {
     $interfaces = [];
     $classes = [];
@@ -106,7 +118,11 @@ function sortDependencies2(array &$dependencies) {
         if($filename[0] == 'A') {
             $abstractClasses[] = $dependency;
         } else if($filename[0] == 'I') {
-            $interfaces[] = $dependency;
+            if(getNestLevel2($dependency) > 5) {
+                $interfaces[] = $dependency;
+            } else {
+                $interfaces = array_merge([$dependency], $interfaces);
+            }
         } else {
             $classes[] = $dependency;
         }
@@ -115,7 +131,17 @@ function sortDependencies2(array &$dependencies) {
     $dependencies = array_merge($interfaces, $abstractClasses, $classes);
 }
 
-loadDependencies2($dependencies, '../');
+/**
+ * Returns the nest level of the dependency
+ * 
+ * @param string $dependecyPath Dependency path
+ * @return int Nest level
+ */
+function getNestLevel2(string $dependencyPath) {
+    return count(explode('\\', $dependencyPath));
+}
+
+loadDependencies2($dependencies, '..\\');
 sortDependencies2($dependencies);
 
 foreach($dependencies as $dependency) {
@@ -124,21 +150,19 @@ foreach($dependencies as $dependency) {
 
 // VENDOR DEPENDENCIES
 
-require_once('../core/vendor/PHPMailer/OAuthTokenProvider.php');
-require_once('../core/vendor/PHPMailer/OAuth.php');
-require_once('../core/vendor/PHPMailer/DSNConfigurator.php');
-require_once('../core/vendor/PHPMailer/Exception.php');
-require_once('../core/vendor/PHPMailer/PHPMailer.php');
-require_once('../core/vendor/PHPMailer/POP3.php');
-require_once('../core/vendor/PHPMailer/SMTP.php');
+require_once('../Core/Vendor/PHPMailer/OAuthTokenProvider.php');
+require_once('../Core/Vendor/PHPMailer/OAuth.php');
+require_once('../Core/Vendor/PHPMailer/DSNConfigurator.php');
+require_once('../Core/Vendor/PHPMailer/Exception.php');
+require_once('../Core/Vendor/PHPMailer/PHPMailer.php');
+require_once('../Core/Vendor/PHPMailer/POP3.php');
+require_once('../Core/Vendor/PHPMailer/SMTP.php');
 
 // END OF VENDOR DENEPENDENCIES
 
 if(!file_exists('../../config.local.php')) {
     die('Config file does not exist!');
 }
-
-//include('../../config.local.php');
 
 $user = null;
 
@@ -205,7 +229,6 @@ if(isset($_SESSION['id_current_user'])) {
 
 }
 
-$panelAuthorizator = new PanelAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);

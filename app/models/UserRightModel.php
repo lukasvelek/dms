@@ -3,11 +3,12 @@
 namespace DMS\Models;
 
 use DMS\Constants\BulkActionRights;
-use DMS\Constants\PanelRights;
+use DMS\Constants\Metadata\UserActionRightMetadata;
+use DMS\Constants\Metadata\UserBulkRightMetadata;
+use DMS\Constants\Metadata\UserMetadataRightMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
-use DMS\Panels\Panels;
 
 class UserRightModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
@@ -15,25 +16,20 @@ class UserRightModel extends AModel {
     }
 
     public function removeAllActionRightsForIdUser(int $idUser) {
-        return $this->deleteByCol('id_user', $idUser, 'user_action_rights');
+        return $this->deleteByCol(UserActionRightMetadata::ID_USER, $idUser, 'user_action_rights');
     }
 
     public function removeAllBulkActionRightsForIdUser(int $idUser) {
-        return $this->deleteByCol('id_user', $idUser, 'user_bulk_rights');
-    }
-
-    public function removeAllPanelRightsForIdUser(int $idUser) {
-        return $this->deleteByCol('id_user', $idUser, 'user_panel_rights');
+        return $this->deleteByCol(UserBulkRightMetadata::ID_USER, $idUser, 'user_bulk_rights');
     }
 
     public function removeAllMetadataRightsForIdUser(int $idUser) {
-        return $this->deleteByCol('id_user', $idUser, 'user_metadata_rights');
+        return $this->deleteByCol(UserMetadataRightMetadata::ID_USER, $idUser, 'user_metadata_rights');
     }
 
     public function removeAllUserRightsForIdUser(int $idUser) {
         return ($this->removeAllActionRightsForIdUser($idUser) &&
                 $this->removeAllBulkActionRightsForIdUser($idUser) &&
-                $this->removeAllPanelRightsForIdUser($idUser) &&
                 $this->removeAllMetadataRightsForIdUser($idUser));
     }
 
@@ -45,38 +41,26 @@ class UserRightModel extends AModel {
         return $this->checkRightExists('bulk', $idUser, $bulkActionName);
     }
 
-    public function checkPanelRightExists(int $idUser, string $panelName) {
-        return $this->checkRightExists('panel', $idUser, $panelName);
-    }
-
     public function insertActionRightForIdUser(int $idUser, string $actionName, bool $status) {
         return $this->insertNew(array(
-            'id_user' => $idUser,
-            'action_name' => $actionName,
-            'is_executable' => $status ? '1' : '0'
+            UserActionRightMetadata::ID_USER => $idUser,
+            UserActionRightMetadata::ACTION_NAME => $actionName,
+            UserActionRightMetadata::IS_EXECUTABLE => $status ? '1' : '0'
             ), 'user_action_rights');
     }
 
     public function insertBulkActionRightForIdUser(int $idUser, string $bulkActionName, bool $status) {
         return $this->insertNew(array(
-            'id_user' => $idUser,
-            'action_name' => $bulkActionName,
-            'is_executable' => $status ? '1' : '0'
+            UserBulkRightMetadata::ID_USER => $idUser,
+            UserBulkRightMetadata::ACTION_NAME => $bulkActionName,
+            UserBulkRightMetadata::IS_EXECUTABLE => $status ? '1' : '0'
             ), 'user_bulk_rights');
-    }
-
-    public function insertPanelRightForIdUser(int $idUser, string $panelName, bool $status) {
-        return $this->insertNew(array(
-            'id_user' => $idUser,
-            'panel_name' => $panelName,
-            'is_visible' => $status ? '1' : '0'
-            ), 'user_panel_rights');
     }
 
     public function insertMetadataRight(int $idUser, int $idMetadata) {
         $qb = $this->qb(__METHOD__);
 
-        $qb ->insert('user_metadata_rights', ['id_user', 'id_metadata'])
+        $qb ->insert('user_metadata_rights', [UserMetadataRightMetadata::ID_USER, UserMetadataRightMetadata::ID_METADATA])
             ->values([$idUser, $idMetadata])
             ->execute();
 
@@ -88,8 +72,8 @@ class UserRightModel extends AModel {
 
         $qb ->update('user_metadata_rights')
             ->set([$name => '1'])
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('id_metadata = ?', [$idMetadata])
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::ID_METADATA . ' = ?', [$idMetadata])
             ->execute();
 
         return $qb->fetchAll();
@@ -100,8 +84,8 @@ class UserRightModel extends AModel {
 
         $qb ->update('user_metadata_rights')
             ->set([$name => '0'])
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('id_metadata = ?', [$idMetadata])
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::ID_METADATA . ' = ?', [$idMetadata])
             ->execute();
 
         return $qb->fetchAll();
@@ -112,8 +96,8 @@ class UserRightModel extends AModel {
 
         $qb ->select(['id'])
             ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('view = 1')
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::VIEW . ' = 1')
             ->execute();
 
         return Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
@@ -124,8 +108,8 @@ class UserRightModel extends AModel {
 
         $qb ->select(['id'])
             ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('edit = 1')
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::EDIT . ' = 1')
             ->execute();
 
         return Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
@@ -136,8 +120,8 @@ class UserRightModel extends AModel {
 
         $qb ->select(['id'])
             ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('view_values = 1')
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::VIEW_VALUES . ' = 1')
             ->execute();
 
         return Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
@@ -148,8 +132,8 @@ class UserRightModel extends AModel {
 
         $qb ->select(['id'])
             ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('edit_values = 1')
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::EDIT_VALUES . ' = 1')
             ->execute();
 
         return Database::convertMysqliResultToArray($qb->fetchAll(), ['id_metadata']);
@@ -160,8 +144,8 @@ class UserRightModel extends AModel {
 
         $qb ->select(['*'])
             ->from('user_metadata_rights')
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('id_metadata = ?', [$idMetadata])
+            ->where(UserMetadataRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserMetadataRightMetadata::ID_METADATA . ' = ?', [$idMetadata])
             ->execute();
 
         return $qb->fetchAll();
@@ -171,21 +155,9 @@ class UserRightModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('user_bulk_rights')
-            ->set(['is_executable' => ($status ? '1' : '0')])
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('action_name = ?', [$rightName])
-            ->execute();
-
-        return $qb->fetchAll();
-    }
-
-    public function updatePanelRight(int $idUser, string $rightName, bool $status) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->update('user_panel_rights')
-            ->set(['is_visible' => ($status ? '1' : '0')])
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('panel_name = ?', [$rightName])
+            ->set([UserBulkRightMetadata::IS_EXECUTABLE => ($status ? '1' : '0')])
+            ->where(UserBulkRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserBulkRightMetadata::ACTION_NAME . ' = ?', [$rightName])
             ->execute();
 
         return $qb->fetchAll();
@@ -195,9 +167,9 @@ class UserRightModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('user_action_rights')
-            ->set(['is_executable' => ($status ? '1' : '0')])
-            ->where('id_user = ?', [$idUser])
-            ->andWhere('action_name = ?', [$rightName])
+            ->set([UserActionRightMetadata::IS_EXECUTABLE => ($status ? '1' : '0')])
+            ->where(UserActionRightMetadata::ID_USER . ' = ?', [$idUser])
+            ->andWhere(UserActionRightMetadata::ACTION_NAME . ' = ?', [$rightName])
             ->execute();
 
         return $qb->fetchAll();
@@ -207,7 +179,7 @@ class UserRightModel extends AModel {
         foreach(UserActionRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
-            $qb ->insert('user_action_rights', ['id_user', 'action_name', 'is_executable'])
+            $qb ->insert('user_action_rights', [UserActionRightMetadata::ID_USER, UserActionRightMetadata::ACTION_NAME, UserActionRightMetadata::IS_EXECUTABLE])
                 ->values([$idUser, $r, '0'])
                 ->execute();
         }
@@ -215,23 +187,11 @@ class UserRightModel extends AModel {
         return true;
     }
 
-    public function insertPanelRightsForIdUser(int $idUser) {
-        foreach(PanelRights::$all as $r) {
-            $qb = $this->qb(__METHOD__);
-
-            $qb ->insert('user_panel_rights', ['id_user', 'panel_name', 'is_visible'])
-                ->values([$idUser, $r, '0'])
-                ->execute();
-        }
-
-        return true;           
-    }
-
     public function insertBulkActionRightsForIdUser(int $idUser) {
         foreach(BulkActionRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
-            $qb ->insert('user_bulk_rights', ['id_user', 'action_name', 'is_executable'])
+            $qb ->insert('user_bulk_rights', [UserBulkRightMetadata::ID_USER, UserBulkRightMetadata::ACTION_NAME, UserBulkRightMetadata::IS_EXECUTABLE])
                 ->values([$idUser, $r, '0'])
                 ->execute();
         }
@@ -243,7 +203,7 @@ class UserRightModel extends AModel {
         foreach($metadata as $m) {
             $qb = $this->qb(__METHOD__);
                          
-            $qb ->insert('user_metadata_rights', ['id_user', 'id_metadata', 'view'])
+            $qb ->insert('user_metadata_rights', [UserMetadataRightMetadata::ID_USER, UserMetadataRightMetadata::ID_METADATA, UserMetadataRightMetadata::VIEW])
                 ->values([$idUser, $m->getId(), '1'])
                 ->execute();
         }
@@ -256,28 +216,12 @@ class UserRightModel extends AModel {
 
         $qb ->select(['*'])
             ->from('user_action_rights')
-            ->where('id_user = ?', [$idUser])
+            ->where(UserActionRightMetadata::ID_USER . ' = ?', [$idUser])
             ->execute();
 
         $rights = [];
         while($row = $qb->fetchAssoc()) {
-            $rights[$row['action_name']] = $row['is_executable'];
-        }
-
-        return $rights;
-    }
-
-    public function getPanelRightsForIdUser(int $idUser) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('user_panel_rights')
-            ->where('id_user = ?', [$idUser])
-            ->execute();
-
-        $rights = [];
-        while($row = $qb->fetchAssoc()) {
-            $rights[$row['panel_name']] = $row['is_visible'];
+            $rights[$row[UserActionRightMetadata::ACTION_NAME]] = $row[UserActionRightMetadata::IS_EXECUTABLE];
         }
 
         return $rights;
@@ -288,12 +232,12 @@ class UserRightModel extends AModel {
 
         $qb ->select(['*'])
             ->from('user_bulk_rights')
-            ->where('id_user = ?', [$idUser])
+            ->where(UserBulkRightMetadata::ID_USER . ' = ?', [$idUser])
             ->execute();
 
         $rights = [];
         while($row = $qb->fetchAssoc()) {
-            $rights[$row['action_name']] = $row['is_executable'];
+            $rights[$row[UserBulkRightMetadata::ACTION_NAME]] = $row[UserBulkRightMetadata::IS_EXECUTABLE];
         }
 
         return $rights;
@@ -304,12 +248,12 @@ class UserRightModel extends AModel {
 
         $qb ->select(['*'])
             ->from('user_bulk_rights')
-            ->where('id_user = ?', [$idUser])
+            ->where(UserBulkRightMetadata::ID_USER . ' = ?', [$idUser])
             ->execute();
 
         $rights = [];
         while($row = $qb->fetchAssoc()) {
-            $rights[] = $row['action_name'];
+            $rights[] = $row[UserBulkRightMetadata::ACTION_NAME];
         }
 
         return $rights;
@@ -320,27 +264,25 @@ class UserRightModel extends AModel {
 
         $tableName = '';
         $columnName = '';
+        $whereColumnName = '';
 
         switch($type) {
             case 'action':
                 $tableName = 'user_action_rights';
                 $columnName = 'action_name';
+                $whereColumnName = UserActionRightMetadata::ID_USER;
                 break;
 
             case 'bulk':
                 $tableName = 'user_bulk_rights';
                 $columnName = 'action_name';
-                break;
-
-            case 'panel':
-                $tableName = 'user_panel_rights';
-                $columnName = 'panel_name';
+                $whereColumnName = UserBulkRightMetadata::ID_USER;
                 break;
         }
 
         $qb ->select(['*'])
             ->from($tableName)
-            ->where('id_user = ?', [$idUser])
+            ->where($whereColumnName . ' = ?', [$idUser])
             ->andWhere($columnName . ' = ?', [$name])
             ->execute();
 

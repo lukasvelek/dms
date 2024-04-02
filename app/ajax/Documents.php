@@ -3,6 +3,9 @@
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\DocumentStatsMetadata;
+use DMS\Constants\ProcessStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
@@ -10,6 +13,7 @@ use DMS\Core\CypherManager;
 use DMS\Entities\Document;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Helpers\GridDataHelper;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
@@ -34,7 +38,7 @@ if($action == null) {
 echo($action());
 
 function getBulkActions() {
-    global $processComponent, $documentModel, $documentBulkActionAuthorizator, $user;
+    global $documentModel, $documentBulkActionAuthorizator, $user, $processModel;
 
     $bulkActions = [];
     $text = '';
@@ -46,74 +50,83 @@ function getBulkActions() {
     $canMoveToArchiveDocument = null;
     $canMoveFromArchiveDocument = null;
 
-    $idDocuments = $_GET['idDocuments'];
+    $idDocuments = $_POST['idDocuments'];
 
     $idFolder = null;
-    if(isset($_GET['id_folder']) && $_GET['id_folder'] != 'null') {
-        $idFolder = $_GET['id_folder'];
+    if(isset($_POST['id_folder']) && $_POST['id_folder'] != 'null') {
+        $idFolder = $_POST['id_folder'];
     }
 
     $filter = null;
-    if(isset($_GET['filter']) && $_GET['filter'] != 'null') {
-        $filter = $_GET['filter'];
+    if(isset($_POST['filter']) && $_POST['filter'] != 'null') {
+        $filter = $_POST['filter'];
     }
 
     if(!is_null($user)) {
-        foreach($idDocuments as $idDocument) {
-            $inProcess = $processComponent->checkIfDocumentIsInProcess($idDocument);
-            $document = $documentModel->getDocumentById($idDocument);
+        $qb = $processModel->composeStandardProcessQuery(['id_document']);
+        $qb ->where('is_archive = 0')
+            ->andWhere('status = ?', [ProcessStatus::IN_PROGRESS])
+            ->andWhere('id_document IS NOT NULL')
+            ->execute();
+        
+        $idDocumentsInProcess = [];
+        while($row = $qb->fetchAssoc()) {
+            $idDocumentsInProcess[] = $row['id_document'];
+        }
 
-            if($documentBulkActionAuthorizator->canDelete($document, null, true, false) && 
-                (is_null($canDelete) || $canDelete) &&
-                !$inProcess) {
+        $qb->clean();
+
+        $canDeleteIds = $documentBulkActionAuthorizator->getAllDocumentIdsForCanDelete($documentModel, null, true);
+        $canApproveArchivationIds = $canDeclineArchivationIds = $documentBulkActionAuthorizator->getAllDocumentIdsForApproveArchivation($documentModel, null, true);
+        //$canDeclineArchivationIds = $documentBulkActionAuthorizator->getAllDocumentIdsForDeclineArchivation($documentModel, null, true); // commented because it does the same SQL query as above
+        $canArchiveIds = $documentBulkActionAuthorizator->getAllDocumentIdsForArchive($documentModel, null, true);
+        $canSuggestShreddingIds = $documentBulkActionAuthorizator->getAllDocumentIdsForSuggestForShredding($documentModel, null, true);
+        $canMoveToArchiveDocumentIds = $documentBulkActionAuthorizator->getAllDocumentIdsForMoveToArchiveDocument($documentModel, null, true);
+        $canMoveFromArchiveDocumentIds = $documentBulkActionAuthorizator->getAllDocumentIdsForMoveFromArchiveDocument($documentModel, null, true);
+
+        foreach($idDocuments as $idDocument) {
+            $inProcess = false;
+            if(in_array($idDocument, $idDocumentsInProcess)) {
+                $inProcess = true;
+            }
+
+            if(in_array($idDocument, $canDeleteIds) && (is_null($canDelete) || $canDelete) && !$inProcess) {
                 $canDelete = true;
             } else {
                 $canDelete = false;
             }
 
-            if($documentBulkActionAuthorizator->canApproveArchivation($document, null, true, false) && 
-                (is_null($canApproveArchivation) || $canApproveArchivation) &&
-                !$inProcess) {
+            if(in_array($idDocument, $canApproveArchivationIds) && (is_null($canApproveArchivation) || $canApproveArchivation) && !$inProcess) {
                 $canApproveArchivation = true;
             } else {
                 $canApproveArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canDeclineArchivation($document, null, true, false) &&
-                (is_null($canDeclineArchivation) || $canDeclineArchivation) &&
-                !$inProcess) {
+            if(in_array($idDocument, $canDeclineArchivationIds) && (is_null($canDeclineArchivation) || $canDeclineArchivation) && !$inProcess) {
                 $canDeclineArchivation = true;
             } else {
                 $canDeclineArchivation = false;
             }
 
-            if($documentBulkActionAuthorizator->canArchive($document, null, true, false) &&
-                (is_null($canArchive) || $canArchive) &&
-                !$inProcess) {
+            if(in_array($idDocument, $canArchiveIds) && (is_null($canArchive) || $canArchive) && !$inProcess) {
                 $canArchive = true;
             } else {
                 $canArchive = false;
             }
 
-            if($documentBulkActionAuthorizator->canSuggestForShredding($document, null, true, false) &&
-              (is_null($canSuggestShredding) || $canSuggestShredding) &&
-              !$inProcess) {
+            if(in_array($idDocument, $canSuggestShreddingIds) && (is_null($canSuggestShredding) || $canSuggestShredding) && !$inProcess) {
                 $canSuggestShredding = true;
             } else {
                 $canSuggestShredding = false;
             }
 
-            if($documentBulkActionAuthorizator->canMoveToArchiveDocument($document, null, true, false) &&
-               (is_null($canMoveToArchiveDocument) || $canMoveToArchiveDocument) &&
-               !$inProcess) {
+            if(in_array($idDocument, $canMoveToArchiveDocumentIds) && (is_null($canMoveToArchiveDocument) || $canMoveToArchiveDocument) && !$inProcess) {
                 $canMoveToArchiveDocument = true;
             } else {
                 $canMoveToArchiveDocument = false;
             }
 
-            if($documentBulkActionAuthorizator->canMoveFromArchiveDocument($document, null, true, false) &&
-               (is_null($canMoveFromArchiveDocument) || $canMoveFromArchiveDocument) &&
-               !$inProcess) {
+            if(in_array($idDocument, $canMoveFromArchiveDocumentIds) && (is_null($canMoveFromArchiveDocument) || $canMoveFromArchiveDocument) && !$inProcess) {
                 $canMoveFromArchiveDocument = true;
             } else {
                 $canMoveFromArchiveDocument = false;
@@ -296,7 +309,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user;
+    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user, $processComponent;
 
     $returnArray = [];
 
@@ -332,7 +345,10 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addColumns([/*'lock' => 'Lock',*/ 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
+            return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked');
+        });*/
         $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
         });
@@ -396,7 +412,10 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addColumns([/*'lock' => 'Lock',*/ 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
+            return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked', 'red', 'green');
+        });*/
         $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
         });
@@ -558,7 +577,7 @@ function searchDocumentsSharedWithMe() {
 }
 
 function generateDocuments() {
-    global $documentModel, $user;
+    global $documentModel, $user, $logger;
 
     if($user == null) {
         exit;
@@ -577,27 +596,32 @@ function generateDocuments() {
     $inserted = 0;
     while($inserted < $count) {
         $data = array(
-            'name' => 'DG_' . CypherManager::createCypher(8),
-            'id_author' => $user->getId(),
-            'id_officer' => $user->getId(),
-            'status' => '1',
-            'id_manager' => '2',
-            'id_group' => '1',
-            'is_deleted' => '0',
-            'rank' => 'public',
-            'shred_year' => date('Y'),
-            'after_shred_action' => 'showAsShredded',
-            'shredding_status' => '5'
+            DocumentMetadata::NAME => 'DG_' . CypherManager::createCypher(8),
+            DocumentMetadata::ID_AUTHOR => $user->getId(),
+            DocumentMetadata::ID_OFFICER => $user->getId(),
+            DocumentMetadata::STATUS => '1',
+            DocumentMetadata::ID_MANAGER => '2',
+            DocumentMetadata::ID_GROUP => '1',
+            DocumentMetadata::IS_DELETED => '0',
+            DocumentMetadata::RANK => 'public',
+            DocumentMetadata::SHRED_YEAR => date('Y'),
+            DocumentMetadata::AFTER_SHRED_ACTION => 'showAsShredded',
+            DocumentMetadata::SHREDDING_STATUS => '5'
         );
 
         if($id_folder != '0') {
-            $data['id_folder'] = $id_folder;
+            $data[DocumentMetadata::ID_FOLDER] = $id_folder;
         }
 
         $result = $documentModel->insertNewDocument($data);
 
         if($result) {
             $inserted++;
+        }
+
+        if($inserted % 100 == 0) {
+            $documentModel->commitTran();
+            $documentModel->beginTran();
         }
     }
 
@@ -607,21 +631,21 @@ function generateDocuments() {
     if($inserted < $count) {
         for($i = 0; $i < ($count - $inserted); $i++) {
             $data = array(
-                'name' => 'DG_' . CypherManager::createCypher(8),
-                'id_author' => $user->getId(),
-                'id_officer' => $user->getId(),
-                'status' => '1',
-                'id_manager' => '2',
-                'id_group' => '1',
-                'is_deleted' => '0',
-                'rank' => 'public',
-                'shred_year' => '2023',
-                'after_shred_action' => 'showAsShredded',
-                'shredding_status' => '5'
+                DocumentMetadata::NAME => 'DG_' . CypherManager::createCypher(8),
+                DocumentMetadata::ID_AUTHOR => $user->getId(),
+                DocumentMetadata::ID_OFFICER => $user->getId(),
+                DocumentMetadata::STATUS => '1',
+                DocumentMetadata::ID_MANAGER => '2',
+                DocumentMetadata::ID_GROUP => '1',
+                DocumentMetadata::IS_DELETED => '0',
+                DocumentMetadata::RANK => 'public',
+                DocumentMetadata::SHRED_YEAR => date('Y'),
+                DocumentMetadata::AFTER_SHRED_ACTION => 'showAsShredded',
+                DocumentMetadata::SHREDDING_STATUS => '5'
             );
     
             if($id_folder != '0') {
-                $data['id_folder'] = $id_folder;
+                $data[DocumentMetadata::ID_FOLDER] = $id_folder;
             }
     
             $documentModel->insertNewDocument($data);
@@ -635,11 +659,11 @@ function generateDocuments() {
     }
 
     $data = array(
-        'total_count' => $documentModel->getTotalDocumentCount($id_folder),
-        'shredded_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
-        'archived_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
-        'new_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
-        'waiting_for_archivation_count' => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED)
+        DocumentStatsMetadata::TOTAL_COUNT => $documentModel->getTotalDocumentCount($id_folder),
+        DocumentStatsMetadata::SHREDDED_COUNT => $documentModel->getDocumentCountByStatus(DocumentStatus::SHREDDED),
+        DocumentStatsMetadata::ARCHIVED_COUNT => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVED),
+        DocumentStatsMetadata::NEW_COUNT => $documentModel->getDocumentCountByStatus(DocumentStatus::NEW),
+        DocumentStatsMetadata::WAITING_FOR_ARCHIVATION_COUNT => $documentModel->getDocumentCountByStatus(DocumentStatus::ARCHIVATION_APPROVED)
     );
 
     $documentModel->beginTran();
@@ -903,15 +927,17 @@ function _createBlankLink(int $left, int $top) {
 }
 
 function _createBulkFunctionLink(string $action, array $idDocuments, ?int $idFolder, ?string $filter) {
+    global $user;
     $link = '?page=UserModule:Documents:performBulkAction&';
 
-    $i = 0;
+    if($user === NULL) {
+        die('User does not exist in AJAX');
+        exit;
+    }
+
+    $cm = CacheManager::getTemporaryObject(md5($user->getId() . 'bulk_action' . $action), true);
     foreach($idDocuments as $idDocument) {
-        if(($i + 1) == count($idDocuments)) {
-            $link .= 'select[]=' . $idDocument;
-        } else {
-            $link .= 'select[]=' . $idDocument . '&';
-        }
+        $cm->saveStringToCache($idDocument);
     }
 
     $link .= '&action=' . $action;

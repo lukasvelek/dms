@@ -2,6 +2,7 @@
 
 namespace DMS\Models;
 
+use DMS\Constants\Metadata\MailQueueMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 
@@ -33,7 +34,7 @@ class MailModel extends AModel {
 
         $qb ->delete()
             ->from('mail_queue')
-            ->where('id = ?', [$id])
+            ->where(MailQueueMetadata::ID . ' = ?', [$id])
             ->execute();
 
         return $qb->fetchAll();

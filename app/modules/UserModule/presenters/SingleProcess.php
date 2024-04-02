@@ -162,12 +162,12 @@ class SingleProcess extends APresenter {
 
         switch($process->getType()) {
             case ProcessTypes::DELETE:
-                $dp = new DeleteProcess($id, $app->processComponent, $app->documentModel, $app->processModel, $app->groupModel, $app->groupUserModel);
+                $dp = new DeleteProcess($id, $app->processComponent, $app->documentModel, $app->processModel, $app->groupModel, $app->groupUserModel, $app->documentMetadataHistoryModel);
                 $dp->work();
                 break;
             
             case ProcessTypes::SHREDDING:
-                $sp = new ShreddingProcess($id, $app->processModel, $app->documentModel, $app->processComponent, $app->documentCommentModel, $app->processCommentModel);
+                $sp = new ShreddingProcess($id, $app->processModel, $app->documentModel, $app->processComponent, $app->documentCommentModel, $app->processCommentModel, $app->documentMetadataHistoryModel);
                 $sp->work();
                 break;
         }

@@ -3,22 +3,28 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\Metadata\FolderMetadata;
+use DMS\Constants\Metadata\MetadataMetadata;
+use DMS\Constants\Metadata\ServiceMetadata as MetadataServiceMetadata;
+use DMS\Constants\Metadata\UserMetadata;
 use DMS\Constants\MetadataAllowedTables;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\ServiceMetadata;
 use DMS\Constants\UserActionRights;
-use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Constants\WidgetLocations;
 use DMS\Core\AppConfiguration;
-use DMS\Core\Application;
 use DMS\Core\CacheManager;
+use DMS\Core\CryptManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Folder;
 use DMS\Entities\Metadata;
+use DMS\Entities\ServiceEntity;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Helpers\DocumentFolderListHelper;
+use DMS\Helpers\GridDataHelper;
 use DMS\Models\DocumentModel;
 use DMS\Models\FolderModel;
 use DMS\Models\GroupModel;
@@ -190,7 +196,7 @@ class Settings extends APresenter {
         }
 
         foreach($values as $k => $v) {
-            $app->serviceModel->updateService($name, $k, $v);
+            $app->serviceModel->updateServiceConfig($name, $k, $v);
         }
 
         $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_CONFIG);
@@ -211,8 +217,31 @@ class Settings extends APresenter {
         $name = $this->get('name');
 
         $data = array(
-            '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i>',
+            '$PAGE_TITLE$' => 'Edit service <i>' . $name . '</i> config',
             '$FORM$' => $this->internalCreateEditServiceForm($name),
+            '$LINKS$' => []
+        );
+
+        $data['$LINKS$'][] = LinkBuilder::createLink('showServices', '&larr;');
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function editServiceServiceForm() {
+        global $app;
+        
+        $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/settings/settings-new-entity-form.html');
+        
+        $app->flashMessageIfNotIsset(['id']);
+        
+        $id = $this->get('id');
+        $service = $app->serviceModel->getServiceById($id);
+
+        $data = array(
+            '$PAGE_TITLE$' => 'Edit service <i>' . $service->getDisplayName() . '</i>',
+            '$FORM$' => $this->internalCreateEditServiceServiceForm($service),
             '$LINKS$' => []
         );
 
@@ -237,12 +266,85 @@ class Settings extends APresenter {
         $data = array(
             '$PAGE_TITLE$' => 'Services',
             '$SETTINGS_GRID$' => $servicesGrid,
-            '$LINKS$' => ''
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showNewServiceForm'], 'New service') . '&nbsp;&nbsp;';
+        $data['$LINKS$'][] = LinkBuilder::createLink('refreshServiceRunDates', 'Refresh');
 
         $this->templateManager->fill($data, $template);
 
         return $template;
+    }
+
+    protected function refreshServiceRunDates() {
+        global $app;
+
+        $app->serviceManager->updateRunDates();
+
+        $app->flashMessage('Service grid refreshed');
+        $app->redirect('showServices');
+    }
+
+    protected function showNewServiceForm() {
+        $template = $this->loadTemplate(__DIR__ . '/templates/settings/settings-new-entity-form.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'New service',
+            '$LINKS$' => [],
+            '$FORM$' => $this->internalCreateNewServiceForm()
+        ];
+
+        $this->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function processNewServiceForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['system_name', 'display_name', 'description']);
+
+        $data = [
+            MetadataServiceMetadata::SYSTEM_NAME => $this->post('system_name'),
+            MetadataServiceMetadata::DISPLAY_NAME => $this->post('display_name'),
+            MetadataServiceMetadata::DESCRIPTION => $this->post('description'),
+            MetadataServiceMetadata::IS_SYSTEM => '0'
+        ];
+
+        if(isset($_POST['is_enabled'])) {
+            $data[MetadataServiceMetadata::IS_ENABLED] = '1';
+        } else {
+            $data[MetadataServiceMetadata::IS_ENABLED] = '0';
+        }
+
+        $app->serviceModel->insertNewService($data);
+        $app->logger->info('Inserted new service ' . $this->post('system_name'), __METHOD__);
+
+        $app->flashMessage('New service created', 'success');
+        $app->redirect('showServices');
+    }
+
+    protected function processEditServiceForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'system_name', 'display_name', 'description']);
+
+        $data = [
+            MetadataServiceMetadata::SYSTEM_NAME => $this->post('system_name'),
+            MetadataServiceMetadata::DISPLAY_NAME => $this->post('display_name'),
+            MetadataServiceMetadata::DESCRIPTION => $this->post('description')
+        ];
+
+        if(isset($_POST['is_enabled'])) {
+            $data[MetadataServiceMetadata::IS_ENABLED] = '1';
+        } else {
+            $data[MetadataServiceMetadata::IS_ENABLED] = '0';
+        }
+
+        $app->serviceModel->updateService($this->get('id'), $data);
+        $app->flashMessage('Service ' . $data['system_name'] . ' updated', 'success');
+        $app->redirect('showServices');
     }
 
     protected function askToRunService() {
@@ -274,8 +376,13 @@ class Settings extends APresenter {
         $name = $this->get('name');
         $cm = CacheManager::getTemporaryObject(CacheCategories::SERVICE_RUN_DATES);
 
-        foreach($app->serviceManager->services as $service) {
-            if($service->name == $name) {
+        if(!array_key_exists($name, $app->serviceManager->services)) {
+            $app->flashMessage('Service \'' . $name . '\' (class \\DMS\\Services\\' . $name . ') not found!', 'error');
+            $app->redirect('showServices');
+        }
+
+        foreach($app->serviceManager->services as $serviceName => $service) {
+            if($serviceName == $name) {
                 $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
 
                 $app->logger->logFunction(function() use ($service) {
@@ -306,7 +413,7 @@ class Settings extends APresenter {
         $pageTitle = 'Document folders';
 
         $idFolder = null;
-        if(isset($_GET['id_folder'])) {
+        if(isset($_GET['id_folder']) && $this->get('id_folder') != '0') {
             $idFolder = $this->get('id_folder');
             $folder = $app->folderModel->getFolderById($idFolder);
 
@@ -333,9 +440,16 @@ class Settings extends APresenter {
         
         $data = array(
             '$PAGE_TITLE$' => $pageTitle,
-            '$LINKS$' => '<div class="row"><div class="col-md" id="right">' . $backLink . '&nbsp;' . $newEntityLink . '</div></div>',
+            '$LINKS$' => [],
             '$FOLDERS_GRID$' => $foldersGrid
         );
+
+        if($backLink !== '') {
+            $data['$LINKS$'][] = $backLink . '&nbsp;&nbsp;';
+        }
+        if($newEntityLink !== '') {
+            $data['$LINKS$'][] = $newEntityLink;
+        }
 
         $this->templateManager->fill($data, $template);
 
@@ -393,29 +507,29 @@ class Settings extends APresenter {
         $parentFolder = $this->post('parent_folder');
         $nestLevel = 0;
 
-        $data['name'] = $this->post('name');
+        $data[FolderMetadata::NAME] = $this->post('name');
 
         $create = true;
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = $this->post('description');
+            $data[FolderMetadata::DESCRIPTION] = $this->post('description');
         }
 
         if($parentFolder == '-1') {
             $parentFolder = null;
         } else {
-            $data['id_parent_folder'] = $parentFolder;
+            $data[FolderMetadata::ID_PARENT_FOLDER] = $parentFolder;
 
             $nestLevelParentFolder = $app->folderModel->getFolderById($parentFolder);
 
             $nestLevel = $nestLevelParentFolder->getNestLevel() + 1;
 
-            if($nestLevel == 6) {
+            if($nestLevel == AppConfiguration::getFolderMaxNestLevel()) {
                 $create = false;
             }
         }
 
-        $data['nest_level'] = $nestLevel;
+        $data[FolderMetadata::NEST_LEVEL] = $nestLevel;
 
         if($create == true) {
             $app->folderModel->updateFolder($idFolder, $data);
@@ -435,25 +549,25 @@ class Settings extends APresenter {
     protected function createNewFolder() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['name', 'parent_folder']);
+        $app->flashMessageIfNotIsset([FolderMetadata::NAME, FolderMetadata::ID_PARENT_FOLDER]);
 
         $data = [];
 
-        $parentFolder = $this->post('parent_folder');
+        $parentFolder = $this->post(FolderMetadata::ID_PARENT_FOLDER);
         $nestLevel = 0;
 
-        $data['name'] = $this->post('name');
+        $data[FolderMetadata::NAME] = $this->post(FolderMetadata::NAME);
 
         $create = true;
 
-        if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = $this->post('description');
+        if(isset($_POST[FolderMetadata::DESCRIPTION]) && $_POST[FolderMetadata::DESCRIPTION] != '') {
+            $data[FolderMetadata::DESCRIPTION] = $this->post(FolderMetadata::DESCRIPTION);
         }
 
         if($parentFolder == '-1') {
             $parentFolder = null;
         } else {
-            $data['id_parent_folder'] = $parentFolder;
+            $data[FolderMetadata::ID_PARENT_FOLDER] = $parentFolder;
 
             $nestLevelParentFolder = $app->folderModel->getFolderById($parentFolder);
 
@@ -464,7 +578,17 @@ class Settings extends APresenter {
             }
         }
 
-        $data['nest_level'] = $nestLevel;
+        $folders = $app->folderModel->getFoldersForIdParentFolder($parentFolder);
+
+        $maxOrder = 0;
+        foreach($folders as $folder) {
+            if($folder->getOrder() > $maxOrder) {
+                $maxOrder = $folder->getOrder();
+            }
+        }
+
+        $data[FolderMetadata::NEST_LEVEL] = $nestLevel;
+        $data[FolderMetadata::ORDER] = $maxOrder + 1;
 
         if($create == true) {
             $app->folderModel->insertNewFolder($data);
@@ -475,10 +599,42 @@ class Settings extends APresenter {
         $app->logger->info('Inserted new folder #' . $idFolder, __METHOD__);
 
         if($parentFolder != '-1') {
-            $app->redirect('showFolders', array('id_folder' => $idFolder));
+            $idParentFolder = (int)$parentFolder;
+            $app->redirect('showFolders', array('id_folder' => $idParentFolder));
         } else {
             $app->redirect('showFolders');
         }
+    }
+
+    protected function moveFolderOrder() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_folder', 'order', 'old_order', 'id_parent_folder']);
+
+        $idFolder = $this->get('id_folder');
+        $idParentFolder = $this->get('id_parent_folder');
+        $order = $this->get('order');
+        $oldOrder = $this->get('old_order');
+        
+        if($idParentFolder == 0) {
+            $parentFolder = null;
+        } else {
+            $parentFolder = $idParentFolder;
+        }
+
+        $oldFolder = $app->folderModel->getFolderByOrderAndParentFolder($parentFolder, $this->get('order'));
+        
+        $data[FolderMetadata::ORDER] = $oldOrder;
+
+        $app->folderModel->updateFolder($oldFolder->getId(), $data);
+        
+        $data = [];
+        
+        $data[FolderMetadata::ORDER] = $order;
+
+        $app->folderModel->updateFolder($idFolder, $data);
+
+        $app->redirect('showFolders', ['id_folder' => $idParentFolder]);
     }
 
     protected function showDashboard() {
@@ -557,8 +713,7 @@ class Settings extends APresenter {
             '$PAGE_TITLE$' => 'Groups',
             '$NEW_ENTITY_LINK$' => '',
             '$SETTINGS_GRID$' => $groupsGrid,
-            '$LINKS$' => [],
-            '$PAGE_CONTROL$' => $this->internalCreateGroupGridPageControl($page)
+            '$LINKS$' => []
         );
 
         if($app->actionAuthorizator->checkActionRight('create_group')) {
@@ -583,7 +738,9 @@ class Settings extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Metadata manager',
-            '$SETTINGS_GRID$' => $metadataGrid
+            '$SETTINGS_GRID$' => $metadataGrid/*,
+            '$CURRENT_FOLDER_TITLE$' => '',
+            '$FOLDER_LIST$' => DocumentFolderListHelper::getFolderList($app->folderModel, 'showMetadata') ''*/
         );
 
         $data['$LINKS$'][] = LinkBuilder::createLink('ExternalEnumViewer:showList', 'External enums') . '&nbsp;&nbsp;';
@@ -741,21 +898,21 @@ class Settings extends APresenter {
 
         $data = [];
 
-        $data['name'] = $name = $this->post('name');
-        $data['table_name'] = $tableName = $this->post('table_name');
+        $data[MetadataMetadata::NAME] = $name = $this->post('name');
+        $data[MetadataMetadata::TABLE_NAME] = $tableName = $this->post('table_name');
         $length = $this->post('length');
         $inputType = $this->post('input_type');
 
         if(isset($_POST['select_external_enum']) && $inputType == 'select_external') {
-            $data['select_external_enum_name'] = $this->post('select_external_enum');
+            $data[MetadataMetadata::SELECT_EXTERNAL_ENUM_NAME] = $this->post('select_external_enum');
         }
 
         if(isset($_POST['readonly'])) {
-            $data['is_readonly'] = '1';
+            $data[MetadataMetadata::IS_READONLY] = '1';
         }
 
-        $data['text'] = $this->post('text');
-        $data['input_type'] = $inputType;
+        $data[MetadataMetadata::TEXT] = $this->post('text');
+        $data[MetadataMetadata::INPUT_TYPE] = $inputType;
 
         if($inputType == 'boolean') {
             $length = '2';
@@ -765,7 +922,7 @@ class Settings extends APresenter {
             $length = '10';
         }
 
-        $data['length'] = $length;
+        $data[MetadataMetadata::LENGTH] = $length;
 
         $app->metadataModel->insertNewMetadata($data);
 
@@ -832,7 +989,6 @@ class Settings extends APresenter {
         $app->logger->info('Created new group #' . $idGroup, __METHOD__);
 
         $app->groupRightModel->insertActionRightsForIdGroup($idGroup);
-        $app->groupRightModel->insertPanelRightsForIdGroup($idGroup);
         $app->groupRightModel->insertBulkActionRightsForIdGroup($idGroup);
 
         $app->redirect('Groups:showUsers', array('id' => $idGroup));
@@ -843,7 +999,7 @@ class Settings extends APresenter {
 
         $data = [];
 
-        $required = array('firstname', 'lastname', 'username');
+        $required = array('firstname', 'lastname', 'username', 'password', 'password2');
         
         $app->flashMessageIfNotIsset($required);
 
@@ -851,27 +1007,34 @@ class Settings extends APresenter {
             $data[$r] = $this->post($r);
         }
 
-        if(isset($_POST['email']) && !empty($_POST['email'])) {
-            $data['email'] = $this->post('email');
-        }
-        if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
-            $data['address_street'] = $this->post('address_street');
-        }
-        if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
-            $data['address_house_number'] = $this->post('address_house_number');
-        }
-        if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
-            $data['address_city'] = $this->post('address_city');
-        }
-        if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
-            $data['address_zip_code'] = $this->post('address_zip_code');
-        }
-        if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
-            $data['address_country'] = $this->post('address_country');
+        if(!$app->userAuthenticator->checkPasswordMatch([$data[UserMetadata::PASSWORD], $data['password2']])) {
+            $app->flashMessage('Passwords do not match!', 'error');
+            $app->redirect('showNewUserForm');
+        } else {
+            $data[UserMetadata::PASSWORD] = CryptManager::hashPassword($data[UserMetadata::PASSWORD]);
+            unset($data['password2']);
         }
 
-        $data['status'] = UserStatus::PASSWORD_CREATION_REQUIRED;
-        $data['password_change_status'] = UserPasswordChangeStatus::FORCE;
+        if(isset($_POST['email']) && !empty($_POST['email'])) {
+            $data[UserMetadata::EMAIL] = $this->post('email');
+        }
+        if(isset($_POST['address_street']) && !empty($_POST['address_street'])) {
+            $data[UserMetadata::ADDRESS_STREET] = $this->post('address_street');
+        }
+        if(isset($_POST['address_house_number']) && !empty($_POST['address_house_number'])) {
+            $data[UserMetadata::ADDRESS_HOUSE_NUMBER] = $this->post('address_house_number');
+        }
+        if(isset($_POST['address_city']) && !empty($_POST['address_city'])) {
+            $data[UserMetadata::ADDRESS_CITY] = $this->post('address_city');
+        }
+        if(isset($_POST['address_zip_code']) && !empty($_POST['address_zip_code'])) {
+            $data[UserMetadata::ADDRESS_ZIP_CODE] = $this->post('address_zip_code');
+        }
+        if(isset($_POST['address_country']) && !empty($_POST['address_country'])) {
+            $data[UserMetadata::ADDRESS_COUNTRY] = $this->post('address_country');
+        }
+
+        $data[UserMetadata::STATUS] = UserStatus::ACTIVE;
 
         $app->userModel->insertUser($data);
         $idUser = $app->userModel->getLastInsertedUser()->getId();
@@ -879,9 +1042,17 @@ class Settings extends APresenter {
         $app->logger->info('Created new user #' . $idUser, __METHOD__);
 
         $app->userRightModel->insertActionRightsForIdUser($idUser);
-        $app->userRightModel->insertPanelRightsForIdUser($idUser);
         $app->userRightModel->insertBulkActionRightsForIdUser($idUser);
         $app->userRightModel->insertMetadataRightsForIdUser($idUser, $app->metadataModel->getAllMetadata());
+
+        $ribbons = $app->ribbonModel->getAllRibbons();
+
+        $visibleRibbons = ['home', 'current_user', 'current_user.settings', 'current_user.document_reports'];
+        foreach($ribbons as $ribbon) {
+            if(in_array($ribbon->getCode(), $visibleRibbons)) {
+                $app->ribbonRightsModel->insertNewUserRibbonRight($ribbon->getId(), $idUser, ['can_see' => '1']);
+            }
+        }
 
         $app->redirect('Users:showProfile', array('id' => $idUser));
     }
@@ -963,26 +1134,32 @@ class Settings extends APresenter {
             ->addElement($fb->createLabel()->setFor('lastname')->setText('Last name'))
             ->addElement($fb->createInput()->setType('text')->setName('lastname')->require())
 
-            ->addElement($fb->createlabel()->setFor('email')->setText('Email'))
+            ->addElement($fb->createLabel()->setFor('email')->setText('Email'))
             ->addElement($fb->createInput()->setType('email')->setName('email'))
 
-            ->addElement($fb->createlabel()->setFor('username')->setText('Username'))
+            ->addElement($fb->createLabel()->setFor('username')->setText('Username'))
             ->addElement($fb->createInput()->setType('text')->setName('username')->require())
 
-            ->addElement($fb->createlabel()->setText('Address'))
+            ->addElement($fb->createLabel()->setFor('password')->setText('Password'))
+            ->addElement($fb->createInput()->setType('password')->setName('password')->require())
+            
+            ->addElement($fb->createLabel()->setFor('password2')->setText('Password again'))
+            ->addElement($fb->createInput()->setType('password')->setName('password2')->require())
+
+            ->addElement($fb->createLabel()->setText('Address'))
             ->addElement($fb->createlabel()->setFor('address_street')->setText('Street'))
             ->addElement($fb->createInput()->setType('text')->setName('address_street'))
 
-            ->addElement($fb->createlabel()->setFor('address_house_number')->setText('House number'))
+            ->addElement($fb->createLabel()->setFor('address_house_number')->setText('House number'))
             ->addElement($fb->createInput()->setType('text')->setName('address_house_number'))
 
-            ->addElement($fb->createlabel()->setFor('address_city')->setText('City'))
+            ->addElement($fb->createLabel()->setFor('address_city')->setText('City'))
             ->addElement($fb->createInput()->setType('text')->setName('address_city'))
 
-            ->addElement($fb->createlabel()->setFor('address_zip_code')->setText('Zip code'))
+            ->addElement($fb->createLabel()->setFor('address_zip_code')->setText('Zip code'))
             ->addElement($fb->createInput()->setType('text')->setName('address_zip_code'))
 
-            ->addElement($fb->createlabel()->setFor('address_country')->setText('Country'))
+            ->addElement($fb->createLabel()->setFor('address_country')->setText('Country'))
             ->addElement($fb->createInput()->setType('text')->setName('address_country'))
 
             ->addElement($fb->createSubmit('Create'))
@@ -1152,7 +1329,7 @@ class Settings extends APresenter {
         $counts = $app->logger->logFunction(function(UserModel $userModel, GroupModel $groupModel, DocumentModel $documentModel, FolderModel $folderModel, MailModel $mailModel) {
             $users = $userModel->getUserCount();
             $groups = $groupModel->getGroupCount();
-            $documents = $documentModel->getTotalDocumentCount(null);
+            $documents = $documentModel->getTotalDocumentCount(null, false);
             $folders = $folderModel->getFolderCount();
             $emails = $mailModel->getMailInQueueCount();
 
@@ -1194,22 +1371,29 @@ class Settings extends APresenter {
     private function internalCreateFolderGrid() {
         global $app;
 
-        $folderModel = $app->folderModel;
-
         $idFolder = null;
 
         if(isset($_GET['id_folder'])) {
             $idFolder = $this->get('id_folder');
         }
 
-        $data = function() use ($folderModel, $idFolder) {
-            return $folderModel->getFoldersForIdParentFolder($idFolder);
-        };
+        if($idFolder == '0') {
+            $idFolder = null;
+        }
+
+        $folders = $app->folderModel->getFoldersForIdParentFolder($idFolder, true);
+
+        $maxOrder = 0;
+        foreach($folders as $folder) {
+            if($folder->getOrder() > $maxOrder) {
+                $maxOrder = $folder->getOrder();
+            }
+        }
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['name' => 'Name', 'description' => 'Description']);
-        $gb->addDataSourceCallback($data);
+        $gb->addColumns([FolderMetadata::NAME => 'Name', FolderMetadata::DESCRIPTION => 'Description']);
+        $gb->addDataSource($folders);
         $gb->addAction(function(Folder $folder) {
             return LinkBuilder::createAdvLink(array('page' => 'showFolders', 'id_folder' => $folder->getId()), 'Open');
         });
@@ -1218,6 +1402,20 @@ class Settings extends APresenter {
         });
         $gb->addAction(function(Folder $folder) {
             return LinkBuilder::createAdvLink(array('page' => 'askToDeleteFolder', 'id_folder' => $folder->getId()), 'Delete');
+        });
+        $gb->addAction(function(Folder $folder) {
+            if($folder->getOrder() > 1) {
+                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() - 1), 'old_order' => ($folder->getOrder()), 'id_folder' => $folder->getId(), 'id_parent_folder' => $folder->getIdParentFolder() ?? 0], '&uarr;');
+            } else {
+                return '-';
+            }
+        });
+        $gb->addAction(function(Folder $folder) use ($maxOrder) {
+            if($folder->getOrder() < $maxOrder) {
+                return LinkBuilder::createAdvLink(['page' => 'moveFolderOrder', 'order' => ($folder->getOrder() + 1), 'old_order' => ($folder->getOrder()), 'id_folder' => $folder->getId(), 'id_parent_folder' => $folder->getIdParentFolder() ?? 0], '&darr;');
+            } else {
+                return '-';
+            }
         });
 
         return $gb->build();
@@ -1263,20 +1461,20 @@ class Settings extends APresenter {
             $foldersArr[] = $temp;
         }
 
-        $textArea = $fb->createTextArea()->setName('description');
+        $textArea = $fb->createTextArea()->setName(FolderMetadata::DESCRIPTION);
         if($folder->getDescription() !== NULL) {
             $textArea->setText($folder->getDescription());
         }
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:processUpdateFolderForm&id_folder=' . $idFolder)
 
-            ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
-            ->addElement($fb->createInput()->setType('input')->setName('name')->setValue($folder->getName())->require())
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::NAME)->setText('Name'))
+            ->addElement($fb->createInput()->setType('input')->setName(FolderMetadata::NAME)->setValue($folder->getName())->require())
 
-            ->addElement($fb->createLabel()->setFor('parent_folder')->setText('Parent folder'))
-            ->addElement($fb->createSelect()->setName('parent_folder')->addOptionsBasedOnArray($foldersArr))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::ID_PARENT_FOLDER)->setText('Parent folder'))
+            ->addElement($fb->createSelect()->setName(FolderMetadata::ID_PARENT_FOLDER)->addOptionsBasedOnArray($foldersArr))
 
-            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::DESCRIPTION)->setText('Description'))
             ->addElement($textArea)
 
             ->addElement($fb->createSubmit('Save'))
@@ -1315,14 +1513,14 @@ class Settings extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewFolder')
 
-            ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
-            ->addElement($fb->createInput()->setType('input')->setName('name')->require())
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::NAME)->setText('Name'))
+            ->addElement($fb->createInput()->setType('input')->setName(FolderMetadata::NAME)->require())
 
-            ->addElement($fb->createLabel()->setFor('parent_folder')->setText('Parent folder'))
-            ->addElement($fb->createSelect()->setName('parent_folder')->addOptionsBasedOnArray($foldersArr))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::ID_PARENT_FOLDER)->setText('Parent folder'))
+            ->addElement($fb->createSelect()->setName(FolderMetadata::ID_PARENT_FOLDER)->addOptionsBasedOnArray($foldersArr))
 
-            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
-            ->addElement($fb->createTextArea()->setName('description'))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::DESCRIPTION)->setText('Description'))
+            ->addElement($fb->createTextArea()->setName(FolderMetadata::DESCRIPTION))
 
             ->addElement($fb->createSubmit('Create'))
         ;
@@ -1334,74 +1532,57 @@ class Settings extends APresenter {
         global $app;
 
         $serviceManager = $app->serviceManager;
+        $serviceModel = $app->serviceModel;
         $user = $app->user;
 
-        $data = function() use ($serviceManager, $user) {
-            $values = [];
-            foreach($serviceManager->services as $k => $v) {
-                $serviceLastRunDate = $serviceManager->getLastRunDateForService($v->name);
-                $serviceNextRunDate = $serviceManager->getNextRunDateForService($v->name);
-
-                $serviceLastRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
-                $serviceNextRunDate = DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceNextRunDate, $user);
-
-                $values[] = new class($v->name, $k, $v->description, $serviceLastRunDate, $serviceNextRunDate) {
-                    private $systemName;
-                    private $name;
-                    private $description;
-                    private $lastRunDate;
-                    private $nextRunDate;
-
-                    function __construct($systemName, $name, $description, $lastRunDate, $nextRunDate) {
-                        $this->systemName = $systemName;
-                        $this->name = $name;
-                        $this->description = $description;
-                        $this->lastRunDate = $lastRunDate;
-                        $this->nextRunDate = $nextRunDate;
-                    }
-
-                    function getSystemName() {
-                        return $this->systemName;
-                    }
-
-                    function getName() {
-                        return $this->name;
-                    }
-
-                    function getDescription() {
-                        return $this->description;
-                    }
-
-                    function getLastRunDate() {
-                        return $this->lastRunDate;
-                    }
-
-                    function getNextRunDate() {
-                        return $this->nextRunDate;
-                    }
-                };
-            }
-            return $values;
+        $dataCallback = function() use ($serviceModel) {
+            return $serviceModel->getAllServicesOrderedByLastRunDate();
         };
 
         $canRunService = $app->actionAuthorizator->checkActionRight(UserActionRights::RUN_SERVICE);
         $canEditService = $app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_SERVICE);
+        $canDeleteService = $app->actionAuthorizator->checkActionRight(UserActionRights::DELETE_SERVICE);
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['systemName' => 'System name', 'name' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
-        $gb->addDataSourceCallback($data);
-        $gb->addAction(function($service) use ($canRunService) {
+        $gb->addColumns(['systemName' => 'System name', 'isEnabled' => 'Enabled', 'displayName' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
+        $gb->addOnColumnRender('lastRunDate', function(ServiceEntity $service) use ($serviceManager, $user) {
+            $serviceLastRunDate = $serviceManager->getLastRunDateForService($service->getSystemName());
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
+        });
+        $gb->addOnColumnRender('nextRunDate', function(ServiceEntity $service) use ($serviceManager, $user) {
+            $serviceNextRunDate = $serviceManager->getNextRunDateForService($service->getSystemName());
+            return DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceNextRunDate, $user);
+        });
+        $gb->addOnColumnRender('isEnabled', function(ServiceEntity $service) {
+            return GridDataHelper::renderBooleanValueWithColors($service->isEnabled(), 'Yes', 'No');
+        });
+        $gb->addDataSourceCallback($dataCallback);
+        $gb->addAction(function(ServiceEntity $service) use ($canRunService) {
             $link = '-';
-            if($canRunService) {
+            if($canRunService && $service->isEnabled() === TRUE) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
             return $link;
         });
-        $gb->addAction(function($service) use ($canEditService) {
+        $gb->addAction(function(ServiceEntity $service) use ($canEditService) {
             $link = '-';
             if($canEditService) {
-                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceForm', 'name' => $service->getSystemName()), 'Edit');
+                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceForm', 'name' => $service->getSystemName()), 'Edit config');
+            }
+            return $link;
+        });
+        $gb->addAction(function(ServiceEntity $service) use ($canEditService) {
+            $link = '-';
+            if($canEditService) {
+                $link = LinkBuilder::createAdvLink(array('page' => 'editServiceServiceForm', 'id' => $service->getId()), 'Edit service');
+            }
+            return $link;
+        });
+        $gb->addAction(function(ServiceEntity $service) use ($canDeleteService) {
+            $link = '-';
+            if($canDeleteService && !$service->isSystem()) {
+                $link = LinkBuilder::createAdvLink(['page' => 'deleteService', 'name' => $service->getSystemName()], 'Delete');
             }
             return $link;
         });
@@ -1422,6 +1603,34 @@ class Settings extends APresenter {
             $this->_getChildFolderList($list, $cf);
         }
     }
+
+    private function internalCreateEditServiceServiceForm(ServiceEntity $service) {
+        $fb = new FormBuilder();
+
+        $enabledCheckbox = $fb->createInput()->setType('checkbox')->setName('is_enabled');
+
+        if($service->isEnabled()) {
+            $enabledCheckbox->setSpecial('checked');
+        }
+
+        $fb ->setAction('?page=UserModule:Settings:processEditServiceForm&id=' . $service->getId())->setMethod('POST')
+            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
+            ->addElement($fb->createInput()->setType('text')->setName('system_name')->require()->setValue($service->getSystemName())->readonlyIfBoolTrue($service->isSystem()))
+
+            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name'))
+            ->addElement($fb->createInput()->setType('text')->setName('display_name')->require()->setValue($service->getDisplayName())->readonlyIfBoolTrue($service->isSystem()))
+
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createInput()->setType('text')->setName('description')->require()->setValue($service->getDescription())->readonlyIfBoolTrue($service->isSystem()))
+
+            ->addElement($fb->createLabel()->setFor('is_enabled')->setText('Enable'))
+            ->addElement($enabledCheckbox)
+
+            ->addElement($fb->createSubmit('Save'))
+        ;
+
+        return $fb->build();
+    }
     
     private function internalCreateEditServiceForm(string $name) {
         global $app;
@@ -1431,14 +1640,7 @@ class Settings extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name)
-            
-            ->addElement($fb->createLabel()->setText('Service name')->setFor('name'))
-            ->addElement($fb->createInput()->setType('text')->setName('name')->disable()->setValue($name))
-
-            ->addElement($fb->createLabel()->setText('Description')->setFor('description'))
-            ->addElement($fb->createInput()->setType('text')->setName('description')->disable()->setValue($service->description))
-        ;
+        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name);
 
         foreach($serviceCfg as $key => $value) {
             $fb ->addElement($fb->createLabel()->setText(ServiceMetadata::$texts[$key] . ' (' . $key . ')')->setFor($key));
@@ -1668,134 +1870,26 @@ class Settings extends APresenter {
         return $fb->build();
     }
 
-    private function internalCreateUserGridPageControl(int $page) {
-        global $app;
+    private function internalCreateNewServiceForm() {
+        $fb = new FormBuilder();
 
-        $userCount = $app->userModel->getUserCount();
+        $fb ->setAction('?page=UserModule:Settings:processNewServiceForm')->setMethod('POST')
+            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
+            ->addElement($fb->createInput()->setType('text')->setName('system_name')->require())
 
-        $userPageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Settings:showUsers';
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Settings:showUsers';
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Settings:showUsers';
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Settings:showUsers';
+            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name'))
+            ->addElement($fb->createInput()->setType('text')->setName('display_name')->require())
 
-        $pageCheck = $page - 1;
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createInput()->setType('text')->setName('description')->require())
 
-        $firstPageLink .= '"';
-        if($page == 1) {
-            $firstPageLink .= ' hidden';
-        }
+            ->addElement($fb->createLabel()->setFor('is_enabled')->setText('Enable'))
+            ->addElement($fb->createInput()->setType('checkbox')->setName('is_enabled')->setSpecial('checked'))
 
-        $firstPageLink .= '>&lt;&lt;</a>';
+            ->addElement($fb->createSubmit('Create'))
+        ;
 
-        if($page > 2) {
-            $previousPageLink .= '&grid_page=' . ($page - 1);
-        }
-        
-        $previousPageLink .= '"';
-
-        if($page == 1) {
-            $previousPageLink .= ' hidden';
-        }
-
-        $previousPageLink .= '>&lt;</a>';
-
-        $nextPageLink .= '&grid_page=' . ($page + 1);
-        $nextPageLink .= '"';
-
-        if($userCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' hidden';
-        }
-
-        $nextPageLink .= '>&gt;</a>';
-
-        $lastPageLink .= '&grid_page=' . (ceil($userCount / AppConfiguration::getGridSize()));
-        $lastPageLink .= '"';
-        
-        if($userCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' hidden';
-        }
-
-        $lastPageLink .= '>&gt;&gt;</a>';
-
-        if($userCount > AppConfiguration::getGridSize()) {
-            if($pageCheck * AppConfiguration::getGridSize() >= $userCount) {
-                $userPageControl = (1 + ($page * AppConfiguration::getGridSize()));
-            } else {
-                $userPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
-            }
-        } else {
-            $userPageControl = $userCount;
-        }
-
-        $userPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
-
-        return $userPageControl;
-    }
-
-    private function internalCreateGroupGridPageControl(int $page) {
-        global $app;
-
-        $groupCount = $app->groupModel->getGroupCount();
-
-        $groupPageControl = '';
-        $firstPageLink = '<a class="general-link" title="First page" href="?page=UserModule:Settings:showGroups';
-        $previousPageLink = '<a class="general-link" title="Previous page" href="?page=UserModule:Settings:showGroups';
-        $nextPageLink = '<a class="general-link" title="Next page" href="?page=UserModule:Settings:showGroups';
-        $lastPageLink = '<a class="general-link" title="Last page" href="?page=UserModule:Settings:showGroups';
-
-        $pageCheck = $page - 1;
-
-        $firstPageLink .= '"';
-        if($page == 1) {
-            $firstPageLink .= ' hidden';
-        }
-
-        $firstPageLink .= '>&lt;&lt;</a>';
-
-        if($page > 2) {
-            $previousPageLink .= '&grid_page=' . ($page - 1);
-        }
-        
-        $previousPageLink .= '"';
-
-        if($page == 1) {
-            $previousPageLink .= ' hidden';
-        }
-
-        $previousPageLink .= '>&lt;</a>';
-
-        $nextPageLink .= '&grid_page=' . ($page + 1);
-        $nextPageLink .= '"';
-
-        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
-            $nextPageLink .= ' hidden';
-        }
-
-        $nextPageLink .= '>&gt;</a>';
-
-        $lastPageLink .= '&grid_page=' . (ceil($groupCount / AppConfiguration::getGridSize()));
-        $lastPageLink .= '"';
-        
-        if($groupCount <= ($page * AppConfiguration::getGridSize())) {
-            $lastPageLink .= ' hidden';
-        }
-
-        $lastPageLink .= '>&gt;&gt;</a>';
-
-        if($groupCount > AppConfiguration::getGridSize()) {
-            if($pageCheck * AppConfiguration::getGridSize() >= $groupCount) {
-                $groupPageControl = (1 + ($page * AppConfiguration::getGridSize()));
-            } else {
-                $groupPageControl = (1 + ($pageCheck * AppConfiguration::getGridSize())) . '-' . (AppConfiguration::getGridSize() + ($pageCheck * AppConfiguration::getGridSize()));
-            }
-        } else {
-            $groupPageControl = $groupCount;
-        }
-
-        $groupPageControl .= ' | ' . $firstPageLink . ' ' . $previousPageLink . ' ' . $nextPageLink . ' ' . $lastPageLink;
-
-        return $groupPageControl;
+        return $fb->build();
     }
 }
 

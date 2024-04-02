@@ -2,22 +2,26 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Components\DocumentReports\ADocumentReport;
 use DMS\Constants\ArchiveType;
 use DMS\Constants\DocumentAfterShredActions;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\FileStorageTypes;
+use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Core\AppConfiguration;
-use DMS\Core\CypherManager;
+use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
-use DMS\Entities\Folder;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\ArrayStringHelper;
+use DMS\Helpers\DocumentFolderListHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
+use Exception;
 
 class Documents extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -33,6 +37,11 @@ class Documents extends APresenter {
 
         $app->flashMessageIfNotIsset(['ids', 'archive_document'], true, ['page' => 'showAll']);
 
+        if(!$app->actionAuthorizator->canMoveEntitiesFromToArchive()) {
+            $app->flashMessage('You are not authorized to move entities to archive.', 'error');
+            $app->redirect('showAll');
+        }
+
         $ids = $this->get('ids', false);
         $archiveDocument = $this->post('archive_document');
 
@@ -40,9 +49,13 @@ class Documents extends APresenter {
             $ids = [$ids];
         }
 
-        foreach($ids as $id) {
-            echo $app->documentModel->moveToArchiveDocument($id, $archiveDocument);
-        }
+        $app->documentModel->bulkMoveToArchiveDocument($ids, $archiveDocument);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::ID_ARCHIVE_DOCUMENT => $archiveDocument], $ids, $app->user->getId());
+
+        /*foreach($ids as $id) {
+            $app->documentModel->moveToArchiveDocument($id, $archiveDocument);
+            $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['id_archive_document' => $archiveDocument], $id);
+        }*/
 
         $app->flashMessage('Documents moved to selected archive document', 'success');
         $app->redirect('showAll');
@@ -75,61 +88,43 @@ class Documents extends APresenter {
         return $template;
     }
 
-    protected function downloadReport() {
-        global $app;
-
-        $app->flashMessageIfNotIsset(['hash']);
-
-        $filename = 'cache/temp_' . $this->get('hash') . '.csv';
-        $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
-
-        copy($filename, $downloadFilename);
-
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary"); 
-        header("Content-disposition: attachment; filename=\"" . basename($downloadFilename) . "\"");
-
-        readfile($downloadFilename);
-
-        unlink($filename);
-        unlink($downloadFilename);
-
-        $app->flashMessage('Report has been generated and downloaded', 'success');
-
-        ScriptLoader::loadJSScript('DocumentReportGenerator.js');
-    }
-
     protected function generateReport() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['id_folder', 'filter', 'limit_range', 'order', 'total_count']);
+        $app->flashMessageIfNotIsset(['id_folder', 'filter', 'limit_range', 'order', 'total_count', 'file_format']);
+
+        if(!$app->actionAuthorizator->canGenerateDocumentReports()) {
+            $app->flashMessage('You are not authorized to generate document reports.', 'error');
+            $app->redirect('showAll');
+        }
 
         $idFolder = $this->get('id_folder');
         $totalCount = $this->get('total_count');
         $filter = $this->post('filter');
         $limit = $this->post('limit_range');
         $order = $this->post('order');
+        $fileFormat = $this->post('file_format');
 
         $limit = ceil($limit);
 
         $qb = $app->documentModel->composeQueryStandardDocuments(false);
 
         if($idFolder > 0) {
-            $qb->where('id_folder = ?', [$idFolder]);
+            $qb->where(DocumentMetadata::ID_FOLDER . ' = ?', [$idFolder]);
         }
 
         if(!is_numeric($filter)) {
             switch($filter) {
                 case 'shredded':
-                    $qb->andWhere('status = ?', [DocumentStatus::SHREDDED]);
+                    $qb->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::SHREDDED]);
                     break;
     
                 case 'waitingForArchivation':
-                    $qb->andWhere('status = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
+                    $qb->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVATION_APPROVED]);
                     break;
     
                 case 'archived':
-                    $qb->andWhere('status = ?', [DocumentStatus::ARCHIVED]);
+                    $qb->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED]);
                     break;
     
                 default:
@@ -142,7 +137,7 @@ class Documents extends APresenter {
             }
     
             if($order == 'desc') {
-                $qb->orderBy('id', $order);
+                $qb->orderBy(DocumentMetadata::ID, $order);
             }
         } else {
             $filterEntity = $app->filterModel->getDocumentFilterById($filter);
@@ -155,7 +150,7 @@ class Documents extends APresenter {
                 }
                 
                 if($order == 'desc') {
-                    $qb->orderBy('id', $order);
+                    $qb->orderBy(DocumentMetadata::ID, $order);
                 }
             }
         }
@@ -172,8 +167,9 @@ class Documents extends APresenter {
         if($rows->num_rows > 1000) {
             // use background export
             $data = [
-                'id_user' => $app->user->getId(),
-                'sql_string' => $qb->getSQL()
+                DocumentReportMetadata::ID_USER => $app->user->getId(),
+                DocumentReportMetadata::SQL_STRING => $qb->getSQL(),
+                DocumentReportMetadata::FILE_FORMAT => $fileFormat
             ];
 
             $app->documentModel->insertDocumentReportQueueEntry($data);
@@ -182,31 +178,46 @@ class Documents extends APresenter {
             $app->redirect('showAll');
         }
 
-        $hash = CypherManager::createCypher(32);
-        $filename = 'temp_' . $hash . '.csv';
+        $filename = $app->user->getId() . '_' . date('Y-m-d_H-i-s') . '_document_report.' . $fileFormat;
 
-        $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $filename);
+        $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $fileFormat, $filename);
 
         if($result === FALSE) {
-            die('ERROR! Documents presenter: line 205');
+            die('ERROR! Documents presenter method '. __METHOD__);
         }
 
-        $filename = $result;
-        $downloadFilename = 'cache/report_' . date('Y-m-d_H-i-s') . '.csv';
+        $idFileStorageLocation = $result['id_file_storage_location'];
+        $realFilename = $result['file_name'];
 
-        copy($filename, $downloadFilename);
+        $location = $app->fileStorageModel->getLocationById($idFileStorageLocation);
+        $realServerPath = $location->getPath() . $realFilename;
 
         header('Content-Type: application/octet-stream');
         header("Content-Transfer-Encoding: Binary"); 
-        header("Content-disposition: attachment; filename=\"" . basename($downloadFilename) . "\"");
+        header("Content-disposition: attachment; filename=\"" . basename($realServerPath) . "\"");
 
-        readfile($downloadFilename);
+        readfile($realServerPath);
 
         unlink($filename);
+
+        exit;
     }
 
     protected function showReportForm() {
+        global $app;
+
+        try {
+            $app->actionAuthorizator->throwExceptionIfCannotGenerateDocumentReports();
+        } catch (Exception $e) {
+            $app->throwError($e->getMessage(), ['page' => 'showAll']);
+        }
+
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
+
+        if(!$app->actionAuthorizator->canGenerateDocumentReports()) {
+            $app->flashMessage('You are not authorized to generate document reports.', 'error');
+            $app->redirect('showAll');
+        }
 
         $data = array(
             '$PAGE_TITLE$' => 'Document report generator',
@@ -284,9 +295,11 @@ class Documents extends APresenter {
 
         if(isset($_GET['id_folder'])) {
             $idFolder = $this->get('id_folder');
-            $folder = $app->folderModel->getFolderById($idFolder);
-            $folderName = $folder->getName();
-            $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'id_folder' => $idFolder), 'New document');
+            if($idFolder > 0) {
+                $folder = $app->folderModel->getFolderById($idFolder);
+                $folderName = $folder->getName();
+                $newEntityLink = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'id_folder' => $idFolder), 'New document');
+            }
         }
 
         if(isset($_GET['grid_page'])) {
@@ -418,11 +431,14 @@ class Documents extends APresenter {
 
     protected function performBulkAction() {
         global $app;
-
-        $app->flashMessageIfNotIsset(['select']);
-
-        $ids = $this->get('select', false);
+        
         $action = $this->get('action');
+        
+        $cm = CacheManager::getTemporaryObject(md5($app->user->getId() . 'bulk_action' . $action));
+        $ids = $cm->loadStringsFromCache();
+
+        $cm->invalidateCache();
+        unset($cm);
         
         $idFolder = -1;
         if(isset($_GET['id_folder'])) {
@@ -447,6 +463,11 @@ class Documents extends APresenter {
 
     protected function showNewForm() {
         global $app;
+
+        if(!$app->actionAuthorizator->canCreateDocument()) {
+            $app->flashMessage('You are not authorized to create a new document.', 'error');
+            $app->redirect('showAll');
+        }
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
 
@@ -784,21 +805,21 @@ class Documents extends APresenter {
         $idFolder = $this->post('folder');
         $fileStorageDirectory = $this->post('file_storage_directory');
         
-        $data['name'] = $this->post('name');
-        $data['id_manager'] = $this->post('manager');
-        $data['status'] = $this->post('status');
-        $data['id_group'] = $idGroup;
-        $data['id_author'] = $app->user->getId();
-        $data['shred_year'] = $this->post('shred_year');
-        $data['after_shred_action'] = $this->post('after_shred_action');
-        $data['shredding_status'] = DocumentShreddingStatus::NO_STATUS;
+        $data[DocumentMetadata::NAME] = $this->post('name');
+        $data[DocumentMetadata::ID_MANAGER] = $this->post('manager');
+        $data[DocumentMetadata::STATUS] = $this->post('status');
+        $data[DocumentMetadata::ID_GROUP] = $idGroup;
+        $data[DocumentMetadata::ID_AUTHOR] = $app->user->getId();
+        $data[DocumentMetadata::SHRED_YEAR] = $this->post('shred_year');
+        $data[DocumentMetadata::AFTER_SHRED_ACTION] = $this->post('after_shred_action');
+        $data[DocumentMetadata::SHREDDING_STATUS] = DocumentShreddingStatus::NO_STATUS;
 
         if($idFolder != '-1') {
-            $data['id_folder'] = $idFolder;
+            $data[DocumentMetadata::ID_FOLDER] = $idFolder;
         }
 
         if(isset($_FILES['file'])) {
-            $data['file'] = $_FILES['file']['name'];
+            $data[DocumentMetadata::FILE] = $_FILES['file']['name'];
         }
 
         ArrayHelper::deleteKeysFromArray($_POST, [
@@ -825,8 +846,8 @@ class Documents extends APresenter {
         $data = array_merge($data, $customMetadata);
 
         $fileUpload = true;
-        if(isset($data['file']) && !empty($data['file'])) {
-            $fileUpload = $app->fsManager->uploadFile($_FILES['file'], $data['file'], $fileStorageDirectory); // filepath is converted here
+        if(isset($data[DocumentMetadata::FILE]) && !empty($data[DocumentMetadata::FILE])) {
+            $fileUpload = $app->fsManager->uploadFile($_FILES['file'], $data[DocumentMetadata::FILE], $fileStorageDirectory); // filepath is converted here
         }
 
         if($fileUpload !== TRUE) {
@@ -838,9 +859,11 @@ class Documents extends APresenter {
         // END OF CUSTOM OPERATION DEFINITION
         
         $app->documentModel->insertNewDocument($data);
-
+        
         $idDocument = $app->documentModel->getLastInsertedDocumentForIdUser($app->user->getId())->getId();
-
+        
+        $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray($data, $idDocument, $app->user->getId());
+        
         $app->logger->info('Created document #' . $idDocument, __METHOD__);
 
         $documentGroupUsers = $app->groupUserModel->getGroupUsersByGroupId($idGroup);
@@ -857,14 +880,15 @@ class Documents extends APresenter {
             $app->redirect($app::URL_HOME_PAGE);
         }
 
+        $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::ID_OFFICER => $documentIdManager], $idDocument, $app->user->getId());
         $app->documentModel->updateOfficer($idDocument, $documentIdManager);
 
         $app->flashMessage('Created new document', 'success');
         
         $url = 'showAll';
 
-        if(isset($data['id_folder'])) {
-            $app->redirect($url, array('id_folder' => $data['id_folder']));
+        if(isset($data[DocumentMetadata::ID_FOLDER])) {
+            $app->redirect($url, array('id_folder' => $data[DocumentMetadata::ID_FOLDER]));
         } else {
             $app->redirect($url);
         }
@@ -888,9 +912,8 @@ class Documents extends APresenter {
     private function _move_from_archive_document(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        foreach($ids as $id) {
-            $app->documentModel->moveFromArchiveDocument($id);
-        }
+        $app->documentModel->bulkMoveFromArchiveDocument($ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::ID_ARCHIVE_DOCUMENT => 'NULL'], $ids, $app->user->getId());
 
         $app->flashMessage('Documents moved from the archive document', 'success');
 
@@ -908,10 +931,10 @@ class Documents extends APresenter {
     private function _suggest_for_shredding(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
+        $app->documentModel->updateDocumentsBulk([DocumentMetadata::SHREDDING_STATUS => DocumentShreddingStatus::IN_APPROVAL], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::SHREDDING_STATUS => DocumentShreddingStatus::IN_APPROVAL], $ids, $app->user->getId());
+
         foreach($ids as $id) {
-            $app->documentModel->updateDocument($id, array(
-                'shredding_status' => DocumentShreddingStatus::IN_APPROVAL
-            ));
             $app->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $app->user->getId());
         }
 
@@ -950,22 +973,9 @@ class Documents extends APresenter {
 
     private function _decline_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
-        
-        foreach($ids as $id) {
-            $document = null;
 
-            $app->logger->logFunction(function() use (&$document, $id, $app) {
-                $document = $app->documentModel->getDocumentById($id);
-            }, __METHOD__);
-
-            if($document == null) {
-                die();
-            }
-
-            if($app->documentAuthorizator->canDeclineArchivation($document)) {
-                $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVATION_DECLINED);
-            }
-        }
+        $app->documentModel->updateDocumentsBulk([DocumentMetadata::STATUS => DocumentStatus::ARCHIVATION_DECLINED], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::STATUS => DocumentStatus::ARCHIVATION_DECLINED], $ids, $app->user->getId());
 
         if(count($ids) == 1) {
             $app->flashMessage('Declined archivation for selected document', 'success');
@@ -987,21 +997,8 @@ class Documents extends APresenter {
     private function _approve_archivation(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        foreach($ids as $id) {
-            $document = null;
-
-            $app->logger->logFunction(function() use (&$document, $id, $app) {
-                $document = $app->documentModel->getDocumentById($id);
-            }, __METHOD__);
-
-            if($document == null) {
-                die();
-            }
-
-            if($app->documentAuthorizator->canApproveArchivation($document)) {
-                $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVATION_APPROVED);
-            }
-        }
+        $app->documentModel->updateDocumentsBulk([DocumentMetadata::STATUS => DocumentStatus::ARCHIVATION_APPROVED], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::STATUS => DocumentStatus::ARCHIVATION_APPROVED], $ids, $app->user->getId());
 
         if(count($ids) == 1) {
             $app->flashMessage('Approved archivation for selected document', 'success');
@@ -1023,21 +1020,8 @@ class Documents extends APresenter {
     private function _archive(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
-        foreach($ids as $id) {
-            $document = null;
-
-            $app->logger->logFunction(function() use (&$document, $id, $app) {
-                $document = $app->documentModel->getDocumentById($id);
-            }, __METHOD__);
-
-            if($document == null) {
-                die();
-            }
-
-            if($app->documentAuthorizator->canArchive($document)) {
-                $app->documentModel->updateStatus($document->getId(), DocumentStatus::ARCHIVED);
-            }
-        }
+        $app->documentModel->updateDocumentsBulk([DocumentMetadata::STATUS => DocumentStatus::ARCHIVED], $ids);
+        $app->documentMetadataHistoryModel->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray([DocumentMetadata::STATUS => DocumentStatus::ARCHIVED], $ids, $app->user->getId());
 
         if(count($ids) == 1) {
             $app->flashMessage('Archived selected document', 'success');
@@ -1080,15 +1064,17 @@ class Documents extends APresenter {
             $link = 'showFiltered';
         }
         
+        $dflh = new DocumentFolderListHelper($app->folderModel);
+        
         $list = array(
-            'null1' => '&nbsp;&nbsp;' . $createLink($link, 'Main folder' . (AppConfiguration::getGridMainFolderHasAllComments() ? ' (all documents)' : ''), null, $filter) . '<br>',
+            'null1' => '&nbsp;&nbsp;' . $dflh->createFolderLink($link, 'Main folder' . (AppConfiguration::getGridMainFolderHasAllDocuments() ? ' (all documents)' : ''), null, $filter) . '<br>',
             'null2' => '<hr>'
         );
         
         $folders = $app->folderModel->getAllFolders();
 
         foreach($folders as $folder) {
-            $this->_createFolderList($folder, $list, 0, $filter, $createLink);
+            $dflh->createFolderList($folder, $list, 0, $filter, $link, $folders);
         }
 
         if(count($folders) > 0) {
@@ -1100,53 +1086,22 @@ class Documents extends APresenter {
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
     }
 
-    private function _createFolderList(Folder $folder, array &$list, int $level, ?string $filter, callable $linkCreationMethod) {
-        global $app;
-
-        $link = 'showAll';
-        if($filter != null) {
-            $link = 'showFiltered';
-        }
-
-        $childFolders = $app->folderModel->getFoldersForIdParentFolder($folder->getId());
-
-        $folderLink = $linkCreationMethod($link, $folder->getName(), $folder->getId(), $filter);
-        
-        $spaces = '&nbsp;&nbsp;';
-
-        if($level > 0) {
-            for($i = 0; $i < $level; $i++) {
-                $spaces .= '&nbsp;&nbsp;';
-            }
-        }
-
-        if(!array_key_exists($folder->getId(), $list)) {
-            $list[$folder->getId()] = $spaces . $folderLink . '<br>';
-        }
-
-        if(count($childFolders) > 0) {
-            foreach($childFolders as $cf) {
-                $this->_createFolderList($cf, $list, $level + 1, $filter, $linkCreationMethod);
-            }
-        }
-    }
-
     private function internalCreateSharedWithMeDocumentGrid(int $page) {
-        return '
-            <script type="text/javascript">
-            loadDocumentsSharedWithMe("' . $page . '");
-            </script> 
-            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
-        ';
+        $code = '<script type="text/javascript">';
+        $code .= 'loadDocumentsSharedWithMe("' . $page . '");';
+        $code .= '</script>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
+
+        return $code;
     }
 
     private function internalCreateCustomFilterDocumentsGrid(int $idFilter) {
-        return '
-            <script type="text/javascript">
-            loadDocumentsCustomFilter("' . $idFilter . '");
-            </script> 
-            <table border="1"><img id="documents-loading" style="position: fixed; top: 50%; left: 49%;" src="img/loading.gif" width="32" height="32"></table>
-        ';
+        $code = '<script type="text/javascript">';
+        $code .= 'loadDocumentsCustomFilter("' . $idFilter . '");';
+        $code .= '</script>';
+        $code .= '<div id="grid-loading"><img src="img/loading.gif" width="32" height="32"></div><table border="1"></table>';
+
+        return $code;
     }
 
     private function internalCreateGridPageControl(int $page, ?string $idFolder, string $action = 'showAll') {
@@ -1305,6 +1260,15 @@ class Documents extends APresenter {
             $step = $count / 20;
         }
 
+        $extensions = ADocumentReport::SUPPORTED_EXTENSIONS;
+        $extensionArray = [];
+        foreach($extensions as $extCode => $extName) {
+            $extensionArray[] = [
+                'value' => $extCode,
+                'text' => $extName
+            ];
+        }
+
         $fb
             ->setMethod('POST')->setAction('?page=UserModule:Documents:generateReport&id_folder=' . $idFolder . '&total_count=' . $count)
 
@@ -1317,6 +1281,9 @@ class Documents extends APresenter {
 
             ->addElement($fb->createLabel()->setText('Order')->setFor('order'))
             ->addElement($fb->createSelect()->setName('order')->addOptionsBasedOnArray($orderArray))
+
+            ->addElement($fb->createLabel()->setText('File format')->setFor('file_format'))
+            ->addElement($fb->createSelect()->setName('file_format')->addOptionsBasedOnArray($extensionArray))
 
             ->addJSScript(ScriptLoader::loadJSScript('js/ReportForm.js'))
 

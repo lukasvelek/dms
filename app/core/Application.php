@@ -12,7 +12,6 @@ use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
-use DMS\Authorizators\PanelAuthorizator;
 use DMS\Authorizators\RibbonAuthorizator;
 use DMS\Components\CalendarComponent;
 use DMS\Components\DocumentReportGeneratorComponent;
@@ -31,6 +30,7 @@ use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\ArchiveModel;
 use DMS\Models\CalendarModel;
 use DMS\Models\DocumentCommentModel;
+use DMS\Models\DocumentMetadataHistoryModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
 use DMS\Models\FilterModel;
@@ -54,6 +54,8 @@ use DMS\Modules\IPresenter;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserRepository;
+use Exception;
 
 /**
  * This is the entry point of the whole application. It contains definition for the whole frontend and backend as well.
@@ -71,13 +73,13 @@ class Application {
     public const URL_LOGOUT_PAGE = 'UserModule:UserLogout:logoutUser';
 
     public const SYSTEM_VERSION_MAJOR = 1;
-    public const SYSTEM_VERSION_MINOR = 9;
+    public const SYSTEM_VERSION_MINOR = 10;
     public const SYSTEM_VERSION_PATCH = 0;
     public const SYSTEM_VERSION_PATCH_DISPLAY = false;
 
-    public const SYSTEM_IS_BETA = true;
+    public const SYSTEM_IS_BETA = false;
     public const SYSTEM_VERSION = self::SYSTEM_VERSION_MAJOR . '.' . self::SYSTEM_VERSION_MINOR . (self::SYSTEM_VERSION_PATCH_DISPLAY ? ('.' . self::SYSTEM_VERSION_PATCH) : '') . (self::SYSTEM_IS_BETA ? ' beta' : '');
-    public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2024/02/21';
+    public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2024/04/02';
 
     public ?string $currentUrl;
     
@@ -119,8 +121,8 @@ class Application {
     public ArchiveModel $archiveModel;
     public FileStorageModel $fileStorageModel;
     public CalendarModel $calendarModel;
+    public DocumentMetadataHistoryModel $documentMetadataHistoryModel;
 
-    public PanelAuthorizator $panelAuthorizator;
     public BulkActionAuthorizator $bulkActionAuthorizator;
     public DocumentAuthorizator $documentAuthorizator;
     public ActionAuthorizator $actionAuthorizator;
@@ -140,6 +142,7 @@ class Application {
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
+    public UserRepository $userRepository;
 
     public MailManager $mailManager;
 
@@ -174,6 +177,7 @@ class Application {
 
         $this->userAuthenticator = new UserAuthenticator($this->conn, $this->logger);
 
+        $this->documentMetadataHistoryModel = new DocumentMetadataHistoryModel($this->conn, $this->logger);
         $this->userModel = new UserModel($this->conn, $this->logger);
         $this->userRightModel = new UserRightModel($this->conn, $this->logger);
         $this->documentModel = new DocumentModel($this->conn, $this->logger);
@@ -221,7 +225,6 @@ class Application {
             'calendarModel' => $this->calendarModel
         );
 
-        $this->panelAuthorizator = new PanelAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->metadataAuthorizator = new MetadataAuthorizator($this->conn, $this->logger, $this->user, $this->userModel, $this->groupUserModel);
@@ -254,12 +257,13 @@ class Application {
         
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
+        $this->userRepository = new UserRepository($this->conn, $this->logger, $this->userModel, $this->actionAuthorizator);
         
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
         $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager, $this->externalEnumComponent, $this->fsManager);
         $this->calendarComponent = new CalendarComponent($this->conn, $this->logger, $this->calendarModel);
         
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
+        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent, $this->notificationComponent, $this->fileStorageModel, $this->documentMetadataHistoryModel);
         
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);
         
@@ -343,7 +347,7 @@ class Application {
         $page .= $hashtag;
 
         header('Location: ' . $page);
-        die();
+        exit;
     }
 
     /**
@@ -406,12 +410,17 @@ class Application {
 
         // User is allowed to visit specific pages before logging in
         if($this->currentPresenter->allowWhenLoginProcess === false && isset($_SESSION['login_in_process'])) {
-            $this->flashMessage('You must login first!', 'warn');
+            $this->flashMessage('You have to be logged in in order to visit this page.', 'warn');
             $this->redirect(self::URL_LOGIN_PAGE);
         }
 
         // Load page body
-        $pageBody = $module->currentPresenter->performAction($action);
+        try {
+            $pageBody = $module->currentPresenter->performAction($action);
+        } catch(Exception $e) {
+            $this->flashMessage($e->getMessage(), 'error');
+            $this->redirect(self::URL_HOME_PAGE);
+        }
 
 
         // --- PAGE CONTENT CREATION ---
@@ -543,7 +552,6 @@ class Application {
         $this->bulkActionAuthorizator->setIdUser($this->user->getId());
         $this->documentAuthorizator->setIdUser($this->user->getId());
         $this->metadataAuthorizator->setIdUser($this->user->getId());
-        $this->panelAuthorizator->setIdUser($this->user->getId());
     }
 
     /**
@@ -656,6 +664,11 @@ class Application {
         }
     }
 
+    public function throwError(string $message, array $redirectUrl = ['page' => 'UserModule:HomePage:showHomepage']) {
+        $this->flashMessage($message, 'error');
+        $this->redirect($redirectUrl['page'], $redirectUrl);
+    }
+
     /**
      * Performs the initial database installation.
      * After installing, it creates a file that shows whether the database has been installed or not.
@@ -678,7 +691,21 @@ class Application {
      * Automatically runs scheduled services
      */
     private function autoRunServices() {
+        $serviceObjs = $this->serviceModel->getAllServices();
         foreach($this->serviceManager->services as $displayName => $service) {
+            //$serviceObj = $this->serviceModel->getServiceByName($service->name);
+
+            $serviceObj = null;
+            foreach($serviceObjs as $sobj) {
+                if($sobj->getSystemName() == $service->name) {
+                    $serviceObj = $sobj;
+                }
+            }
+
+            if($serviceObj === NULL) continue;
+
+            if($serviceObj->isEnabled() === FALSE) continue;
+
             $nextRunDate = $this->serviceManager->getNextRunDateForService($service->name);
 
             if($nextRunDate !== NULL && time() > strtotime($nextRunDate)) {

@@ -3,10 +3,14 @@
 namespace DMS\Authorizators;
 
 use DMS\Constants\BulkActionRights;
+use DMS\Constants\DocumentShreddingStatus;
+use DMS\Constants\DocumentStatus;
+use DMS\Constants\Metadata\DocumentMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
 use DMS\Entities\User;
+use DMS\Models\DocumentModel;
 
 /**
  * DocumentBulkActionAuthorizator checks if a bulk action can be displayed.
@@ -55,6 +59,28 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    public function getAllDocumentIdsForMoveFromArchiveDocument(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::MOVE_DOCUMENT_FROM_ARCHIVE_DOCUMENT, $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' IS NOT NULL')
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+
+        return $ids;
+    }
+
     /**
      * Checks if the bulk action "Move to archive document" can be displayed
      * 
@@ -78,6 +104,28 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         return true;
+    }
+
+    public function getAllDocumentIdsForMoveToArchiveDocument(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::MOVE_DOCUMENT_TO_ARCHIVE_DOCUMENT, $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' IS NULL')
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+        
+        return $ids;
     }
 
     /**
@@ -105,6 +153,27 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    public function getAllDocumentIdsForApproveArchivation(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::APPROVE_ARCHIVATION, $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::NEW])
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+        
+        return $ids;
+    }
+
     /**
      * Checks if bulk action "Decline archivation" can be displayed.
      * 
@@ -128,6 +197,27 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         return true;
+    }
+
+    public function getAllDocumentIdsForDeclineArchivation(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::DECLINE_ARCHIVATION, $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::NEW])
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+        
+        return $ids;
     }
 
     /**
@@ -155,6 +245,27 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    public function getAllDocumentIdsForArchive(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::ARCHIVE, $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVATION_APPROVED])
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+        
+        return $ids;
+    }
+
     /**
      * Checks if bulk action "Delete document" can be displayed.
      * 
@@ -180,6 +291,27 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
+    public function getAllDocumentIdsForCanDelete(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight('delete_documents', $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere($qb->getColumnInValues(DocumentMetadata::STATUS, [DocumentStatus::ARCHIVED, DocumentStatus::SHREDDED]))
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+
+        return $ids;
+    }
+
     /**
      * Checks if bulk action "Approve shredding" can be displayed.
      * 
@@ -198,11 +330,34 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canApproveShredding($document, true, $checkForExistingProcess)) {
+        if(!$this->documentAuthorizator->canApproveShredding($document, $checkForExistingProcess)) {
             return false;
         }
 
         return true;
+    }
+
+    public function getAllDocumentIdsForApproveShredding(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::APPROVE_SHREDDING, $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::SHREDDING_STATUS . ' = ?', [DocumentShreddingStatus::IN_APPROVAL])
+            ->andWhere(DocumentMetadata::SHRED_YEAR . ' >= ?', [date('Y')])
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+
+        return $ids;
     }
 
     /**
@@ -223,11 +378,33 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canDeclineShredding($document, true, $checkForExistingProcess)) {
+        if(!$this->documentAuthorizator->canDeclineShredding($document, $checkForExistingProcess)) {
             return false;
         }
 
         return true;
+    }
+
+    public function getAllDocumentIdsForDeclineShredding(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::DECLINE_SHREDDING, $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::SHREDDING_STATUS . ' = ?', [DocumentShreddingStatus::IN_APPROVAL])
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+
+        return $ids;
     }
 
     /**
@@ -248,11 +425,34 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canSuggestForShredding($document, true, $checkForExistingProcess)) {
+        if(!$this->documentAuthorizator->canSuggestForShredding($document, $checkForExistingProcess)) {
             return false;
         }
 
         return true;
+    }
+
+    public function getAllDocumentIdsForSuggestForShredding(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::SUGGEST_SHREDDING, $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::SHREDDING_STATUS . ' = ?', [DocumentShreddingStatus::NO_STATUS])
+            ->andWhere(DocumentMetadata::SHRED_YEAR . ' >= ?', [date('Y')])
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+
+        return $ids;
     }
 
     /**
@@ -273,11 +473,34 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canShred($document, true, $checkForExistingProcess)) {
+        if(!$this->documentAuthorizator->canShred($document, $checkForExistingProcess)) {
             return false;
         }
 
         return true;
+    }
+
+    public function getAllDocumentIdsForShred(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
+        if(!$this->assignUser($idUser)) {
+            return false;
+        }
+
+        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::SHRED, $idUser, $checkCache)) {
+            return false;
+        }
+
+        $qb = $dm->composeQueryStandardDocuments();
+        $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVED])
+            ->andWhere(DocumentMetadata::SHREDDING_STATUS . ' = ?', [DocumentShreddingStatus::APPROVED])
+            ->andWhere(DocumentMetadata::SHRED_YEAR . ' >= ?', [date('Y')])
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row[DocumentMetadata::ID];
+        }
+
+        return $ids;
     }
 
     /**

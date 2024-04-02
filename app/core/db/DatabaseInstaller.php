@@ -10,7 +10,6 @@ use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\FileStorageSystemLocations;
-use DMS\Constants\PanelRights;
 use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\Ribbons;
@@ -49,17 +48,16 @@ class DatabaseInstaller {
      */
     public function install() {
         $this->createTables();
+        $this->createIndexes();
         $this->insertDefaultUsers();
         $this->insertDefaultGroups();
         $this->insertDefaultUserGroups();
         $this->insertDefaultMetadata();
 
-        $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
 
-        $this->insertDefaultGroupPanelRights();
         $this->insertDefaultGroupBulkActionRights();
         $this->insertDefaultGroupActionRights();
         $this->insertDefaultGroupMetadataRights();
@@ -71,13 +69,14 @@ class DatabaseInstaller {
         $this->insertDefaultRibbonUserRights();
 
         $this->insertDefaultFileStorageLocations();
+
+        $this->insertSystemServices();
     }
 
     /**
      * Updates default user rights
      */
     public function updateDefaultUserRights() {
-        $this->insertDefaultUserPanelRights();
         $this->insertDefaultUserBulkActionRights();
         $this->insertDefaultUserActionRights();
         $this->insertDefaultUserMetadataRights();
@@ -110,12 +109,6 @@ class DatabaseInstaller {
                 'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'default_user_datetime_format' => 'VARCHAR(256) NULL',
                 'last_login_hash' => 'VARCHAR(256) NULL'
-            ),
-            'user_panel_rights' => array(
-                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'id_user' => 'INT(32) NOT NULL',
-                'panel_name' => 'VARCHAR(256) NOT NULL',
-                'is_visible' => 'INT(2) DEFAULT 0'
             ),
             'documents' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -183,12 +176,6 @@ class DatabaseInstaller {
                 'action_name' => 'VARCHAR(256) NOT NULL',
                 'is_executable' => 'INT(2) DEFAULT 0'
             ),
-            'group_panel_rights' => array(
-                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'id_group' => 'INT(32) NOT NULL',
-                'panel_name' => 'VARCHAR(256) NOT NULL',
-                'is_visible' => 'INT(2) DEFAULT 0'
-            ),
             'group_bulk_rights' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_group' => 'INT(32) NOT NULL',
@@ -237,7 +224,8 @@ class DatabaseInstaller {
                 'name' => 'VARCHAR(256) NOT NULL',
                 'description' => 'VARCHAR(256) NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
-                'nest_level' => 'INT(32) NOT NULL'
+                'nest_level' => 'INT(32) NOT NULL',
+                'ordering' => 'INT(32) NOT NULL'
             ),
             'service_config' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -388,7 +376,10 @@ class DatabaseInstaller {
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
-                'file_src' => 'VARCHAR(256) NULL'
+                'file_src' => 'VARCHAR(256) NULL',
+                'file_format' => 'VARCHAR(256) NOT NULL',
+                'file_name' => 'VARCHAR(256) NULL',
+                'id_file_storage_location' => 'INT(32) NULL'
             ),
             'file_storage_locations' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -416,6 +407,23 @@ class DatabaseInstaller {
                 'id_calling_user' => 'INT(32) NULL',
                 'time_taken' => 'VARCHAR(256) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'services' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'system_name' => 'VARCHAR(256) NOT NULL',
+                'display_name' => 'VARCHAR(256) NOT NULL',
+                'description' => 'VARCHAR(256) NOT NULL',
+                'is_enabled' => 'INT(2) NOT NULL DEFAULT 1',
+                'is_system' => 'INT(2) NOT NULL DEFAULT 0',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'document_metadata_history' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'id_document' => 'INT(32) NOT NULL',
+                'metadata_name' => 'VARCHAR(256) NOT NULL',
+                'metadata_value' => 'VARCHAR(256) NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 
@@ -439,6 +447,233 @@ class DatabaseInstaller {
 
             $this->logger->sql($sql, __METHOD__);
 
+            $this->db->query($sql);
+        }
+
+        return true;
+    }
+
+    /**
+     * Inserts indexes for selected database tables
+     * 
+     * @return true
+     */
+    private function createIndexes() {
+        $indexes = [
+            [
+                'table_name' => 'documents',
+                'columns' => [
+                    'id_folder'
+                ]
+            ],
+            [
+                'table_name' => 'documents',
+                'columns' => [
+                    'status'
+                ]
+            ],
+            [
+                'table_name' => 'document_comments',
+                'columns' => [
+                    'id_document'
+                ]
+            ],
+            [
+                'table_name' => 'document_sharing',
+                'columns' => [
+                    'id_user',
+                    'id_document'
+                ]
+            ],
+            [
+                'table_name' => 'document_filters',
+                'columns' => [
+                    'id_author'
+                ]
+            ],
+            [
+                'table_name' => 'document_reports',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'user_bulk_rights',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'user_action_rights',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'user_metadata_rights',
+                'columns' => [
+                    'id_user',
+                    'id_metadata'
+                ]
+            ],
+            [
+                'table_name' => 'ribbon_user_rights',
+                'columns' => [
+                    'id_ribbon',
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'group_bulk_rights',
+                'columns' => [
+                    'id_group'
+                ]
+            ],
+            [
+                'table_name' => 'group_action_rights',
+                'columns' => [
+                    'id_group'
+                ]
+            ],
+            [
+                'table_name' => 'group_metadata_rights',
+                'columns' => [
+                    'id_group',
+                    'id_metadata'
+                ]
+            ],
+            [
+                'table_name' => 'ribbon_group_rights',
+                'columns' => [
+                    'id_ribbon',
+                    'id_group'
+                ]
+            ],
+            [
+                'table_name' => 'metadata_values',
+                'columns' => [
+                    'id_metadata'
+                ]
+            ],
+            [
+                'table_name' => 'folders',
+                'columns' => [
+                    'id_parent_folder'
+                ]
+            ],
+            [
+                'table_name' => 'processes',
+                'columns' => [
+                    'id_document'
+                ]
+            ],
+            [
+                'table_name' => 'processes',
+                'columns' => [
+                    'id_author'
+                ]
+            ],
+            [
+                'table_name' => 'processes',
+                'columns' => [
+                    'workflow1',
+                    'workflow2',
+                    'workflow3',
+                    'workflow4'
+                ]
+            ],
+            [
+                'table_name' => 'process_comments',
+                'columns' => [
+                    'id_process'
+                ]
+            ],
+            [
+                'table_name' => 'notifications',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'password_reset_hashes',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'ribbons',
+                'columns' => [
+                    'id_parent_ribbon'
+                ]
+            ],
+            [
+                'table_name' => 'file_storage_locations',
+                'columns' => [
+                    'type'
+                ]
+            ],
+            [
+                'table_name' => 'file_storage_locations',
+                'columns' => [
+                    'name'
+                ]
+            ],
+            [
+                'table_name' => 'services',
+                'columns' => [
+                    'system_name'
+                ]
+            ],
+            [
+                'table_name' => 'users',
+                'columns' => [
+                    'last_login_hash'
+                ]
+            ],
+            [
+                'table_name' => 'document_metadata_history',
+                'columns' => [
+                    'id_document'
+                ]
+            ],
+        ];
+
+        $tables = [];
+        foreach($indexes as $array) {
+            $tableName = $array['table_name'];
+            $columns = $array['columns'];
+
+            $c = 1;
+            foreach($tables as $table) {
+                if($table == $tableName) {
+                    $c++;
+                }
+            }
+            $tables[] = $tableName;
+
+            $sql = 'CREATE INDEX `$INDEX_NAME$` ON `$TABLE_NAME$` (';
+
+            $params = [
+                '$INDEX_NAME$' => $tableName . '_' . $c,
+                '$TABLE_NAME$' => $tableName
+            ];
+
+            foreach($params as $paramName => $paramValue) {
+                $sql = str_replace($paramName, $paramValue, $sql);
+            }
+
+            $i = 0;
+            foreach($columns as $col) {
+                if(($i + 1) == count($columns)) {
+                    $sql .= $col . ')';
+                } else {
+                    $sql .= $col . ', ';
+                }
+
+                $i++;
+            }
+
+            $this->logger->sql($sql, __METHOD__);
             $this->db->query($sql);
         }
 
@@ -590,123 +825,6 @@ class DatabaseInstaller {
                     $sql = "INSERT INTO `group_users` (`id_user`, `id_group`, `is_manager`) VALUES ('$idUser', '$idGroup', '$isManager')";
                     $result = $this->db->query($sql);
                 } 
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Inserts default group panel rights
-     * 
-     * @return true
-     */
-    private function insertDefaultGroupPanelRights() {
-        $idGroups = [];
-        $panels = PanelRights::$all;
-
-        $sql = "SELECT `id`, `code` FROM `groups`";
-
-        $this->logger->sql($sql, __METHOD__);
-
-        $rows = $this->db->query($sql);
-
-        $allowPanels = [];
-
-        foreach($rows as $row) {
-            $idGroups[] = $row['id'];
-
-            switch($row['code']) {
-                case 'ARCHMAN':
-                    $allowPanels[$row['id']] = array(
-                        PanelRights::DOCUMENTS,
-                        PanelRights::PROCESSES
-                    );
-                    break;
-                
-                case 'ADMINISTRATORS':
-                    $allowPanels[$row['id']] = $panels;
-                    break;
-            }
-        }
-
-        foreach($idGroups as $id) {
-            foreach($panels as $panel) {
-                if(in_array($panel, $allowPanels[$id])) {
-                    // allow
-                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '1')";
-                } else {
-                    // deny
-                    $sql = "INSERT INTO `group_panel_rights` (`id_group`, `panel_name`, `is_visible`) VALUES ('$id', '$panel', '0')";
-                }
-
-                $this->logger->sql($sql, __METHOD__);
-
-                $this->db->query($sql);
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Inserts default user panel rights
-     * 
-     * @return true
-     */
-    private function insertDefaultUserPanelRights() {
-        $idUsers = [];
-        $panels = PanelRights::$all;
-
-        $userPanels = [];
-        $dbUserPanels = [];
-
-        $sql = 'SELECT * FROM `users`';
-
-        $this->logger->sql($sql, __METHOD__);
-
-        $rows = $this->db->query($sql);
-
-        if($rows->num_rows > 0) {
-            foreach($rows as $row) {
-                if(in_array($row['username'], self::DEFAULT_USERS)) {
-                    $idUsers[] = $row['id'];
-                }
-            }
-        }
-
-        $sql = 'SELECT * FROM `user_panel_rights`';
-
-        $rows = $this->db->query($sql);
-
-        if($rows->num_rows > 0) {
-            foreach($rows as $row) {
-                $dbUserPanels[$row['id_user']][] = $row['panel_name'];
-            }
-        }
-
-        foreach($panels as $panel) {
-            if(empty($dbUserPanels)) {
-                foreach($idUsers as $id) {
-                    $userPanels[$id][] = $panel;
-                }
-            } else {
-                foreach($dbUserPanels as $id => $dupanels) {
-                    if(!in_array($panel, $dupanels)) {
-                        $userPanels[$id][] = $panel;
-                    }
-                }
-            }
-        }
-
-        foreach($userPanels as $id => $upanels) {
-            foreach($upanels as $upanel) {
-                $sql = "INSERT INTO `user_panel_rights` (`id_user`, `panel_name`, `is_visible`)
-                VALUES ('$id', '$upanel', '1')";
-
-                $this->logger->sql($sql, __METHOD__);
-
-                $this->db->query($sql);
             }
         }
 
@@ -1755,6 +1873,71 @@ class DatabaseInstaller {
             $this->db->query($sql);
             $order++;
         }
+
+        return true;
+    }
+
+    /**
+     * Inserts system serviecs
+     * 
+     * @return true
+     */
+    public function insertSystemServices() {
+        $services = [
+            'LogRotateService' => [
+                'display_name' => 'Log rotate',
+                'description' => 'Deletes old log files'
+            ],
+            'CacheRotateService' => [
+                'display_name' => 'Cache rotate',
+                'description' => 'Deletes old cache files'
+            ],
+            'FileManagerService' => [
+                'display_name' => 'File manager',
+                'description' => 'Deletes old unused files'
+            ],
+            'ShreddingSuggestionService' => [
+                'display_name' => 'Shredding suggestion',
+                'description' => 'Suggests documents for shredding'
+            ],
+            'PasswordPolicyService' => [
+                'display_name' => 'Password policy',
+                'description' => 'Checks if passwords have been changed in a period of time'
+            ],
+            'MailService' => [
+                'display_name' => 'Mail service',
+                'description' => 'Service responsible for sending emails'
+            ],
+            'NotificationManagerService' => [
+                'display_name' => 'Notification manager',
+                'description' => 'Service responsible for deleting old notifications'
+            ],
+            'DocumentArchivationService' => [
+                'display_name' => 'Document archivator',
+                'description' => 'Archives documents waiting for archivation'
+            ],
+            'DeclinedDocumentRemoverService' => [
+                'display_name' => 'Declined document remover',
+                'description' => 'Deletes declined documents'
+            ],
+            'DocumentReportGeneratorService' => [
+                'display_name' => 'Document report generator',
+                'description' => 'Generates document reports'
+            ]
+        ];
+
+        $this->db->beginTransaction();
+
+        foreach($services as $serviceName => $serviceData) {
+            $sql = "INSERT INTO `services` (`system_name`, `display_name`, `description`, `is_enabled`, `is_system`) VALUES (";
+            $sql .= "'$serviceName', '" . $serviceData['display_name'] . "', '" . $serviceData['description'] . "', '1', '1'";
+            $sql .= ")";
+
+            $this->logger->sql($sql, __METHOD__);
+            $this->db->query($sql);
+        }
+
+        $this->db->commit();
 
         return true;
     }

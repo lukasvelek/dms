@@ -47,6 +47,11 @@ if(isset($_SESSION['id_current_user'])) {
         }
 
         if(isset($_SESSION['last_login_hash'])) {
+            $isRelogin = false;
+            if(isset($_SESSION['is_relogin']) && $_SESSION['is_relogin'] === TRUE && isset($_SESSION['id_original_user'])) {
+                $loginHash = $app->userModel->getLastLoginHashForIdUser($_SESSION['id_original_user']);
+                $isRelogin = true;
+            }
             $loginHash = $app->userModel->getLastLoginHashForIdUser($_SESSION['id_current_user']);
 
             if($loginHash === NULL) {
@@ -56,12 +61,16 @@ if(isset($_SESSION['id_current_user'])) {
                 }
             }
 
-            if($_SESSION['last_login_hash'] == $loginHash) { // ok
-                $app->logger->info('Successfully authenticated user #' . $user->getId());
-                $app->setCurrentUser($app->userModel->getUserById($_SESSION['id_current_user']));
+            if($_SESSION['last_login_hash'] == $loginHash || $isRelogin === TRUE) { // ok
+                if($isRelogin === TRUE) {
+                    $app->logger->info('Successfully authenticated user #' . $_SESSION['id_original_user'] . ' as user #' . $user->getId());
+                } else {
+                    $app->logger->info('Successfully authenticated user #' . $user->getId());
+                }
+                $app->setCurrentUser($user);
             } else { // hash mismatch
                 $app->logger->warn('Login hash mismatch for user #' . $user->getId() . '. Requesting relogin!');
-                $app->flashMessage('Auto authentication failed, please log in again.', 'warn');
+                $app->flashMessage('Auto authentication failed, please log in again. You are probably logging in as a user that is already logged in somewhere else.', 'warn');
                 unset($_SESSION['last_login_hash']);
                 unset($_SESSION['id_current_user']);
                 unset($_SESSION['session_end_date']);
@@ -89,9 +98,9 @@ if(isset($_SESSION['id_current_user'])) {
 if(!is_null($app->user)) {
     if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::WARNING) {
         $changeLink = '<a style="color: red; text-decoration: underline" href="?page=UserModule:Users:showChangePasswordForm&id=' . $app->user->getId() . '">here</a>';
-        $app->flashMessage('Your password is outdated. You should update it! Click ' . $changeLink . ' to update password.', FlashMessageTypes::WARNING);
+        $app->flashMessage('Your password is outdated. You should update it. Click ' . $changeLink . ' to update password.', FlashMessageTypes::WARNING);
     } else if($app->user->getPasswordChangeStatus() == UserPasswordChangeStatus::FORCE) {
-        $app->flashMessage('Your password is outdated. You must update it!', FlashMessageTypes::ERROR);
+        $app->flashMessage('Your password is outdated. You must update it.', FlashMessageTypes::ERROR);
         
         if($app->currentUrl != 'UserModule:UserLogout:logoutUser') {
             $app->redirect($app::URL_LOGOUT_PAGE);
@@ -134,7 +143,7 @@ $title = 'DMS | ' . $app->currentPresenter->getTitle();
         <div id="cover">
             <img style="position: fixed; top: 50%; left: 49%;" src='img/loading.gif' width='32' height='32'>
         </div>
-        <div id="notifications" style="display: none;">Notifications (0)</div>
+        <div id="notifications" style="display: none;"><?php if(isset($_SESSION['user_notification_count'])) { echo('Notifications (' . $_SESSION['user_notification_count'] . ')'); } else { echo('Notifications (0)'); } ?></div>
         <?php
 
         $app->showPage();

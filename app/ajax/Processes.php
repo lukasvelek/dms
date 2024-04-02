@@ -1,6 +1,7 @@
 <?php
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\Metadata\ProcessCommentMetadata;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
@@ -45,9 +46,9 @@ function sendComment() {
     $canDelete = htmlspecialchars($_POST['canDelete']);
 
     $data = array(
-        'id_author' => $idAuthor,
-        'id_process' => $idProcess,
-        'text' => $text
+        ProcessCommentMetadata::ID_AUTHOR => $idAuthor,
+        ProcessCommentMetadata::ID_PROCESS => $idProcess,
+        ProcessCommentMetadata::TEXT => $text
     );
 
     $processCommentModel->insertComment($data);

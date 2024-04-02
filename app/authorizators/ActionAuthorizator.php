@@ -3,6 +3,7 @@
 namespace DMS\Authorizators;
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -10,6 +11,7 @@ use DMS\Entities\User;
 use DMS\Models\GroupRightModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\UserRightModel;
+use Exception;
 
 /**
  * ActionAuthorizator checks if an entity is allowed to perform an action.
@@ -147,6 +149,40 @@ class ActionAuthorizator extends AAuthorizator {
         }
 
         return $result ? true : false;
+    }
+
+    public function canEditUser(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::EDIT_USER, $idCallingUser, $checkCache);
+    }
+
+    public function canUseDocumentGenerator(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::USE_DOCUMENT_GENERATOR, $idCallingUser, $checkCache);
+    }
+
+    public function canDeleteDocumentReports(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::DELETE_DOCUMENT_REPORT_QUEUE_ENTRY, $idCallingUser, $checkCache);
+    }
+
+    public function canMoveEntitiesFromToArchive(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::MOVE_ENTITIES_FROM_TO_ARCHIVE, $idCallingUser, $checkCache);
+    }
+
+    public function canMoveEntitiesWithinArchive(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::MOVE_ENTITIES_WITHIN_ARCHIVE, $idCallingUser, $checkCache);
+    }
+
+    public function canGenerateDocumentReports(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT, $idCallingUser, $checkCache);
+    }
+
+    public function canCreateDocument(?int $idCallingUser = null, bool $checkCache = true) {
+        return $this->checkActionRight(UserActionRights::CREATE_DOCUMENT, $idCallingUser, $checkCache);
+    }
+
+    public function throwExceptionIfCannotGenerateDocumentReports(?int $idCallingUser = null, bool $checkCache = true) {
+        if($this->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT, $idCallingUser, $checkCache) === TRUE) {
+            throw new Exception('You are not authorized to generate document reports.');
+        }
     }
 }
 

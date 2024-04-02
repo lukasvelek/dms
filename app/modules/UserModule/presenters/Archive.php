@@ -5,6 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\ArchiveStatus;
 use DMS\Constants\ArchiveType;
 use DMS\Constants\DocumentStatus;
+use DMS\Constants\Metadata\ArchiveMetadata;
 use DMS\Constants\ProcessTypes;
 use DMS\Constants\UserActionRights;
 use DMS\Modules\APresenter;
@@ -23,7 +24,7 @@ class Archive extends APresenter {
     protected function performBulkAction() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['select', 'action']);
+        $app->flashMessageIfNotIsset(['select', 'action'], true, ['page' => 'showDocuments']);
 
         $ids = $this->get('select', false);
         $action = $this->get('action');
@@ -193,7 +194,7 @@ class Archive extends APresenter {
         }
 
         $data = [
-            'name' => $name
+            ArchiveMetadata::NAME => $name
         ];
 
         $app->archiveModel->insertNewDocument($data);
@@ -219,7 +220,7 @@ class Archive extends APresenter {
         }
 
         $data = [
-            'name' => $name
+            ArchiveMetadata::NAME => $name
         ];
 
         $app->archiveModel->insertNewBox($data);
@@ -245,7 +246,7 @@ class Archive extends APresenter {
         }
 
         $data = [
-            'name' => $name
+            ArchiveMetadata::NAME => $name
         ];
 
         $app->archiveModel->insertNewArchive($data);
@@ -511,19 +512,19 @@ class Archive extends APresenter {
             $boxCount = $boxCount + count($boxes);
 
             foreach($boxes as $box) {
-                $app->archiveModel->updateBox($box->getId(), ['status' => ArchiveStatus::FINISHED]);
+                $app->archiveModel->updateBox($box->getId(), [ArchiveMetadata::STATUS => ArchiveStatus::FINISHED]);
 
                 $documents = $app->archiveModel->getDocumentsForIdParent($box->getId());
                 $documentCount = $documentCount + count($documents);
                 
                 foreach($documents as $document) {
-                    $app->archiveModel->updateDocument($document->getId(), ['status' => ArchiveStatus::FINISHED]);
+                    $app->archiveModel->updateDocument($document->getId(), [ArchiveMetadata::STATUS => ArchiveStatus::FINISHED]);
 
                     $files = $app->documentModel->getDocumentForIdArchiveEntity($document->getId());
                     $fileCount = $fileCount + count($files);
 
                     foreach($files as $file) {
-                        $app->documentModel->updateDocument($file->getId(), ['status' => DocumentStatus::FINISHED]);
+                        $app->documentModel->updateDocument($file->getId(), [ArchiveMetadata::STATUS => DocumentStatus::FINISHED]);
                     }
                 }
             }
@@ -541,7 +542,7 @@ class Archive extends APresenter {
         foreach($ids as $id) {
             $app->processComponent->startProcess(ProcessTypes::SHREDDING, $id, $app->user->getId(), true);
 
-            $app->archiveModel->updateArchive($id, ['status' => ArchiveStatus::SUGGESTED_FOR_SHREDDING]);
+            $app->archiveModel->updateArchive($id, [ArchiveMetadata::STATUS => ArchiveStatus::SUGGESTED_FOR_SHREDDING]);
         }
 
         $app->flashMessage('Archives suggested for shredding', 'success');

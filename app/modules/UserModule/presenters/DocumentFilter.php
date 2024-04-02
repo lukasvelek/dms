@@ -7,6 +7,9 @@ use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\FlashMessageTypes;
+use DMS\Constants\Metadata\DocumentFilterMetadata;
+use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\RibbonMetadata;
 use DMS\Constants\MetadataInputType;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
@@ -28,7 +31,7 @@ class DocumentFilter extends APresenter {
     protected function unpinFilter() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_filter'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, ['page' => 'showFilters']);
 
         $idFilter = $this->get('id_filter');
         $ribbon = $app->ribbonModel->getRibbonForIdDocumentFilter($idFilter);
@@ -54,7 +57,7 @@ class DocumentFilter extends APresenter {
     protected function pinFilter() {
         global $app;
 
-        $app->flashMessageIfNotIsset(array('id_filter'));
+        $app->flashMessageIfNotIsset(array('id_filter'), true, ['page' => 'showFilters']);
 
         $idFilter = $this->get('id_filter');
         $filter = $app->filterModel->getDocumentFilterById($idFilter);
@@ -62,12 +65,12 @@ class DocumentFilter extends APresenter {
         $parentRibbon = $app->ribbonModel->getRibbonByCode('documents');
 
         $data = array(
-            'id_parent_ribbon' => $parentRibbon->getId(),
-            'name' => $filter->getName(),
-            'code' => 'documents.custom_filter.' . $filter->getId(),
-            'is_visible' => '1',
-            'is_system' => '0',
-            'page_url' => '?page=UserModule:Documents:showDocumentsCustomFilter&id_filter=' . $filter->getId()
+            RibbonMetadata::ID_PARENT_RIBBON => $parentRibbon->getId(),
+            RibbonMetadata::NAME => $filter->getName(),
+            RibbonMetadata::CODE => 'documents.custom_filter.' . $filter->getId(),
+            RibbonMetadata::IS_VISIBLE => '1',
+            RibbonMetadata::IS_SYSTEM => '0',
+            RibbonMetadata::PAGE_URL => '?page=UserModule:Documents:showDocumentsCustomFilter&id_filter=' . $filter->getId()
         );
 
         $app->ribbonModel->insertNewRibbon($data);
@@ -177,18 +180,18 @@ class DocumentFilter extends APresenter {
         $idFilter = $this->get('id_filter');
 
         $data = [];
-        $data['name'] = $this->post('name');
+        $data[DocumentFilterMetadata::NAME] = $this->post('name');
 
         if(isset($_POST['description']) && $_POST['description'] != '') {
-            $data['description'] = $this->post('description');
+            $data[DocumentFilterMetadata::DESCRIPTION] = $this->post('description');
         }
 
         if(isset($_POST['filter_sql'])) {
-            $data['filter_sql'] = $this->post('filter_sql');
+            $data[DocumentFilterMetadata::FILTER_SQL] = $this->post('filter_sql');
         }
 
         if(isset($_POST['has_ordering'])) {
-            $data['has_ordering'] = '1';
+            $data[DocumentFilterMetadata::HAS_ORDERING] = '1';
         }
 
         $app->filterModel->updateDocumentFilter($data, $idFilter);
@@ -212,12 +215,12 @@ class DocumentFilter extends APresenter {
         $sql = "SELECT * FROM `documents`";
 
         $metadata = [
-            'id_author',
-            'id_officer',
-            'id_manager',
-            'rank',
-            'status',
-            'shredding_status',
+            DocumentMetadata::ID_AUTHOR,
+            DocumentMetadata::ID_OFFICER,
+            DocumentMetadata::ID_MANAGER,
+            DocumentMetadata::RANK,
+            DocumentMetadata::STATUS,
+            DocumentMetadata::SHREDDING_STATUS,
             'document_form'
         ];
         $textMetadata = $metadata;

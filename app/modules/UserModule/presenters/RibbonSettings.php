@@ -3,6 +3,9 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\Metadata\RibbonGroupRightMetadata;
+use DMS\Constants\Metadata\RibbonMetadata;
+use DMS\Constants\Metadata\RibbonUserRightMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Entities\Group;
@@ -320,26 +323,26 @@ class RibbonSettings extends APresenter {
         $id = $this->get('id');
 
         $data = [];
-        $data['name'] = $this->post('name');
-        $data['code'] = $this->post('code');
-        $data['page_url'] = $this->post('page_url');
+        $data[RibbonMetadata::NAME] = $this->post('name');
+        $data[RibbonMetadata::CODE] = $this->post('code');
+        $data[RibbonMetadata::PAGE_URL] = $this->post('page_url');
 
         if($_POST['parent'] != '0') {
-            $data['id_parent_ribbon'] = $this->post('parent');
+            $data[RibbonMetadata::ID_PARENT_RIBBON] = $this->post('parent');
         }
 
         if(isset($_POST['title']) && $_POST['title'] != '') {
-            $data['title'] = $this->post('title');
+            $data[RibbonMetadata::TITLE] = $this->post('title');
         }
 
         if(isset($_POST['image'])) {
-            $data['image'] = $this->post('image');
+            $data[RibbonMetadata::IMAGE] = $this->post('image');
         }
 
         if(isset($_POST['is_visible'])) {
-            $data['is_visible'] = '1';
+            $data[RibbonMetadata::IS_VISIBLE] = '1';
         } else {
-            $data['is_visible'] = '0';
+            $data[RibbonMetadata::IS_VISIBLE] = '0';
         }
 
         $app->ribbonModel->updateRibbon($id, $data);
@@ -375,37 +378,37 @@ class RibbonSettings extends APresenter {
         $app->flashMessageIfNotIsset(array('name', 'code', 'parent', 'page_url'), true, array('page' => 'showNewForm'));
 
         $data = [];
-        $data['name'] = $this->post('name');
-        $data['code'] = $this->post('code');
-        $data['page_url'] = $this->post('page_url');
-        $data['is_system'] = '0';
+        $data[RibbonMetadata::NAME] = $this->post('name');
+        $data[RibbonMetadata::CODE] = $this->post('code');
+        $data[RibbonMetadata::PAGE_URL] = $this->post('page_url');
+        $data[RibbonMetadata::IS_SYSTEM] = '0';
 
         if(isset($_POST['parent'])) {
             if($_POST['parent'] != '0') {
-                $data['id_parent_ribbon'] = $this->post('parent');
+                $data[RibbonMetadata::ID_PARENT_RIBBON] = $this->post('parent');
             }
         } else if(isset($_GET['parent'])) {
             if($_GET['parent'] != '0') {
-                $data['id_parent_ribbon'] = $this->get('parent');
+                $data[RibbonMetadata::ID_PARENT_RIBBON] = $this->get('parent');
             }
         }
 
         if(isset($_POST['title'])) {
-            $data['title'] = $this->post('title');
+            $data[RibbonMetadata::TITLE] = $this->post('title');
         }
 
         if(isset($_POST['image'])) {
-            $data['image'] = $this->post('image');
+            $data[RibbonMetadata::IMAGE] = $this->post('image');
         }
 
         if(isset($_POST['is_visible'])) {
-            $data['is_visible'] = '1';
+            $data[RibbonMetadata::IS_VISIBLE] = '1';
         } else {
-            $data['is_visible'] = '0';
+            $data[RibbonMetadata::IS_VISIBLE] = '0';
         }
 
         if(isset($_POST['is_dropdown'])) {
-            $data['page_url'] = 'js.showDropdownMenu(&apos;$ID_PARENT_RIBBON$&apos;, &apos;$ID_RIBBON$&apos;);';
+            $data[RibbonMetadata::PAGE_URL] = 'js.showDropdownMenu(&apos;$ID_PARENT_RIBBON$&apos;, &apos;$ID_RIBBON$&apos;);';
         }
 
         $app->ribbonModel->insertNewRibbon($data);
@@ -439,11 +442,11 @@ class RibbonSettings extends APresenter {
         $splitterCount = $app->ribbonModel->getSplitterCountForIdParent($idParent);
 
         $data = [];
-        $data['id_parent_ribbon'] = $idParent;
-        $data['name'] = 'SPLITTER';
-        $data['code'] = $parent->getCode() . '.splitter' . $splitterCount;
-        $data['is_system'] = '0';
-        $data['page_url'] = '#';
+        $data[RibbonMetadata::ID_PARENT_RIBBON] = $idParent;
+        $data[RibbonMetadata::NAME] = 'SPLITTER';
+        $data[RibbonMetadata::CODE] = $parent->getCode() . '.splitter' . $splitterCount;
+        $data[RibbonMetadata::IS_SYSTEM] = '0';
+        $data[RibbonMetadata::PAGE_URL] = '#';
 
         $app->ribbonModel->insertNewRibbon($data);
         $idRibbon = $app->ribbonModel->getLastInsertedRibbonId();
@@ -844,10 +847,20 @@ class RibbonSettings extends APresenter {
                 continue;
             }
 
+            $canSee = 0;
+            $canEdit = 0;
+            $canDelete = 0;
+            foreach($userRights as $ur) {
+                $canSee = $ur[RibbonUserRightMetadata::CAN_SEE];
+                $canEdit = $ur[RibbonUserRightMetadata::CAN_EDIT];
+                $canDelete = $ur[RibbonUserRightMetadata::CAN_DELETE];
+                break;
+            }
+
             $userRightsArr[$user->getId()] = array(
-                'can_see' => $userRights['can_see'],
-                'can_edit' => $userRights['can_edit'],
-                'can_delete' => $userRights['can_delete']
+                'can_see' => $canSee,
+                'can_edit' => $canEdit,
+                'can_delete' => $canDelete
             );
         }
 
@@ -909,10 +922,20 @@ class RibbonSettings extends APresenter {
                 continue;
             }
 
+            $canSee = 0;
+            $canEdit = 0;
+            $canDelete = 0;
+            foreach($groupRights as $gr) {
+                $canSee = $gr[RibbonGroupRightMetadata::CAN_SEE];
+                $canEdit = $gr[RibbonGroupRightMetadata::CAN_EDIT];
+                $canDelete = $gr[RibbonGroupRightMetadata::CAN_DELETE];
+                break;
+            }
+
             $groupRightsArr[$group->getId()] = array(
-                'can_see' => $groupRights['can_see'],
-                'can_edit' => $groupRights['can_edit'],
-                'can_delete' => $groupRights['can_delete']
+                'can_see' => $canSee,
+                'can_edit' => $canEdit,
+                'can_delete' => $canDelete
             );
         }
 

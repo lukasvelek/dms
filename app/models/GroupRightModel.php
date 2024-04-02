@@ -3,7 +3,9 @@
 namespace DMS\Models;
 
 use DMS\Constants\BulkActionRights;
-use DMS\Constants\PanelRights;
+use DMS\Constants\Metadata\GroupActionRightMetadata;
+use DMS\Constants\Metadata\GroupBulkRightMetadata;
+use DMS\Constants\Metadata\GroupMetadataRightMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
@@ -14,25 +16,20 @@ class GroupRightModel extends AModel {
     }
 
     public function removeAllActionRightsForIdGroup(int $idGroup) {
-        return $this->deleteByCol('id_group', $idGroup, 'group_action_rights');
+        return $this->deleteByCol(GroupActionRightMetadata::ID_GROUP, $idGroup, 'group_action_rights');
     }
 
     public function removeAllBulkActionRightsForIdGroup(int $idGroup) {
-        return $this->deleteByCol('id_group', $idGroup, 'group_bulk_rights');
+        return $this->deleteByCol(GroupBulkRightMetadata::ID_GROUP, $idGroup, 'group_bulk_rights');
     }
-
-    public function removeAllPanelRightsForIdGroup(int $idGroup) {
-        return $this->deleteByCol('id_group', $idGroup, 'group_panel_rights');
-    }
-
+    
     public function removeAllMetadataRightsForIdGroup(int $idGroup) {
-        return $this->deleteByCol('id_group', $idGroup, 'group_metadata_rights');
+        return $this->deleteByCol(GroupMetadataRightMetadata::ID_GROUP, $idGroup, 'group_metadata_rights');
     }
 
     public function removeAllGroupRightsForIdGroup(int $idGroup) {
         return ($this->removeAllActionRightsForIdGroup($idGroup) &&
                 $this->removeAllBulkActionRightsForIdGroup($idGroup) &&
-                $this->removeAllPanelRightsForIdGroup($idGroup) &&
                 $this->removeAllMetadataRightsForIdGroup($idGroup));
     }
 
@@ -44,32 +41,20 @@ class GroupRightModel extends AModel {
         return $this->checkRightExists('bulk', $idGroup, $bulkActionName);
     }
 
-    public function checkPanelRightExists(int $idGroup, string $panelName) {
-        return $this->checkRightExists('panel', $idGroup, $panelName);
-    }
-
     public function insertActionRightForIdGroup(int $idGroup, string $actionName, bool $status) {
         return $this->insertNew(array(
-            'id_group' => $idGroup,
-            'action_name' => $actionName,
-            'is_executable' => $status ? '1' : '0'
+            GroupActionRightMetadata::ID_GROUP => $idGroup,
+            GroupActionRightMetadata::ACTION_NAME => $actionName,
+            GroupActionRightMetadata::IS_EXECUTABLE => $status ? '1' : '0'
             ), 'group_action_rights');
     }
 
     public function insertBulkActionRightForIdGroup(int $idGroup, string $bulkActionName, bool $status) {
         return $this->insertNew(array(
-            'id_group' => $idGroup,
-            'action_name' => $bulkActionName,
-            'is_executable' => $status ? '1' : '0'
+            GroupBulkRightMetadata::ID_GROUP => $idGroup,
+            GroupBulkRightMetadata::ACTION_NAME => $bulkActionName,
+            GroupBulkRightMetadata::IS_EXECUTABLE => $status ? '1' : '0'
             ), 'group_bulk_rights');
-    }
-
-    public function insertPanelRightForIdGroup(int $idGroup, string $panelName, bool $status) {
-        return $this->insertNew(array(
-            'id_group' => $idGroup,
-            'panel_name' => $panelName,
-            'is_visible' => $status ? '1' : '0'
-            ), 'group_panel_rights');
     }
 
     public function insertActionRightsForIdGroup(int $idGroup) {
@@ -78,31 +63,10 @@ class GroupRightModel extends AModel {
         foreach(UserActionRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
-            $qb ->insert('group_action_rights', ['id_group', 'action_name', 'is_executable'])
+            $qb ->insert('group_action_rights', [GroupActionRightMetadata::ID_GROUP, GroupActionRightMetadata::ACTION_NAME, GroupActionRightMetadata::IS_EXECUTABLE])
                 ->values([$idGroup, $r, '0'])
                 ->execute();
             
-            if($totalResult === TRUE) {
-                $totalResult = $qb->fetchAll();
-            }
-
-            $qb->clean();
-            unset($qb);
-        }
-
-        return $totalResult;
-    }
-
-    public function insertPanelRightsForIdGroup(int $idGroup) {
-        $totalResult = true;
-
-        foreach(PanelRights::$all as $r) {
-            $qb = $this->qb(__METHOD__);
-
-            $qb ->insert('group_panel_rights', ['id_group', 'panel_name', 'is_visible'])
-                ->values([$idGroup, $r, '0'])
-                ->execute();
-
             if($totalResult === TRUE) {
                 $totalResult = $qb->fetchAll();
             }
@@ -120,7 +84,7 @@ class GroupRightModel extends AModel {
         foreach(BulkActionRights::$all as $r) {
             $qb = $this->qb(__METHOD__);
 
-            $qb ->insert('group_bulk_rights', ['id_group', 'action_name', 'is_executable'])
+            $qb ->insert('group_bulk_rights', [GroupBulkRightMetadata::ID_GROUP, GroupBulkRightMetadata::ACTION_NAME, GroupBulkRightMetadata::IS_EXECUTABLE])
                 ->values([$idGroup, $r, '0'])
                 ->execute()
                 ->fetch();
@@ -136,25 +100,13 @@ class GroupRightModel extends AModel {
         return $totalResult;
     }
 
-    public function updatePanelRight(int $idGroup, string $rightName, bool $status) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->update('group_panel_rights')
-            ->set(['is_visible' => ($status ? '1' : '0')])
-            ->where('id_group = ?', [$idGroup])
-            ->andWhere('panel_name = ?', [$rightName])
-            ->execute();
-
-        return $qb->fetchAll();
-    }
-
     public function updateBulkActionRight(int $idGroup, string $rightName, bool $status) {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('group_bulk_rights')
-            ->set(['is_executable', ($status ? '1' : '0')])
-            ->where('id_group = ?', [$idGroup])
-            ->andWhere('action_name = ?', [$rightName])
+            ->set([GroupBulkRightMetadata::IS_EXECUTABLE, ($status ? '1' : '0')])
+            ->where(GroupBulkRightMetadata::ID_GROUP . ' = ?', [$idGroup])
+            ->andWhere(GroupBulkRightMetadata::ACTION_NAME . ' = ?', [$rightName])
             ->execute();
 
         return $qb->fetchAll();
@@ -164,9 +116,9 @@ class GroupRightModel extends AModel {
         $qb = $this->qb(__METHOD__);
 
         $qb ->update('group_action_rights')
-            ->set(['is_executable', ($status ? '1' : '0')])
-            ->where('id_group = ?', [$idGroup])
-            ->andWhere('action_name = ?', [$rightName])
+            ->set([GroupActionRightMetadata::IS_EXECUTABLE, ($status ? '1' : '0')])
+            ->where(GroupActionRightMetadata::ID_GROUP . ' = ?', [$idGroup])
+            ->andWhere(GroupActionRightMetadata::ACTION_NAME . ' = ?', [$rightName])
             ->execute();
 
         return $qb->fetchAll();
@@ -177,28 +129,12 @@ class GroupRightModel extends AModel {
 
         $qb ->select(['*'])
             ->from('group_action_rights')
-            ->where('id_group = ?', [$idGroup])
+            ->where(GroupActionRightMetadata::ID_GROUP . ' = ?', [$idGroup])
             ->execute();
 
         $rights = [];
         while($row = $qb->fetchAssoc()) {
-            $rights[$row['action_name']] = $row['is_executable'];
-        }
-
-        return $rights;
-    }
-
-    public function getPanelRightsForIdGroup(int $idGroup) {
-        $qb = $this->qb(__METHOD__);
-
-        $qb ->select(['*'])
-            ->from('group_panel_rights')
-            ->where('id_group = ?', [$idGroup])
-            ->execute();
-
-        $rights = [];
-        while($row = $qb->fetchAssoc()) {
-            $rights[$row['panel_name']] = $row['is_visible'];
+            $rights[$row[GroupActionRightMetadata::ACTION_NAME]] = $row[GroupActionRightMetadata::IS_EXECUTABLE];
         }
 
         return $rights;
@@ -209,12 +145,12 @@ class GroupRightModel extends AModel {
 
         $qb ->select(['*'])
             ->from('group_bulk_rights')
-            ->where('id_group = ?', [$idGroup])
+            ->where(GroupBulkRightMetadata::ID_GROUP . ' = ?', [$idGroup])
             ->execute();
 
         $rights = [];
         while($row = $qb->fetchAssoc()) {
-            $rights[$row['action_name']] = $row['is_executable'];
+            $rights[$row[GroupBulkRightMetadata::ACTION_NAME]] = $row[GroupBulkRightMetadata::IS_EXECUTABLE];
         }
 
         return $rights;
@@ -234,27 +170,25 @@ class GroupRightModel extends AModel {
 
         $tableName = '';
         $columnName = '';
+        $whereColumName = '';
 
         switch($type) {
             case 'action':
                 $tableName = 'group_action_rights';
-                $columnName = 'action_name';
+                $columnName = GroupActionRightMetadata::ACTION_NAME;
+                $whereColumName = GroupActionRightMetadata::ID_GROUP;
                 break;
 
             case 'bulk':
                 $tableName = 'group_bulk_rights';
-                $columnName = 'action_name';
-                break;
-
-            case 'panel':
-                $tableName = 'group_panel_rights';
-                $columnName = 'panel_name';
+                $columnName = GroupBulkRightMetadata::ACTION_NAME;
+                $whereColumName = GroupBulkRightMetadata::ID_GROUP;
                 break;
         }
 
         $qb ->select(['*'])
             ->from($tableName)
-            ->where('id_group = ?', [$idGroup])
+            ->where($whereColumName . ' = ?', [$idGroup])
             ->andWhere($columnName . ' = ?', [$name])
             ->execute();
 
