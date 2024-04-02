@@ -32,6 +32,30 @@ class Documents extends APresenter {
         $this->getActionNamesFromClass($this);
     }
     
+    protected function lockDocumentForUser() {
+        global $app;
+
+        $idDocument = $this->get('id_document');
+        $idUser = $this->get('id_user');
+
+        $app->documentLockComponent->lockDocumentForUser($idDocument, $idUser);
+
+        $app->flashMessage('Document #' . $idDocument . ' has been locked', 'info');
+        $app->redirect('showAll');
+    }
+
+    protected function unlockDocumentForUser() {
+        global $app;
+
+        $idDocument = $this->get('id_document');
+        $idUser = $this->get('id_user');
+
+        $app->documentLockComponent->unlockDocument($idDocument, $idUser);
+
+        $app->flashMessage('Document #' . $idDocument . ' has been unlocked', 'info');
+        $app->redirect('showAll');
+    }
+
     protected function processMoveToArchiveDocumentFormBulkAction() {
         global $app;
 

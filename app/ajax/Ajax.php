@@ -6,6 +6,7 @@ use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
+use DMS\Components\DocumentLockComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
@@ -18,6 +19,7 @@ use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
+use DMS\Models\DocumentLockModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
 use DMS\Models\FilterModel;
@@ -191,6 +193,7 @@ $filterModel = new FilterModel($db, $logger);
 $ribbonModel = new RibbonModel($db, $logger);
 $archiveModel = new ArchiveModel($db, $logger);
 $fileStorageModel = new FileStorageModel($db, $logger);
+$documentLockModel = new DocumentLockModel($db, $logger);
 
 $models = array(
     'userModel' => $userModel,
@@ -212,7 +215,8 @@ $models = array(
     'ribbonModel' => $ribbonModel,
     'filterModel' => $filterModel,
     'archiveModel' => $archiveModel,
-    'fileStorageModel' => $fileStorageModel
+    'fileStorageModel' => $fileStorageModel,
+    'documentLockModel' => $documentLockModel
 );
 
 if(isset($_SESSION['id_current_user'])) {
@@ -236,6 +240,7 @@ $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
 $processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
+$documentLockComponent = new DocumentLockComponent($db, $logger, $documentLockModel);
 
 $archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
 $documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);

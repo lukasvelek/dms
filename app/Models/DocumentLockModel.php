@@ -12,6 +12,22 @@ class DocumentLockModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getActiveLockForIdDocument(int $idDocument) {
+        $qb = $this->composeStandardLockQuery(__METHOD__);
+
+        $rows = $qb ->where('status = ?', [DocumentLockStatus::ACTIVE])
+                    ->andWhere('id_document = ?', [$idDocument])
+                    ->limit(1)
+                    ->execute();
+
+        $entity = null;
+        while($row = $rows->fetchAssoc()) {
+            $entity = $this->createDocumentLockEntityFromDbRow($row);
+        }
+
+        return $entity;
+    }
+
     public function getActiveLocks() {
         $qb = $this->composeStandardLockQuery(__METHOD__);
 
@@ -38,6 +54,14 @@ class DocumentLockModel extends AModel {
         }
 
         return $entries;
+    }
+
+    public function insertNewLock(array $data) {
+        return $this->insertNew($data, 'document_locks');
+    }
+
+    public function updateLock(int $id, array $data) {
+        return $this->updateExisting('document_locks', $id, $data);
     }
 
     private function composeStandardLockQuery(string $method = __METHOD__) {

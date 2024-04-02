@@ -14,6 +14,7 @@ use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\RibbonAuthorizator;
 use DMS\Components\CalendarComponent;
+use DMS\Components\DocumentLockComponent;
 use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
@@ -30,6 +31,7 @@ use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\ArchiveModel;
 use DMS\Models\CalendarModel;
 use DMS\Models\DocumentCommentModel;
+use DMS\Models\DocumentLockModel;
 use DMS\Models\DocumentMetadataHistoryModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
@@ -122,6 +124,7 @@ class Application {
     public FileStorageModel $fileStorageModel;
     public CalendarModel $calendarModel;
     public DocumentMetadataHistoryModel $documentMetadataHistoryModel;
+    public DocumentLockModel $documentLockModel;
 
     public BulkActionAuthorizator $bulkActionAuthorizator;
     public DocumentAuthorizator $documentAuthorizator;
@@ -139,6 +142,7 @@ class Application {
     public RibbonComponent $ribbonComponent;
     public DocumentReportGeneratorComponent $documentReportGeneratorComponent;
     public CalendarComponent $calendarComponent;
+    public DocumentLockComponent $documentLockComponent;
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
@@ -200,6 +204,7 @@ class Application {
         $this->archiveModel = new ArchiveModel($this->conn, $this->logger);
         $this->fileStorageModel = new FileStorageModel($this->conn, $this->logger);
         $this->calendarModel = new CalendarModel($this->conn, $this->logger);
+        $this->documentLockModel = new DocumentLockModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -222,7 +227,8 @@ class Application {
             'filterModel' => $this->filterModel,
             'archiveModel' => $this->archiveModel,
             'fileStorageModel' => $this->fileStorageModel,
-            'calendarModel' => $this->calendarModel
+            'calendarModel' => $this->calendarModel,
+            'documentLockModel' => $this->documentLockModel
         );
 
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -250,6 +256,7 @@ class Application {
         $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->models, $this->notificationComponent);
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
         $this->ribbonComponent = new RibbonComponent($this->conn, $this->logger, $this->ribbonModel, $this->ribbonAuthorizator);
+        $this->documentLockComponent = new DocumentLockComponent($this->conn, $this->logger, $this->documentLockModel);
         
         $this->archiveAuthorizator = new ArchiveAuthorizator($this->conn, $this->logger, $this->archiveModel, $this->user, $this->processComponent);
         $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
