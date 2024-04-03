@@ -64,6 +64,21 @@ class DocumentLockModel extends AModel {
         return $this->updateExisting('document_locks', $id, $data);
     }
 
+    public function getLockEntriesForIdDocumentForGrid(int $idDocument) {
+        $qb = $this->composeStandardLockQuery(__METHOD__);
+
+        $rows = $qb ->where('id_document = ?', [$idDocument])
+                    ->orderBy('date_updated', 'DESC')
+                    ->execute();
+
+        $entries = [];
+        while($row = $rows->fetchAssoc()) {
+            $entries[] = $this->createDocumentLockEntityFromDbRow($row);
+        }
+
+        return $entries;
+    }
+
     private function composeStandardLockQuery(string $method = __METHOD__) {
         $qb = $this->qb($method);
 

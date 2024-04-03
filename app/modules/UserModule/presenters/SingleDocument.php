@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\DocumentAfterShredActions;
+use DMS\Constants\DocumentLockStatus;
 use DMS\Constants\DocumentLockType;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
@@ -15,6 +16,7 @@ use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\Document;
+use DMS\Entities\DocumentLockEntity;
 use DMS\Entities\DocumentMetadataHistoryEntity;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\DatetimeFormatHelper;
@@ -32,6 +34,28 @@ class SingleDocument extends APresenter {
         parent::__construct('SingleDocument', 'Document');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function showLockHistory() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $idDocument = $this->get('id');
+
+        $template = $this->loadTemplate(__DIR__ . '/templates/documents/document-metadata-history-grid.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'Locking history for document #' . $idDocument,
+            '$LINKS$' => [],
+            '$METADATA_GRID$' => $this->internalCreateLockHistoryGrid($idDocument)
+        ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showInfo', 'id' => $idDocument], '&larr;');
+
+        $this->fill($data, $template);
+        
+        return $template;
     }
 
     protected function showMetadataHistory() {
@@ -211,7 +235,8 @@ class SingleDocument extends APresenter {
         }
 
         $data['$LINKS$'][] = LinkBuilder::createAdvLink($backUrl, '&larr;') . '&nbsp;&nbsp;';
-        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showMetadataHistory', 'id' => $id], 'Metadata history');
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showMetadataHistory', 'id' => $id], 'Metadata history') . '&nbsp;&nbsp;';
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showLockHistory', 'id' => $id], 'Locking history');
 
         $this->templateManager->fill($data, $template);
 
@@ -819,6 +844,37 @@ class SingleDocument extends APresenter {
         return $fb->build();
     }
 
+    private function internalCreateLockHistoryGrid(int $idDocument) {
+        global $app;
+
+        $documentLockModel = $app->documentLockModel;
+        $documentLockComponent = $app->documentLockComponent;
+        $user = $app->user;
+
+        $dataSource = function() use ($documentLockModel, $idDocument) {
+            return $documentLockModel->getLockEntriesForIdDocumentForGrid($idDocument);
+        };
+
+        $gb = new GridBuilder();
+
+        $gb->addDataSourceCallback($dataSource);
+        $gb->addColumns(['type' => 'Type', 'status' => 'Active', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addOnColumnRender('type', function(DocumentLockEntity $dle) use ($documentLockComponent, $user) {
+            return $documentLockComponent->createLockText($dle, $user->getId());
+        });
+        $gb->addOnColumnRender('status', function(DocumentLockEntity $dle) {
+            switch($dle->getStatus()) {
+                case DocumentLockStatus::ACTIVE:
+                    return TextHelper::colorText(DocumentLockStatus::$texts[$dle->getStatus()], 'green');
+
+                case DocumentLockStatus::INACTIVE:
+                    return TextHelper::colorText(DocumentLockStatus::$texts[$dle->getStatus()], 'red');
+            }
+        });
+
+        return $gb->build();
+    }
+
     private function internalCreateMetadataHistoryGrid(int $idDocument) {
         global $app;
 
@@ -829,8 +885,6 @@ class SingleDocument extends APresenter {
         $ucm = CacheManager::getTemporaryObject(CacheCategories::USERS);
         
         $users = [];
-
-        //$document = $app->documentModel->getDocumentById($idDocument);
 
         $dataSource = function() use ($metadataHistoryModel, $idDocument) {
             return $metadataHistoryModel->getAllEntriesForIdDocument($idDocument, 'ASC');
