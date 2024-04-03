@@ -86,7 +86,7 @@ class DocumentLockComponent extends AComponent {
         }
     }
 
-    public function createLockText(DocumentLockEntity $lock, int $idCallingUser) {
+    public function createLockText(DocumentLockEntity $lock, int $idCallingUser, bool $createLink = true) {
         switch($lock->getType()) {
             case DocumentLockType::PROCESS_LOCK:
                 $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()], DocumentLockType::$colors[$lock->getType()]);
@@ -97,7 +97,9 @@ class DocumentLockComponent extends AComponent {
                 
                 if($lock->getIdUser() == $idCallingUser) {
                     $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()] . ' (Me)', DocumentLockType::$colors[$lock->getType()]);
-                    $html = LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:unlockDocumentForUser', 'id_document' => $lock->getIdDocument(), 'id_user' => $lock->getIdUser()], $html);
+                    if($createLink === TRUE) {
+                        $html = LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:unlockDocumentForUser', 'id_document' => $lock->getIdDocument(), 'id_user' => $lock->getIdUser()], $html);
+                    }
                 } else {
                     $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()] . ' (' . $user->getFullname() . ')', DocumentLockType::$colors[$lock->getType()]);
                 }

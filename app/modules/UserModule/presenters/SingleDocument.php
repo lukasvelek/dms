@@ -860,7 +860,7 @@ class SingleDocument extends APresenter {
         $gb->addDataSourceCallback($dataSource);
         $gb->addColumns(['type' => 'Type', 'status' => 'Active', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
         $gb->addOnColumnRender('type', function(DocumentLockEntity $dle) use ($documentLockComponent, $user) {
-            return $documentLockComponent->createLockText($dle, $user->getId());
+            return $documentLockComponent->createLockText($dle, $user->getId(), false);
         });
         $gb->addOnColumnRender('status', function(DocumentLockEntity $dle) {
             switch($dle->getStatus()) {
