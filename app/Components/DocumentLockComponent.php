@@ -32,6 +32,8 @@ class DocumentLockComponent extends AComponent {
                 'date_updated' => date('Y-m-d H:i:s')
             ];
 
+            $this->logger->warn('Unlocking document #' . $idDocument, __METHOD__);
+
             return $this->dlm->updateLock($lock->getId(), $data);
         } else {
             return false;
@@ -39,9 +41,9 @@ class DocumentLockComponent extends AComponent {
     }
 
     public function lockDocumentForUser(int $idDocument, int $idUser) {
-        $lock = $this->dlm->getActiveLockForIdDocument($idDocument);
+        $lock = $this->isDocumentLocked($idDocument);
 
-        if($lock !== NULL) {
+        if($lock !== false) {
             return false;
         } else {
             $data = [
@@ -49,19 +51,29 @@ class DocumentLockComponent extends AComponent {
                 'id_user' => $idUser,
                 'description' => 'Document locked by user'
             ];
+
+            $this->logger->warn('Locking document #' . $idDocument . ' by user #' . $idUser, __METHOD__);
     
             return $this->dlm->insertNewLock($data);
         }
     }
 
     public function lockDocumentForProcess(int $idDocument, int $idProcess) {
-        $data = [
-            'id_document' => $idDocument,
-            'id_process' => $idProcess,
-            'description' => 'Document locked by process'
-        ];
+        $lock = $this->isDocumentLocked($idDocument);
 
-        return $this->dlm->insertNewLock($data);
+        if($lock !== false) {
+            return false;
+        } else {
+            $data = [
+                'id_document' => $idDocument,
+                'id_process' => $idProcess,
+                'description' => 'Document locked by process'
+            ];
+
+            $this->logger->warn('Locking document #' . $idDocument . ' by process #' . $idProcess, __METHOD__);
+    
+            return $this->dlm->insertNewLock($data);
+        }
     }
 
     public function isDocumentLocked(int $idDocument) {
