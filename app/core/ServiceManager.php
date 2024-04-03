@@ -3,6 +3,7 @@
 namespace DMS\Core;
 
 use DMS\Authorizators\DocumentAuthorizator;
+use DMS\Components\DocumentLockComponent;
 use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
@@ -50,6 +51,7 @@ class ServiceManager {
     private NotificationComponent $notificationComponent;
     private FileStorageModel $fsModel;
     private DocumentMetadataHistoryModel $dmhm;
+    private DocumentLockComponent $dlc;
 
     private array $runDates;
 
@@ -73,6 +75,7 @@ class ServiceManager {
      * @param DocumentReportGeneratorComponent $documentReportGeneratorComponent DocumentReportGeneratorComponent instance
      * @param NotificationComponent $notificationComponent NotificationComponent instance
      * @param DocumentMetadataHistoryModel $dmhm DocumentMetadataHistoryModel instance
+     * @param DocumentLockComponent $dlc DocumentLockComponent instance
      */
     public function __construct(Logger $logger, 
                                 ServiceModel $serviceModel, 
@@ -89,7 +92,8 @@ class ServiceManager {
                                 DocumentReportGeneratorComponent $documentReportGeneratorComponent, 
                                 NotificationComponent $notificationComponent,
                                 FileStorageModel $fsModel,
-                                DocumentMetadataHistoryModel $dmhm) {
+                                DocumentMetadataHistoryModel $dmhm,
+                                DocumentLockComponent $dlc) {
         $this->logger = $logger;
         $this->serviceModel = $serviceModel;
         $this->fsm = $fsm;
@@ -106,6 +110,7 @@ class ServiceManager {
         $this->notificationComponent = $notificationComponent;
         $this->fsModel = $fsModel;
         $this->dmhm = $dmhm;
+        $this->dlc = $dlc;
         
         $this->loadServices();
         $this->loadRunDates();
@@ -210,7 +215,7 @@ class ServiceManager {
         $this->services['MailService'] = new MailService($this->logger, $this->serviceModel, $this->cm, $this->mailModel, $this->mailManager);
         $this->services['NotificationManagerService'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel);
         $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm);
-        $this->services['DeclinedDocumentRemoverService'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm);
+        $this->services['DeclinedDocumentRemoverService'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm, $this->dlc);
         $this->services['DocumentReportGeneratorService'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
     }
 }

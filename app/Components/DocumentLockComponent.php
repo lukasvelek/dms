@@ -23,6 +23,11 @@ class DocumentLockComponent extends AComponent {
         $this->userModel = $userModel;
     }
 
+    public function deleteLockEntriesForIdDocument(int $idDocument) {
+        $this->dlm->deleteEntriesForIdDocument($idDocument);
+        return true;
+    }
+
     public function unlockDocument(int $idDocument) {
         $lock = $this->dlm->getActiveLockForIdDocument($idDocument);
 

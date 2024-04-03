@@ -12,6 +12,17 @@ class DocumentLockModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteEntriesForIdDocument(int $idDocument) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->delete()
+            ->from('document_locks')
+            ->where('id_document = ?', [$idDocument])
+            ->execute();
+
+        return $qb->fetch();
+    }
+
     public function getActiveLockForIdDocument(int $idDocument) {
         $qb = $this->composeStandardLockQuery(__METHOD__);
 

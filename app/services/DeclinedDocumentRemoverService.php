@@ -3,6 +3,7 @@
 namespace DMS\Services;
 
 use DMS\Authorizators\DocumentAuthorizator;
+use DMS\Components\DocumentLockComponent;
 use DMS\Constants\DocumentStatus;
 use DMS\Core\CacheManager;
 use DMS\Core\Logger\Logger;
@@ -14,13 +15,15 @@ class DeclinedDocumentRemoverService extends AService {
     private DocumentModel $documentModel;
     private DocumentAuthorizator $documentAuthorizator;
     private DocumentMetadataHistoryModel $dmhm;
+    private DocumentLockComponent $dlc;
 
-    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentModel $documentModel, DocumentAuthorizator $documentAuthorizator, DocumentMetadataHistoryModel $dmhm) {
+    public function __construct(Logger $logger, ServiceModel $serviceModel, CacheManager $cm, DocumentModel $documentModel, DocumentAuthorizator $documentAuthorizator, DocumentMetadataHistoryModel $dmhm, DocumentLockComponent $dlc) {
         parent::__construct('DeclinedDocumentRemoverService', $logger, $serviceModel, $cm);
 
         $this->documentModel = $documentModel;
         $this->documentAuthorizator = $documentAuthorizator;
         $this->dmhm = $dmhm;
+        $this->dlc = $dlc;
     }
 
     public function run() {
@@ -36,6 +39,7 @@ class DeclinedDocumentRemoverService extends AService {
                 if($this->documentAuthorizator->canDeleteDocument($document, false, true)) {
                     $this->documentModel->deleteDocument($document->getId(), true);
                     $this->dmhm->deleteEntriesForIdDocument($document->getId());
+                    $this->dlc->deleteLockEntriesForIdDocument($document->getId());
                     $deleted++;
                 }
             }

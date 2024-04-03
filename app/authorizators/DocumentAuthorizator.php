@@ -74,7 +74,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the action is allowed or false if not
      */
-    public function canMoveToArchiveDocument(Document $document, int $idUser, bool $checkForExistingProcess = false) {
+    public function canMoveToArchiveDocument(Document $document, int $idUser = null, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -84,7 +84,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
@@ -107,7 +107,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the action is allowed or false if not
      */
-    public function canMoveFromArchiveDocument(Document $document, int $idUser, bool $checkForExistingProcess = false) {
+    public function canMoveFromArchiveDocument(Document $document, int $idUser = null, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -117,7 +117,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
@@ -140,7 +140,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be archived and false if not
      */
-    public function canArchive(Document $document, int $idUser, bool $checkForExistingProcess = false) {
+    public function canArchive(Document $document, int $idUser = null, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -150,7 +150,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
@@ -169,7 +169,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be approved for archivation and false if not
      */
-    public function canApproveArchivation(Document $document, int $idUser, bool $checkForExistingProcess = false) {
+    public function canApproveArchivation(Document $document, int $idUser = null, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -179,7 +179,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
@@ -199,7 +199,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be declined for archivation and false if not
      */
-    public function canDeclineArchivation(Document $document, int $idUser, bool $checkForExistingProcess = false) {
+    public function canDeclineArchivation(Document $document, int $idUser = null, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -209,7 +209,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
@@ -229,7 +229,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be deleted and false if not
      */
-    public function canDeleteDocument(Document $document, int $idUser, bool $checkStatus = true, bool $checkForExistingProcess = false) {
+    public function canDeleteDocument(Document $document, int $idUser = null, bool $checkStatus = true, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -239,7 +239,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
@@ -263,7 +263,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the document can be shredded and false if not
      */
-    public function canShred(Document $document, int $idUser, bool $checkForExistingProcess = false) {
+    public function canShred(Document $document, int $idUser = null, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -273,7 +273,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
@@ -300,7 +300,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the action is allowed
      */
-    public function canSuggestForShredding(Document $document, int $idUser, bool $checkForExistingProcess = false) {
+    public function canSuggestForShredding(Document $document, int $idUser = null, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -310,7 +310,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
@@ -337,7 +337,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the action is allowed
      */
-    public function canApproveShredding(Document $document, int $idUser, bool $checkForExistingProcess = false) {
+    public function canApproveShredding(Document $document, int $idUser = null, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -347,7 +347,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
@@ -374,7 +374,7 @@ class DocumentAuthorizator extends AAuthorizator {
      * @param bool $checkForExistingProcess True if the method should check for an existing process
      * @return bool True if the action is allowed
      */
-    public function canDeclineShredding(Document $document, int $idUser, bool $checkForExistingProcess = false) {
+    public function canDeclineShredding(Document $document, int $idUser = null, bool $checkForExistingProcess = false) {
         if($checkForExistingProcess === TRUE) {
             if($this->processComponent->checkIfDocumentIsInProcess($document->getId())) {
                 return false;
@@ -384,7 +384,7 @@ class DocumentAuthorizator extends AAuthorizator {
         $lock = $this->documentLockComponent->isDocumentLocked($document->getId());
 
         if($lock !== FALSE) {
-            if($lock->getType() != DocumentLockType::USER_LOCK && $lock->getIdUser() != $idUser) {
+            if($lock->getType() != DocumentLockType::USER_LOCK && $idUser !== NULL && $lock->getIdUser() != $idUser) {
                 return false;
             }
         }
