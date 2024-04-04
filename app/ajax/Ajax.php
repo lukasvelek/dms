@@ -17,6 +17,7 @@ use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
+use DMS\Exceptions\SystemFileDoesNotExistException;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentLockModel;
@@ -163,7 +164,7 @@ require_once('../Core/Vendor/PHPMailer/SMTP.php');
 // END OF VENDOR DENEPENDENCIES
 
 if(!file_exists('../../config.local.php')) {
-    die('Config file does not exist!');
+    throw new SystemFileDoesNotExistException('config.local.php');
 }
 
 $user = null;

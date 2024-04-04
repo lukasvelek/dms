@@ -13,6 +13,8 @@ use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Entities\Document;
 use DMS\Entities\DocumentLockEntity;
+use DMS\Exceptions\AException;
+use DMS\Exceptions\ValueIsNullException;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Helpers\GridDataHelper;
@@ -34,10 +36,15 @@ if(isset($_GET['action'])) {
 }
 
 if($action == null) {
-    exit;
+    throw new ValueIsNullException('$action');
 }
 
-echo($action());
+try {
+    echo($action());
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
 
 function getBulkActions() {
     global $documentModel, $documentBulkActionAuthorizator, $user, $processModel;
@@ -320,7 +327,7 @@ function search() {
     $returnArray = [];
 
     if($user === NULL) {
-        die();
+        throw new ValueIsNullException('$user');
     }
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
@@ -1016,8 +1023,7 @@ function _createBulkFunctionLink(string $action, array $idDocuments, ?int $idFol
     $link = '?page=UserModule:Documents:performBulkAction&';
 
     if($user === NULL) {
-        die('User does not exist in AJAX');
-        exit;
+        throw new ValueIsNullException('$user');
     }
 
     $cm = CacheManager::getTemporaryObject(md5($user->getId() . 'bulk_action' . $action), true);
