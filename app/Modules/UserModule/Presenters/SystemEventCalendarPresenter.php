@@ -7,7 +7,7 @@ use DMS\Core\CacheManager;
 use DMS\Entities\CalendarEventEntity;
 use DMS\Modules\APresenter;
 
-class SystemEventCalendar extends APresenter {
+class SystemEventCalendarPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

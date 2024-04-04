@@ -6,7 +6,7 @@ use DMS\Constants\ArchiveType;
 use DMS\Modules\APresenter;
 use DMS\UI\LinkBuilder;
 
-class SingleArchive extends APresenter {
+class SingleArchivePresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

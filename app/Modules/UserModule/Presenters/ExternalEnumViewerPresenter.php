@@ -8,7 +8,7 @@ use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
-class ExternalEnumViewer extends APresenter {
+class ExternalEnumViewerPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

@@ -7,7 +7,7 @@ use DMS\Helpers\FormDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\LinkBuilder;
 
-class ImageBrowser extends APresenter {
+class ImageBrowserPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

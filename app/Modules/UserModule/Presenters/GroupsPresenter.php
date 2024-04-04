@@ -17,7 +17,7 @@ use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
-class Groups extends APresenter {
+class GroupsPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

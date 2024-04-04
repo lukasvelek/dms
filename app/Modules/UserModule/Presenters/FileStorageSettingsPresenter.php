@@ -12,7 +12,7 @@ use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 
-class FileStorageSettings extends APresenter {
+class FileStorageSettingsPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

@@ -27,7 +27,7 @@ use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
-class SingleDocument extends APresenter {
+class SingleDocumentPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

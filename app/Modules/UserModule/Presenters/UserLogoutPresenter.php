@@ -5,7 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Core\CacheManager;
 use DMS\Modules\APresenter;
 
-class UserLogout extends APresenter {
+class UserLogoutPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

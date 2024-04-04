@@ -6,7 +6,7 @@ use DMS\Constants\FlashMessageTypes;
 use DMS\Core\AppConfiguration;
 use DMS\Modules\APresenter;
 
-class DocumentGenerator extends APresenter {
+class DocumentGeneratorPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

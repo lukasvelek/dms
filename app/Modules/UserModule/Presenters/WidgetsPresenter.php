@@ -8,7 +8,7 @@ use DMS\Constants\Metadata\ProcessStatsMetadata;
 use DMS\Constants\ProcessStatus;
 use DMS\Modules\APresenter;
 
-class Widgets extends APresenter {
+class WidgetsPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

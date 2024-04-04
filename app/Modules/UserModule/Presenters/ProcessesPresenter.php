@@ -8,7 +8,7 @@ use DMS\Modules\APresenter;
 use DMS\UI\LinkBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
 
-class Processes extends APresenter {
+class ProcessesPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

@@ -5,7 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Helpers\FormDataHelper;
 use DMS\Modules\APresenter;
 
-class AjaxHelper extends APresenter {
+class AjaxHelperPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

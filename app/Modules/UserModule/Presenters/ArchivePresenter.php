@@ -12,7 +12,7 @@ use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 
-class Archive extends APresenter {
+class ArchivePresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

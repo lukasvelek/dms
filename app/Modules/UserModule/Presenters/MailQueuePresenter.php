@@ -4,7 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Modules\APresenter;
 
-class MailQueue extends APresenter {
+class MailQueuePresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

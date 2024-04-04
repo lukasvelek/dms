@@ -19,7 +19,7 @@ use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
-class DocumentFilter extends APresenter {
+class DocumentFilterPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

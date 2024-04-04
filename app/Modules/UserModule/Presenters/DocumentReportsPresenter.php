@@ -9,7 +9,7 @@ use DMS\Modules\APresenter;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
-class DocumentReports extends APresenter {
+class DocumentReportsPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

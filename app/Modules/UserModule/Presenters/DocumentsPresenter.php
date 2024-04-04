@@ -23,7 +23,7 @@ use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\LinkBuilder;
 use Exception;
 
-class Documents extends APresenter {
+class DocumentsPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {

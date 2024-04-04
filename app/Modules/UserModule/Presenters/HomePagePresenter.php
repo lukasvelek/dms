@@ -5,7 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\WidgetLocations;
 use DMS\Modules\APresenter;
 
-class HomePage extends APresenter {
+class HomePagePresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
 
     public function __construct() {
