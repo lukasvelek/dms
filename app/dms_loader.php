@@ -14,8 +14,10 @@
  * It also loads all UI modules and registers them in the application.
  * 
  * @author Lukas Velek
- * @version 1.1
+ * @version 1.2
  */
+
+use DMS\Modules\IModule;
 
 $dependencies = array();
 
@@ -135,10 +137,13 @@ require_once('Core/Vendor/PHPMailer/SMTP.php');
 // END OF VENDOR DENEPENDENCIES
 
 if(!DMS\Core\FileManager::fileExists('config.local.php')) {
-    die('Config file does not exist!');
+    throw new Exception('Config file does not exist.');
 }
 
-//include('config.local.php');
+if(!DMS\Core\FileManager::fileExists('Modules/modules.php')) {
+    throw new Exception('Module definition file does not exist.');
+}
+
 include('Modules/modules.php');
 
 $app = new DMS\Core\Application();
@@ -147,6 +152,10 @@ foreach($modules as $moduleName => $modulePresenters) {
     $moduleUrl = 'DMS\\Modules\\' . $moduleName . '\\' . $moduleName;
 
     $module = new $moduleUrl();
+
+    if(!($module instanceof IModule)) {
+        throw new Exception('Module \'' . $moduleUrl . '\' does not implement IModule.');
+    }
     
     foreach($modulePresenters as $modulePresenter) {
         $presenterUrl = 'DMS\\Modules\\' . $moduleName . '\\' . $modulePresenter;
