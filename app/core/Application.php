@@ -264,7 +264,7 @@ class Application {
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
-        $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator);
+        $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator, $this->documentCommentModel);
         $this->userRepository = new UserRepository($this->conn, $this->logger, $this->userModel, $this->actionAuthorizator);
         
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);

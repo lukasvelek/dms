@@ -668,8 +668,16 @@ class DocumentModel extends AModel {
         return $qb->fetchAll();
     }
 
-    public function insertNewDocument(array $data) {
-        return $this->insertNew($data, 'documents');
+    public function insertNewDocument(array $data, bool $returnId = false) {
+        $result = $this->insertNew($data, 'documents');
+
+        if($returnId === FALSE) {
+            return $result;
+        }
+
+        $document = $this->getLastInsertedDocumentForIdUser($data['id_author']);
+
+        return $document->getId();
     }
 
     public function getStandardFilteredDocuments(string $filter) {
