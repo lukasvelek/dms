@@ -707,7 +707,7 @@ class Application {
 
             file_put_contents('app/core/install', 'installed');
 
-            $sessionDestroyed = session_destroy();
+            session_destroy();
         }
     }
 
