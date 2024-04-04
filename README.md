@@ -8,6 +8,7 @@ It also enables users to manage metadata and their values.
 - added document locks
 - added document duplication action
     - configurable
+- added exceptions
 
 ### v1.10
 - added database indexes
