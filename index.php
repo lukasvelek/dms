@@ -39,19 +39,6 @@ if(isset($_SESSION['id_current_user'])) {
         }
     } else {
         $user = $app->userRepository->getUserById($_SESSION['id_current_user']);
-        /*$ucm = new CacheManager(CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
-
-        $user = null;
-
-        $cacheUser = $ucm->loadUserByIdFromCache($_SESSION['id_current_user']);
-
-        if(is_null($cacheUser)) {
-            $user = $app->userModel->getUserById($_SESSION['id_current_user']);
-
-            $ucm->saveUserToCache($user);
-        } else {
-            $user = $cacheUser;
-        }*/
 
         if(isset($_SESSION['last_login_hash'])) {
             $isRelogin = false;
