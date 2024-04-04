@@ -19,8 +19,21 @@ class DocumentRepository extends ARepository {
         $this->documentAuthorizator = $documentAuthorizator;
     }
 
+    public function duplicateDocument(int $idDocument) {
+        $docuRow = $this->documentModel->getDocumentRowById($idDocument);
+
+        $data = [];
+        foreach($docuRow as $key => $value) {
+            if(!in_array($key, ['id', 'date_created', 'date_updated']) && $value !== NULL) {
+                $data[$key] = $value;
+            }
+        }
+
+        return $this->createDocument($data);
+    }
+
     public function createDocument(array $data) {
-        
+        return $this->documentModel->insertNewDocument($data);
     }
 
     public static function composeCreateDocumentDataArray(array $post, int $idUser, mixed $file) {

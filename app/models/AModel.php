@@ -37,7 +37,7 @@ abstract class AModel {
      * @param string $methodName Calling method name
      * @return QueryBuilder QueryBuilder instance
      */
-    protected function qb(string $methodName) {
+    public function qb(string $methodName) {
         $qb = $this->db->createQueryBuilder();
         $qb->setCallingMethod($methodName);
         return $qb;
@@ -48,7 +48,7 @@ abstract class AModel {
      * 
      * @return ExpressionBuilder ExpressionBuilder instance
      */
-    protected function xb() {
+    public function xb() {
         return new ExpressionBuilder();
     }
 

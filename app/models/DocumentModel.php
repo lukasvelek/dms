@@ -19,6 +19,15 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentRowById(int $id) {
+        $qb = $this->composeQueryStandardDocuments(false);
+
+        $qb ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetch();
+    }
+
     public function updateDocumentsBulk(array $data, array $ids) {
         return $this->bulkUpdateExisting($data, $ids, 'documents');
     }
