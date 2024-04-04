@@ -8,6 +8,7 @@ use DMS\Constants\ProcessStatus;
 use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\DocumentLockEntity;
 
 /**
  * Component that contains methods or operations that are regarded to process part of the application
@@ -16,6 +17,7 @@ use DMS\Core\Logger\Logger;
  */
 class ProcessComponent extends AComponent {
     private NotificationComponent $notificationComponent;
+    private DocumentLockComponent $documentLockComponent;
 
     private array $models;
 
@@ -27,11 +29,12 @@ class ProcessComponent extends AComponent {
      * @param array $models Document models array
      * @param NotificationComponent $notificationComponent NotificationComponent instance
      */
-    public function __construct(Database $db, Logger $logger, array $models, NotificationComponent $notificationComponent) {
+    public function __construct(Database $db, Logger $logger, array $models, NotificationComponent $notificationComponent, DocumentLockComponent $documentLockComponent) {
         parent::__construct($db, $logger);
 
         $this->models = $models;
         $this->notificationComponent = $notificationComponent;
+        $this->documentLockComponent = $documentLockComponent;
     }
 
     /**
@@ -93,6 +96,11 @@ class ProcessComponent extends AComponent {
 
         if($this->checkIfDocumentIsInProcess($idDocument)) {
             // is in process
+            return false;
+        }
+
+        if($this->checkIfDocumentIsLocked($idDocument)) {
+            // is locked
             return false;
         }
 
@@ -176,6 +184,7 @@ class ProcessComponent extends AComponent {
         }
 
         if($start) {
+            // process
             $this->models['processModel']->insertNewProcess($data);
             $this->logger->info('Started new process for document #' . $idDocument . ' of type \'' . ProcessTypes::$texts[$type] . '\'', __METHOD__);
             
@@ -185,10 +194,16 @@ class ProcessComponent extends AComponent {
                 $idProcess = $this->models['processModel']->getLastInsertedIdProcess();
             }, __METHOD__);
 
-            $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
-                'id_process' => $idProcess,
-                'id_user' => $_SESSION['id_current_user']
-            ));
+            if($idProcess !== NULL) {
+                // notification
+                $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, array(
+                    'id_process' => $idProcess,
+                    'id_user' => $_SESSION['id_current_user']
+                ));
+
+                // document lock
+                $this->documentLockComponent->lockDocumentForProcess($idDocument, $idProcess);
+            }
 
             return true;
         } else {
@@ -281,6 +296,26 @@ class ProcessComponent extends AComponent {
         }, __METHOD__);
 
         if(!is_null($process) && $process->getStatus() == ProcessStatus::IN_PROGRESS) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Checks if a given document is locked
+     * 
+     * @param int $idDocument Document ID to be checked
+     * @return bool True if the given document is locked or false if not
+     */
+    public function checkIfDocumentIsLocked(int $idDocument) {
+        $lock = null;
+
+        $this->logger->logFunction(function() use (&$lock, $idDocument) {
+            $lock = $this->documentLockComponent->isDocumentLocked($idDocument);
+        });
+
+        if($lock instanceof DocumentLockEntity) {
             return true;
         } else {
             return false;

@@ -32,12 +32,16 @@ class DocumentArchivationService extends AService {
 
         $ids = [];
         while($row = $qb->fetchAssoc()) {
-            $ids[] = $row['id'];
+            $document = $this->documentModel->createDocumentObjectFromDbRow($row);
+
+            if($this->documentAuthorizator->canArchive($document) === TRUE) {
+                $ids[] = $document->getId();
+            }
         }
 
         $this->log('Found ' . count($ids) . ' documents waiting for archivation', __METHOD__);
 
-        $archived = count($ids);;
+        $archived = count($ids);
         if(count($ids) > 0) {
             $this->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVED], $ids);
             $this->dmhm->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVED], $ids, $_SESSION['id_current_user']);

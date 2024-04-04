@@ -1,6 +1,7 @@
 <?php
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\DocumentLockType;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\Metadata\DocumentMetadata;
@@ -309,7 +310,7 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user, $processComponent;
+    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user, $documentLockModel, $documentLockComponent;
 
     $returnArray = [];
 
@@ -345,10 +346,16 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns([/*'lock' => 'Lock',*/ 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
-        /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
-            return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked');
-        });*/
+        $gb->addColumns(['lock' => 'Lock', 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addOnColumnRender('lock', function(Document $document) use ($user, $documentLockComponent) {
+            $lock = $documentLockComponent->isDocumentLocked($document->getId());
+    
+            if($lock === FALSE) {
+                return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()], GridDataHelper::renderBooleanValueWithColors($lock, '-', 'Unlocked', 'red', 'green'));
+            }
+    
+            return $documentLockComponent->createLockText($lock, $user->getId());
+        });
         $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
         });
@@ -385,13 +392,37 @@ function search() {
         $gb->addAction(function(Document $document) {
             return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()], 'Info');
         });
-        $gb->addAction(function(Document $document) {
-            return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
+        $gb->addAction(function(Document $document) use ($documentLockComponent, $user) {
+            if($document->getStatus() == DocumentStatus::ARCHIVED) {
+                $lock = $documentLockComponent->isDocumentLocked($document->getId());
+
+                if($lock !== FALSE) {
+                    if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
+                        return '-';
+                    } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
+                        return '-';
+                    }
+                }
+
+                return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
+            } else {
+                return '-';
+            }
         });
-        $gb->addAction(function(Document $document) use ($canShareDocuments) {
+        $gb->addAction(function(Document $document) use ($canShareDocuments, $documentLockComponent, $user) {
             if($canShareDocuments &&
                ($document->getStatus() == DocumentStatus::ARCHIVED) &&
                ($document->getRank() == DocumentRank::PUBLIC)) {
+                $lock = $documentLockComponent->isDocumentLocked($document->getId());
+
+                if($lock !== FALSE) {
+                    if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
+                        return '-';
+                    } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
+                        return '-';
+                    }
+                }
+
                 return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
             } else {
                 return '-';
@@ -412,10 +443,16 @@ function search() {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns([/*'lock' => 'Lock',*/ 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
-        /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
-            return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked', 'red', 'green');
-        });*/
+        $gb->addColumns(['lock' => 'Lock', 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addOnColumnRender('lock', function(Document $document) use ($user, $documentLockComponent) {
+            $lock = $documentLockComponent->isDocumentLocked($document->getId());
+
+            if($lock === FALSE) {
+                return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()], GridDataHelper::renderBooleanValueWithColors($lock, '-', 'Unlocked', 'red', 'green'));
+            }
+
+            return $documentLockComponent->createLockText($lock, $user->getId());
+        });
         $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
         });
@@ -452,17 +489,37 @@ function search() {
         $gb->addAction(function(Document $document) {
             return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()], 'Info');
         });
-        $gb->addAction(function(Document $document) {
+        $gb->addAction(function(Document $document) use ($documentLockComponent, $user) {
             if($document->getStatus() == DocumentStatus::ARCHIVED) {
+                $lock = $documentLockComponent->isDocumentLocked($document->getId());
+
+                if($lock !== FALSE) {
+                    if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
+                        return '-';
+                    } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
+                        return '-';
+                    }
+                }
+
                 return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
             } else {
                 return '-';
             }
         });
-        $gb->addAction(function(Document $document) use ($canShareDocuments) {
+        $gb->addAction(function(Document $document) use ($canShareDocuments, $documentLockComponent, $user) {
             if($canShareDocuments &&
                ($document->getStatus() == DocumentStatus::ARCHIVED) &&
                ($document->getRank() == DocumentRank::PUBLIC)) {
+                $lock = $documentLockComponent->isDocumentLocked($document->getId());
+
+                if($lock !== FALSE) {
+                    if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
+                        return '-';
+                    } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
+                        return '-';
+                    }
+                }
+
                 return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
             } else {
                 return '-';

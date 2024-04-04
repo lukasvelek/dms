@@ -6,6 +6,7 @@ use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
+use DMS\Components\DocumentLockComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
@@ -18,6 +19,7 @@ use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
+use DMS\Models\DocumentLockModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
 use DMS\Models\FilterModel;
@@ -191,6 +193,7 @@ $filterModel = new FilterModel($db, $logger);
 $ribbonModel = new RibbonModel($db, $logger);
 $archiveModel = new ArchiveModel($db, $logger);
 $fileStorageModel = new FileStorageModel($db, $logger);
+$documentLockModel = new DocumentLockModel($db, $logger);
 
 $models = array(
     'userModel' => $userModel,
@@ -212,7 +215,8 @@ $models = array(
     'ribbonModel' => $ribbonModel,
     'filterModel' => $filterModel,
     'archiveModel' => $archiveModel,
-    'fileStorageModel' => $fileStorageModel
+    'fileStorageModel' => $fileStorageModel,
+    'documentLockModel' => $documentLockModel
 );
 
 if(isset($_SESSION['id_current_user'])) {
@@ -229,16 +233,18 @@ if(isset($_SESSION['id_current_user'])) {
 
 }
 
+$documentLockComponent = new DocumentLockComponent($db, $logger, $documentLockModel, $userModel);
+
 $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
-$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent);
+$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent, $documentLockComponent);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 $archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
-$documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
+$documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent, $documentLockComponent);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
 $documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);

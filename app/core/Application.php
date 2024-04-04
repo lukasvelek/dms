@@ -14,6 +14,7 @@ use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Authorizators\RibbonAuthorizator;
 use DMS\Components\CalendarComponent;
+use DMS\Components\DocumentLockComponent;
 use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
@@ -30,6 +31,7 @@ use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\ArchiveModel;
 use DMS\Models\CalendarModel;
 use DMS\Models\DocumentCommentModel;
+use DMS\Models\DocumentLockModel;
 use DMS\Models\DocumentMetadataHistoryModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
@@ -122,6 +124,7 @@ class Application {
     public FileStorageModel $fileStorageModel;
     public CalendarModel $calendarModel;
     public DocumentMetadataHistoryModel $documentMetadataHistoryModel;
+    public DocumentLockModel $documentLockModel;
 
     public BulkActionAuthorizator $bulkActionAuthorizator;
     public DocumentAuthorizator $documentAuthorizator;
@@ -139,6 +142,7 @@ class Application {
     public RibbonComponent $ribbonComponent;
     public DocumentReportGeneratorComponent $documentReportGeneratorComponent;
     public CalendarComponent $calendarComponent;
+    public DocumentLockComponent $documentLockComponent;
 
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
@@ -200,6 +204,7 @@ class Application {
         $this->archiveModel = new ArchiveModel($this->conn, $this->logger);
         $this->fileStorageModel = new FileStorageModel($this->conn, $this->logger);
         $this->calendarModel = new CalendarModel($this->conn, $this->logger);
+        $this->documentLockModel = new DocumentLockModel($this->conn, $this->logger);
         
         $this->models = array(
             'userModel' => $this->userModel,
@@ -222,8 +227,11 @@ class Application {
             'filterModel' => $this->filterModel,
             'archiveModel' => $this->archiveModel,
             'fileStorageModel' => $this->fileStorageModel,
-            'calendarModel' => $this->calendarModel
+            'calendarModel' => $this->calendarModel,
+            'documentLockModel' => $this->documentLockModel
         );
+        
+        $this->documentLockComponent = new DocumentLockComponent($this->conn, $this->logger, $this->documentLockModel, $this->userModel);
 
         $this->bulkActionAuthorizator = new BulkActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
         $this->actionAuthorizator = new ActionAuthorizator($this->conn, $this->logger, $this->userRightModel, $this->groupUserModel, $this->groupRightModel, $this->user);
@@ -247,12 +255,12 @@ class Application {
         $serviceManagerCacheManager = new CacheManager(CacheCategories::SERVICE_CONFIG, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
         
         $this->notificationComponent = new NotificationComponent($this->conn, $this->logger, $this->notificationModel);
-        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->models, $this->notificationComponent);
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->models, $this->notificationComponent, $this->documentLockComponent);
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
         $this->ribbonComponent = new RibbonComponent($this->conn, $this->logger, $this->ribbonModel, $this->ribbonAuthorizator);
         
         $this->archiveAuthorizator = new ArchiveAuthorizator($this->conn, $this->logger, $this->archiveModel, $this->user, $this->processComponent);
-        $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent);
+        $this->documentAuthorizator = new DocumentAuthorizator($this->conn, $this->logger, $this->documentModel, $this->userModel, $this->processModel, $this->user, $this->processComponent, $this->documentLockComponent);
         $this->documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($this->conn, $this->logger, $this->user, $this->documentAuthorizator, $this->bulkActionAuthorizator);
         
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
@@ -263,7 +271,24 @@ class Application {
         $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager, $this->externalEnumComponent, $this->fsManager);
         $this->calendarComponent = new CalendarComponent($this->conn, $this->logger, $this->calendarModel);
         
-        $this->serviceManager = new ServiceManager($this->logger, $this->serviceModel, $this->fsManager, $this->documentModel, $serviceManagerCacheManager, $this->documentAuthorizator, $this->processComponent, $this->userModel, $this->groupUserModel, $this->mailModel, $this->mailManager, $this->notificationModel, $this->documentReportGeneratorComponent, $this->notificationComponent, $this->fileStorageModel, $this->documentMetadataHistoryModel);
+        $this->serviceManager = new ServiceManager( $this->logger,
+                                                    $this->serviceModel,
+                                                    $this->fsManager,
+                                                    $this->documentModel,
+                                                    $serviceManagerCacheManager,
+                                                    $this->documentAuthorizator,
+                                                    $this->processComponent,
+                                                    $this->userModel,
+                                                    $this->groupUserModel,
+                                                    $this->mailModel,
+                                                    $this->mailManager,
+                                                    $this->notificationModel,
+                                                    $this->documentReportGeneratorComponent,
+                                                    $this->notificationComponent,
+                                                    $this->fileStorageModel,
+                                                    $this->documentMetadataHistoryModel,
+                                                    $this->documentLockComponent
+                                                );
         
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);
         

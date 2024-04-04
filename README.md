@@ -4,6 +4,9 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.11
+- added document locks
+
 ### v1.10
 - added database indexes
 - added option to manage ribbon rights for a user or a group

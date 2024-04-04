@@ -424,6 +424,16 @@ class DatabaseInstaller {
                 'metadata_name' => 'VARCHAR(256) NOT NULL',
                 'metadata_value' => 'VARCHAR(256) NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'document_locks' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_document' => 'INT(32) NOT NULL',
+                'id_user' => 'INT(32) NULL',
+                'id_process' => 'INT(32) NULL',
+                'description' => 'TEXT NOT NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 
@@ -636,6 +646,13 @@ class DatabaseInstaller {
                     'id_document'
                 ]
             ],
+            [
+                'table_name' => 'document_locks',
+                'columns' => [
+                    'id_document',
+                    'status'
+                ]
+            ]
         ];
 
         $tables = [];
