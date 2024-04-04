@@ -3,7 +3,6 @@
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\UserPasswordChangeStatus;
-use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Exceptions\AException;
 use DMS\Panels\Panels;
