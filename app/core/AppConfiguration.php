@@ -131,6 +131,10 @@ class AppConfiguration {
         return self::loadParam('document_report_keep_length');
     }
 
+    public static function getIsDocumentDuplicationEnabled() {
+        return self::loadParam('enable_document_duplication');
+    }
+
     /**
      * ----- PRIVATE METHODS -----
      */

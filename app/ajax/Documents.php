@@ -12,6 +12,7 @@ use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Entities\Document;
+use DMS\Entities\DocumentLockEntity;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Helpers\GridDataHelper;
@@ -448,7 +449,7 @@ function search() {
             $lock = $documentLockComponent->isDocumentLocked($document->getId());
 
             if($lock === FALSE) {
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()], GridDataHelper::renderBooleanValueWithColors($lock, '-', 'Unlocked', 'red', 'green'));
+                return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()], GridDataHelper::renderBooleanValueWithColors(($lock instanceof DocumentLockEntity), '-', 'Unlocked', 'red', 'green'));
             }
 
             return $documentLockComponent->createLockText($lock, $user->getId());
@@ -530,6 +531,25 @@ function search() {
             return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')">';
         });
         $gb->addDataSource($documents);
+
+        if(AppConfiguration::getIsDocumentDuplicationEnabled()) {
+            $gb->addAction(function(Document $document) use ($documentLockComponent, $user) {
+                if(($document->getStatus() == DocumentStatus::ARCHIVED) &&
+                   ($document->getRank() == DocumentRank::PUBLIC)) {
+                    $lock = $documentLockComponent->isDocumentLocked($document->getId());
+
+                    if($lock !== FALSE) {
+                        if($lock->getType() == DocumentLockType::USER_LOCK) {
+                            return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:duplicateDocument', 'id' => $document->getId()], 'Duplicate');
+                        }
+                    } else {
+                        return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:duplicateDocument', 'id' => $document->getId()], 'Duplicate');
+                    }
+                }
+
+                return '-';
+            });
+        }
 
         $returnArray['grid'] = $gb->build();
         $returnArray['controls'] = _createGridPageControls($page, $filter, $idFolder, 'showAll', count($documents));
