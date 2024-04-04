@@ -453,7 +453,11 @@ function search() {
             $lock = $documentLockComponent->isDocumentLocked($document->getId());
 
             if($lock === FALSE) {
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()], GridDataHelper::renderBooleanValueWithColors(($lock instanceof DocumentLockEntity), '-', 'Unlocked', 'red', 'green'));
+                if(in_array($document->getStatus(), [DocumentStatus::DELETED, DocumentStatus::SHREDDED])) {
+                    return '-';
+                } else {
+                    return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()], GridDataHelper::renderBooleanValueWithColors(($lock instanceof DocumentLockEntity), '-', 'Unlocked', 'red', 'green'));
+                }
             }
 
             return $documentLockComponent->createLockText($lock, $user->getId());
