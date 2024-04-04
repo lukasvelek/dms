@@ -213,7 +213,11 @@ function deleteComment() {
         $idCurrentUser = $_SESSION['id_current_user'];
     }
 
-    $documentCommentRepository->deleteComment($idComment, $idCurrentUser);
+    try {
+        $documentCommentRepository->deleteComment($idComment, $idCurrentUser);
+    } catch(Exception $e) {
+        return $e->getMessage();
+    }
 }
 
 function getComments() {

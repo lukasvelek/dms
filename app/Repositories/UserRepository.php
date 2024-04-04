@@ -40,30 +40,19 @@ class UserRepository extends ARepository {
     }
 
     public function deactiveUser(int $id) {
-        $result = false;
-        try {
-            if($this->actionAuthorizator->canEditUser() !== TRUE) {
-                throw new Exception("Current user cannot edit other users");
-            }
-            $result = $this->userModel->updateUserStatus($id, UserStatus::INACTIVE);
-        } catch(Exception $e) {
-            die('Caught exception: ' . $e->getMessage());
+        if($this->actionAuthorizator->canEditUser() !== TRUE) {
+            throw new Exception("Current user cannot edit other users");
         }
 
-        return $result;
+        return $this->userModel->updateUserStatus($id, UserStatus::INACTIVE);
     }
 
     public function activateUser(int $id) {
-        $result = false;
-        try {
-            if($this->actionAuthorizator->canEditUser() !== TRUE) {
-                throw new Exception('Current user cannot edit other users');
-            }
-            $result = $this->userModel->updateUserStatus($id, UserStatus::ACTIVE);
-        } catch(Exception $e) {
-            die('Caught exception: ' . $e->getMessage());
+        if($this->actionAuthorizator->canEditUser() !== TRUE) {
+            throw new Exception('Current user cannot edit other users');
         }
-        return $result;
+
+        return $this->userModel->updateUserStatus($id, UserStatus::ACTIVE);
     }
 
     public function getUserEntityByID(int $id) {

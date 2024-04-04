@@ -6,6 +6,7 @@ use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
+use Exception;
 
 class DocumentCommentRepository extends ARepository {
     private DocumentCommentModel $documentCommentModel;
@@ -33,12 +34,10 @@ class DocumentCommentRepository extends ARepository {
 
         if($comment->getIdAuthor() != $idCallingUser &&
            $document->getIdAuthor() != $idCallingUser) {
-            return false;
+            throw new Exception('Current user is not either comment author or document author.');
         }
 
         $this->documentCommentModel->deleteComment($idComment);
-
-        return true;
     }
 
     /**
