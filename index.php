@@ -5,11 +5,18 @@ use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
+use DMS\Exceptions\AException;
 use DMS\Panels\Panels;
 
 session_start();
 
-include('app/dms_loader.php');
+try {
+    include('app/dms_loader.php');
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
+
 
 if(isset($_GET['page'])) {
     $page = htmlspecialchars($_GET['page']);

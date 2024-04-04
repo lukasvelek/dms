@@ -17,6 +17,8 @@
  * @version 1.2
  */
 
+use DMS\Exceptions\ClassDoesNotImplementInterfaceException;
+use DMS\Exceptions\SystemFileDoesNotExistException;
 use DMS\Modules\IModule;
 
 $dependencies = array();
@@ -137,11 +139,11 @@ require_once('Core/Vendor/PHPMailer/SMTP.php');
 // END OF VENDOR DENEPENDENCIES
 
 if(!DMS\Core\FileManager::fileExists('config.local.php')) {
-    throw new Exception('Config file does not exist.');
+    throw new SystemFileDoesNotExistException('config.local.php');
 }
 
-if(!DMS\Core\FileManager::fileExists('Modules/modules.php')) {
-    throw new Exception('Module definition file does not exist.');
+if(!DMS\Core\FileManager::fileExists('app/Modules/modules.php')) {
+    throw new SystemFileDoesNotExistException('app/Modules/modules.php');
 }
 
 include('Modules/modules.php');
@@ -154,7 +156,7 @@ foreach($modules as $moduleName => $modulePresenters) {
     $module = new $moduleUrl();
 
     if(!($module instanceof IModule)) {
-        throw new Exception('Module \'' . $moduleUrl . '\' does not implement IModule.');
+        throw new ClassDoesNotImplementInterfaceException($moduleUrl, 'DMS\Modules\IModule');
     }
     
     foreach($modulePresenters as $modulePresenter) {
