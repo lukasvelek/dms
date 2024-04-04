@@ -253,10 +253,10 @@ class DocumentsPresenter extends APresenter {
 
         $template = $this->templateManager->loadTemplate('app/modules/UserModule/presenters/templates/documents/new-document-form.html');
 
-        if(!$app->actionAuthorizator->canGenerateDocumentReports()) {
+        /*if(!$app->actionAuthorizator->canGenerateDocumentReports()) {
             $app->flashMessage('You are not authorized to generate document reports.', 'error');
             $app->redirect('showAll');
-        }
+        }*/
 
         $data = array(
             '$PAGE_TITLE$' => 'Document report generator',
