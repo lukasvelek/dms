@@ -993,11 +993,27 @@ class DocumentsPresenter extends APresenter {
     private function _delete_documents(array $ids, int $idFolder, ?string $filter) {
         global $app;
 
+        $result = true;
         foreach($ids as $id) {
-            $app->processComponent->startProcess(ProcessTypes::DELETE, $id, $app->user->getId());
+            if($result === TRUE) {
+                $result = $app->processComponent->startProcess(ProcessTypes::DELETE, $id, $app->user->getId());
+            }
         }
 
-        $app->flashMessage('Process has started', 'success');
+        if(count($ids) > 1) {
+            // multiple
+            if($result === TRUE) {
+                $app->flashMessage('Processes have started', 'success');
+            } else {
+                $app->flashMessage('Some processes have not started', 'warn');
+            }
+        } else {
+            if($result === TRUE) {
+                $app->flashMessage('Process has started', 'success');
+            } else {
+                $app->flashMessage('Process could not be started', 'error');
+            }
+        }
 
         if($filter !== NULL) {
             $params = ['filter' => $filter];

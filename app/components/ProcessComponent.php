@@ -279,6 +279,10 @@ class ProcessComponent extends AComponent {
 
         $this->logger->info('Ended process #' . $idProcess, __METHOD__);
 
+        if($process->getIdDocument() !== NULL) {
+            $this->documentLockComponent->unlockDocument($process->getIdDocument());
+        }
+
         return true;
     }
 
