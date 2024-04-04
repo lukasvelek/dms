@@ -94,12 +94,12 @@ class ServiceSettingsPresenter extends APresenter {
         $name = $this->get('name');
 
         $urlConfirm = array(
-            'page' => 'UserModule:Settings:runService',
+            'page' => 'UserModule:ServiceSettings:runService',
             'name' => $name
         );
 
         $urlClose = array(
-            'page' => 'UserModule:Settings:showServices'
+            'page' => 'UserModule:ServiceSettings:showServices'
         );
 
         $code = ScriptLoader::confirmUser('Do you want to run service ' . $name . '?', $urlConfirm, $urlClose);
