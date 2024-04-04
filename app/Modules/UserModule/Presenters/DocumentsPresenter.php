@@ -32,6 +32,21 @@ class DocumentsPresenter extends APresenter {
         $this->getActionNamesFromClass($this);
     }
     
+    protected function duplicateDocument() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $idDocument = $this->get('id');
+
+        $idNewDocument = $app->documentRepository->duplicateDocument($idDocument, true);
+        $app->documentRepository->addCommentToDocument($idDocument, 'Document has been duplicated as #' . $idNewDocument . ' by user #' . $app->user->getId(), $app->user->getId());
+        
+        $app->flashMessage('Document #' . $idDocument . ' duplicated as document #' . $idNewDocument);
+        $app->logger->info('Document #' . $idDocument . ' duplicated by user #' . $app->user->getId() . ' as document #' . $idNewDocument);
+        $app->redirect('showAll');
+    }
+
     protected function lockDocumentForUser() {
         global $app;
 

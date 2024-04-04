@@ -248,7 +248,7 @@ $documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
 $documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
-$documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator);
+$documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator, $documentCommentModel);
 
 $mailManager = new MailManager();
 
