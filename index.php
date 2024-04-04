@@ -131,8 +131,13 @@ if($app->user !== NULL) {
     }
 }
 
-$app->loadPages();
-$app->renderPage();
+try {
+    $app->loadPages();
+    $app->renderPage();
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
 
 $title = 'DMS | ' . $app->currentPresenter->getTitle();
 
