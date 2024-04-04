@@ -55,7 +55,7 @@ class UserRepository extends ARepository {
         return $this->userModel->updateUserStatus($id, UserStatus::ACTIVE);
     }
 
-    public function getUserEntityByID(int $id) {
+    public function getUserById(int $id) {
         $valFromCache = $this->userCache->loadUserByIdFromCache($id);
 
         $user = null;

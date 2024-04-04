@@ -717,8 +717,6 @@ class Application {
     private function autoRunServices() {
         $serviceObjs = $this->serviceModel->getAllServices();
         foreach($this->serviceManager->services as $displayName => $service) {
-            //$serviceObj = $this->serviceModel->getServiceByName($service->name);
-
             $serviceObj = null;
             foreach($serviceObjs as $sobj) {
                 if($sobj->getSystemName() == $service->name) {

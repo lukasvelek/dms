@@ -536,6 +536,8 @@ class SettingsPresenter extends APresenter {
 
         $widgets[] = LinkBuilder::createAdvLink(['page' => 'SystemEventCalendar:showEvents', 'tag' => 'system', 'year' => date('Y'), 'month' => date('m')], 'System event calendar');
 
+        $widgets[] = LinkBuilder::createAdvLink(['page' => 'DocumentReports:showReportsForAllUsers'], 'Generated document reports');
+
         $widgetsCode = '';
 
         $x = 100;

@@ -11,12 +11,34 @@ use DMS\Core\AppConfiguration;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
+use DMS\Entities\DocumentReportEntity;
 use DMS\Helpers\ArrayHelper;
 use QueryBuilder\QueryBuilder;
 
 class DocumentModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function getDocumentReportQueueEntries() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('document_reports')
+            ->orderBy(DocumentReportMetadata::DATE_UPDATED, 'DESC')
+            ->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $fileSrc = null;
+            if(isset($row[DocumentReportMetadata::FILE_SRC])) {
+                $fileSrc = $row[DocumentReportMetadata::FILE_SRC];
+            }
+
+            $entities[] = new DocumentReportEntity($row[DocumentReportMetadata::ID], $row[DocumentReportMetadata::ID_USER], $row[DocumentReportMetadata::DATE_CREATED], $row[DocumentReportMetadata::DATE_UPDATED], $row[DocumentReportMetadata::STATUS], $row[DocumentReportMetadata::SQL_STRING], $fileSrc, $row[DocumentReportMetadata::FILE_NAME], $row[DocumentReportMetadata::ID_FILE_STORAGE_LOCATION]);
+        }
+
+        return $entities;
     }
 
     public function getDocumentRowById(int $id) {

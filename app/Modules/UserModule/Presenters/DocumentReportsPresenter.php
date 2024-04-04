@@ -5,6 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\DocumentReportStatus;
 use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\UserActionRights;
+use DMS\Entities\DocumentReportEntity;
 use DMS\Modules\APresenter;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
@@ -16,6 +17,70 @@ class DocumentReportsPresenter extends APresenter {
         parent::__construct('DocumentReports', 'Document reports');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function showReportsForAllUsers() {
+        global $app;
+
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-grid.html');
+
+        $documentModel = $app->documentModel;
+        $userRepository = $app->userRepository;
+
+        $dataCallback = function() use ($documentModel) {
+            return $documentModel->getDocumentReportQueueEntries();
+        };
+
+        $gb = new GridBuilder();
+
+        $gb->addColumns(['user' => 'User', 'date_created' => 'Date created', 'date_updated' => 'Date updated', 'status' => 'Status']);
+        $gb->addDataSourceCallback($dataCallback);
+        $gb->addOnColumnRender('user', function(DocumentReportEntity $dre) use ($userRepository) {
+            $user = $userRepository->getUserById($dre->getIdUser());
+
+            return $user->getFullname();
+        });
+        $gb->addOnColumnRender('date_created', function(DocumentReportEntity $obj) {
+            return $obj->getDateCreated();
+        });
+        $gb->addOnColumnRender('date_updated', function(DocumentReportEntity $obj) {
+            return $obj->getDateUpdated();
+        });
+        $gb->addOnColumnRender('status', function(DocumentReportEntity $obj) {
+            return DocumentReportStatus::$texts[$obj->getStatus()];
+        });
+        /*$gb->addAction(function(DocumentReportEntity $obj) use ($fileManager, $fileStorageModel) {
+            if($obj->getStatus() == DocumentReportStatus::FINISHED) {
+                $location = $fileStorageModel->getLocationById($obj->getIdFileStorageLocation());
+                $realServerPath = $location->getPath() . $obj->getFilename();
+
+                if($fileManager->fileExists($realServerPath)) {
+                    return LinkBuilder::createAdvLink(['page' => 'downloadReport', 'path' => base64_encode($realServerPath)], 'Download');
+                } else {
+                    return '-';
+                }
+            } else {
+                return '-';
+            }
+        });
+        $gb->addAction(function(DocumentReportEntity $obj) use ($canDeleteDocumentReportQueueEntry) {
+            if($canDeleteDocumentReportQueueEntry) {
+                return LinkBuilder::createAdvLink(['page' => 'deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
+            } else {
+                return '-';
+            }
+        });*/
+
+        $data = [
+            '$PAGE_TITLE$' => 'Document reports',
+            '$BULK_ACTION_CONTROLLER$' => '',
+            '$LINKS$' => [],
+            '$FILTER_GRID$' => $gb->build()
+        ];
+
+        $this->templateManager->fill($data, $template);
+
+        return $template;
     }
     
     protected function downloadReport() {
@@ -52,67 +117,8 @@ class DocumentReportsPresenter extends APresenter {
                 if(isset($row[DocumentReportMetadata::FILE_SRC])) {
                     $fileSrc = $row[DocumentReportMetadata::FILE_SRC];
                 }
-                $entry = new class($row[DocumentReportMetadata::ID], $row[DocumentReportMetadata::ID_USER], $row[DocumentReportMetadata::DATE_CREATED], $row[DocumentReportMetadata::DATE_UPDATED], $row[DocumentReportMetadata::STATUS], $row[DocumentReportMetadata::SQL_STRING], $fileSrc, $row[DocumentReportMetadata::FILE_NAME], $row[DocumentReportMetadata::ID_FILE_STORAGE_LOCATION]) {
-                    private int $id;
-                    private int $idUser;
-                    private string $dateCreated;
-                    private string $dateUpdated;
-                    private int $status;
-                    private string $sqlString;
-                    private ?string $fileSrc;
-                    private ?string $filename;
-                    private ?int $idFileStorageLocation;
 
-                    public function __construct(int $id, int $idUser, string $dateCreated, string $dateUpdated, int $status, string $sqlString, ?string $fileSrc, ?string $filename, ?int $idFileStorageLocation) {
-                        $this->id = $id;
-                        $this->idUser = $idUser;
-                        $this->dateCreated = $dateCreated;
-                        $this->dateUpdated = $dateUpdated;
-                        $this->status = $status;
-                        $this->sqlString = $sqlString;
-                        $this->fileSrc = $fileSrc;
-                        $this->filename = $filename;
-                        $this->idFileStorageLocation = $idFileStorageLocation;
-                    }
-
-                    public function getId() {
-                        return $this->id;
-                    }
-
-                    public function getIdUser() {
-                        return $this->idUser;
-                    }
-
-                    public function getDateCreated() {
-                        return $this->dateCreated;
-                    }
-
-                    public function getDateUpdated() {
-                        return $this->dateUpdated;
-                    }
-
-                    public function getStatus() {
-                        return $this->status;
-                    }
-
-                    public function getSqlString() {
-                        return $this->sqlString;
-                    }
-
-                    public function getFileSrc() {
-                        return $this->fileSrc;
-                    }
-
-                    public function getFilename() {
-                        return $this->filename;
-                    }
-
-                    public function getIdFileStorageLocation() {
-                        return $this->idFileStorageLocation;
-                    }
-                };
-
-                $entries[] = $entry;
+                $entries[] = new DocumentReportEntity($row[DocumentReportMetadata::ID], $row[DocumentReportMetadata::ID_USER], $row[DocumentReportMetadata::DATE_CREATED], $row[DocumentReportMetadata::DATE_UPDATED], $row[DocumentReportMetadata::STATUS], $row[DocumentReportMetadata::SQL_STRING], $fileSrc, $row[DocumentReportMetadata::FILE_NAME], $row[DocumentReportMetadata::ID_FILE_STORAGE_LOCATION]);
             }
 
             return $entries;
@@ -126,16 +132,16 @@ class DocumentReportsPresenter extends APresenter {
 
         $gb->addColumns(['date_created' => 'Date created', 'date_updated' => 'Date updated', 'status' => 'Status']);
         $gb->addDataSourceCallback($dataCallback);
-        $gb->addOnColumnRender('date_created', function(object $obj) {
+        $gb->addOnColumnRender('date_created', function(DocumentReportEntity $obj) {
             return $obj->getDateCreated();
         });
-        $gb->addOnColumnRender('date_updated', function(object $obj) {
+        $gb->addOnColumnRender('date_updated', function(DocumentReportEntity $obj) {
             return $obj->getDateUpdated();
         });
-        $gb->addOnColumnRender('status', function(object $obj) {
+        $gb->addOnColumnRender('status', function(DocumentReportEntity $obj) {
             return DocumentReportStatus::$texts[$obj->getStatus()];
         });
-        $gb->addAction(function(object $obj) use ($fileManager, $fileStorageModel) {
+        $gb->addAction(function(DocumentReportEntity $obj) use ($fileManager, $fileStorageModel) {
             if($obj->getStatus() == DocumentReportStatus::FINISHED) {
                 $location = $fileStorageModel->getLocationById($obj->getIdFileStorageLocation());
                 $realServerPath = $location->getPath() . $obj->getFilename();
@@ -149,7 +155,7 @@ class DocumentReportsPresenter extends APresenter {
                 return '-';
             }
         });
-        $gb->addAction(function(object $obj) use ($canDeleteDocumentReportQueueEntry) {
+        $gb->addAction(function(DocumentReportEntity $obj) use ($canDeleteDocumentReportQueueEntry) {
             if($canDeleteDocumentReportQueueEntry) {
                 return LinkBuilder::createAdvLink(['page' => 'deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
             } else {
