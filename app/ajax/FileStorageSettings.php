@@ -3,6 +3,8 @@
 use DMS\Constants\FileStorageTypes;
 use DMS\Core\FileStorageManager;
 use DMS\Entities\FileStorageLocation;
+use DMS\Exceptions\AException;
+use DMS\Exceptions\ValueIsNullException;
 use DMS\Helpers\GridDataHelper;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
@@ -18,10 +20,15 @@ if(isset($_GET['action'])) {
 }
 
 if($action == null) {
-    exit;
+    throw new ValueIsNullException('$action');
 }
 
-echo($action());
+try {
+    echo($action());
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
 
 function getLocationsGrid() {
     global $fm, $logger, $fileStorageModel;

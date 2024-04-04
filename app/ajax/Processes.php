@@ -6,6 +6,8 @@ use DMS\Constants\ProcessTypes;
 use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Entities\Process;
+use DMS\Exceptions\AException;
+use DMS\Exceptions\ValueIsNullException;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\UI\GridBuilder;
@@ -24,10 +26,15 @@ if(isset($_GET['action'])) {
 }
 
 if($action == null) {
-    exit;
+    throw new ValueIsNullException('$action');
 }
 
-echo($action());
+try {
+    echo($action());
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
 
 function deleteComment() {
     global $processCommentModel;

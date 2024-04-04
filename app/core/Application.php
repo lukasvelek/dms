@@ -27,6 +27,8 @@ use DMS\Constants\FileStorageSystemLocations;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Core\Logger\Logger;
 use DMS\Core\FileManager;
+use DMS\Exceptions\SystemComponentDoesNotExistException;
+use DMS\Exceptions\ValueIsNullException;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Models\ArchiveModel;
 use DMS\Models\CalendarModel;
@@ -391,7 +393,7 @@ class Application {
      */
     public function renderPage() {
         if(is_null($this->currentUrl)) {
-            die('Current URL is null!');
+            throw new ValueIsNullException('$currentUrl');
         }
 
 
@@ -416,22 +418,19 @@ class Application {
         if(array_key_exists($module, $this->modules)) {
             $this->currentModule = $module = $this->modules[$module];
         } else {
-            die('Module does not exist!');
+            throw new SystemComponentDoesNotExistException('Module ' . $module);
         }
 
         // Get presenter
+        $origPresenter = $presenter;
         $presenter = $module->getPresenterByName($presenter);
 
         if($presenter === NULL) {
-            die('Presenter does not exist');
+            throw new SystemComponentDoesNotExistException('Presenter ' . $origPresenter);
         }
 
         $this->currentPresenter = $presenter;
-        if(!is_null($presenter)) {
-            $module->setPresenter($presenter);
-        } else {
-            die('Presenter does not exist');
-        }
+        $module->setPresenter($presenter);
 
         // User is allowed to visit specific pages before logging in
         if($this->currentPresenter->allowWhenLoginProcess === false && isset($_SESSION['login_in_process'])) {

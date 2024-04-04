@@ -1,6 +1,8 @@
 <?php
 
 use DMS\Core\AppConfiguration;
+use DMS\Exceptions\AException;
+use DMS\Exceptions\ValueIsNullException;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\UI\GridBuilder;
 use DMS\UI\TableBuilder\TableBuilder;
@@ -16,10 +18,15 @@ if(isset($_GET['action'])) {
 }
 
 if($action == null) {
-    exit;
+    throw new ValueIsNullException('$action');
 }
 
-echo($action());
+try {
+    echo($action());
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
 
 function getQueue() {
     global $mailModel, $user;

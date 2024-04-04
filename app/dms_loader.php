@@ -14,8 +14,12 @@
  * It also loads all UI modules and registers them in the application.
  * 
  * @author Lukas Velek
- * @version 1.1
+ * @version 1.2
  */
+
+use DMS\Exceptions\ClassDoesNotImplementInterfaceException;
+use DMS\Exceptions\SystemFileDoesNotExistException;
+use DMS\Modules\IModule;
 
 $dependencies = array();
 
@@ -135,10 +139,13 @@ require_once('Core/Vendor/PHPMailer/SMTP.php');
 // END OF VENDOR DENEPENDENCIES
 
 if(!DMS\Core\FileManager::fileExists('config.local.php')) {
-    die('Config file does not exist!');
+    throw new SystemFileDoesNotExistException('config.local.php');
 }
 
-//include('config.local.php');
+if(!DMS\Core\FileManager::fileExists('app/Modules/modules.php')) {
+    throw new SystemFileDoesNotExistException('app/Modules/modules.php');
+}
+
 include('Modules/modules.php');
 
 $app = new DMS\Core\Application();
@@ -147,6 +154,10 @@ foreach($modules as $moduleName => $modulePresenters) {
     $moduleUrl = 'DMS\\Modules\\' . $moduleName . '\\' . $moduleName;
 
     $module = new $moduleUrl();
+
+    if(!($module instanceof IModule)) {
+        throw new ClassDoesNotImplementInterfaceException($moduleUrl, 'DMS\Modules\IModule');
+    }
     
     foreach($modulePresenters as $modulePresenter) {
         $presenterUrl = 'DMS\\Modules\\' . $moduleName . '\\' . $modulePresenter;
