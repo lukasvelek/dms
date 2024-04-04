@@ -144,6 +144,17 @@ class DocumentLockComponent extends AComponent {
         }
     }
 
+    public function getBulkLocksForIdDocuments(array $idDocuments) {
+        $locks = $this->dlm->getActiveLocksForIdDocuments($idDocuments);
+
+        $lockArray = [];
+        foreach($locks as $lock) {
+            $lockArray[$lock->getIdDocument()] = $lock;
+        }
+
+        return $lockArray;
+    }
+
     /**
      * Creates lock type text
      * 

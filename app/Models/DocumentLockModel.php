@@ -23,6 +23,21 @@ class DocumentLockModel extends AModel {
         return $qb->fetch();
     }
 
+    public function getActiveLocksForIdDocuments(array $idDocuments) {
+        $qb = $this->composeStandardLockQuery(__METHOD__);
+
+        $rows = $qb ->where('status = ?', [DocumentLockStatus::ACTIVE])
+                    ->andWhere($qb->getColumnInValues('id_document', $idDocuments))
+                    ->execute();
+
+        $entities = [];
+        while($row = $rows->fetchAssoc()) {
+            $entities[] = $this->createDocumentLockEntityFromDbRow($row);
+        }
+
+        return $entities;
+    }
+
     public function getActiveLockForIdDocument(int $idDocument) {
         $qb = $this->composeStandardLockQuery(__METHOD__);
 

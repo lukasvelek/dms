@@ -451,23 +451,30 @@ function search() {
     } else {
         $documents = $documentModel->getStandardDocumentsWithOffset($idFolder, $gridSize, (($page - 1) * $gridSize), $filter);
 
+        $idDocuments = [];
+        foreach($documents as $document) {
+            $idDocuments[] = $document->getId();
+        }
+
+        $documentLocks = $documentLockComponent->getBulkLocksForIdDocuments($idDocuments);
+
         $canShareDocuments = $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false);
 
         $gb = new GridBuilder();
 
         $gb->addColumns(['lock' => 'Lock', 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
-        $gb->addOnColumnRender('lock', function(Document $document) use ($user, $documentLockComponent) {
-            $lock = $documentLockComponent->isDocumentLocked($document->getId());
+        $gb->addOnColumnRender('lock', function(Document $document) use ($user, $documentLockComponent, $documentLocks) {
+            if(array_key_exists($document->getId(), $documentLocks)) {
+                $lock = $documentLocks[$document->getId()];
 
-            if($lock === FALSE) {
+                return $documentLockComponent->createLockText($lock, $user->getId());
+            } else {
                 if(in_array($document->getStatus(), [DocumentStatus::DELETED, DocumentStatus::SHREDDED])) {
                     return '-';
                 } else {
-                    return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()], GridDataHelper::renderBooleanValueWithColors(($lock instanceof DocumentLockEntity), '-', 'Unlocked', 'red', 'green'));
+                    return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()], GridDataHelper::renderBooleanValueWithColors(false, '-', 'Unlocked', 'red', 'green'));
                 }
             }
-
-            return $documentLockComponent->createLockText($lock, $user->getId());
         });
         $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
