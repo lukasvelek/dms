@@ -1642,7 +1642,7 @@ class DatabaseInstaller {
                     'name' => 'Services',
                     'code' => 'settings.services',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showServices',
+                    'page_url' => '?page=UserModule:ServiceSettings:showServices',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_SERVICES
                 ),

@@ -37,7 +37,7 @@ class ServiceStats extends AWidget {
             }
         }
 
-        $this->addLink(LinkBuilder::createAdvLink(['page' => 'UserModule:Settings:showServices'], 'Services'));
+        $this->addLink(LinkBuilder::createAdvLink(['page' => 'UserModule:ServiceSettings:showServices'], 'Services'));
 
         return parent::render();
     }
