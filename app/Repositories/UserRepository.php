@@ -10,6 +10,7 @@ use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Entities\UserLoginAttemptEntity;
 use DMS\Models\UserModel;
 use Exception;
 
@@ -25,6 +26,26 @@ class UserRepository extends ARepository {
         $this->actionAuthorizator = $actionAuthorizator;
 
         $this->userCache = CacheManager::getTemporaryObject(CacheCategories::USERS);
+    }
+
+    public function getLoginAttemptsByDate() {
+        $qb = $this->userModel->composeStandardLoginAttemptsQuery();
+
+        $qb ->orderBy('date_created', 'DESC')
+            ->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $id = $row['id'];
+            $dateCreated = $row['date_created'];
+            $username = $row['username'];
+            $description = $row['description'];
+            $result = $row['result'];
+
+            $entities[] = new UserLoginAttemptEntity($id, $dateCreated, $username, $result, $description);
+        }
+
+        return $entities;
     }
 
     public function checkUsernameExists(string $username) {

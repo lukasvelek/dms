@@ -4,6 +4,7 @@ namespace DMS\Modules\AnonymModule;
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
+use DMS\Constants\UserLoginAttemptResults;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
@@ -121,7 +122,7 @@ class LoginPagePresenter extends APresenter {
                 $generatedHash = CypherManager::createCypher(64);
 
                 $app->userModel->insertLastLoginHashForIdUser($user->getId(), $generatedHash);
-                $app->userRepository->insertUserLoginAttempt($username, 1, 'User has logged in successfully.');
+                $app->userRepository->insertUserLoginAttempt($username, UserLoginAttemptResults::SUCCESS, 'User has logged in successfully.');
             
                 $_SESSION['last_login_hash'] = $generatedHash;
                 $_SESSION['id_current_user'] = $authResult;
@@ -131,12 +132,12 @@ class LoginPagePresenter extends APresenter {
 
                 $app->redirect('UserModule:HomePage:showHomepage');
             } else {
-                $app->userRepository->insertUserLoginAttempt($username, 0, 'User has entered wrong credentials.');
+                $app->userRepository->insertUserLoginAttempt($username, UserLoginAttemptResults::BAD_CREDENTIALS, 'User has entered wrong credentials.');
                 $app->flashMessage('You have entered wrong credentials. Please log in again.', 'warn');
                 $app->redirect('AnonymModule:LoginPage:showForm');
             }
         } else {
-            $app->userRepository->insertUserLoginAttempt($username, -1, 'User has entered wrong credentials.');
+            $app->userRepository->insertUserLoginAttempt($username, UserLoginAttemptResults::NON_EXISTING_USER, 'User has entered wrong credentials.');
             $app->flashMessage('You have entered wrong credentials. Please log in again.', 'warn');
             $app->redirect('AnonymModule:LoginPage:showForm');
         }
