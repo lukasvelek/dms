@@ -28,6 +28,27 @@ class UserRepository extends ARepository {
         $this->userCache = CacheManager::getTemporaryObject(CacheCategories::USERS);
     }
 
+    public function getUnsuccessfulLoginAttemptsByDate() {
+        $qb = $this->userModel->composeStandardLoginAttemptsQuery();
+
+        $qb ->where('result <> 1')
+            ->orderBy('date_created', 'DESC')
+            ->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $id = $row['id'];
+            $dateCreated = $row['date_created'];
+            $username = $row['username'];
+            $description = $row['description'];
+            $result = $row['result'];
+
+            $entities[] = new UserLoginAttemptEntity($id, $dateCreated, $username, $result, $description);
+        }
+
+        return $entities;
+    }
+
     public function getLoginAttemptsByDate() {
         $qb = $this->userModel->composeStandardLoginAttemptsQuery();
 
@@ -46,6 +67,19 @@ class UserRepository extends ARepository {
         }
 
         return $entities;
+    }
+
+    public function getExistingUsernames() {
+        $qb = $this->userModel->composeStandardUserQuery(['username']);
+
+        $qb->execute();
+
+        $usernames = [];
+        while($row = $qb->fetchAssoc()) {
+            $usernames[] = $row['username'];
+        }
+
+        return $usernames;
     }
 
     public function checkUsernameExists(string $username) {

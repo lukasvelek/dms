@@ -7,6 +7,7 @@ use DMS\Entities\UserLoginAttemptEntity;
 use DMS\Helpers\GridDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\GridBuilder;
+use DMS\UI\LinkBuilder;
 
 class UserSettingsPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -20,21 +21,40 @@ class UserSettingsPresenter extends APresenter {
     protected function showLoginAttempts() {
         $template = $this->loadTemplate(__DIR__ . '/templates/settings/settings-grid.html');
 
+        $type = 'all';
+
+        if($this->get('type') !== NULL) {
+            $type = $this->get('type');
+        }
+
         $data = [
             '$PAGE_TITLE$' => 'Login attempts',
             '$LINKS$' => [],
-            '$SETTINGS_GRID$' => $this->internalCreateLoginAttemptsGrid()
+            '$SETTINGS_GRID$' => $this->internalCreateLoginAttemptsGrid($type)
         ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showLoginAttempts'], 'All attempts') . '&nbsp;&nbsp;';
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showLoginAttempts', 'type' => 'unsuccessful'], 'Unsuccessful attempts');
 
         $this->fill($data, $template);
 
         return $template;
     }
 
-    private function internalCreateLoginAttemptsGrid() {
+    private function internalCreateLoginAttemptsGrid(string $type) {
         global $app;
         
-        $dataSource = $app->userRepository->getLoginAttemptsByDate();
+        $dataSource = [];
+
+        switch($type) {
+            case 'all':
+                $dataSource = $app->userRepository->getLoginAttemptsByDate();
+                break;
+
+            case 'unsuccessful':
+                $dataSource = $app->userRepository->getUnsuccessfulLoginAttemptsByDate();
+                break;
+        }
         
         $gb = new GridBuilder();
 
