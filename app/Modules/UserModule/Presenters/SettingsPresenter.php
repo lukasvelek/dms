@@ -535,21 +535,30 @@ class SettingsPresenter extends APresenter {
         }
 
         $widgets[] = LinkBuilder::createAdvLink(['page' => 'SystemEventCalendar:showEvents', 'tag' => 'system', 'year' => date('Y'), 'month' => date('m')], 'System event calendar');
-
         $widgets[] = LinkBuilder::createAdvLink(['page' => 'DocumentReports:showReportsForAllUsers'], 'Generated document reports');
+        $widgets[] = LinkBuilder::createAdvLink(['page' => 'UserSettings:showLoginAttempts'], 'Login attempts');
 
-        $widgetsCode = '';
+        $widgetsCode = '<div class="row"><div class="col-md" id="center">';
 
-        $x = 100;
+        $c = 0;
         foreach($widgets as $widget) {
-            $code = '<div id="subpanel" style="position: absolute; top: 15%; left: ' . $x . 'px; width: 250px; height: 100px;">';
-            $code .= $widget;
-            $code .= '</div>';
+            if($c == 0) {
+                $widgetsCode .= '<div class="row">';
+            }
 
-            $widgetsCode .= $code;
+            $widgetsCode .= '<div class="col-md-2" id="subpanel" style="height: 100px; margin: 25px;">';
+            $widgetsCode .= $widget;
+            $widgetsCode .= '</div>';
 
-            $x += 260;
+            if(($c + 1) == count($widgets)) {
+                $widgetsCode .= '</div>';
+                $c = 0;
+            } else {
+                $c++;
+            }
         }
+
+        $widgetsCode .= '</div></div>';
 
         $data = array(
             '$PAGE_TITLE$' => 'System',
