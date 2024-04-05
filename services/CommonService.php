@@ -11,16 +11,13 @@ use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
 use DMS\Components\DocumentLockComponent;
-use DMS\Components\DocumentReportGeneratorComponent;
-use DMS\Components\ExternalEnumComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
-use DMS\Core\FileStorageManager;
-use DMS\Core\MailManager;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentLockModel;
+use DMS\Models\DocumentMetadataHistoryModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
 use DMS\Models\FilterModel;
@@ -69,6 +66,7 @@ $ribbonModel = new RibbonModel($db, $logger);
 $archiveModel = new ArchiveModel($db, $logger);
 $fileStorageModel = new FileStorageModel($db, $logger);
 $documentLockModel = new DocumentLockModel($db, $logger);
+$documentMetadataHistoryModel = new DocumentMetadataHistoryModel($db, $logger);
 
 $models = array(
     'userModel' => $userModel,
@@ -91,7 +89,8 @@ $models = array(
     'filterModel' => $filterModel,
     'archiveModel' => $archiveModel,
     'fileStorageModel' => $fileStorageModel,
-    'documentLockModel' => $documentLockModel
+    'documentLockModel' => $documentLockModel,
+    'documentMetadataHistoryModel' => $documentMetadataHistoryModel
 );
 
 $documentLockComponent = new DocumentLockComponent($db, $logger, $documentLockModel, $userModel);
@@ -112,18 +111,20 @@ $documentCommentRepository = new DocumentCommentRepository($db, $logger, $docume
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator, $documentCommentModel);
 
 function start(string $name) {
-    global $serviceModel;
+    global $serviceModel, $logger;
 
     $service = $serviceModel->getServiceByName($name);
     $serviceModel->updateService($service->getId(), ['status' => '1', 'pid' => getmypid()]);
+    $logger->info('Service ' . $name . ' start...');
 }
 
 function stop(string $name) {
-    global $serviceModel;
-
+    global $serviceModel, $logger;
+    
     $service = $serviceModel->getServiceByName($name);
     $serviceModel->updateService($service->getId(), ['status' => '0', 'pid' => NULL]);
     $serviceModel->insertServiceLog(['name' => SERVICE_NAME, 'text' => 'Service ' . SERVICE_NAME . ' finished running.']);
+    $logger->info('Service ' . $name . ' stop...');
 }
 
 ?>

@@ -12,7 +12,6 @@ use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Entities\Document;
-use DMS\Entities\DocumentLockEntity;
 use DMS\Exceptions\AException;
 use DMS\Exceptions\ValueIsNullException;
 use DMS\Helpers\ArrayStringHelper;
