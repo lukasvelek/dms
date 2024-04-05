@@ -73,6 +73,44 @@ class FormBuilder {
     return $this;
   }
 
+  public function addLabel(string $text, string $for) {
+    $this->elements[] = (new Label())->setText($text)->setFor($for);
+    
+    return $this;
+  }
+
+  public function addText(string $name, string $value = '', string $placeholder = '') {
+    $e = new Input();
+    $e->setType('text')->setName($name);
+
+    if($value != '') {
+      $e->setValue($value);
+    }
+    if($placeholder != '') {
+      $e->setPlaceHolder($placeholder);
+    }
+
+    $this->elements[] = $e;
+
+    return $this;
+  }
+
+  public function addPassword(string $name, string $value = '', string $placeholder = '') {
+    $e = new Input();
+    $e->setType('password')->setName($name);
+
+    if($value != '') {
+      $e->setValue($value);
+    }
+    if($placeholder != '') {
+      $e->setPlaceHolder($placeholder);
+    }
+
+    $this->elements[] = $e;
+
+    return $this;
+  }
+
   /**
    * Adds element to the form
    * 

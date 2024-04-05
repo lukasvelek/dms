@@ -54,8 +54,11 @@ class UserReloginPresenter extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New user connection',
-            '$FORM$' => $this->internalCreateNewConnectionForm()
+            '$FORM$' => $this->internalCreateNewConnectionForm(),
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'UserRelogin:showConnectedUsers'], '&larr;');
 
         $this->templateManager->fill($data, $template);
 
@@ -67,13 +70,27 @@ class UserReloginPresenter extends APresenter {
 
         $this->checkEnabled();
 
-        $app->flashMessageIfNotIsset(array('user'), true, array('page' => 'showNewConnectionForm'));
+        $app->flashMessageIfNotIsset(['user', 'my_password', 'user_password'], true, ['page' => 'showNewConnectionForm']);
+        
+        $idUser = $this->post('user'); // id user
+        $myPassword = $this->post('my_password');
+        $userPassword = $this->post('user_password');
 
-        $user = $this->post('user'); // id user
+        $user = $app->userRepository->getUserById($idUser);
+
+        $r1 = $app->userAuthenticator->authUser($app->user->getUsername(), $myPassword);
+        $r2 = $app->userAuthenticator->authUser($user->getUsername(), $userPassword);
+
+        unset($myPassword, $userPassword);
+
+        if($r1 === FALSE || $r2 === FALSE) {
+            $app->flashMessage('One of the given passwords is not right.', 'error');
+            $app->redirect('showNewConnectionForm');
+        }
 
         $data = array(
             UserConnectionMetadata::ID_USER1 => $app->user->getId(),
-            UserConnectionMetadata::ID_USER2 => $user
+            UserConnectionMetadata::ID_USER2 => $idUser
         );
 
         $app->userModel->insertNewUserConnect($data);
@@ -174,6 +191,12 @@ class UserReloginPresenter extends APresenter {
             
             ->addElement($fb->createLabel()->setText('User')->setFor('user'))
             ->addElement($fb->createSelect()->setName('user')->addOptionsBasedOnArray($usersArr))
+
+            ->addLabel('My password', 'my_password')
+            ->addPassword('my_password')
+
+            ->addLabel('Connected user\'s password', 'user_password')
+            ->addPassword('user_password')
 
             ->addElement($fb->createSubmit('Create'))
         ;

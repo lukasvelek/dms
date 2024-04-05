@@ -28,7 +28,7 @@ class UserAuthenticator extends AAuthenticator {
      * 
      * @param string $username User's username
      * @param string $password User's password
-     * @return int|bool If user's credentials are valid and the user can log in then it returns ID of that user, if not then false is returned
+     * @return int|false If user's credentials are valid and the user can log in then it returns ID of that user, if not then false is returned
      */
     public function authUser(string $username, string $password) {
         $qb = $this->qb(__METHOD__);
