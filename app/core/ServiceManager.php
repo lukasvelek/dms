@@ -117,6 +117,28 @@ class ServiceManager {
     }
 
     /**
+     * Starts a background service asynchronously
+     * 
+     * @param string $serviceName Service name
+     * @return true
+     */
+    public function startBgProcess(string $serviceName) {
+        $phpExe = AppConfiguration::getPhpDirectoryPath() . 'php.exe';
+
+        $serviceFile = AppConfiguration::getServerPath() . 'services\\' . $serviceName . '.php';
+
+        $cmd = $phpExe . ' ' . $serviceFile;
+
+        if(substr(php_uname(), 0, 7) == "Windows") {
+            pclose(popen("start /B ". $cmd, "r")); 
+        } else {
+            exec($cmd . " > /dev/null &");  
+        }
+
+        return true;
+    }
+
+    /**
      * Returns service by its name
      * 
      * @param string $name Service name

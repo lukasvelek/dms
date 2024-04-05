@@ -124,9 +124,14 @@ class ServiceSettingsPresenter extends APresenter {
             if($serviceName == $name) {
                 $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
 
-                $app->logger->logFunction(function() use ($service) {
+                /*$app->logger->logFunction(function() use ($service) {
                     $service->run();
-                }, __METHOD__);
+                }, __METHOD__);*/
+
+                /**
+                 * TODO: IMPLEMENT ALL SERVICES
+                 */
+                //$app->serviceManager->startBgProcess($name); 
 
                 $cm->invalidateCache();
 
