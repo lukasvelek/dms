@@ -4,6 +4,7 @@ namespace DMS\Repositories;
 
 use DMS\Authorizators\ActionAuthorizator;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\Metadata\UserLoginsMetadata;
 use DMS\Constants\Metadata\UserMetadata;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
@@ -24,6 +25,29 @@ class UserRepository extends ARepository {
         $this->actionAuthorizator = $actionAuthorizator;
 
         $this->userCache = CacheManager::getTemporaryObject(CacheCategories::USERS);
+    }
+
+    public function checkUsernameExists(string $username) {
+        $username = htmlspecialchars($username);
+        $sql = "SELECT 1 FROM `users` WHERE `username` = '" . $username . "'";
+
+        $result = $this->db->query($sql);
+
+        if($result->num_rows == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function insertUserLoginAttempt(string $username, int $result, string $description) {
+        $data = [
+            UserLoginsMetadata::DESCRIPTION => $description,
+            UserLoginsMetadata::RESULT => $result,
+            UserLoginsMetadata::USERNAME => $username
+        ];
+
+        return $this->userModel->insertUserLoginAttempt($data);
     }
 
     public function getActiveUsersIDs() {

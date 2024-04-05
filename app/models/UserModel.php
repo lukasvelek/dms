@@ -15,6 +15,10 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertUserLoginAttempt(array $data) {
+        return $this->insertNew($data, 'user_logins');
+    }
+
     public function composeStandardUserQuery(array $selects = ['*']) {
         $qb = $this->qb(__METHOD__);
 

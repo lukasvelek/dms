@@ -435,6 +435,13 @@ class DatabaseInstaller {
                 'status' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
                 'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_logins' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'username' => 'VARCHAR(256) NOT NULL',
+                'result' => 'INT(2) NOT NULL DEFAULT 1',
+                'description' => 'VARCHAR(256) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 

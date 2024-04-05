@@ -12,7 +12,7 @@ use QueryBuilder\ExpressionBuilder;
  * @author Lukas Velek
  */
 abstract class ARepository {
-    private Database $db;
+    protected Database $db;
     protected Logger $logger;
 
     /**
