@@ -137,7 +137,7 @@ class LoginPagePresenter extends APresenter {
                 $app->redirect('AnonymModule:LoginPage:showForm');
             }
         } else {
-            $app->userRepository->insertUserLoginAttempt($username, UserLoginAttemptResults::NON_EXISTING_USER, 'User has entered wrong credentials.');
+            $app->userRepository->insertUserLoginAttempt($username, UserLoginAttemptResults::NON_EXISTING_USER, 'Non existing user has tried to login.');
             $app->flashMessage('You have entered wrong credentials. Please log in again.', 'warn');
             $app->redirect('AnonymModule:LoginPage:showForm');
         }
