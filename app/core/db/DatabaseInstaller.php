@@ -16,6 +16,7 @@ use DMS\Constants\Ribbons;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
+use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
 
 /**

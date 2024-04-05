@@ -49,7 +49,8 @@ function loadDependencies(array &$dependencies, string $dir) {
         'png',
         'gif',
         'jpg',
-        'svg'
+        'svg',
+        'sql'
     );
 
     foreach($content as $c) {
