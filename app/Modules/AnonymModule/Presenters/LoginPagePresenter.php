@@ -33,7 +33,6 @@ class LoginPagePresenter extends APresenter {
             '$FORM$' => $this->internalRenderForm()
         );
 
-        //$data['$LINKS$'][] = LinkBuilder::createLink('AnonymModule:LoginPage:showFirstLoginForm', 'First login');
         $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createLink('AnonymModule:LoginPage:showForgotPasswordForm', 'Forgot password');
 
         $this->templateManager->fill($data, $template);

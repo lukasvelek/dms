@@ -62,6 +62,10 @@ body {
     background-color: lightgrey;
 }
 
+.page-supertitle {
+    font-size: 26px;
+}
+
 .page-title {
     font-size: 22px;
 }
