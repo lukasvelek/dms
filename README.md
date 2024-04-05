@@ -9,6 +9,9 @@ It also enables users to manage metadata and their values.
 - added document duplication action
     - configurable
 - added exceptions
+- added login attempts overview
+- updated login page
+- fixed bugs
 
 ### v1.10
 - added database indexes
