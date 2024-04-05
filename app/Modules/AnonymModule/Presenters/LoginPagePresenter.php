@@ -4,6 +4,7 @@ namespace DMS\Modules\AnonymModule;
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
+use DMS\Constants\UserLoginAttemptResults;
 use DMS\Constants\UserPasswordChangeStatus;
 use DMS\Constants\UserStatus;
 use DMS\Core\CacheManager;
@@ -33,7 +34,6 @@ class LoginPagePresenter extends APresenter {
             '$FORM$' => $this->internalRenderForm()
         );
 
-        //$data['$LINKS$'][] = LinkBuilder::createLink('AnonymModule:LoginPage:showFirstLoginForm', 'First login');
         $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createLink('AnonymModule:LoginPage:showForgotPasswordForm', 'Forgot password');
 
         $this->templateManager->fill($data, $template);
@@ -100,37 +100,44 @@ class LoginPagePresenter extends APresenter {
 
     protected function tryLogin() {
         global $app;
-        
-        if(!$app->isset('username', 'password')) {
-            $app->flashMessage('These values: ' . ArrayStringHelper::createUnindexedStringFromUnindexedArray($app->missingUrlValues, ',') . ' are missing!', 'error');
-            $app->redirect('AnonymModule:LoginPage:showForm');
-        }
+
+        $app->flashMessageIfNotIsset(['username', 'password'], true, ['page' => 'AnonymModule:LoginPage:showForm']);
 
         $username = htmlspecialchars($_POST['username']);
         $password = htmlspecialchars($_POST['password']);
 
-        $authResult = $app->userAuthenticator->authUser($username, $password);
+        $usernameExists = $app->userRepository->checkUsernameExists($username);
 
-        if($authResult !== FALSE) {
-            $user = $app->userModel->getUserById($authResult);
+        if($usernameExists === TRUE) {
+            $authResult = $app->userAuthenticator->authUser($username, $password);
 
-            if(!in_array($user->getStatus(), array(UserStatus::ACTIVE))) {
-                $app->flashMessage('Password change for your account has been requested. Please create a new password!', FlashMessageTypes::WARNING);
-                $app->redirect('AnonymModule:LoginPage:showUpdatePasswordForm', ['id_user' => $user->getId()]);
-            }
+            if($authResult !== FALSE) {
+                $user = $app->userModel->getUserById($authResult);
 
-            $generatedHash = CypherManager::createCypher(64);
+                if(!in_array($user->getStatus(), array(UserStatus::ACTIVE))) {
+                    $app->flashMessage('Password change for your account has been requested. Please create a new password!', FlashMessageTypes::WARNING);
+                    $app->redirect('AnonymModule:LoginPage:showUpdatePasswordForm', ['id_user' => $user->getId()]);
+                }
 
-            $app->userModel->insertLastLoginHashForIdUser($user->getId(), $generatedHash);
+                $generatedHash = CypherManager::createCypher(64);
+
+                $app->userModel->insertLastLoginHashForIdUser($user->getId(), $generatedHash);
+                $app->userRepository->insertUserLoginAttempt($username, UserLoginAttemptResults::SUCCESS, 'User has logged in successfully.');
             
-            $_SESSION['last_login_hash'] = $generatedHash;
-            $_SESSION['id_current_user'] = $authResult;
-            $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60))); // 1 day
+                $_SESSION['last_login_hash'] = $generatedHash;
+                $_SESSION['id_current_user'] = $authResult;
+                $_SESSION['session_end_date'] = date('Y-m-d H:i:s', (time() + (24 * 60 * 60))); // 1 day
 
-            unset($_SESSION['login_in_process']);
+                unset($_SESSION['login_in_process']);
 
-            $app->redirect('UserModule:HomePage:showHomepage');
+                $app->redirect('UserModule:HomePage:showHomepage');
+            } else {
+                $app->userRepository->insertUserLoginAttempt($username, UserLoginAttemptResults::BAD_CREDENTIALS, 'User has entered wrong credentials.');
+                $app->flashMessage('You have entered wrong credentials. Please log in again.', 'warn');
+                $app->redirect('AnonymModule:LoginPage:showForm');
+            }
         } else {
+            $app->userRepository->insertUserLoginAttempt($username, UserLoginAttemptResults::NON_EXISTING_USER, 'Non existing user has tried to login.');
             $app->flashMessage('You have entered wrong credentials. Please log in again.', 'warn');
             $app->redirect('AnonymModule:LoginPage:showForm');
         }
