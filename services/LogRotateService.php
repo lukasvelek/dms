@@ -1,11 +1,13 @@
 <?php
 
-file_put_contents('__pid.txt', getmypid());
+require_once('CommonService.php');
 
-while(1 > 0) {
-    file_put_contents('__test.txt', 'running' . "\r\n", FILE_APPEND);
-    sleep(10);
-}
+define('SERVICE_NAME', 'LogRotateService');
+
+start(SERVICE_NAME);
+$logger->info('Service start', SERVICE_NAME);
+sleep(100);
+stop(SERVICE_NAME);
 
 exit;
 

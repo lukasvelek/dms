@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\ServiceMetadata;
+use DMS\Constants\ServiceStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
@@ -124,14 +125,7 @@ class ServiceSettingsPresenter extends APresenter {
             if($serviceName == $name) {
                 $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
 
-                /*$app->logger->logFunction(function() use ($service) {
-                    $service->run();
-                }, __METHOD__);*/
-
-                /**
-                 * TODO: IMPLEMENT ALL SERVICES
-                 */
-                //$app->serviceManager->startBgProcess($name); 
+                $app->serviceManager->startBgProcess($name); 
 
                 $cm->invalidateCache();
 
@@ -428,7 +422,10 @@ class ServiceSettingsPresenter extends APresenter {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['systemName' => 'System name', 'isEnabled' => 'Enabled', 'displayName' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
+        $gb->addColumns(['systemName' => 'System name', 'isEnabled' => 'Enabled', 'displayName' => 'Name', 'description' => 'Description', 'status' => 'Status', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
+        $gb->addOnColumnRender('status', function(ServiceEntity $service) {
+            return ServiceStatus::$texts[$service->getStatus()];
+        });
         $gb->addOnColumnRender('lastRunDate', function(ServiceEntity $service) use ($serviceManager, $user) {
             $serviceLastRunDate = $serviceManager->getLastRunDateForService($service->getSystemName());
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);

@@ -416,6 +416,8 @@ class DatabaseInstaller {
                 'description' => 'VARCHAR(256) NOT NULL',
                 'is_enabled' => 'INT(2) NOT NULL DEFAULT 1',
                 'is_system' => 'INT(2) NOT NULL DEFAULT 0',
+                'status' => 'INT(2) NOT NULL DEFAULT 0',
+                'pid' => 'VARCHAR(32) NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'document_metadata_history' => array(
