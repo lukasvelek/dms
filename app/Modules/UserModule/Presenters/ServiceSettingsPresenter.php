@@ -424,7 +424,7 @@ class ServiceSettingsPresenter extends APresenter {
 
         $gb->addColumns(['systemName' => 'System name', 'isEnabled' => 'Enabled', 'displayName' => 'Name', 'description' => 'Description', 'status' => 'Status', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
         $gb->addOnColumnRender('status', function(ServiceEntity $service) {
-            return ServiceStatus::$texts[$service->getStatus()];
+            return GridDataHelper::renderBooleanValueWithColors($service->getStatus(), ServiceStatus::$texts[$service->getStatus()], ServiceStatus::$texts[$service->getStatus()]);
         });
         $gb->addOnColumnRender('lastRunDate', function(ServiceEntity $service) use ($serviceManager, $user) {
             $serviceLastRunDate = $serviceManager->getLastRunDateForService($service->getSystemName());
@@ -440,7 +440,7 @@ class ServiceSettingsPresenter extends APresenter {
         $gb->addDataSourceCallback($dataCallback);
         $gb->addAction(function(ServiceEntity $service) use ($canRunService) {
             $link = '-';
-            if($canRunService && $service->isEnabled() === TRUE) {
+            if($canRunService && $service->isEnabled() === TRUE && $service->getStatus() === ServiceStatus::STOPPED) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
             return $link;
