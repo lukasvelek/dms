@@ -36,7 +36,7 @@ class DeclinedDocumentRemoverService extends AService {
         $deleted = 0;
         if(count($documents) > 0) {
             foreach($documents as $document) {
-                if($this->documentAuthorizator->canDeleteDocument($document, false, true)) {
+                if($this->documentAuthorizator->canDeleteDocument($document, null, false, true)) {
                     $this->documentModel->deleteDocument($document->getId(), true);
                     $this->dmhm->deleteEntriesForIdDocument($document->getId());
                     $this->dlc->deleteLockEntriesForIdDocument($document->getId());

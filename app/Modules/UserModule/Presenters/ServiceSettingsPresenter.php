@@ -274,7 +274,7 @@ class ServiceSettingsPresenter extends APresenter {
             $enabledCheckbox->setSpecial('checked');
         }
 
-        $fb ->setAction('?page=UserModule:Settings:processEditServiceForm&id=' . $service->getId())->setMethod('POST')
+        $fb ->setAction('?page=UserModule:ServiceSettings:processEditServiceForm&id=' . $service->getId())->setMethod('POST')
             ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
             ->addElement($fb->createInput()->setType('text')->setName('system_name')->require()->setValue($service->getSystemName())->readonlyIfBoolTrue($service->isSystem()))
 
@@ -301,7 +301,7 @@ class ServiceSettingsPresenter extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name);
+        $fb ->setMethod('POST')->setAction('?page=UserModule:ServiceSettings:editService&name=' . $name);
 
         foreach($serviceCfg as $key => $value) {
             $fb ->addElement($fb->createLabel()->setText(ServiceMetadata::$texts[$key] . ' (' . $key . ')')->setFor($key));

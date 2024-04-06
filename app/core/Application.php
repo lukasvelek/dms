@@ -731,7 +731,7 @@ class Application {
             $nextRunDate = $this->serviceManager->getNextRunDateForService($service->name);
 
             if($nextRunDate !== NULL && time() > strtotime($nextRunDate)) {
-                $service->run();
+                $this->serviceManager->startBgProcess($service->name);
             }
         }
     }

@@ -18,7 +18,6 @@ use DMS\Models\MailModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\UserModel;
-use DMS\Services\CacheRotateService;
 use DMS\Services\DeclinedDocumentRemoverService;
 use DMS\Services\DocumentArchivationService;
 use DMS\Services\DocumentReportGeneratorService;
@@ -26,7 +25,6 @@ use DMS\Services\FileManagerService;
 use DMS\Services\LogRotateService;
 use DMS\Services\MailService;
 use DMS\Services\NotificationManagerService;
-use DMS\Services\PasswordPolicyService;
 use DMS\Services\ShreddingSuggestionService;
 
 /**
@@ -230,10 +228,8 @@ class ServiceManager {
      */
     private function loadServices() {
         $this->services['LogRotateService'] = new LogRotateService($this->logger, $this->serviceModel, $this->cm);
-        $this->services['CacheRotateService'] = new CacheRotateService($this->logger, $this->serviceModel, $this->cm);
         $this->services['FileManagerService'] = new FileManagerService($this->logger, $this->serviceModel, $this->fsm, $this->documentModel, $this->cm, $this->fsModel);
         $this->services['ShreddingSuggestionService'] = new ShreddingSuggestionService($this->logger, $this->serviceModel, $this->cm, $this->documentAuthorizator, $this->documentModel, $this->processComponent);
-        $this->services['PasswordPolicyService'] = new PasswordPolicyService($this->logger, $this->serviceModel, $this->cm, $this->userModel, $this->groupUserModel);
         $this->services['MailService'] = new MailService($this->logger, $this->serviceModel, $this->cm, $this->mailModel, $this->mailManager);
         $this->services['NotificationManagerService'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel);
         $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm);

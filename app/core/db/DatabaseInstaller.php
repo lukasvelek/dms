@@ -1376,19 +1376,10 @@ class DatabaseInstaller {
                 'service_run_period' => '7',
                 'archive_old_logs' => '1'
             ),
-            'PasswordPolicyService' => array(
-                'password_change_period' => '30',
-                'password_change_force_administrators' => '0',
-                'password_change_force' => '0',
-                'service_run_period' => '30'
-            ),
             'NotificationManagerService' => array(
                 'notification_keep_length' => '1',
                 'service_run_period' => '7',
                 'notification_keep_unseen_service_user' => '1'
-            ),
-            'CacheRotateService' => array(
-                'service_run_period' => '1'
             ),
             'FileManagerService' => array(
                 'service_run_period' => '30'
@@ -1915,10 +1906,6 @@ class DatabaseInstaller {
                 'display_name' => 'Log rotate',
                 'description' => 'Deletes old log files'
             ],
-            'CacheRotateService' => [
-                'display_name' => 'Cache rotate',
-                'description' => 'Deletes old cache files'
-            ],
             'FileManagerService' => [
                 'display_name' => 'File manager',
                 'description' => 'Deletes old unused files'
@@ -1926,10 +1913,6 @@ class DatabaseInstaller {
             'ShreddingSuggestionService' => [
                 'display_name' => 'Shredding suggestion',
                 'description' => 'Suggests documents for shredding'
-            ],
-            'PasswordPolicyService' => [
-                'display_name' => 'Password policy',
-                'description' => 'Checks if passwords have been changed in a period of time'
             ],
             'MailService' => [
                 'display_name' => 'Mail service',
