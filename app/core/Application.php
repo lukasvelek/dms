@@ -289,7 +289,8 @@ class Application {
                                                     $this->notificationComponent,
                                                     $this->fileStorageModel,
                                                     $this->documentMetadataHistoryModel,
-                                                    $this->documentLockComponent
+                                                    $this->documentLockComponent,
+                                                    $this->documentBulkActionAuthorizator
                                                 );
         
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);

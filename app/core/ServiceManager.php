@@ -3,6 +3,7 @@
 namespace DMS\Core;
 
 use DMS\Authorizators\DocumentAuthorizator;
+use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Components\DocumentLockComponent;
 use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\NotificationComponent;
@@ -50,6 +51,7 @@ class ServiceManager {
     private FileStorageModel $fsModel;
     private DocumentMetadataHistoryModel $dmhm;
     private DocumentLockComponent $dlc;
+    private DocumentBulkActionAuthorizator $dbaa;
 
     private array $runDates;
 
@@ -91,7 +93,8 @@ class ServiceManager {
                                 NotificationComponent $notificationComponent,
                                 FileStorageModel $fsModel,
                                 DocumentMetadataHistoryModel $dmhm,
-                                DocumentLockComponent $dlc) {
+                                DocumentLockComponent $dlc,
+                                DocumentBulkActionAuthorizator $dbaa) {
         $this->logger = $logger;
         $this->serviceModel = $serviceModel;
         $this->fsm = $fsm;
@@ -109,6 +112,7 @@ class ServiceManager {
         $this->fsModel = $fsModel;
         $this->dmhm = $dmhm;
         $this->dlc = $dlc;
+        $this->dbaa = $dbaa;
         
         $this->loadServices();
         $this->loadRunDates();
@@ -232,7 +236,7 @@ class ServiceManager {
         $this->services['ShreddingSuggestionService'] = new ShreddingSuggestionService($this->logger, $this->serviceModel, $this->cm, $this->documentAuthorizator, $this->documentModel, $this->processComponent);
         $this->services['MailService'] = new MailService($this->logger, $this->serviceModel, $this->cm, $this->mailModel, $this->mailManager);
         $this->services['NotificationManagerService'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel);
-        $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm);
+        $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm, $this->dbaa);
         $this->services['DeclinedDocumentRemoverService'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm, $this->dlc);
         $this->services['DocumentReportGeneratorService'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
     }

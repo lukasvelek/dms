@@ -22,6 +22,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
     private DocumentAuthorizator $documentAuthorizator;
     private BulkActionAuthorizator $bulkActionAuthorizator;
 
+    private array $idDocumentsWithNotOverridableLocks;
+
     /**
      * The DocumentBulkActionAuthorizator constructor creates an object
      * 
@@ -33,6 +35,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
 
         $this->documentAuthorizator = $documentAuthorizator;
         $this->bulkActionAuthorizator = $bulkActionAuthorizator;
+
+        $this->idDocumentsWithNotOverridableLocks = [];
     }
 
     /**
@@ -226,12 +230,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
-    public function getAllDocumentIdsForArchive(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
-        if(!$this->assignUser($idUser)) {
+    public function getAllDocumentIdsForArchive(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true, bool $checkBulkActionRights = true) {
+        if($checkBulkActionRights === TRUE && !$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::ARCHIVE, $idUser, $checkCache)) {
+        if($checkBulkActionRights === TRUE && !$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::ARCHIVE, $idUser, $checkCache)) {
             return false;
         }
 
@@ -474,12 +478,23 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
-    private function commonGetIdsFromQb(QueryBuilder $qb, int $idUser) {
+    private function commonGetIdsFromQb(QueryBuilder $qb, ?int $idUser = null) {
+        if($idUser !== NULL) {
+            if(empty($this->idDocumentsWithNotOverridableLocks)) {
+                $this->idDocumentsWithNotOverridableLocks = $this->documentAuthorizator->getDocumentLocksNotOverridableByUser($idUser);
+            }
+        }
+
         $ids = [];
         while($row = $qb->fetchAssoc()) {
             $id = $row[DocumentMetadata::ID];
-            if($this->documentAuthorizator->canUserOverrideDocumentLock($id, $idUser)) {
+
+            if($idUser === NULL) {
                 $ids[] = $id;
+            } else {
+                if(!in_array($id, $this->idDocumentsWithNotOverridableLocks)) {
+                    $ids[] = $id;
+                }
             }
         }
 

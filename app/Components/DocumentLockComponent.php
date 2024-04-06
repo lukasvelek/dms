@@ -41,6 +41,10 @@ class DocumentLockComponent extends AComponent {
         $this->userModel = $userModel;
     }
 
+    public function getDocumentsWithNotOverridableLocksForUser(int $idUser) {
+        return $this->dlm->getNotOverridableLocksForIdUser($idUser);
+    }
+
     /**
      * Deletes lock entries for given ID document
      * 
