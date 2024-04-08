@@ -219,7 +219,7 @@ class DocumentsPresenter extends APresenter {
 
         $filename = $app->user->getId() . '_' . date('Y-m-d_H-i-s') . '_document_report.' . $fileFormat;
 
-        $result = $app->documentReportGeneratorComponent->generateReport($rows, $app->user->getId(), $fileFormat, $filename);
+        $result = $app->documentReportGeneratorComponent->generateReport(null, $rows, $app->user->getId(), $fileFormat, $filename);
 
         if($result === FALSE) {
             die('ERROR! Documents presenter method '. __METHOD__);

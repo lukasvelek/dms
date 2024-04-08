@@ -9,8 +9,9 @@ class DocumentReportEntity extends AEntity {
     private ?string $fileSrc;
     private ?string $filename;
     private ?int $idFileStorageLocation;
+    private int $finishedPercent;
 
-    public function __construct(int $id, int $idUser, string $dateCreated, string $dateUpdated, int $status, string $sqlString, ?string $fileSrc, ?string $filename, ?int $idFileStorageLocation) {
+    public function __construct(int $id, int $idUser, string $dateCreated, string $dateUpdated, int $status, string $sqlString, ?string $fileSrc, ?string $filename, ?int $idFileStorageLocation, int $finishedPercent) {
         parent::__construct($id, $dateCreated, $dateUpdated);
         $this->idUser = $idUser;
         $this->status = $status;
@@ -18,6 +19,7 @@ class DocumentReportEntity extends AEntity {
         $this->fileSrc = $fileSrc;
         $this->filename = $filename;
         $this->idFileStorageLocation = $idFileStorageLocation;
+        $this->finishedPercent = $finishedPercent;
     }
 
     public function getIdUser() {
@@ -42,6 +44,10 @@ class DocumentReportEntity extends AEntity {
 
     public function getIdFileStorageLocation() {
         return $this->idFileStorageLocation;
+    }
+
+    public function getFinishedPercent() {
+        return $this->finishedPercent;
     }
 }
 

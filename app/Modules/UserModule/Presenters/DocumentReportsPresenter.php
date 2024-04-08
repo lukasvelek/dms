@@ -49,27 +49,6 @@ class DocumentReportsPresenter extends APresenter {
         $gb->addOnColumnRender('status', function(DocumentReportEntity $obj) {
             return DocumentReportStatus::$texts[$obj->getStatus()];
         });
-        /*$gb->addAction(function(DocumentReportEntity $obj) use ($fileManager, $fileStorageModel) {
-            if($obj->getStatus() == DocumentReportStatus::FINISHED) {
-                $location = $fileStorageModel->getLocationById($obj->getIdFileStorageLocation());
-                $realServerPath = $location->getPath() . $obj->getFilename();
-
-                if($fileManager->fileExists($realServerPath)) {
-                    return LinkBuilder::createAdvLink(['page' => 'downloadReport', 'path' => base64_encode($realServerPath)], 'Download');
-                } else {
-                    return '-';
-                }
-            } else {
-                return '-';
-            }
-        });
-        $gb->addAction(function(DocumentReportEntity $obj) use ($canDeleteDocumentReportQueueEntry) {
-            if($canDeleteDocumentReportQueueEntry) {
-                return LinkBuilder::createAdvLink(['page' => 'deleteGeneratedReport', 'id' => $obj->getId()], 'Delete');
-            } else {
-                return '-';
-            }
-        });*/
 
         $data = [
             '$PAGE_TITLE$' => 'Document reports',
@@ -118,7 +97,7 @@ class DocumentReportsPresenter extends APresenter {
                     $fileSrc = $row[DocumentReportMetadata::FILE_SRC];
                 }
 
-                $entries[] = new DocumentReportEntity($row[DocumentReportMetadata::ID], $row[DocumentReportMetadata::ID_USER], $row[DocumentReportMetadata::DATE_CREATED], $row[DocumentReportMetadata::DATE_UPDATED], $row[DocumentReportMetadata::STATUS], $row[DocumentReportMetadata::SQL_STRING], $fileSrc, $row[DocumentReportMetadata::FILE_NAME], $row[DocumentReportMetadata::ID_FILE_STORAGE_LOCATION]);
+                $entries[] = new DocumentReportEntity($row[DocumentReportMetadata::ID], $row[DocumentReportMetadata::ID_USER], $row[DocumentReportMetadata::DATE_CREATED], $row[DocumentReportMetadata::DATE_UPDATED], $row[DocumentReportMetadata::STATUS], $row[DocumentReportMetadata::SQL_STRING], $fileSrc, $row[DocumentReportMetadata::FILE_NAME], $row[DocumentReportMetadata::ID_FILE_STORAGE_LOCATION], $row[DocumentReportMetadata::PERCENT_FINISHED]);
             }
 
             return $entries;
@@ -130,7 +109,7 @@ class DocumentReportsPresenter extends APresenter {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['date_created' => 'Date created', 'date_updated' => 'Date updated', 'status' => 'Status']);
+        $gb->addColumns(['date_created' => 'Date created', 'date_updated' => 'Date updated', 'percentFinished' => '% Finished', 'status' => 'Status']);
         $gb->addDataSourceCallback($dataCallback);
         $gb->addOnColumnRender('date_created', function(DocumentReportEntity $obj) {
             return $obj->getDateCreated();
@@ -140,6 +119,9 @@ class DocumentReportsPresenter extends APresenter {
         });
         $gb->addOnColumnRender('status', function(DocumentReportEntity $obj) {
             return DocumentReportStatus::$texts[$obj->getStatus()];
+        });
+        $gb->addOnColumnRender('percentFinished', function(DocumentReportEntity $obj) {
+            return $obj->getFinishedPercent() . '%';
         });
         $gb->addAction(function(DocumentReportEntity $obj) use ($fileManager, $fileStorageModel) {
             if($obj->getStatus() == DocumentReportStatus::FINISHED) {

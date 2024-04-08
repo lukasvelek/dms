@@ -380,7 +380,8 @@ class DatabaseInstaller {
                 'file_src' => 'VARCHAR(256) NULL',
                 'file_format' => 'VARCHAR(256) NOT NULL',
                 'file_name' => 'VARCHAR(256) NULL',
-                'id_file_storage_location' => 'INT(32) NULL'
+                'id_file_storage_location' => 'INT(32) NULL',
+                'percent_finished' => 'INT(32) NOT NULL DEFAULT 0'
             ),
             'file_storage_locations' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',

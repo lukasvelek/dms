@@ -9,6 +9,7 @@ use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\FileStorageTypes;
+use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\MetadataInputType;
 use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
@@ -21,6 +22,8 @@ abstract class ADocumentReport {
         'json' => 'JSON'
     ];
 
+    protected const UPDATE_COUNT_CONST = 1000;
+    
     protected static $defaultMetadata = [
         'id', 'id_folder', 'name', 'date_created', 'date_updated', 'id_officer', 'id_manager', 'status', 'id_group', 'is_deleted', 'rank', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'id_archive_document', 'id_archive_box', 'id_archive_archive'
     ];
@@ -34,6 +37,7 @@ abstract class ADocumentReport {
     protected int $idCallingUser;
     protected ?string $filename;
     protected array $customValues;
+    protected ?int $idReport;
 
     protected array $customMetadataValues = [
         'id_folder',
@@ -50,7 +54,7 @@ abstract class ADocumentReport {
         'shredding_status'
     ];
 
-    protected function __construct(ExternalEnumComponent $eec, FileManager $fm, FileStorageManager $fsm, mixed $sqlResult, int $idCallingUser, array $models) {
+    protected function __construct(ExternalEnumComponent $eec, FileManager $fm, FileStorageManager $fsm, mixed $sqlResult, int $idCallingUser, array $models, ?int $idReport) {
         $this->eec = $eec;
         $this->fm = $fm;
         $this->fsm = $fsm;
@@ -59,6 +63,7 @@ abstract class ADocumentReport {
         $this->models = $models;
         $this->filename = null;
         $this->customValues = [];
+        $this->idReport = $idReport;
 
         $this->cacheManagers = [
             'users' => CacheManager::getTemporaryObject(CacheCategories::USERS),
@@ -254,6 +259,14 @@ abstract class ADocumentReport {
         } else {
             return false;
         }
+    }
+
+    protected function calcFinishedPercent(int $current, int $total) {
+        return ($current / $total) * 100;
+    }
+
+    protected function updateFinishedProcent(int $procent, int $idReport) {
+        return $this->models['documentModel']->updateDocumentReportQueueEntry($idReport, [DocumentReportMetadata::PERCENT_FINISHED => $procent]);
     }
 }
 

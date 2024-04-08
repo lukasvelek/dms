@@ -9,8 +9,8 @@ use DMS\Core\FileStorageManager;
 class JSONGenerator extends ADocumentReport implements IGeneratable {
     private const FILE_EXTENSION = 'json';
 
-    public function __construct(ExternalEnumComponent $eec, FileManager $fm, FileStorageManager $fsm, mixed $sqlResult, int $idCallingUser, array $models) {
-        parent::__construct($eec, $fm, $fsm, $sqlResult, $idCallingUser, $models);
+    public function __construct(ExternalEnumComponent $eec, FileManager $fm, FileStorageManager $fsm, mixed $sqlResult, int $idCallingUser, array $models, ?int $idReport) {
+        parent::__construct($eec, $fm, $fsm, $sqlResult, $idCallingUser, $models, $idReport);
     }
 
     public function generate(?string $filename = null): array|bool {
@@ -20,7 +20,15 @@ class JSONGenerator extends ADocumentReport implements IGeneratable {
 
         $data = [];
 
+        $total = $this->sqlResult->num_rows;
+        $current = 0;
+
         foreach($this->sqlResult as $row) {
+            if(($current % ADocumentReport::UPDATE_COUNT_CONST) == 0) {
+                $finished = $this->calcFinishedPercent($current, $total);
+                $this->updateFinishedProcent($finished, $this->idReport);
+            }
+
             foreach($metadata as $m) {
                 $text = '-';
                 if(isset($row[$m]) && $row[$m] !== NULL) {
@@ -33,6 +41,8 @@ class JSONGenerator extends ADocumentReport implements IGeneratable {
                 
                 $data[$row['id']][$m] = $text;
             }
+
+            $current++;
         }
 
         return $this->saveFile(json_encode($data), $filename, self::FILE_EXTENSION);
