@@ -13,6 +13,8 @@ It also enables users to manage metadata and their values.
 - updated login page
 - updated background services
     - they are now being run fully independently as a different process
+- updated document report generator
+    - now as the service progresses user can see how many percent is finished
 - fixed bugs
 
 ### v1.10
