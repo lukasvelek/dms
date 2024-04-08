@@ -5,6 +5,7 @@ namespace DMS\Services;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Constants\DocumentStatus;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentMetadataHistoryModel;
@@ -44,9 +45,9 @@ class DocumentArchivationService extends AService {
         $this->log('Found ' . count($ids) . ' documents waiting for archivation', __METHOD__);
 
         $archived = count($ids);
-        if(count($ids) > 0) {
+        if($archived > 0) {
             $this->documentModel->updateDocumentsBulk(['status' => DocumentStatus::ARCHIVED], $ids);
-            $this->dmhm->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVED], $ids, $_SESSION['id_current_user']);
+            $this->dmhm->bulkInsertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(['status' => DocumentStatus::ARCHIVED], $ids, AppConfiguration::getIdServiceUser());
         }
 
         $this->log('Archived ' . $archived . ' documents', __METHOD__);

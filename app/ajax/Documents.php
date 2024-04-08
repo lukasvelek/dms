@@ -511,38 +511,38 @@ function search() {
         $gb->addAction(function(Document $document) {
             return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()], 'Info');
         });
-        $gb->addAction(function(Document $document) use ($documentLockComponent, $user) {
+        $gb->addAction(function(Document $document) use ($user, $documentLocks) {
             if($document->getStatus() == DocumentStatus::ARCHIVED) {
-                $lock = $documentLockComponent->isDocumentLocked($document->getId());
+                if(array_key_exists($document->getId(), $documentLocks)) {
+                    $lock = $documentLocks[$document->getId()];
 
-                if($lock !== FALSE) {
                     if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
                         return '-';
                     } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
                         return '-';
                     }
+                } else {
+                    return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
                 }
-
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
             } else {
                 return '-';
             }
         });
-        $gb->addAction(function(Document $document) use ($canShareDocuments, $documentLockComponent, $user) {
+        $gb->addAction(function(Document $document) use ($canShareDocuments, $user, $documentLocks) {
             if($canShareDocuments &&
                ($document->getStatus() == DocumentStatus::ARCHIVED) &&
                ($document->getRank() == DocumentRank::PUBLIC)) {
-                $lock = $documentLockComponent->isDocumentLocked($document->getId());
+                if(array_key_exists($document->getId(), $documentLocks)) {
+                    $lock = $documentLocks[$document->getId()];
 
-                if($lock !== FALSE) {
                     if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
                         return '-';
                     } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
                         return '-';
                     }
+                } else {
+                    return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
                 }
-
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
             } else {
                 return '-';
             }
@@ -554,12 +554,12 @@ function search() {
         $gb->addDataSource($documents);
 
         if(AppConfiguration::getIsDocumentDuplicationEnabled()) {
-            $gb->addAction(function(Document $document) use ($documentLockComponent, $user) {
+            $gb->addAction(function(Document $document) use ($documentLockComponent, $user, $documentLocks) {
                 if(($document->getStatus() == DocumentStatus::ARCHIVED) &&
                    ($document->getRank() == DocumentRank::PUBLIC)) {
-                    $lock = $documentLockComponent->isDocumentLocked($document->getId());
+                    if(array_key_exists($document->getId(), $documentLocks)) {
+                        $lock = $documentLocks[$document->getId()];
 
-                    if($lock !== FALSE) {
                         if($lock->getType() == DocumentLockType::USER_LOCK) {
                             return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:duplicateDocument', 'id' => $document->getId()], 'Duplicate');
                         }

@@ -43,6 +43,7 @@ require_once('App/dms_loader.php');
 
 $fm = new FileManager(AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 $logger = new Logger($fm);
+$logger->setType('service');
 $db = new Database(AppConfiguration::getDbServer(), AppConfiguration::getDbUser(), AppConfiguration::getDbPass(), AppConfiguration::getDbName(), $logger);
 
 $userModel = new UserModel($db, $logger);
