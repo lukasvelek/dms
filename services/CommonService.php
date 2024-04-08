@@ -43,7 +43,6 @@ require_once('App/dms_loader.php');
 
 $fm = new FileManager(AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
 $logger = new Logger($fm);
-$logger->setType('service');
 $db = new Database(AppConfiguration::getDbServer(), AppConfiguration::getDbUser(), AppConfiguration::getDbPass(), AppConfiguration::getDbName(), $logger);
 
 $userModel = new UserModel($db, $logger);
@@ -117,6 +116,7 @@ function start(string $name) {
     $service = $serviceModel->getServiceByName($name);
     $serviceModel->updateService($service->getId(), ['status' => '1', 'pid' => getmypid()]);
     $logger->info('Service ' . $name . ' start...');
+    $logger->setType('service'); // will switch logging to service log file
 }
 
 function stop(string $name) {
@@ -125,6 +125,7 @@ function stop(string $name) {
     $service = $serviceModel->getServiceByName($name);
     $serviceModel->updateService($service->getId(), ['status' => '0', 'pid' => NULL]);
     $serviceModel->insertServiceLog(['name' => SERVICE_NAME, 'text' => 'Service ' . SERVICE_NAME . ' finished running.']);
+    $logger->setType('default'); // will switch logging back to normal log file
     $logger->info('Service ' . $name . ' stop...');
 }
 
