@@ -74,6 +74,10 @@ class DocumentAuthorizator extends AAuthorizator {
         return true;
     }
 
+    public function getDocumentLocksNotOverridableByUser(int $idUser) {
+        return $this->documentLockComponent->getDocumentsWithNotOverridableLocksForUser($idUser);
+    }
+
     /**
      * This method checks if a document can be moved to an archive document
      * 

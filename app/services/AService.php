@@ -45,7 +45,7 @@ abstract class AService implements IServiceRunnable {
      * @return void
      */
     protected function loadCfg() : void {
-        $valsFromCache = $this->cm->loadServiceConfigForService($this->name);
+        /*$valsFromCache = $this->cm->loadServiceConfigForService($this->name);
 
         if(!is_null($valsFromCache)) {
             $this->scfg = $valsFromCache;
@@ -53,7 +53,9 @@ abstract class AService implements IServiceRunnable {
             $this->scfg = $this->serviceModel->getConfigForServiceName($this->name);
 
             $this->cm->saveServiceConfig($this->name, $this->scfg);
-        }
+        }*/
+
+        $this->scfg = $this->serviceModel->getConfigForServiceName($this->name);
     }
 
     /**
@@ -80,10 +82,10 @@ abstract class AService implements IServiceRunnable {
      * 
      * @param string $text Log message
      * @param string $method Name of the calling method (usually used: __METHOD__)
-     * @return void
+     * @return bool
      */
-    protected function log(string $text, string $method) : void {
-        $this->logger->info($text, $method);
+    protected function log(string $text, string $method) : bool {
+        return $this->logger->info($text, $method);
     }
 
     /**

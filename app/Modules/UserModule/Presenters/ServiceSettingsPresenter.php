@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\CacheCategories;
 use DMS\Constants\ServiceMetadata;
+use DMS\Constants\ServiceStatus;
 use DMS\Constants\UserActionRights;
 use DMS\Core\CacheManager;
 use DMS\Core\ScriptLoader;
@@ -124,9 +125,7 @@ class ServiceSettingsPresenter extends APresenter {
             if($serviceName == $name) {
                 $app->logger->info('Running service \'' . $name . '\'', __METHOD__);
 
-                $app->logger->logFunction(function() use ($service) {
-                    $service->run();
-                }, __METHOD__);
+                $app->serviceManager->startBgProcess($name); 
 
                 $cm->invalidateCache();
 
@@ -275,7 +274,7 @@ class ServiceSettingsPresenter extends APresenter {
             $enabledCheckbox->setSpecial('checked');
         }
 
-        $fb ->setAction('?page=UserModule:Settings:processEditServiceForm&id=' . $service->getId())->setMethod('POST')
+        $fb ->setAction('?page=UserModule:ServiceSettings:processEditServiceForm&id=' . $service->getId())->setMethod('POST')
             ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
             ->addElement($fb->createInput()->setType('text')->setName('system_name')->require()->setValue($service->getSystemName())->readonlyIfBoolTrue($service->isSystem()))
 
@@ -302,7 +301,7 @@ class ServiceSettingsPresenter extends APresenter {
 
         $fb = FormBuilder::getTemporaryObject();
 
-        $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:editService&name=' . $name);
+        $fb ->setMethod('POST')->setAction('?page=UserModule:ServiceSettings:editService&name=' . $name);
 
         foreach($serviceCfg as $key => $value) {
             $fb ->addElement($fb->createLabel()->setText(ServiceMetadata::$texts[$key] . ' (' . $key . ')')->setFor($key));
@@ -423,7 +422,10 @@ class ServiceSettingsPresenter extends APresenter {
 
         $gb = new GridBuilder();
 
-        $gb->addColumns(['systemName' => 'System name', 'isEnabled' => 'Enabled', 'displayName' => 'Name', 'description' => 'Description', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
+        $gb->addColumns(['systemName' => 'System name', 'isEnabled' => 'Enabled', 'displayName' => 'Name', 'description' => 'Description', 'status' => 'Status', 'lastRunDate' => 'Last run date', 'nextRunDate' => 'Next run date']);
+        $gb->addOnColumnRender('status', function(ServiceEntity $service) {
+            return GridDataHelper::renderBooleanValueWithColors($service->getStatus(), ServiceStatus::$texts[$service->getStatus()], ServiceStatus::$texts[$service->getStatus()]);
+        });
         $gb->addOnColumnRender('lastRunDate', function(ServiceEntity $service) use ($serviceManager, $user) {
             $serviceLastRunDate = $serviceManager->getLastRunDateForService($service->getSystemName());
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($serviceLastRunDate, $user);
@@ -438,7 +440,7 @@ class ServiceSettingsPresenter extends APresenter {
         $gb->addDataSourceCallback($dataCallback);
         $gb->addAction(function(ServiceEntity $service) use ($canRunService) {
             $link = '-';
-            if($canRunService && $service->isEnabled() === TRUE) {
+            if($canRunService && $service->isEnabled() === TRUE && $service->getStatus() === ServiceStatus::STOPPED) {
                 $link = LinkBuilder::createAdvLink(array('page' => 'askToRunService', 'name' => $service->getSystemName()), 'Run');
             }
             return $link;

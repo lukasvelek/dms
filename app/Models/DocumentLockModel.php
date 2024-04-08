@@ -3,6 +3,7 @@
 namespace DMS\Models;
 
 use DMS\Constants\DocumentLockStatus;
+use DMS\Constants\DocumentLockType;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\DocumentLockEntity;
@@ -10,6 +11,33 @@ use DMS\Entities\DocumentLockEntity;
 class DocumentLockModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function getNotOverridableLocksForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['id_document'])
+            ->from('document_locks')
+            ->where($this->xb()->lb()
+                                    ->where('id_process IS NOT NULL')
+                                    ->andWhere('status = ?', [DocumentLockStatus::ACTIVE])
+                                ->rb()
+                                ->or()
+                                ->lb()
+                                    ->where('id_user IS NOT NULL')
+                                    ->andWhere('status = ?', [DocumentLockStatus::ACTIVE])
+                                    ->andWhere('id_user <> ?', [$idUser])
+                                ->rb()
+                                ->build()
+                    )
+            ->execute();
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $ids[] = $row['id_document'];
+        }
+
+        return $ids;
     }
 
     public function deleteEntriesForIdDocument(int $idDocument) {

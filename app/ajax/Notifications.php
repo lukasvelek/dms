@@ -41,10 +41,11 @@ function loadCount() {
 
         echo($_SESSION['user_notification_count']);
     } else {
+        $timeLength = 10; // seconds
         $difference = time() - $_SESSION['user_notification_count_timestamp'];
-        $remaining = (1 * 60) - $difference;
+        $remaining = ($timeLength) - $difference;
 
-        if($difference > (1 * 60)) {
+        if($difference > ($timeLength)) {
             unset($_SESSION['user_notification_count']);
             unset($_SESSION['user_notification_count_timestamp']);
 

@@ -3,6 +3,7 @@
 namespace DMS\Core;
 
 use DMS\Authorizators\DocumentAuthorizator;
+use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Components\DocumentLockComponent;
 use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\NotificationComponent;
@@ -18,7 +19,6 @@ use DMS\Models\MailModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\UserModel;
-use DMS\Services\CacheRotateService;
 use DMS\Services\DeclinedDocumentRemoverService;
 use DMS\Services\DocumentArchivationService;
 use DMS\Services\DocumentReportGeneratorService;
@@ -26,7 +26,6 @@ use DMS\Services\FileManagerService;
 use DMS\Services\LogRotateService;
 use DMS\Services\MailService;
 use DMS\Services\NotificationManagerService;
-use DMS\Services\PasswordPolicyService;
 use DMS\Services\ShreddingSuggestionService;
 
 /**
@@ -52,6 +51,7 @@ class ServiceManager {
     private FileStorageModel $fsModel;
     private DocumentMetadataHistoryModel $dmhm;
     private DocumentLockComponent $dlc;
+    private DocumentBulkActionAuthorizator $dbaa;
 
     private array $runDates;
 
@@ -93,7 +93,8 @@ class ServiceManager {
                                 NotificationComponent $notificationComponent,
                                 FileStorageModel $fsModel,
                                 DocumentMetadataHistoryModel $dmhm,
-                                DocumentLockComponent $dlc) {
+                                DocumentLockComponent $dlc,
+                                DocumentBulkActionAuthorizator $dbaa) {
         $this->logger = $logger;
         $this->serviceModel = $serviceModel;
         $this->fsm = $fsm;
@@ -111,9 +112,32 @@ class ServiceManager {
         $this->fsModel = $fsModel;
         $this->dmhm = $dmhm;
         $this->dlc = $dlc;
+        $this->dbaa = $dbaa;
         
         $this->loadServices();
         $this->loadRunDates();
+    }
+
+    /**
+     * Starts a background service asynchronously
+     * 
+     * @param string $serviceName Service name
+     * @return true
+     */
+    public function startBgProcess(string $serviceName) {
+        $phpExe = AppConfiguration::getPhpDirectoryPath() . 'php.exe';
+
+        $serviceFile = AppConfiguration::getServerPath() . 'services\\' . $serviceName . '.php';
+
+        $cmd = $phpExe . ' ' . $serviceFile;
+
+        if(substr(php_uname(), 0, 7) == "Windows") {
+            pclose(popen("start /B ". $cmd, "w")); 
+        } else {
+            exec($cmd . " > /dev/null &");  
+        }
+
+        return true;
     }
 
     /**
@@ -208,13 +232,11 @@ class ServiceManager {
      */
     private function loadServices() {
         $this->services['LogRotateService'] = new LogRotateService($this->logger, $this->serviceModel, $this->cm);
-        $this->services['CacheRotateService'] = new CacheRotateService($this->logger, $this->serviceModel, $this->cm);
         $this->services['FileManagerService'] = new FileManagerService($this->logger, $this->serviceModel, $this->fsm, $this->documentModel, $this->cm, $this->fsModel);
         $this->services['ShreddingSuggestionService'] = new ShreddingSuggestionService($this->logger, $this->serviceModel, $this->cm, $this->documentAuthorizator, $this->documentModel, $this->processComponent);
-        $this->services['PasswordPolicyService'] = new PasswordPolicyService($this->logger, $this->serviceModel, $this->cm, $this->userModel, $this->groupUserModel);
         $this->services['MailService'] = new MailService($this->logger, $this->serviceModel, $this->cm, $this->mailModel, $this->mailManager);
         $this->services['NotificationManagerService'] = new NotificationManagerService($this->logger, $this->serviceModel, $this->cm, $this->notificationModel);
-        $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm);
+        $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm, $this->dbaa);
         $this->services['DeclinedDocumentRemoverService'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm, $this->dlc);
         $this->services['DocumentReportGeneratorService'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
     }

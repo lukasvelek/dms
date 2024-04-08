@@ -11,6 +11,8 @@ It also enables users to manage metadata and their values.
 - added exceptions
 - added login attempts overview
 - updated login page
+- updated background services
+    - they are now being run fully independently as a different process
 - fixed bugs
 
 ### v1.10

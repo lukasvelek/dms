@@ -135,6 +135,14 @@ class AppConfiguration {
         return self::loadParam('enable_document_duplication');
     }
 
+    public static function getPhpDirectoryPath() {
+        return self::loadParam('php_path');
+    }
+
+    public static function getServerPath() {
+        return self::loadParam('app_dir');
+    }
+
     /**
      * ----- PRIVATE METHODS -----
      */
