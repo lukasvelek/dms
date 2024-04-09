@@ -447,7 +447,7 @@ class Application {
         try {
             $pageBody = $module->currentPresenter->performAction($action);
         } catch(Exception $e) {
-            $this->flashMessage($e->getMessage(), 'error');
+            $this->flashMessage($e->getMessage() . ' Stack trace: ' . $e->getTraceAsString(), 'error');
             $this->redirect(self::URL_HOME_PAGE);
         }
 

@@ -121,7 +121,7 @@ if($app->user !== NULL) {
 try {
     $app->loadPages();
     $app->renderPage();
-} catch(AException $e) {
+} catch(Exception $e) {
     echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
     exit;
 }

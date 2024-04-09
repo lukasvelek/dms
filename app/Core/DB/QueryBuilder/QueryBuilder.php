@@ -778,7 +778,7 @@ class QueryBuilder
         $i = 0;
         foreach($this->queryData['keys'] as $key) {
             if(($i + 1) == count($this->queryData['keys'])) {
-                if($key === '*') {
+                if($key == '*') {
                     $sql .= $key . ' ';
                 } else if(str_starts_with($key, 'COUNT')) {
                     $sql .= $key . ' ';
