@@ -41,13 +41,26 @@ class DocumentGeneratorPresenter extends APresenter {
     }
 
     private function internalCreateForm(bool $isDebug) {
+        global $app;
+
+        $options = '<option value="0">Main folder</option>';
+
+        $dbFolders = $app->folderModel->getAllFolders();
+
+        foreach($dbFolders as $folder) {
+            $options .= '<option value="' . $folder->getId() . '">' . $folder->getName() . '</option>';
+        }
+
         $code = '
             <label for="count">Count</label>
             <input type="number" id="count" name="count" min="1">
             <br>
             <br>
             <label for="id_folder">ID folder</label>
-            <input type="number" id="id_folder" name="id_folder">
+            <!--<input type="number" id="id_folder" name="id_folder">-->
+            <select name="id_folder" id="id_folder">
+                ' . $options .  '
+            </select>
             <br>
             <br>
             <button id="submitBtn" type="button" onclick="generateDocuments(\'' . ($isDebug ? 1 : 0) . '\')">Submit</button>
