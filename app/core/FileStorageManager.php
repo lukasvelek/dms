@@ -5,6 +5,7 @@ namespace DMS\Core;
 use DMS\Constants\FileStorageTypes;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\FileStorageFile;
+use DMS\Entities\FileStorageLocation;
 use DMS\Models\FileStorageModel;
 
 /**
@@ -15,7 +16,7 @@ use DMS\Models\FileStorageModel;
 class FileStorageManager {
     public FileManager $fm;
     private Logger $logger;
-    private FileStorageModel $fsm;
+    public FileStorageModel $fsm;
 
     private static array $allowedFileTypes = array(
         'pdf',
@@ -38,6 +39,47 @@ class FileStorageManager {
         $this->fm = $fm;
         $this->logger = $logger;
         $this->fsm = $fsm;
+    }
+
+    /**
+     * Moves file to the storage
+     * 
+     * @param string $filepath Imported filepath
+     * @param FileStorageLocation $location FileStorageLocation instance of the final path
+     * @return bool True on success or false on failure
+     */
+    public function storeFile(string $filepath, string $filename, FileStorageLocation $location) {
+        return rename($filepath, $location->getPath());
+
+        $d = function(string $text) {
+            return date($text) . '\\';
+        };
+
+        $targetFile = $location->getPath() . $d('Y') . $d('m') . $d('d') . $d('H') . $d('i') . $filename;
+        $ok = true;
+
+        if(!is_dir($location->getPath() . $d('Y') . $d('m') . $d('d') . $d('H') . $d('i'))) {
+            $this->logger->warn('Specified folder does not exist! Creating...', __METHOD__);
+            $ok = mkdir($location->getPath() . $d('Y') . $d('m') . $d('d') . $d('H') . $d('i'), 0777, true);
+            if($ok == true) {
+                $this->logger->info('Folder has been created!', __METHOD__);
+            } else {
+                $this->logger->error('Folder could not be created!', __METHOD__);
+            }
+        }
+
+        if($this->fm->fileExists($targetFile)) {
+            return false;
+        }
+
+        $fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+        if(!in_array($fileType, self::$allowedFileTypes)) {
+            $this->logger->error('File is not allowed to be uploaded!', __METHOD__);
+            return false;
+        }
+
+        return rename($filepath, $location->getPath());
     }
 
     /**

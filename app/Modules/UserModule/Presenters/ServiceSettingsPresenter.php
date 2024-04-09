@@ -144,6 +144,7 @@ class ServiceSettingsPresenter extends APresenter {
         $name = $this->get('name');
         
         $values = ArrayHelper::formatArrayData($_POST);
+        $values = ArrayHelper::escapeArrayData($_POST);
 
         unset($values['name']);
         unset($values['description']);
@@ -171,6 +172,12 @@ class ServiceSettingsPresenter extends APresenter {
                 $values['archive_old_logs'] = '0';
             } else {
                 $values['archive_old_logs'] = '1';
+            }
+        } else if($name == 'ExtractionService') {
+            if(!array_key_exists(ServiceMetadata::DELETE_EXTRACTED_FILES, $values)) {
+                $values[ServiceMetadata::DELETE_EXTRACTED_FILES] = '0';
+            } else {
+                $values[ServiceMetadata::DELETE_EXTRACTED_FILES] = '1';
             }
         }
 
@@ -395,6 +402,41 @@ class ServiceSettingsPresenter extends APresenter {
                     $fb->addElement($checkbox);
 
                     break;
+
+                case ServiceMetadata::DELETE_EXTRACTED_FILES:
+                    $checkbox = $fb->createInput()->setType('checkbox')->setName($key);
+
+                    if($value == '1') {
+                        $checkbox->setSpecial('checked');
+                    }
+
+                    $fb->addElement($checkbox);
+
+                    break;
+
+                case ServiceMetadata::EXTRACTION_PATH:
+                    $fb->addText($key, $value);
+
+                    break;
+
+                case ServiceMetadata::DOCUMENT_FOLDER_FOR_IMPORTS:
+                    $dbFolders = $app->folderModel->getAllFolders();
+
+                    $folders = [
+                        [
+                            'value' => '-1',
+                            'text' => '-'
+                        ]
+                    ];
+                    foreach($dbFolders as $folder) {
+                        $folders[] = [
+                            'value' => $folder->getId(),
+                            'text' => $folder->getName()
+                        ];
+                    }
+
+                    $fb->addElement($fb->createSelect()->setName($key)->addOptionsBasedOnArray($folders));
+
                     break;
             }
         }

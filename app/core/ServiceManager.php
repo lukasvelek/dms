@@ -14,14 +14,18 @@ use DMS\Core\Logger\Logger;
 use DMS\Models\DocumentMetadataHistoryModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
+use DMS\Models\GroupModel;
 use DMS\Models\GroupUserModel;
 use DMS\Models\MailModel;
 use DMS\Models\NotificationModel;
 use DMS\Models\ServiceModel;
 use DMS\Models\UserModel;
+use DMS\Repositories\DocumentCommentRepository;
+use DMS\Repositories\DocumentRepository;
 use DMS\Services\DeclinedDocumentRemoverService;
 use DMS\Services\DocumentArchivationService;
 use DMS\Services\DocumentReportGeneratorService;
+use DMS\Services\ExtractionService;
 use DMS\Services\FileManagerService;
 use DMS\Services\LogRotateService;
 use DMS\Services\MailService;
@@ -52,6 +56,10 @@ class ServiceManager {
     private DocumentMetadataHistoryModel $dmhm;
     private DocumentLockComponent $dlc;
     private DocumentBulkActionAuthorizator $dbaa;
+    private FileManager $fm;
+    private DocumentRepository $dr;
+    private DocumentCommentRepository $dcr;
+    private GroupModel $gm;
 
     private array $runDates;
 
@@ -94,7 +102,11 @@ class ServiceManager {
                                 FileStorageModel $fsModel,
                                 DocumentMetadataHistoryModel $dmhm,
                                 DocumentLockComponent $dlc,
-                                DocumentBulkActionAuthorizator $dbaa) {
+                                DocumentBulkActionAuthorizator $dbaa,
+                                FileManager $fm,
+                                DocumentRepository $dr,
+                                DocumentCommentRepository $dcr,
+                                GroupModel $gm) {
         $this->logger = $logger;
         $this->serviceModel = $serviceModel;
         $this->fsm = $fsm;
@@ -113,6 +125,10 @@ class ServiceManager {
         $this->dmhm = $dmhm;
         $this->dlc = $dlc;
         $this->dbaa = $dbaa;
+        $this->fm = $fm;
+        $this->dr = $dr;
+        $this->dcr = $dcr;
+        $this->gm = $gm;
         
         $this->loadServices();
         $this->loadRunDates();
@@ -164,7 +180,11 @@ class ServiceManager {
      */
     public function getLastRunDateForService(string $name) {
         if(array_key_exists($name, $this->runDates)) {
-            return $this->runDates[$name]['last_run_date'];
+            if(array_key_exists('last_run_date', $this->runDates[$name])) {
+                return $this->runDates[$name]['last_run_date'];
+            } else {
+                return '-';
+            }
         } else {
             return '-';
         }
@@ -239,6 +259,7 @@ class ServiceManager {
         $this->services['DocumentArchivationService'] = new DocumentArchivationService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm, $this->dbaa);
         $this->services['DeclinedDocumentRemoverService'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm, $this->dlc);
         $this->services['DocumentReportGeneratorService'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
+        $this->services['ExtractionService'] = new ExtractionService($this->logger, $this->serviceModel, $this->cm, $this->dr, $this->dcr, $this->fsm, $this->gm);
     }
 }
 

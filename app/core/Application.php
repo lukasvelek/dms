@@ -290,7 +290,11 @@ class Application {
                                                     $this->fileStorageModel,
                                                     $this->documentMetadataHistoryModel,
                                                     $this->documentLockComponent,
-                                                    $this->documentBulkActionAuthorizator
+                                                    $this->documentBulkActionAuthorizator,
+                                                    $this->fileManager,
+                                                    $this->documentRepository,
+                                                    $this->documentCommentRepository,
+                                                    $this->groupModel
                                                 );
         
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);
