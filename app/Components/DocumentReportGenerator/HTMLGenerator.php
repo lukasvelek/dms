@@ -29,11 +29,16 @@ class HTMLGenerator extends ADocumentReport implements IGeneratable {
 
         $total = $this->sqlResult->num_rows;
         $current = 0;
+        $lastFinished = 0;
 
         foreach($this->sqlResult as $row) {
             if(($current % ADocumentReport::UPDATE_COUNT_CONST) == 0) {
                 $finished = $this->calcFinishedPercent($current, $total);
-                $this->updateFinishedProcent($finished, $this->idReport);
+
+                if($finished > $lastFinished) {
+                    $this->updateFinishedProcent($finished, $this->idReport);
+                    $lastFinished = $finished;
+                }
             }
 
             $tr = $tb->createRow();
