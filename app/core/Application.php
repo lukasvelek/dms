@@ -290,7 +290,11 @@ class Application {
                                                     $this->fileStorageModel,
                                                     $this->documentMetadataHistoryModel,
                                                     $this->documentLockComponent,
-                                                    $this->documentBulkActionAuthorizator
+                                                    $this->documentBulkActionAuthorizator,
+                                                    $this->fileManager,
+                                                    $this->documentRepository,
+                                                    $this->documentCommentRepository,
+                                                    $this->groupModel
                                                 );
         
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);
@@ -443,7 +447,7 @@ class Application {
         try {
             $pageBody = $module->currentPresenter->performAction($action);
         } catch(Exception $e) {
-            $this->flashMessage($e->getMessage(), 'error');
+            $this->flashMessage($e->getMessage() . ' Stack trace: ' . $e->getTraceAsString(), 'error');
             $this->redirect(self::URL_HOME_PAGE);
         }
 

@@ -1399,7 +1399,13 @@ class DatabaseInstaller {
             ),
             'DocumentReportGeneratorService' => array(
                 'service_run_period' => '1'
-            )
+            ),
+            'ExtractionService' => [
+                'service_run_period' => '7',
+                'extraction_path' => '',
+                'delete_extracted_files' => '1',
+                'document_folder_for_imports' => ''
+            ]
         );
 
         $this->db->beginTransaction();
@@ -1934,6 +1940,10 @@ class DatabaseInstaller {
             'DocumentReportGeneratorService' => [
                 'display_name' => 'Document report generator',
                 'description' => 'Generates document reports'
+            ],
+            'ExtractionService' => [
+                'display_name' => 'Extraction service',
+                'description' => 'Imports documents from files'
             ]
         ];
 

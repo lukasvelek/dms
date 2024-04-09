@@ -63,13 +63,13 @@ class UserModel extends AModel {
 
         $docuUsers = [];
         while($row = $qb->fetchAssoc()) {
-            if(!in_array($row[DocumentMetadata::ID_AUTHOR], $docuUsers)) {
+            if($row[DocumentMetadata::ID_AUTHOR] !== NULL && !in_array($row[DocumentMetadata::ID_AUTHOR], $docuUsers)) {
                 $docuUsers[] = $row[DocumentMetadata::ID_AUTHOR];
             }
-            if(!in_array($row[DocumentMetadata::ID_OFFICER], $docuUsers)) {
+            if($row[DocumentMetadata::ID_OFFICER] !== NULL && !in_array($row[DocumentMetadata::ID_OFFICER], $docuUsers)) {
                 $docuUsers[] = $row[DocumentMetadata::ID_OFFICER];
             }
-            if(!in_array($row[DocumentMetadata::ID_MANAGER], $docuUsers)) {
+            if($row[DocumentMetadata::ID_MANAGER] !== NULL && !in_array($row[DocumentMetadata::ID_MANAGER], $docuUsers)) {
                 $docuUsers[] = $row[DocumentMetadata::ID_MANAGER];
             }
         }
