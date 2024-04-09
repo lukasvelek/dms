@@ -51,6 +51,10 @@ class DocumentModel extends AModel {
     }
 
     public function updateDocumentsBulk(array $data, array $ids) {
+        if(!array_key_exists('date_updated', $data)) {
+            $data['date_updated'] = date('Y-m-d H:i:s');
+        }
+
         return $this->bulkUpdateExisting($data, $ids, 'documents');
     }
 
