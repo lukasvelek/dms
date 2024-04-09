@@ -703,7 +703,11 @@ class DocumentModel extends AModel {
 
         $document = $this->getLastInsertedDocumentForIdUser($data['id_author']);
 
-        return $document->getId();
+        if($document instanceof Document) {
+            return $document->getId();
+        } else {
+            return $result;
+        }
     }
 
     public function getStandardFilteredDocuments(string $filter) {

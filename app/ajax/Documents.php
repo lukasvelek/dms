@@ -706,7 +706,7 @@ function searchDocumentsSharedWithMe() {
 }
 
 function generateDocuments() {
-    global $documentModel, $user, $logger;
+    global $documentModel, $user, $logger, $documentMetadataHistoryModel;
 
     if($user == null) {
         exit;
@@ -777,7 +777,11 @@ function generateDocuments() {
                 $data[DocumentMetadata::ID_FOLDER] = $id_folder;
             }
     
-            $documentModel->insertNewDocument($data);
+            $result = $documentModel->insertNewDocument($data);
+
+            if($result) {
+                $inserted++;
+            }
         }
     }
 
