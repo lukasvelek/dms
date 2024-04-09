@@ -167,7 +167,7 @@ class DocumentLockComponent extends AComponent {
      * @param bool $createLink True if link should be created or false if not
      * @return string HTML text
      */
-    public function createLockText(DocumentLockEntity $lock, int $idCallingUser, bool $createLink = true) {
+    public function createLockText(DocumentLockEntity $lock, int $idCallingUser, bool $createLink = true, ?int $idFolder = null) {
         $html = '';
         switch($lock->getType()) {
             case DocumentLockType::PROCESS_LOCK:
@@ -180,7 +180,13 @@ class DocumentLockComponent extends AComponent {
                 if($lock->getIdUser() == $idCallingUser) {
                     $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()] . ' (Me)', DocumentLockType::$colors[$lock->getType()]);
                     if($createLink == true) {
-                        $html = LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:unlockDocumentForUser', 'id_document' => $lock->getIdDocument(), 'id_user' => $lock->getIdUser()], $html);
+                        $url = ['page' => 'UserModule:Documents:unlockDocumentForUser', 'id_document' => $lock->getIdDocument(), 'id_user' => $lock->getIdUser()];
+
+                        if($idFolder !== NULL) {
+                            $url['id_folder'] = $idFolder;
+                        }
+
+                        $html = LinkBuilder::createAdvLink($url, $html);
                     }
                 } else {
                     $html = TextHelper::colorText(DocumentLockType::$texts[$lock->getType()] . ' (' . $user->getFullname() . ')', DocumentLockType::$colors[$lock->getType()]);

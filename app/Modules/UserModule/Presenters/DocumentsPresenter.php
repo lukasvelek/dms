@@ -52,11 +52,17 @@ class DocumentsPresenter extends APresenter {
 
         $idDocument = $this->get('id_document');
         $idUser = $this->get('id_user');
+        $idFolder = $this->get('id_folder');
 
         $app->documentLockComponent->lockDocumentForUser($idDocument, $idUser);
 
+        $url = [];
+        if($idFolder !== NULL) {
+            $url['id_folder'] = $idFolder;
+        }
+
         $app->flashMessage('Document #' . $idDocument . ' has been locked', 'info');
-        $app->redirect('showAll');
+        $app->redirect('showAll', $url);
     }
 
     protected function unlockDocumentForUser() {
@@ -64,11 +70,17 @@ class DocumentsPresenter extends APresenter {
 
         $idDocument = $this->get('id_document');
         $idUser = $this->get('id_user');
+        $idFolder = $this->get('id_folder');
 
         $app->documentLockComponent->unlockDocument($idDocument, $idUser);
 
+        $url = [];
+        if($idFolder !== NULL) {
+            $url['id_folder'] = $idFolder;
+        }
+
         $app->flashMessage('Document #' . $idDocument . ' has been unlocked', 'info');
-        $app->redirect('showAll');
+        $app->redirect('showAll', $url);
     }
 
     protected function processMoveToArchiveDocumentFormBulkAction() {
