@@ -63,7 +63,8 @@ function loadDependencies2(array &$dependencies, string $dir) {
         $dir . '\\install',
         $dir . '\\Modules',
         $dir . '\\Ajax',
-        $dir . '\\PHPMailer'
+        $dir . '\\PHPMailer',
+        $dir . '\\dms_loader2.php'
     );
 
     $extensionsToSkip = array(

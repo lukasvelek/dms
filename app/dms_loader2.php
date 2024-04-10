@@ -1,34 +1,7 @@
 <?php
 
-/**
- * The default DMS appplication loader.
- * 
- * It loads all dependencies that are sorted by importance:
- * 1. Interfaces
- * 2. Abstract classes
- * 3. Classes
- * 
- * After loading dependencies it create an instance of the Application.
- * 
- * It also checks for presence of 'config.local.php' config script.
- * It also loads all UI modules and registers them in the application.
- * 
- * @author Lukas Velek
- * @version 1.2
- */
+$dependencies = [];
 
-use DMS\Exceptions\ClassDoesNotImplementInterfaceException;
-use DMS\Exceptions\SystemFileDoesNotExistException;
-use DMS\Modules\IModule;
-
-$dependencies = array();
-
-/**
- * Creates a list of dependencies with their paths in a given directory
- * 
- * @param array $dependencies Array of dependencies
- * @param string $dir Directory to search in
- */
 function loadDependencies(array &$dependencies, string $dir) {
     $content = scandir($dir);
 
@@ -121,6 +94,51 @@ function getNestLevel(string $dependencyPath) {
     return count(explode('\\', $dependencyPath));
 }
 
+function loadDependencies2() {
+    $classes = get_declared_classes();
+    $interfaces = get_declared_interfaces();
+
+    $temp = [];
+    foreach($classes as $class) {
+        $mainpart = explode('\\', $class)[0];
+
+        if($mainpart === 'DMS') {
+            $temp[] = $class;
+        }
+    }
+    $classes = $temp;
+
+    $temp = [];
+    foreach($interfaces as $interface) {
+        $mainpart = explode('\\', $interface)[0];
+
+        if($mainpart === 'DMS') {
+            $temp[] = $interface;
+        }
+    }
+    $interfaces = $temp;
+
+    /*var_dump($classes);
+    var_dump($interfaces);*/
+
+    foreach($classes as $class) {
+        constructClass($class);
+    }
+}
+
+function constructClass(string $className) {
+    $constructor = new ReflectionMethod($className, '__construct');
+    $parameters = $constructor->getParameters();
+
+    foreach($parameters as $parameter) {
+        if(!in_array($parameter->getType(), ['int', 'string', 'bool', 'float', '?int', '?string', '?bool', '?float'])) {
+            $dependenceClass = (string) $parameter->getType();
+
+            constructClass($dependenceClass);
+        }
+    }
+}
+
 loadDependencies($dependencies, __DIR__);
 sortDependencies($dependencies);
 
@@ -128,48 +146,8 @@ foreach($dependencies as $dependency) {
     require_once($dependency);
 }
 
-// VENDOR DEPENDENCIES
+loadDependencies2();
 
-require_once('Core/Vendor/PHPMailer/OAuthTokenProvider.php');
-require_once('Core/Vendor/PHPMailer/OAuth.php');
-require_once('Core/Vendor/PHPMailer/DSNConfigurator.php');
-require_once('Core/Vendor/PHPMailer/Exception.php');
-require_once('Core/Vendor/PHPMailer/PHPMailer.php');
-require_once('Core/Vendor/PHPMailer/POP3.php');
-require_once('Core/Vendor/PHPMailer/SMTP.php');
-
-// END OF VENDOR DENEPENDENCIES
-
-if(!DMS\Core\FileManager::fileExists('config.local.php')) {
-    throw new SystemFileDoesNotExistException('config.local.php');
-}
-
-if(!DMS\Core\FileManager::fileExists('app/Modules/modules.php')) {
-    throw new SystemFileDoesNotExistException('app/Modules/modules.php');
-}
-
-include('Modules/modules.php');
-
-$app = new DMS\Core\Application();
-
-foreach($modules as $moduleName => $modulePresenters) {
-    $moduleUrl = 'DMS\\Modules\\' . $moduleName . '\\' . $moduleName;
-
-    $module = new $moduleUrl();
-
-    if(!($module instanceof IModule)) {
-        throw new ClassDoesNotImplementInterfaceException($moduleUrl, 'DMS\Modules\IModule');
-    }
-    
-    foreach($modulePresenters as $modulePresenter) {
-        $presenterUrl = 'DMS\\Modules\\' . $moduleName . '\\' . $modulePresenter;
-
-        $presenter = new $presenterUrl();
-
-        $module->registerPresenter($presenter);
-    }
-
-    $app->registerModule($module);
-}
+die();
 
 ?>
