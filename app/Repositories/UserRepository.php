@@ -16,7 +16,7 @@ use DMS\Models\UserModel;
 use Exception;
 
 class UserRepository extends ARepository {
-    private UserModel $userModel;
+    public UserModel $userModel;
     private ActionAuthorizator $actionAuthorizator;
     
     private CacheManager $userCache;

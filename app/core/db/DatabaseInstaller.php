@@ -1415,6 +1415,9 @@ class DatabaseInstaller {
                 'extraction_path' => '',
                 'delete_extracted_files' => '1',
                 'document_folder_for_imports' => ''
+            ],
+            'UserLoginBlockingManagerService' => [
+                'service_run_period' => '1'
             ]
         );
 
@@ -1954,6 +1957,10 @@ class DatabaseInstaller {
             'ExtractionService' => [
                 'display_name' => 'Extraction service',
                 'description' => 'Imports documents from files'
+            ],
+            'UserLoginBlockingManagerService' => [
+                'display_name' => 'User login blocking manager',
+                'description' => 'Manages user login blockings'
             ]
         ];
 
