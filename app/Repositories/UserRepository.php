@@ -4,6 +4,7 @@ namespace DMS\Repositories;
 
 use DMS\Authorizators\ActionAuthorizator;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\Metadata\UserLoginBlocksMetadata;
 use DMS\Constants\Metadata\UserLoginsMetadata;
 use DMS\Constants\Metadata\UserMetadata;
 use DMS\Constants\UserStatus;
@@ -15,7 +16,7 @@ use DMS\Models\UserModel;
 use Exception;
 
 class UserRepository extends ARepository {
-    private UserModel $userModel;
+    public UserModel $userModel;
     private ActionAuthorizator $actionAuthorizator;
     
     private CacheManager $userCache;
@@ -26,6 +27,50 @@ class UserRepository extends ARepository {
         $this->actionAuthorizator = $actionAuthorizator;
 
         $this->userCache = CacheManager::getTemporaryObject(CacheCategories::USERS);
+    }
+
+    public function updateUserBlock(int $idBlock, string $dateFrom, ?string $dateTo, string $description) {
+        $data = [
+            UserLoginBlocksMetadata::DESCRIPTION => $description,
+            UserLoginBlocksMetadata::DATE_FROM => $dateFrom,
+            UserLoginBlocksMetadata::DATE_TO => $dateTo
+        ];
+
+        return $this->userModel->updateUserLoginBlock($idBlock, $data);
+    }
+    
+    public function isUserBlocked(int $idUser) {
+        if($this->userModel->getActiveUserLoginBlockByIdUser($idUser) === NULL) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public function unblockUser(int $idUser) {
+        $data = [
+            UserLoginBlocksMetadata::IS_ACTIVE => '0'
+        ];
+
+        $blockEntity = $this->userModel->getActiveUserLoginBlockByIdUser($idUser);
+
+        $this->userModel->updateUserLoginBlock($blockEntity->getId(), $data);
+    }
+
+    public function blockUser(int $idCallingUser, int $idUser, string $description, string $dateFrom, ?string $dateTo) {
+        $data = [
+            UserLoginBlocksMetadata::ID_AUTHOR => $idCallingUser,
+            UserLoginBlocksMetadata::ID_USER => $idUser,
+            UserLoginBlocksMetadata::DESCRIPTION => $description,
+            UserLoginBlocksMetadata::DATE_FROM => $dateFrom,
+            UserLoginBlocksMetadata::IS_ACTIVE => '1'
+        ];
+
+        if($dateTo !== NULL) {
+            $data[UserLoginBlocksMetadata::DATE_TO] = $dateTo;
+        }
+
+        return $this->userModel->insertUserLoginBlock($data);
     }
 
     public function getUnsuccessfulLoginAttemptsByDate() {
@@ -147,6 +192,10 @@ class UserRepository extends ARepository {
         }
         
         return $user;
+    }
+
+    public function getUserByUsername(string $username) {
+        return $this->userModel->getUserByUsername($username);
     }
 }
 

@@ -445,6 +445,16 @@ class DatabaseInstaller {
                 'result' => 'INT(2) NOT NULL DEFAULT 1',
                 'description' => 'VARCHAR(256) NOT NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_login_blocks' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'id_author' => 'INT(32) NOT NULL',
+                'description' => 'TEXT NOT NULL',
+                'date_from' => 'DATETIME NOT NULL',
+                'date_to' => 'DATETIME NULL',
+                'is_active' => 'INT(2) NOT NULL DEFAULT 1',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             )
         );
 
@@ -1405,6 +1415,9 @@ class DatabaseInstaller {
                 'extraction_path' => '',
                 'delete_extracted_files' => '1',
                 'document_folder_for_imports' => ''
+            ],
+            'UserLoginBlockingManagerService' => [
+                'service_run_period' => '1'
             ]
         );
 
@@ -1944,6 +1957,10 @@ class DatabaseInstaller {
             'ExtractionService' => [
                 'display_name' => 'Extraction service',
                 'description' => 'Imports documents from files'
+            ],
+            'UserLoginBlockingManagerService' => [
+                'display_name' => 'User login blocking manager',
+                'description' => 'Manages user login blockings'
             ]
         ];
 

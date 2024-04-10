@@ -22,6 +22,7 @@ use DMS\Models\ServiceModel;
 use DMS\Models\UserModel;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserRepository;
 use DMS\Services\DeclinedDocumentRemoverService;
 use DMS\Services\DocumentArchivationService;
 use DMS\Services\DocumentReportGeneratorService;
@@ -31,6 +32,7 @@ use DMS\Services\LogRotateService;
 use DMS\Services\MailService;
 use DMS\Services\NotificationManagerService;
 use DMS\Services\ShreddingSuggestionService;
+use DMS\Services\UserLoginBlockingManagerService;
 
 /**
  * Manager responsible for services
@@ -60,6 +62,7 @@ class ServiceManager {
     private DocumentRepository $dr;
     private DocumentCommentRepository $dcr;
     private GroupModel $gm;
+    private UserRepository $userRepository;
 
     private array $runDates;
 
@@ -106,7 +109,8 @@ class ServiceManager {
                                 FileManager $fm,
                                 DocumentRepository $dr,
                                 DocumentCommentRepository $dcr,
-                                GroupModel $gm) {
+                                GroupModel $gm,
+                                UserRepository $userRepository) {
         $this->logger = $logger;
         $this->serviceModel = $serviceModel;
         $this->fsm = $fsm;
@@ -129,6 +133,7 @@ class ServiceManager {
         $this->dr = $dr;
         $this->dcr = $dcr;
         $this->gm = $gm;
+        $this->userRepository = $userRepository;
         
         $this->loadServices();
         $this->loadRunDates();
@@ -260,6 +265,7 @@ class ServiceManager {
         $this->services['DeclinedDocumentRemoverService'] = new DeclinedDocumentRemoverService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentAuthorizator, $this->dmhm, $this->dlc);
         $this->services['DocumentReportGeneratorService'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
         $this->services['ExtractionService'] = new ExtractionService($this->logger, $this->serviceModel, $this->cm, $this->dr, $this->dcr, $this->fsm, $this->gm);
+        $this->services['UserLoginBlockingManagerService'] = new UserLoginBlockingManagerService($this->logger, $this->serviceModel, $this->cm, $this->userRepository);
     }
 }
 

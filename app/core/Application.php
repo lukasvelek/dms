@@ -294,7 +294,8 @@ class Application {
                                                     $this->fileManager,
                                                     $this->documentRepository,
                                                     $this->documentCommentRepository,
-                                                    $this->groupModel
+                                                    $this->groupModel,
+                                                    $this->userRepository
                                                 );
         
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);

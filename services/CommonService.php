@@ -38,6 +38,7 @@ use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserRepository;
 
 require_once('App/dms_loader.php');
 
@@ -109,6 +110,7 @@ $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logge
 
 $documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator, $documentCommentModel);
+$userRepository = new UserRepository($db, $logger, $userModel, $actionAuthorizator);
 
 function start(string $name) {
     global $serviceModel, $logger;

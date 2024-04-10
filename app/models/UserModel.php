@@ -9,10 +9,73 @@ use DMS\Constants\Metadata\UserPasswordResetHashMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\User;
+use DMS\Entities\UserLoginBlockEntity;
 
 class UserModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function getActiveBlockedIdUsers() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_login_blocks')
+            ->where('is_active = 1')
+            ->execute();
+
+        $idUsers = [];
+        while($row = $qb->fetchAssoc()) {
+            if(strtotime($row['date_from']) > time()) {
+                continue;
+            }
+
+            if(isset($row['date_to'])) {
+                if(strtotime($row['date_to']) < time() && $row['is_active'] == '1') {
+                    continue;
+                }
+            }
+
+            $idUsers[] = $row['id_user'];
+        }
+
+        return $idUsers;
+    }
+
+    public function getActiveUserLoginBlocks() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_login_blocks')
+            ->where('is_active = 1')
+            ->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $entities[] = $this->createUserLoginBlockEntityFromDbRow($row);
+        }
+
+        return $entities;
+    }
+
+    public function getActiveUserLoginBlockByIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_login_blocks')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('is_active = 1')
+            ->execute();
+
+        return $this->createUserLoginBlockEntityFromDbRow($qb->fetch());
+    }
+
+    public function updateUserLoginBlock(int $id, array $data) {
+        return $this->updateExisting('user_login_blocks', $id, $data);
+    }
+
+    public function insertUserLoginBlock(array $data) {
+        return $this->insertNew($data, 'user_login_blocks');
     }
 
     public function composeStandardLoginAttemptsQuery() {
@@ -389,6 +452,33 @@ class UserModel extends AModel {
         $user = User::createUserObjectFromArrayValues($values);
 
         return $user;
+    }
+    
+    private function createUserLoginBlockEntityFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+
+        $id = $row['id'];
+        $idUser = $row['id_user'];
+        $idAuthor = $row['id_author'];
+        $description = $row['description'];
+        $dateFrom = explode(' ', $row['date_from'])[0];
+        $dateTo = null;
+        $dateCreated = $row['date_created'];
+        $isActive = $row['is_active'];
+
+        if($isActive == '1') {
+            $isActive = true;
+        } else {
+            $isActive = false;
+        }
+
+        if(isset($row['date_to'])) {
+            $dateTo = explode(' ', $row['date_to'])[0];
+        }
+
+        return new UserLoginBlockEntity($id, $dateCreated, $idUser, $idAuthor, $description, $dateFrom, $dateTo, $isActive);
     }
 }
 

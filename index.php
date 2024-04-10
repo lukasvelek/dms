@@ -38,6 +38,18 @@ if(isset($_SESSION['id_current_user'])) {
             $app->redirect($app::URL_LOGIN_PAGE);
         }
     } else {
+        if($app->userRepository->isUserBlocked($_SESSION['id_current_user']) === TRUE) {
+            // blocked
+            unset($_SESSION['last_login_hash']);
+            unset($_SESSION['id_current_user']);
+            unset($_SESSION['session_end_date']);
+
+            if($app->currentUrl != $app::URL_LOGIN_PAGE) {
+                $app->flashMessage('Your account has been blocked.', 'error');
+                $app->redirect($app::URL_LOGIN_PAGE);
+            }
+        }
+
         $user = $app->userRepository->getUserById($_SESSION['id_current_user']);
 
         if(isset($_SESSION['last_login_hash'])) {
