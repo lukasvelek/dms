@@ -36,9 +36,6 @@ class UserRepository extends ARepository {
             UserLoginBlocksMetadata::DATE_TO => $dateTo
         ];
 
-        /*if($dateTo !== NULL) {
-        }*/
-
         return $this->userModel->updateUserLoginBlock($idBlock, $data);
     }
     
