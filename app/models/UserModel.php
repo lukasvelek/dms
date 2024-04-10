@@ -16,12 +16,38 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getActiveBlockedIdUsers() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_login_blocks')
+            ->where('is_active = 1')
+            ->execute();
+
+        $idUsers = [];
+        while($row = $qb->fetchAssoc()) {
+            if(strtotime($row['date_from']) > time()) {
+                continue;
+            }
+
+            if(isset($row['date_to'])) {
+                if(strtotime($row['date_to']) < time() && $row['is_active'] == '1') {
+                    continue;
+                }
+            }
+
+            $idUsers[] = $row['id_user'];
+        }
+
+        return $idUsers;
+    }
+
     public function getActiveUserLoginBlocks() {
         $qb = $this->qb(__METHOD__);
 
         $qb ->select(['*'])
             ->from('user_login_blocks')
-            ->andWhere('is_active = 1')
+            ->where('is_active = 1')
             ->execute();
 
         $entities = [];
