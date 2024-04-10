@@ -135,7 +135,12 @@ class UserSettingsPresenter extends APresenter {
         $app->userRepository->unblockUser($idUser);
 
         $app->flashMessage('User #' . $idUser . ' has been unblocked!');
-        $app->redirect('showLoginAttempts');
+        
+        if(isset($_GET['return_page'])) {
+            $app->redirect($this->get('return_page'));
+        } else {
+            $app->redirect('showLoginAttempts');
+        }
     }
 
     protected function showLoginAttempts() {
@@ -273,7 +278,7 @@ class UserSettingsPresenter extends APresenter {
             return $userRepository->getUserById($ulbe->getIdAuthor())->getFullname();
         });
         $gb->addAction(function(UserLoginBlockEntity $ulbe) {
-            return LinkBuilder::createAdvLink(['page' => 'unblockUser', 'id_user' => $ulbe->getIdUser()], 'Unblock user');
+            return LinkBuilder::createAdvLink(['page' => 'unblockUser', 'id_user' => $ulbe->getIdUser(), 'return_page' => 'UserModule:UserSettings:showBlockedUsers'], 'Unblock user');
         });
         $gb->addAction(function(UserLoginBlockEntity $ulbe) {
             return LinkBuilder::createAdvLink(['page' => 'showEditUserBlockForm', 'id_user' => $ulbe->getIdUser()], 'Edit block');
