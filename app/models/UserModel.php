@@ -16,6 +16,22 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getActiveUserLoginBlocks() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_login_blocks')
+            ->andWhere('is_active = 1')
+            ->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $entities[] = $this->createUserLoginBlockEntityFromDbRow($row);
+        }
+
+        return $entities;
+    }
+
     public function getActiveUserLoginBlockByIdUser(int $idUser) {
         $qb = $this->qb(__METHOD__);
 

@@ -43,6 +43,8 @@ class UserSettingsPresenter extends APresenter {
 
     private function internalCreateLoginAttemptsGrid(string $type) {
         global $app;
+
+        $userRepository = $app->userRepository;
         
         $dataSource = [];
 
@@ -55,6 +57,8 @@ class UserSettingsPresenter extends APresenter {
                 $dataSource = $app->userRepository->getUnsuccessfulLoginAttemptsByDate();
                 break;
         }
+
+        $usernames = [];
         
         $gb = new GridBuilder();
 
@@ -64,6 +68,24 @@ class UserSettingsPresenter extends APresenter {
             $text = UserLoginAttemptResults::$texts[$ulae->getResult()];
             $value = ($ulae->getResult() == 1) ? true : false;
             return GridDataHelper::renderBooleanValueWithColors($value, $text, $text);
+        });
+        $gb->addAction(function(UserLoginAttemptEntity $ulae) use ($userRepository, &$usernames) {
+            $idUser = null;
+            if(array_key_exists($ulae->getUsername(), $usernames)) {
+                $idUser = $usernames[$ulae->getUsername()];
+            } else {
+                $user = $userRepository->getUserByUsername($ulae->getUsername());
+                if($user !== NULL) {
+                    $usernames[$user->getUsername()] = $user->getId();
+                    $idUser = $user->getId();
+                }
+            }
+
+            if($idUser === NULL) {
+                return '-';
+            }
+
+            return LinkBuilder::createAdvLink(['page' => 'blockUser', 'id_user' => $idUser], 'Block user');
         });
 
         return $gb->build();

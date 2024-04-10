@@ -175,6 +175,10 @@ class UserRepository extends ARepository {
         
         return $user;
     }
+
+    public function getUserByUsername(string $username) {
+        return $this->userModel->getUserByUsername($username);
+    }
 }
 
 ?>
