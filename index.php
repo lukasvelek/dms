@@ -47,7 +47,7 @@ if(isset($_SESSION['id_current_user'])) {
             unset($_SESSION['session_end_date']);
 
             if($app->currentUrl != $app::URL_LOGIN_PAGE) {
-                $app->flashMessage('Your account has been blocked!');
+                $app->flashMessage('Your account has been blocked.', 'error');
                 $app->redirect($app::URL_LOGIN_PAGE);
             }
         }

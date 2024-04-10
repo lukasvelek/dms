@@ -28,6 +28,14 @@ class UserRepository extends ARepository {
 
         $this->userCache = CacheManager::getTemporaryObject(CacheCategories::USERS);
     }
+    
+    public function isUserBlocked(int $idUser) {
+        if($this->userModel->getActiveUserLoginBlockByIdUser($idUser) === NULL) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
     public function unblockUser(int $idUser) {
         $data = [

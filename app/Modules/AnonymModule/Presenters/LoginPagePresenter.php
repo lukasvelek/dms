@@ -112,6 +112,12 @@ class LoginPagePresenter extends APresenter {
             $authResult = $app->userAuthenticator->authUser($username, $password);
 
             if($authResult !== FALSE) {
+                if($app->userRepository->isUserBlocked($authResult)) {
+                    $app->userRepository->insertUserLoginAttempt($username, UserLoginAttemptResults::BLOCKED_USER, 'User is blocked.');
+                    $app->flashMessage('Your account has been blocked.', 'error');
+                    $app->redirect('showForm');
+                }
+
                 $user = $app->userModel->getUserById($authResult);
 
                 if(!in_array($user->getStatus(), array(UserStatus::ACTIVE))) {
