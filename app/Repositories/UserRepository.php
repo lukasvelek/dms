@@ -4,6 +4,7 @@ namespace DMS\Repositories;
 
 use DMS\Authorizators\ActionAuthorizator;
 use DMS\Constants\CacheCategories;
+use DMS\Constants\Metadata\UserLoginBlocksMetadata;
 use DMS\Constants\Metadata\UserLoginsMetadata;
 use DMS\Constants\Metadata\UserMetadata;
 use DMS\Constants\UserStatus;
@@ -26,6 +27,32 @@ class UserRepository extends ARepository {
         $this->actionAuthorizator = $actionAuthorizator;
 
         $this->userCache = CacheManager::getTemporaryObject(CacheCategories::USERS);
+    }
+
+    public function unblockUser(int $idUser) {
+        $data = [
+            UserLoginBlocksMetadata::IS_ACTIVE => '0'
+        ];
+
+        $blockEntity = $this->userModel->getActiveUserLoginBlockByIdUser($idUser);
+
+        $this->userModel->updateUserLoginBlock($blockEntity->getId(), $data);
+    }
+
+    public function blockUser(int $idCallingUser, int $idUser, string $description, string $dateFrom, ?string $dateTo) {
+        $data = [
+            UserLoginBlocksMetadata::ID_AUTHOR => $idCallingUser,
+            UserLoginBlocksMetadata::ID_USER => $idUser,
+            UserLoginBlocksMetadata::DESCRIPTION => $description,
+            UserLoginBlocksMetadata::DATE_FROM => $dateFrom,
+            UserLoginBlocksMetadata::IS_ACTIVE => '1'
+        ];
+
+        if($dateTo !== NULL) {
+            $data[UserLoginBlocksMetadata::DATE_TO] = $dateTo;
+        }
+
+        return $this->userModel->insertUserLoginBlock($data);
     }
 
     public function getUnsuccessfulLoginAttemptsByDate() {

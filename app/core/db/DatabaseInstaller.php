@@ -449,6 +449,7 @@ class DatabaseInstaller {
             'user_login_blocks' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user' => 'INT(32) NOT NULL',
+                'id_author' => 'INT(32) NOT NULL',
                 'description' => 'TEXT NOT NULL',
                 'date_from' => 'DATETIME NOT NULL',
                 'date_to' => 'DATETIME NULL',
