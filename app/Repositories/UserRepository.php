@@ -32,12 +32,12 @@ class UserRepository extends ARepository {
     public function updateUserBlock(int $idBlock, string $dateFrom, ?string $dateTo, string $description) {
         $data = [
             UserLoginBlocksMetadata::DESCRIPTION => $description,
-            UserLoginBlocksMetadata::DATE_FROM => $dateFrom
+            UserLoginBlocksMetadata::DATE_FROM => $dateFrom,
+            UserLoginBlocksMetadata::DATE_TO => $dateTo
         ];
 
-        if($dateTo !== NULL) {
-            $data[UserLoginBlocksMetadata::DATE_TO] = $dateTo;
-        }
+        /*if($dateTo !== NULL) {
+        }*/
 
         return $this->userModel->updateUserLoginBlock($idBlock, $data);
     }

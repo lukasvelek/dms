@@ -73,7 +73,9 @@ abstract class AModel {
             }
         }
 
-        $this->updateToNull($tableName, $id, $updateToNull);
+        if(!empty($updateToNull)) {
+            $this->updateToNull($tableName, $id, $updateToNull);
+        }
 
         $data = $updateNormally;
 
