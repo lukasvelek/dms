@@ -463,7 +463,7 @@ class UserModel extends AModel {
         $idUser = $row['id_user'];
         $idAuthor = $row['id_author'];
         $description = $row['description'];
-        $dateFrom = $row['date_from'];
+        $dateFrom = explode(' ', $row['date_from'])[0];
         $dateTo = null;
         $dateCreated = $row['date_created'];
         $isActive = $row['is_active'];
@@ -475,7 +475,7 @@ class UserModel extends AModel {
         }
 
         if(isset($row['date_to'])) {
-            $dateTo = $row['date_to'];
+            $dateTo = explode(' ', $row['date_to'])[0];
         }
 
         return new UserLoginBlockEntity($id, $dateCreated, $idUser, $idAuthor, $description, $dateFrom, $dateTo, $isActive);

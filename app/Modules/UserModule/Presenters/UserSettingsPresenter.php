@@ -5,6 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\UserLoginAttemptResults;
 use DMS\Core\ScriptLoader;
 use DMS\Entities\UserLoginAttemptEntity;
+use DMS\Entities\UserLoginBlockEntity;
 use DMS\Helpers\GridDataHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -18,6 +19,62 @@ class UserSettingsPresenter extends APresenter {
         parent::__construct('UserSettings', 'User settings');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function processBlockUserEditForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'date_from', 'description']);
+
+        $id = $this->get('id');
+        $dateFrom = $this->post('date_from');
+        $description = $this->post('description');
+
+        $dateTo = null;
+        if(isset($_POST['date_to']) && !empty($_POST['date_to'])) {
+            $dateTo = $this->post('date_to');
+        }
+
+        $app->userRepository->updateUserBlock($id, $dateFrom, $dateTo, $description);
+
+        $app->flashMessage('User block #' . $id . ' updated.');
+        $app->redirect('showBlockedUsers');
+    }
+
+    protected function showEditUserBlockForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id_user']);
+
+        $idUser = $this->get('id_user');
+
+        $template = $this->loadTemplate(__DIR__ . '/templates/settings/settings-new-entity-form.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'Edit block for user #' . $idUser,
+            '$LINKS$' => [],
+            '$FORM$' => $this->internalCreateBlockUserEditForm($idUser)
+        ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showBlockedUsers'], '&larr;');
+
+        $this->fill($data, $template);
+
+        return $template;
+    }
+
+    protected function showBlockedUsers() {
+        $template = $this->loadTemplate(__DIR__ . '/templates/settings/settings-grid.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'Blocked users',
+            '$LINKS$' => [],
+            '$SETTINGS_GRID$' => $this->internalCreateBlockedUsersGrid()
+        ];
+
+        $this->fill($data, $template);
+
+        return $template;
     }
 
     protected function showBlockUserForm() {
@@ -190,6 +247,66 @@ class UserSettingsPresenter extends APresenter {
             ->addElement($fb->createTextArea()->setName('description')->require())
 
             ->addElement($fb->createSubmit('Block'))
+        ;
+
+        $jsScript = ScriptLoader::loadJSScript('js/UserBlockForm.js');
+
+        $fb->addJSScript($jsScript);
+
+        return $fb->build();
+    }
+
+    private function internalCreateBlockedUsersGrid() {
+        global $app;
+        $userRepository = $app->userRepository;
+
+        $dataSource = $app->userModel->getActiveUserLoginBlocks();
+
+        $gb = new GridBuilder();
+
+        $gb->addDataSource($dataSource);
+        $gb->addColumns(['user' => 'User', 'dateFrom' => 'Date from', 'dateTo' => 'Date to', 'author' => 'Blocked by', 'description' => 'Reason']);
+        $gb->addOnColumnRender('user', function(UserLoginBlockEntity $ulbe) use ($userRepository) {
+            return $userRepository->getUserById($ulbe->getIdUser())->getFullname();
+        });
+        $gb->addOnColumnRender('author', function(UserLoginBlockEntity $ulbe) use ($userRepository) {
+            return $userRepository->getUserById($ulbe->getIdAuthor())->getFullname();
+        });
+        $gb->addAction(function(UserLoginBlockEntity $ulbe) {
+            return LinkBuilder::createAdvLink(['page' => 'unblockUser', 'id_user' => $ulbe->getIdUser()], 'Unblock user');
+        });
+        $gb->addAction(function(UserLoginBlockEntity $ulbe) {
+            return LinkBuilder::createAdvLink(['page' => 'showEditUserBlockForm', 'id_user' => $ulbe->getIdUser()], 'Edit block');
+        });
+
+        return $gb->build();
+    }
+
+    private function internalCreateBlockUserEditForm(int $idUser) {
+        global $app;
+
+        $entity = $app->userModel->getActiveUserLoginBlockByIdUser($idUser);
+
+        $fb = new FormBuilder();
+
+        $dateTo = $fb->createInput()->setType('date')->setName('date_to');
+
+        if($entity->getDateTo() !== NULL) {
+            $dateTo->setValue($entity->getDateTo());
+        }
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:UserSettings:processBlockUserEditForm&id=' . $entity->getId())
+            
+            ->addLabel('Date from', 'date_from')
+            ->addElement($fb->createInput()->setType('date')->setName('date_from')->setMin(date('Y-m-d'))->require()->setValue($entity->getDateFrom()))
+
+            ->addLabel('Date to', 'date_to')
+            ->addElement($dateTo)
+
+            ->addLabel('Description', 'description')
+            ->addElement($fb->createTextArea()->setName('description')->require()->setText($entity->getDescription()))
+
+            ->addElement($fb->createSubmit('Edit block'))
         ;
 
         $jsScript = ScriptLoader::loadJSScript('js/UserBlockForm.js');

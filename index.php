@@ -25,8 +25,6 @@ if(isset($_GET['page'])) {
     $app->redirect($app::URL_HOME_PAGE);
 }
 
-$blockedUsers = $app->userModel->getActiveBlockedIdUsers();
-
 if(isset($_SESSION['id_current_user'])) {
     if(strtotime($_SESSION['session_end_date']) < time() ||
        !isset($_SESSION['last_login_hash'])) {
@@ -40,7 +38,7 @@ if(isset($_SESSION['id_current_user'])) {
             $app->redirect($app::URL_LOGIN_PAGE);
         }
     } else {
-        if(in_array($_SESSION['id_current_user'], $blockedUsers)) {
+        if($app->userRepository->isUserBlocked($_SESSION['id_current_user']) === TRUE) {
             // blocked
             unset($_SESSION['last_login_hash']);
             unset($_SESSION['id_current_user']);

@@ -63,6 +63,20 @@ abstract class AModel {
     protected function updateExisting(string $tableName, int $id, array $data) {
         $qb = $this->qb(__METHOD__);
 
+        $updateToNull = [];
+        $updateNormally = [];
+        foreach($data as $k => $v) {
+            if($v === NULL) {
+                $updateToNull[] = $k;
+            } else {
+                $updateNormally[$k] = $v;
+            }
+        }
+
+        $this->updateToNull($tableName, $id, $updateToNull);
+
+        $data = $updateNormally;
+
         $qb ->update($tableName)
             ->set($data)
             ->where('id = ?', [$id])

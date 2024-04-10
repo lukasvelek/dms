@@ -28,6 +28,19 @@ class UserRepository extends ARepository {
 
         $this->userCache = CacheManager::getTemporaryObject(CacheCategories::USERS);
     }
+
+    public function updateUserBlock(int $idBlock, string $dateFrom, ?string $dateTo, string $description) {
+        $data = [
+            UserLoginBlocksMetadata::DESCRIPTION => $description,
+            UserLoginBlocksMetadata::DATE_FROM => $dateFrom
+        ];
+
+        if($dateTo !== NULL) {
+            $data[UserLoginBlocksMetadata::DATE_TO] = $dateTo;
+        }
+
+        return $this->userModel->updateUserLoginBlock($idBlock, $data);
+    }
     
     public function isUserBlocked(int $idUser) {
         if($this->userModel->getActiveUserLoginBlockByIdUser($idUser) === NULL) {
