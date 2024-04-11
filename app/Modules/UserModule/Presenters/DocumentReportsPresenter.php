@@ -3,6 +3,7 @@
 namespace DMS\Modules\UserModule;
 
 use DMS\Constants\DocumentReportStatus;
+use DMS\Constants\FileStorageTypes;
 use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\UserActionRights;
 use DMS\Entities\DocumentReportEntity;
@@ -176,6 +177,14 @@ class DocumentReportsPresenter extends APresenter {
         }
 
         $app->documentModel->deleteDocumentReportQueueEntry($id);
+
+        $file = $row['file_name'];
+
+        $location = $app->fsManager->getDefaultLocationForStorageType(FileStorageTypes::DOCUMENT_REPORTS);
+
+        $file = $location->getPath() . $file;
+
+        $app->fileManager->deleteFile($file);
 
         $app->flashMessage('Deleted generated document report.');
         $app->redirect('showAll');
