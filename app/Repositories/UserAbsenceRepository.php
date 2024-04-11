@@ -19,6 +19,31 @@ class UserAbsenceRepository extends ARepository {
         $this->userModel = $userModel;
     }
 
+    public function isUserAbsent(int $idUser) {
+        $absence = $this->getAbsenceForIdUser($idUser);
+
+        foreach($absence as $a) {
+            $dateFrom = $a->getDateFrom();
+            $dateTo = $a->getDateTo();
+
+            if(strtotime($dateFrom) < time() && time() < strtotime($dateTo)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function getIdSubstituteForIdUser(int $idUser) {
+        $substitute = $this->getSubstituteForIdUser($idUser);
+
+        if($substitute === NULL) {
+            return null;
+        } else {
+            return $substitute->getIdSubstitute();
+        }
+    }
+
     public function createSubstituteForIdUser(int $idUser, int $idSubstitute) {
         $data = [
             UserSubstitutesMetadata::ID_USER => $idUser,
