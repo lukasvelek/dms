@@ -299,7 +299,8 @@ class Application {
                                                     $this->documentRepository,
                                                     $this->documentCommentRepository,
                                                     $this->groupModel,
-                                                    $this->userRepository
+                                                    $this->userRepository,
+                                                    $this->userAbsenceRepository
                                                 );
         
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);

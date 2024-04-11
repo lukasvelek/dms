@@ -9,6 +9,7 @@ use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\DocumentLockEntity;
+use DMS\Models\ProcessModel;
 use DMS\Repositories\UserAbsenceRepository;
 use DMS\Repositories\UserRepository;
 
@@ -199,7 +200,7 @@ class ProcessComponent extends AComponent {
                     $idSubstitute = $this->userAbsenceRepository->getIdSubstituteForIdUser($document->getIdManager());
 
                     if($idSubstitute !== NULL) {
-                        $data['workflow1'] = $idSubstitute;
+                        $data['workflow2'] = $idSubstitute;
                     } else {
                         $data['workflow2'] = $document->getIdManager();
                     }
@@ -417,6 +418,38 @@ class ProcessComponent extends AComponent {
         }
 
         return true;
+    }
+
+    /**
+     * Updates workflow user during absence and sends them notification
+     * 
+     * @param int $idProcess Process ID
+     * @param int $workflow Workflow position
+     * @param int $newUser New user ID
+     * @return mixed DB query result
+     */
+    public function updateProcessWorkflowUser(int $idProcess, int $workflow, int $newUser) {
+        $data = [
+            'workflow' . $workflow => $newUser
+        ];
+        
+        $this->models['processModel']->updateProcess($idProcess, $data);
+        
+        $this->notificationComponent->createNewNotification(Notifications::PROCESS_ASSIGNED_TO_USER, [
+            'id_process' => $idProcess,
+            'id_user' => $newUser
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Returns ProcessModel instance
+     * 
+     * @return ProcessModel ProcessModel instance
+     */
+    public function getProcessModel(): ProcessModel {
+        return $this->models['processModel'];
     }
 }
 

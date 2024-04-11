@@ -466,6 +466,13 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user' => 'INT(32) NOT NULL',
                 'id_substitute' => 'INT(32) NOT NULL'
+            ),
+            'process_user_substitution' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_process' => 'INT(32) NOT NULL',
+                'workflow' => 'INT(32) NOT NULL',
+                'id_original_user' => 'INT(32) NOT NULL',
+                'id_new_user' => 'INT(32) NOT NULL'
             )
         );
 
@@ -1429,6 +1436,9 @@ class DatabaseInstaller {
             ],
             'UserLoginBlockingManagerService' => [
                 'service_run_period' => '1'
+            ],
+            'UserSubstitutionProcessService' => [
+                'service_run_period' => '1'
             ]
         );
 
@@ -1980,6 +1990,10 @@ class DatabaseInstaller {
             'UserLoginBlockingManagerService' => [
                 'display_name' => 'User login blocking manager',
                 'description' => 'Manages user login blockings'
+            ],
+            'UserSubstitutionProcessService' => [
+                'display_name' => 'User substitution process service',
+                'description' => 'Updates users in process workflows during absence'
             ]
         ];
 

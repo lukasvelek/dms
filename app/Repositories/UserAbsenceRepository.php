@@ -19,6 +19,24 @@ class UserAbsenceRepository extends ARepository {
         $this->userModel = $userModel;
     }
 
+    public function getIdAbsentUsers() {
+        $idUsers = [];
+
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_absence')
+            ->where('date_from < ?', [date('Y-m-d')])
+            ->andWhere('date_to > ?', [date('Y-m-d')])
+            ->execute();
+
+        while($row = $qb->fetchAssoc()) {
+            $idUsers[] = $row['id_user'];
+        }
+
+        return $idUsers;
+    }
+
     public function isUserAbsent(int $idUser) {
         $absence = $this->getAbsenceForIdUser($idUser);
 
