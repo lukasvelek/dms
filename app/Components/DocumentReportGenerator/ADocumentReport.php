@@ -80,8 +80,12 @@ abstract class ADocumentReport {
         }
     }
 
-    protected function generateFilename(int $idUser, string $extension) {
-        return $idUser . '_' . date('Y-m-d_H-i-s') . '_document_report.' . $extension;
+    protected function generateFilename(int $idUser, string $extension = '') {
+        if($extension !== '') {
+            return $idUser . '_' . date('Y-m-d_H-i-s') . '_document_report.' . $extension;
+        } else {
+            return $idUser . '_' . date('Y-m-d_H-i-s') . '_document_report';
+        }
     }
 
     protected function loadCustomMetadata() {
@@ -262,7 +266,7 @@ abstract class ADocumentReport {
     }
 
     protected function calcFinishedPercent(int $current, int $total) {
-        return ($current / $total) * 100;
+        return (int)(($current / $total) * 100);
     }
 
     protected function updateFinishedProcent(int $procent, int $idReport) {
