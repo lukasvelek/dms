@@ -21,12 +21,12 @@ class UserRepository extends ARepository {
     
     private CacheManager $userCache;
 
-    public function __construct(Database $db, Logger $logger, UserModel $userModel, ActionAuthorizator $actionAuthorizator) {
+    public function __construct(Database $db, Logger $logger, UserModel $userModel, ActionAuthorizator $actionAuthorizator, bool $ajax = false) {
         parent::__construct($db, $logger);
         $this->userModel = $userModel;
         $this->actionAuthorizator = $actionAuthorizator;
 
-        $this->userCache = CacheManager::getTemporaryObject(CacheCategories::USERS);
+        $this->userCache = CacheManager::getTemporaryObject(CacheCategories::USERS, $ajax);
     }
 
     public function updateUserBlock(int $idBlock, string $dateFrom, ?string $dateTo, string $description) {

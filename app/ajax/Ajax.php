@@ -254,7 +254,7 @@ $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logge
 
 $documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator, $documentCommentModel);
-//$userRepository = new UserRepository($db, $logger, $userModel, $actionAuthorizator);
+$userRepository = new UserRepository($db, $logger, $userModel, $actionAuthorizator, true);
 $userAbsenceRepository = new UserAbsenceRepository($db, $logger, $userModel);
 
 $mailManager = new MailManager();

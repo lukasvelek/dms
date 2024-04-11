@@ -2,6 +2,8 @@
 
 namespace DMS\Modules\UserModule;
 
+use DMS\Core\ScriptLoader;
+use DMS\Entities\UserAbsenceEntity;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
 use DMS\UI\GridBuilder;
@@ -16,6 +18,21 @@ class UserAbsencePresenter extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function processNewAbsenceForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['date_from', 'date_to']);
+
+        $dateFrom = $this->post('date_from');
+        $dateTo = $this->post('date_to');
+        $idUser = $app->user->getId();
+
+        $app->userAbsenceRepository->insertAbsence($idUser, $dateFrom, $dateTo);
+
+        $app->flashMessage('Absence created.');
+        $app->redirect('showMyAbsence');
+    }
+
     protected function showNewAbsenceForm() {
         $template = $this->loadTemplate(__DIR__ . '/templates/users/user-new-entity-form.html');
 
@@ -24,6 +41,8 @@ class UserAbsencePresenter extends APresenter {
             '$LINKS$' => [],
             '$FORM$' => $this->internalCreateNewAbsenceForm()
         ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showMyAbsence'], '&larr;');
 
         $this->fill($data, $template);
 
@@ -55,6 +74,12 @@ class UserAbsencePresenter extends APresenter {
 
         $gb->addColumns(['dateFrom' => 'Date from', 'dateTo' => 'Date to']);
         $gb->addDataSource($datasource);
+        $gb->addOnColumnRender('dateFrom', function(UserAbsenceEntity $uae) {
+            return explode(' ', $uae->getDateFrom())[0];
+        });
+        $gb->addOnColumnRender('dateTo', function(UserAbsenceEntity $uae) {
+            return explode(' ', $uae->getDateTo())[0];
+        });
 
         return $gb->build();
     }
@@ -65,13 +90,17 @@ class UserAbsencePresenter extends APresenter {
         $fb ->setMethod('POST')->setAction('?page=UserModule:UserAbsence:processNewAbsenceForm')
             
             ->addLabel('Date from', 'date_from')
-            ->addElement($fb->createInput()->setType('date')->setName('date_from'))
+            ->addElement($fb->createInput()->setType('date')->setName('date_from')->require())
 
             ->addLabel('Date to', 'date_to')
-            ->addElement($fb->createInput()->setType('date')->setName('date_to'))
+            ->addElement($fb->createInput()->setType('date')->setName('date_to')->require())
 
             ->addElement($fb->createSubmit('Create'))
         ;
+
+        $script = ScriptLoader::loadJSScript('js/UserAbsenceForm.js');
+
+        $fb->addJSScript($script);
 
         return $fb->build();
     }
