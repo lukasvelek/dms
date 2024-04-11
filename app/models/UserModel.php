@@ -7,6 +7,7 @@ use DMS\Constants\Metadata\UserAbsenceMetadata;
 use DMS\Constants\Metadata\UserConnectionMetadata;
 use DMS\Constants\Metadata\UserMetadata;
 use DMS\Constants\Metadata\UserPasswordResetHashMetadata;
+use DMS\Constants\Metadata\UserSubstitutesMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\User;
@@ -15,6 +16,21 @@ use DMS\Entities\UserLoginBlockEntity;
 class UserModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function updateSubstitute(int $idUser, int $idSubstitute) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->update('user_substitutes')
+            ->set([UserSubstitutesMetadata::ID_SUBSTITUTE => $idSubstitute])
+            ->where(UserSubstitutesMetadata::ID_USER . ' = ?', [$idUser])
+            ->execute();
+
+        return $qb->fetch();
+    }
+
+    public function insertSubstitute(array $data) {
+        return $this->insertNew($data, 'user_substitutes');
     }
 
     public function deleteAbsence(int $id) {

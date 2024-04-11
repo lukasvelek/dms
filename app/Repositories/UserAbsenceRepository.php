@@ -3,9 +3,11 @@
 namespace DMS\Repositories;
 
 use DMS\Constants\Metadata\UserAbsenceMetadata;
+use DMS\Constants\Metadata\UserSubstitutesMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\UserAbsenceEntity;
+use DMS\Entities\UserSubstituteEntity;
 use DMS\Models\UserModel;
 
 class UserAbsenceRepository extends ARepository {
@@ -15,6 +17,30 @@ class UserAbsenceRepository extends ARepository {
         parent::__construct($db, $logger);
 
         $this->userModel = $userModel;
+    }
+
+    public function createSubstituteForIdUser(int $idUser, int $idSubstitute) {
+        $data = [
+            UserSubstitutesMetadata::ID_USER => $idUser,
+            UserSubstitutesMetadata::ID_SUBSTITUTE => $idSubstitute
+        ];
+
+        return $this->userModel->insertSubstitute($data);
+    }
+
+    public function editSubstituteForIdUser(int $idUser, int $idSubstitute) {
+        return $this->userModel->updateSubstitute($idUser, $idSubstitute);
+    }
+
+    public function getSubstituteForIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_substitutes')
+            ->where(UserSubstitutesMetadata::ID_USER . ' = ?', [$idUser])
+            ->execute();
+
+        return $this->createUserSubstituteEntityFromDbRow($qb->fetch());
     }
 
     public function deleteAbsence(int $id) {
@@ -73,6 +99,18 @@ class UserAbsenceRepository extends ARepository {
         $dateTo = $row[UserAbsenceMetadata::DATE_TO];
 
         return new UserAbsenceEntity($id, $idUser, $dateFrom, $dateTo);
+    }
+
+    private function createUserSubstituteEntityFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+
+        $id = $row[UserSubstitutesMetadata::ID];
+        $idUser = $row[UserSubstitutesMetadata::ID_USER];
+        $idSubstitute = $row[UserSubstitutesMetadata::ID_SUBSTITUTE];
+
+        return new UserSubstituteEntity($id, $idUser, $idSubstitute);
     }
 }
 
