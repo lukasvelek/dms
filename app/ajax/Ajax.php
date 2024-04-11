@@ -41,6 +41,8 @@ use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserAbsenceRepository;
+use DMS\Repositories\UserRepository;
 
 session_start();
 
@@ -252,6 +254,8 @@ $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logge
 
 $documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator, $documentCommentModel);
+//$userRepository = new UserRepository($db, $logger, $userModel, $actionAuthorizator);
+$userAbsenceRepository = new UserAbsenceRepository($db, $logger, $userModel);
 
 $mailManager = new MailManager();
 
