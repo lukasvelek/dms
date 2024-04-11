@@ -3,6 +3,7 @@
 namespace DMS\Models;
 
 use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\UserAbsenceMetadata;
 use DMS\Constants\Metadata\UserConnectionMetadata;
 use DMS\Constants\Metadata\UserMetadata;
 use DMS\Constants\Metadata\UserPasswordResetHashMetadata;
@@ -14,6 +15,21 @@ use DMS\Entities\UserLoginBlockEntity;
 class UserModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function updateAbsence(int $id, array $data) {
+        return $this->updateExisting('user_absence', $id, $data);
+    }
+
+    public function getAbsenceById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_absence')
+            ->where(UserAbsenceMetadata::ID . ' = ?', [$id])
+            ->execute();
+
+        return $qb->fetch();
     }
 
     public function insertAbsence(array $data) {

@@ -18,6 +18,43 @@ class UserAbsencePresenter extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function processEditAbsenceForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id', 'date_from', 'date_to']);
+
+        $id = $this->get('id');
+        $dateFrom = $this->post('date_from');
+        $dateTo = $this->post('date_to');
+
+        $app->userAbsenceRepository->editAbsence($id, $dateFrom, $dateTo);
+
+        $app->flashMessage('Updated absence.');
+        $app->redirect('showMyAbsence');
+    }
+
+    protected function showEditAbsenceForm() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $id = $this->get('id');
+
+        $template = $this->loadTemplate(__DIR__ . '/templates/users/user-new-entity-form.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'Edit absence',
+            '$LINKS$' => [],
+            '$FORM$' => $this->internalCreateEditAbsenceForm($id)
+        ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showMyAbsence'], '&larr;');
+
+        $this->fill($data, $template);
+
+        return $template;
+    }
+
     protected function processNewAbsenceForm() {
         global $app;
 
@@ -80,6 +117,12 @@ class UserAbsencePresenter extends APresenter {
         $gb->addOnColumnRender('dateTo', function(UserAbsenceEntity $uae) {
             return explode(' ', $uae->getDateTo())[0];
         });
+        $gb->addAction(function(UserAbsenceEntity $uae) {
+            return LinkBuilder::createAdvLink(['page' => 'showEditAbsenceForm', 'id' => $uae->getId()], 'Edit');
+        });
+        $gb->addAction(function(UserAbsenceEntity $uae) {
+            return LinkBuilder::createAdvLink(['page' => 'deleteAbsence', 'id' => $uae->getId()], 'Delete');
+        });
 
         return $gb->build();
     }
@@ -96,6 +139,34 @@ class UserAbsencePresenter extends APresenter {
             ->addElement($fb->createInput()->setType('date')->setName('date_to')->require())
 
             ->addElement($fb->createSubmit('Create'))
+        ;
+
+        $script = ScriptLoader::loadJSScript('js/UserAbsenceForm.js');
+
+        $fb->addJSScript($script);
+
+        return $fb->build();
+    }
+
+    private function internalCreateEditAbsenceForm(int $id) {
+        global $app;
+
+        $entity = $app->userAbsenceRepository->getAbsenceById($id);
+
+        $dateFrom = explode(' ', $entity->getDateFrom())[0];
+        $dateTo = explode(' ', $entity->getDateTo())[0];
+
+        $fb = new FormBuilder();
+
+        $fb ->setMethod('POST')->setAction('?page=UserModule:UserAbsence:processEditAbsenceForm&id=' . $id)
+            
+            ->addLabel('Date from', 'date_from')
+            ->addElement($fb->createInput()->setType('date')->setName('date_from')->require()->setValue($dateFrom))
+
+            ->addLabel('Date to', 'date_to')
+            ->addElement($fb->createInput()->setType('date')->setName('date_to')->require()->setValue($dateTo))
+
+            ->addElement($fb->createSubmit('Save'))
         ;
 
         $script = ScriptLoader::loadJSScript('js/UserAbsenceForm.js');

@@ -16,6 +16,21 @@ class UserAbsenceRepository extends ARepository {
 
         $this->userModel = $userModel;
     }
+    
+    public function editAbsence(int $id, string $dateFrom, string $dateTo) {
+        $data = [
+            UserAbsenceMetadata::DATE_FROM => $dateFrom,
+            UserAbsenceMetadata::DATE_TO => $dateTo
+        ];
+
+        return $this->userModel->updateAbsence($id, $data);
+    }
+
+    public function getAbsenceById(int $id) {
+        $row = $this->userModel->getAbsenceById($id);
+
+        return $this->createUserAbsenceEntityFromDbRow($row);
+    }
 
     public function insertAbsence(int $idUser, string $dateFrom, string $dateTo) {
         $data = [
@@ -44,6 +59,10 @@ class UserAbsenceRepository extends ARepository {
     }
 
     private function createUserAbsenceEntityFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+
         $id = $row[UserAbsenceMetadata::ID];
         $idUser = $row[UserAbsenceMetadata::ID_USER];
         $dateFrom = $row[UserAbsenceMetadata::DATE_FROM];
