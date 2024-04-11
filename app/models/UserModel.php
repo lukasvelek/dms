@@ -16,6 +16,10 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function insertAbsence(array $data) {
+        return $this->insertNew($data, 'user_absence');
+    }
+
     public function getActiveBlockedIdUsers() {
         $qb = $this->qb(__METHOD__);
 
