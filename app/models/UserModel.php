@@ -17,6 +17,10 @@ class UserModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function deleteAbsence(int $id) {
+        return $this->deleteById($id, 'user_absence');
+    }
+
     public function updateAbsence(int $id, array $data) {
         return $this->updateExisting('user_absence', $id, $data);
     }

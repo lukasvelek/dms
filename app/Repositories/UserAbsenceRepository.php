@@ -16,6 +16,10 @@ class UserAbsenceRepository extends ARepository {
 
         $this->userModel = $userModel;
     }
+
+    public function deleteAbsence(int $id) {
+        return $this->userModel->deleteAbsence($id);
+    }
     
     public function editAbsence(int $id, string $dateFrom, string $dateTo) {
         $data = [

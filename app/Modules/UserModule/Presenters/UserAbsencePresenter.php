@@ -18,6 +18,19 @@ class UserAbsencePresenter extends APresenter {
         $this->getActionNamesFromClass($this);
     }
 
+    protected function deleteAbsence() {
+        global $app;
+
+        $app->flashMessageIfNotIsset(['id']);
+
+        $id = $this->get('id');
+
+        $app->userAbsenceRepository->deleteAbsence($id);
+
+        $app->flashMessage('Deleted absence.');
+        $app->redirect('showMyAbsence');
+    }
+
     protected function processEditAbsenceForm() {
         global $app;
 
