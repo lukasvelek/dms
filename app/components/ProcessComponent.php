@@ -9,6 +9,8 @@ use DMS\Constants\ProcessTypes;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\DocumentLockEntity;
+use DMS\Repositories\UserAbsenceRepository;
+use DMS\Repositories\UserRepository;
 
 /**
  * Component that contains methods or operations that are regarded to process part of the application
@@ -18,6 +20,8 @@ use DMS\Entities\DocumentLockEntity;
 class ProcessComponent extends AComponent {
     private NotificationComponent $notificationComponent;
     private DocumentLockComponent $documentLockComponent;
+    private UserRepository $userRepository;
+    private UserAbsenceRepository $userAbsenceRepository;
 
     private array $models;
 
@@ -29,12 +33,14 @@ class ProcessComponent extends AComponent {
      * @param array $models Document models array
      * @param NotificationComponent $notificationComponent NotificationComponent instance
      */
-    public function __construct(Database $db, Logger $logger, array $models, NotificationComponent $notificationComponent, DocumentLockComponent $documentLockComponent) {
+    public function __construct(Database $db, Logger $logger, array $models, NotificationComponent $notificationComponent, DocumentLockComponent $documentLockComponent, UserRepository $userRepository, UserAbsenceRepository $userAbsenceRepository) {
         parent::__construct($db, $logger);
 
         $this->models = $models;
         $this->notificationComponent = $notificationComponent;
         $this->documentLockComponent = $documentLockComponent;
+        $this->userRepository = $userRepository;
+        $this->userAbsenceRepository = $userAbsenceRepository;
     }
 
     /**
@@ -122,12 +128,32 @@ class ProcessComponent extends AComponent {
                     die();
                 }
 
-                $data['workflow1'] = $document->getIdManager();
+                if($this->userAbsenceRepository->isUserAbsent($document->getIdManager())) {
+                    $idSubstitute = $this->userAbsenceRepository->getIdSubstituteForIdUser($document->getIdManager());
+
+                    if($idSubstitute === NULL) {
+                        $data['workflow1'] = $document->getIdManager();
+                    } else {
+                        $data['workflow1'] = $idSubstitute;
+                    }
+                } else {
+                    $data['workflow1'] = $document->getIdManager();
+                }
 
                 if(count($groupUsers) > 0) {
                     foreach($groupUsers as $gu) {
                         if($gu->getIsManager()) {
-                            $data['workflow2'] = $gu->getIdUser();
+                            if($this->userAbsenceRepository->isUserAbsent($gu->getIdUser())) {
+                                $idSubstitute = $this->userAbsenceRepository->getIdSubstituteForIdUser($gu->getIdUser());
+
+                                if($idSubstitute === NULL) {
+                                    $data['workflow2'] = $gu->getIdUser();
+                                } else {
+                                    $data['workflow2'] = $idSubstitute;
+                                }
+                            } else {
+                                $data['workflow2'] = $gu->getIdUser();
+                            }
                             
                             break;
                         }
@@ -156,13 +182,45 @@ class ProcessComponent extends AComponent {
                 }
 
                 $document = $this->models['documentModel']->getDocumentById($idDocument);
-                $data['workflow1'] = $document->getIdAuthor();
-                $data['workflow2'] = $document->getIdManager();
+
+                if($this->userAbsenceRepository->isUserAbsent($document->getIdAuthor())) {
+                    $idSubstitute = $this->userAbsenceRepository->getIdSubstituteForIdUser($document->getIdAuthor());
+
+                    if($idSubstitute !== NULL) {
+                        $data['workflow1'] = $idSubstitute;
+                    } else {
+                        $data['workflow1'] = $document->getIdAuthor();
+                    }
+                } else {
+                    $data['workflow1'] = $document->getIdAuthor();
+                }
+
+                if($this->userAbsenceRepository->isUserAbsent($document->getIdManager())) {
+                    $idSubstitute = $this->userAbsenceRepository->getIdSubstituteForIdUser($document->getIdManager());
+
+                    if($idSubstitute !== NULL) {
+                        $data['workflow1'] = $idSubstitute;
+                    } else {
+                        $data['workflow2'] = $document->getIdManager();
+                    }
+                } else {
+                    $data['workflow2'] = $document->getIdManager();
+                }
 
                 if(count($groupUsers) > 0) {
                     foreach($groupUsers as $gu) {
                         if($gu->getIsManager()) {
-                            $data['workflow3'] = $gu->getIdUser();
+                            if($this->userAbsenceRepository->isUserAbsent($gu->getIdUser())) {
+                                $idSubstitute = $this->userAbsenceRepository->getIdSubstituteForIdUser($gu->getIdUser());
+
+                                if($idSubstitute === NULL) {
+                                    $data['workflow2'] = $gu->getIdUser();
+                                } else {
+                                    $data['workflow2'] = $idSubstitute;
+                                }
+                            } else {
+                                $data['workflow2'] = $gu->getIdUser();
+                            }
                             
                             break;
                         }
