@@ -10,7 +10,10 @@ define('SERVICE_NAME', 'UserSubstitutionProcessService');
 start(SERVICE_NAME);
 
 $usps = new UserSubstitutionProcessService($logger, $serviceModel, CacheManager::getTemporaryObject('services'), $processComponent, $userAbsenceRepository);
-$usps->run();
+
+run(function() use ($usps) { $usps->run(); });
+
+//$usps->run();
 
 stop(SERVICE_NAME);
 

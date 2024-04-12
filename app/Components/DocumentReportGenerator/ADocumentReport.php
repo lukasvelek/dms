@@ -23,6 +23,7 @@ abstract class ADocumentReport {
     ];
 
     protected const UPDATE_COUNT_CONST = 1000;
+    public const SYNCHRONOUS_COUNT_CONST = 1000;
     
     protected static $defaultMetadata = [
         'id', 'id_folder', 'name', 'date_created', 'date_updated', 'id_officer', 'id_manager', 'status', 'id_group', 'is_deleted', 'rank', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'id_archive_document', 'id_archive_box', 'id_archive_archive'
@@ -228,9 +229,14 @@ abstract class ADocumentReport {
         return $value;
     }
 
-    protected function saveFile(string|array $data, ?string $filename = null, ?string $fileextension = null) {
+    protected function saveFile(string|array $data, ?string $filename = null, ?string $fileextension = null, bool $append = true) {
         if($filename === NULL) {
-            $filename = $this->generateFilename($this->idCallingUser, $fileextension);
+            if($this->filename === NULL) {
+                $filename = $this->generateFilename($this->idCallingUser, $fileextension);
+                $this->filename = $filename;
+            } else {
+                $filename = $this->filename;
+            }
         }
 
         $reportStorageObj = $this->fsm->getDefaultLocationForStorageType(FileStorageTypes::DOCUMENT_REPORTS);
@@ -242,15 +248,17 @@ abstract class ADocumentReport {
             $reportStorage = $reportStorageObj->getPath();
         }
 
-        $defaultFilename = $filename;
-        $i = 1;
-        while($this->fm->fileExists($reportStorage . $filename)) {
-            $filename = explode('.', $defaultFilename)[0];
-            $filename = $filename . ' (' . $i . ').' . $fileextension;
-            $i++;
+        if($append === FALSE) {
+            $defaultFilename = $filename;
+            $i = 1;
+            while($this->fm->fileExists($reportStorage . $filename)) {
+                $filename = explode('.', $defaultFilename)[0];
+                $filename = $filename . ' (' . $i . ').' . $fileextension;
+                $i++;
+            }
         }
 
-        $writeResult = $this->fm->write($reportStorage . $filename, $data, false);
+        $writeResult = $this->fm->write($reportStorage . $filename, $data, !$append);
 
         if($writeResult === TRUE) {
             $path = $reportStorageObj->getPath();

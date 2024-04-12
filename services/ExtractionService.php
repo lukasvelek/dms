@@ -14,7 +14,10 @@ start(SERVICE_NAME);
 $fsm = new FileStorageManager(FileManager::getTemporaryObject(), $logger, $fileStorageModel);
 
 $es = new ExtractionService($logger, $serviceModel, CacheManager::getTemporaryObject('service'), $documentRepository, $documentCommentRepository, $fsm, $groupModel);
-$es->run();
+
+run(function() use ($es) { $es->run(); });
+
+//$es->run();
 
 stop(SERVICE_NAME);
 

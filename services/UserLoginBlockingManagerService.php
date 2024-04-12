@@ -10,7 +10,10 @@ define('SERVICE_NAME', 'UserLoginBlockingManagerService');
 start(SERVICE_NAME);
 
 $ulbms = new UserLoginBlockingManagerService($logger, $serviceModel, CacheManager::getTemporaryObject('service'), $userRepository);
-$ulbms->run();
+
+run(function() use ($ulbms) { $ulbms->run(); });
+
+//$ulbms->run();
 
 stop(SERVICE_NAME);
 

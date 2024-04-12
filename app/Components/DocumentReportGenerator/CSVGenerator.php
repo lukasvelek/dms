@@ -71,10 +71,15 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
 
             $fileRow[] = $dataRow . "\r\n";
 
+            if(($current % parent::UPDATE_COUNT_CONST) == 0) {
+                $this->saveFile($fileRow, $filename, self::FILE_EXTENSION);
+                $fileRow = [];
+            }
+
             $current++;
         }
 
-        return $this->saveFile($fileRow, $filename, self::FILE_EXTENSION);
+        return true;
     }
 }
 

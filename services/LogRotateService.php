@@ -12,7 +12,9 @@ start(SERVICE_NAME);
 
 $lrs = new LogRotateService($logger, $serviceModel, CacheManager::getTemporaryObject(CacheCategories::SERVICE_CONFIG));
 
-$lrs->run();
+run(function() use ($lrs) { $lrs->run(); });
+
+//$lrs->run();
 
 stop(SERVICE_NAME);
 

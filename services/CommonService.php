@@ -134,4 +134,19 @@ function stop(string $name) {
     $logger->info('Service ' . $name . ' stop...');
 }
 
+function run(callable $run) {
+    global $logger;
+
+    $result = true;
+
+    try {
+        $run();
+    } catch(Exception $e) {
+        $logger->error($e->getMessage() . ' - Trace: ' . $e->getTraceAsString(), __METHOD__);
+        $result = false;
+    }
+
+    return $result;
+}
+
 ?>
