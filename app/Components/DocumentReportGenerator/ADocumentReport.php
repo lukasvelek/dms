@@ -14,6 +14,7 @@ use DMS\Constants\MetadataInputType;
 use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
 use DMS\Core\FileStorageManager;
+use DMS\Entities\FileStorageLocation;
 
 abstract class ADocumentReport {
     public const SUPPORTED_EXTENSIONS = [
@@ -40,6 +41,8 @@ abstract class ADocumentReport {
     protected array $customValues;
     protected ?int $idReport;
 
+    private ?FileStorageLocation $reportStorageObj;
+
     protected array $customMetadataValues = [
         'id_folder',
         'id_officer',
@@ -65,6 +68,8 @@ abstract class ADocumentReport {
         $this->filename = null;
         $this->customValues = [];
         $this->idReport = $idReport;
+
+        $this->reportStorageObj = null;
 
         $this->cacheManagers = [
             'users' => CacheManager::getTemporaryObject(CacheCategories::USERS),
@@ -239,13 +244,16 @@ abstract class ADocumentReport {
             }
         }
 
-        $reportStorageObj = $this->fsm->getDefaultLocationForStorageType(FileStorageTypes::DOCUMENT_REPORTS);
+        if($this->reportStorageObj === NULL) {
+            $this->reportStorageObj = $this->fsm->getDefaultLocationForStorageType(FileStorageTypes::DOCUMENT_REPORTS);
+        }
 
-        if($reportStorageObj === NULL) {
+
+        if($this->reportStorageObj === NULL) {
             die('Report storage is null (DocumentReportGeneratorComponent::' . __METHOD__ . '())');
             exit;
         } else {
-            $reportStorage = $reportStorageObj->getPath();
+            $reportStorage = $this->reportStorageObj->getPath();
         }
 
         if($append === FALSE) {
@@ -261,12 +269,12 @@ abstract class ADocumentReport {
         $writeResult = $this->fm->write($reportStorage . $filename, $data, !$append);
 
         if($writeResult === TRUE) {
-            $path = $reportStorageObj->getPath();
+            $path = $this->reportStorageObj->getPath();
             $path = str_replace('\\', '\\\\', $path);
             return [
-                'file_src' => $reportStorageObj->getAbsolutePath() . $filename,
+                'file_src' => $this->reportStorageObj->getAbsolutePath() . $filename,
                 'file_name' => $filename,
-                'id_file_storage_location' => $reportStorageObj->getId()
+                'id_file_storage_location' => $this->reportStorageObj->getId()
             ];
         } else {
             return false;
