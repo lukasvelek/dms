@@ -22,6 +22,7 @@ use DMS\Models\ServiceModel;
 use DMS\Models\UserModel;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserAbsenceRepository;
 use DMS\Repositories\UserRepository;
 use DMS\Services\DeclinedDocumentRemoverService;
 use DMS\Services\DocumentArchivationService;
@@ -33,6 +34,7 @@ use DMS\Services\MailService;
 use DMS\Services\NotificationManagerService;
 use DMS\Services\ShreddingSuggestionService;
 use DMS\Services\UserLoginBlockingManagerService;
+use DMS\Services\UserSubstitutionProcessService;
 
 /**
  * Manager responsible for services
@@ -63,6 +65,7 @@ class ServiceManager {
     private DocumentCommentRepository $dcr;
     private GroupModel $gm;
     private UserRepository $userRepository;
+    private UserAbsenceRepository $userAbsenceRepository;
 
     private array $runDates;
 
@@ -110,7 +113,8 @@ class ServiceManager {
                                 DocumentRepository $dr,
                                 DocumentCommentRepository $dcr,
                                 GroupModel $gm,
-                                UserRepository $userRepository) {
+                                UserRepository $userRepository,
+                                UserAbsenceRepository $userAbsenceRepository) {
         $this->logger = $logger;
         $this->serviceModel = $serviceModel;
         $this->fsm = $fsm;
@@ -134,6 +138,7 @@ class ServiceManager {
         $this->dcr = $dcr;
         $this->gm = $gm;
         $this->userRepository = $userRepository;
+        $this->userAbsenceRepository = $userAbsenceRepository;
         
         $this->loadServices();
         $this->loadRunDates();
@@ -266,6 +271,7 @@ class ServiceManager {
         $this->services['DocumentReportGeneratorService'] = new DocumentReportGeneratorService($this->logger, $this->serviceModel, $this->cm, $this->documentModel, $this->documentReportGeneratorComponent, $this->notificationComponent);
         $this->services['ExtractionService'] = new ExtractionService($this->logger, $this->serviceModel, $this->cm, $this->dr, $this->dcr, $this->fsm, $this->gm);
         $this->services['UserLoginBlockingManagerService'] = new UserLoginBlockingManagerService($this->logger, $this->serviceModel, $this->cm, $this->userRepository);
+        $this->services['UserSubstitutionProcessService'] = new UserSubstitutionProcessService($this->logger, $this->serviceModel, $this->cm, $this->processComponent, $this->userAbsenceRepository);
     }
 }
 

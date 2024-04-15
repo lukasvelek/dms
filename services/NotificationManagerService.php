@@ -11,7 +11,9 @@ start(SERVICE_NAME);
 
 $nms = new NotificationManagerService($logger, $serviceModel, CacheManager::getTemporaryObject('ppp'), $notificationModel);
 
-$nms->run();
+run(function() use ($nms) { $nms->run(); });
+
+//$nms->run();
 
 stop(SERVICE_NAME);
 

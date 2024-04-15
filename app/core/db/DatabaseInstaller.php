@@ -17,6 +17,7 @@ use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
 use DMS\Core\FileManager;
+use DMS\Core\Logger\LogFileTypes;
 use DMS\Core\Logger\Logger;
 
 /**
@@ -48,6 +49,8 @@ class DatabaseInstaller {
      * Installs the database
      */
     public function install() {
+        $this->logger->setType(LogFileTypes::INSTALL);
+
         $this->createTables();
         $this->createIndexes();
         $this->insertDefaultUsers();
@@ -72,6 +75,8 @@ class DatabaseInstaller {
         $this->insertDefaultFileStorageLocations();
 
         $this->insertSystemServices();
+        
+        $this->logger->setType(LogFileTypes::DEFAULT);
     }
 
     /**
@@ -455,6 +460,17 @@ class DatabaseInstaller {
                 'date_to' => 'DATETIME NULL',
                 'is_active' => 'INT(2) NOT NULL DEFAULT 1',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_absence' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'date_from' => 'DATETIME NOT NULL',
+                'date_to' => 'DATETIME NOT NULL'
+            ),
+            'user_substitutes' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'id_substitute' => 'INT(32) NOT NULL'
             )
         );
 
@@ -673,7 +689,50 @@ class DatabaseInstaller {
                     'id_document',
                     'status'
                 ]
-            ]
+            ],
+            [
+                'table_name' => 'user_logins',
+                'columns' => [
+                    'username'
+                ]
+            ],
+            [
+                'table_name' => 'user_logins',
+                'columns' => [
+                    'result'
+                ]
+            ],
+            [
+                'table_name' => 'user_login_blocks',
+                'columns' => [
+                    'is_active'
+                ]
+            ],
+            [
+                'table_name' => 'user_login_blocks',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'user_absence',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'user_absence',
+                'columns' => [
+                    'date_from',
+                    'date_to'
+                ]
+            ],
+            [
+                'table_name' => 'user_substitutes',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
         ];
 
         $tables = [];
@@ -1418,6 +1477,9 @@ class DatabaseInstaller {
             ],
             'UserLoginBlockingManagerService' => [
                 'service_run_period' => '1'
+            ],
+            'UserSubstitutionProcessService' => [
+                'service_run_period' => '1'
             ]
         );
 
@@ -1726,6 +1788,14 @@ class DatabaseInstaller {
                     'page_url' => '?page=UserModule:DocumentReports:showAll&id=current_user',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::CURRENT_USER_DOCUMENT_REPORTS
+                ),
+                array(
+                    'name' => 'Absence',
+                    'code' => 'current_user.absence',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:UserAbsence:showMyAbsence',
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::CURRENT_USER_ABSENCE
                 )
             )
         );
@@ -1961,6 +2031,10 @@ class DatabaseInstaller {
             'UserLoginBlockingManagerService' => [
                 'display_name' => 'User login blocking manager',
                 'description' => 'Manages user login blockings'
+            ],
+            'UserSubstitutionProcessService' => [
+                'display_name' => 'User substitution process service',
+                'description' => 'Updates users in process workflows during absence'
             ]
         ];
 

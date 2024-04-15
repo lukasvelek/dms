@@ -23,7 +23,7 @@ class Logger implements ILoggerCallable {
      */
     public function __construct(FileManager $fm) {
         $this->fileManager = $fm;
-        $this->type = 'default';
+        $this->type = LogFileTypes::DEFAULT;
     }
 
     public function setType(string $type) {
@@ -181,10 +181,11 @@ class Logger implements ILoggerCallable {
      */
     private function saveLogEntry(?string $filename, string $text) {
         if(is_null($filename)) {
-            if($this->type == 'service') {
-                $filename = 'service_log_' . date('Y-m-d') . '.log';
+            $filename = '_' . date('Y-m-d') . '.log';
+            if($this->type != LogFileTypes::DEFAULT) {
+                $filename = $this->type . $filename;
             } else {
-                $filename = 'log_' . date('Y-m-d') . '.log';
+                $filename = 'log' . $filename;
             }
         }
 

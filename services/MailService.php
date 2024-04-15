@@ -14,7 +14,9 @@ $mailManager = new MailManager();
 
 $ms = new MailService($logger, $serviceModel, CacheManager::getTemporaryObject('ppp'), $mailModel, $mailManager);
 
-$ms->run();
+run(function() use ($ms) { $ms->run(); });
+
+//$ms->run();
 
 stop(SERVICE_NAME);
 

@@ -17,7 +17,10 @@ $eec = new ExternalEnumComponent($models);
 $drgc = new DocumentReportGeneratorComponent($models, $fm, $eec, $fsm);
 
 $service = new DocumentReportGeneratorService($logger, $serviceModel, CacheManager::getTemporaryObject('notific'), $documentModel, $drgc, $notificationComponent);
-$service->run();
+
+run(function() use ($service) { $service->run(); });
+
+//$service->run();
 
 stop(SERVICE_NAME);
 

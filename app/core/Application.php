@@ -58,6 +58,7 @@ use DMS\Modules\IPresenter;
 use DMS\Panels\Panels;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserAbsenceRepository;
 use DMS\Repositories\UserRepository;
 use Exception;
 
@@ -149,6 +150,7 @@ class Application {
     public DocumentCommentRepository $documentCommentRepository;
     public DocumentRepository $documentRepository;
     public UserRepository $userRepository;
+    public UserAbsenceRepository $userAbsenceRepository;
 
     public MailManager $mailManager;
 
@@ -256,8 +258,11 @@ class Application {
         
         $serviceManagerCacheManager = new CacheManager(CacheCategories::SERVICE_CONFIG, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
         
+        $this->userRepository = new UserRepository($this->conn, $this->logger, $this->userModel, $this->actionAuthorizator);
+        $this->userAbsenceRepository = new UserAbsenceRepository($this->conn, $this->logger, $this->userModel);
+        
         $this->notificationComponent = new NotificationComponent($this->conn, $this->logger, $this->notificationModel);
-        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->models, $this->notificationComponent, $this->documentLockComponent);
+        $this->processComponent = new ProcessComponent($this->conn, $this->logger, $this->models, $this->notificationComponent, $this->documentLockComponent, $this->userRepository, $this->userAbsenceRepository);
         $this->sharingComponent = new SharingComponent($this->conn, $this->logger, $this->documentModel);
         $this->ribbonComponent = new RibbonComponent($this->conn, $this->logger, $this->ribbonModel, $this->ribbonAuthorizator);
         
@@ -267,7 +272,6 @@ class Application {
         
         $this->documentCommentRepository = new DocumentCommentRepository($this->conn, $this->logger, $this->documentCommentModel, $this->documentModel);
         $this->documentRepository = new DocumentRepository($this->conn, $this->logger, $this->documentModel, $this->documentAuthorizator, $this->documentCommentModel);
-        $this->userRepository = new UserRepository($this->conn, $this->logger, $this->userModel, $this->actionAuthorizator);
         
         $this->externalEnumComponent = new ExternalEnumComponent($this->models);
         $this->documentReportGeneratorComponent = new DocumentReportGeneratorComponent($this->models, $this->fileManager, $this->externalEnumComponent, $this->fsManager);
@@ -295,7 +299,8 @@ class Application {
                                                     $this->documentRepository,
                                                     $this->documentCommentRepository,
                                                     $this->groupModel,
-                                                    $this->userRepository
+                                                    $this->userRepository,
+                                                    $this->userAbsenceRepository
                                                 );
         
         $this->widgetComponent = new WidgetComponent($this->conn, $this->logger, $this->documentModel, $this->processModel, $this->mailModel, $this->notificationModel, $this->serviceModel, $this->serviceManager, $this->userModel);

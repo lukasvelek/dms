@@ -30,7 +30,7 @@ abstract class ARepository {
      * Creates QueryBuilder instance
      * 
      * @param string $methodName Name of the calling method
-     * @return QueryBuilder QueryBuilder instance
+     * @return \QueryBuilder\QueryBuilder QueryBuilder instance
      */
     protected function qb(string $methodName) {
         $qb = $this->db->createQueryBuilder();

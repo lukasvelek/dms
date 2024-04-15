@@ -215,7 +215,7 @@ class DocumentsPresenter extends APresenter {
             die('Error!');
         }
 
-        if($rows->num_rows > 1000) {
+        if($rows->num_rows > ADocumentReport::SYNCHRONOUS_COUNT_CONST) {
             // use background export
             $data = [
                 DocumentReportMetadata::ID_USER => $app->user->getId(),

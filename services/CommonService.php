@@ -14,6 +14,7 @@ use DMS\Components\DocumentLockComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
+use DMS\Core\Logger\LogFileTypes;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentLockModel;
@@ -38,6 +39,7 @@ use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserAbsenceRepository;
 use DMS\Repositories\UserRepository;
 
 require_once('App/dms_loader.php');
@@ -100,8 +102,11 @@ $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightMod
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 
+$userRepository = new UserRepository($db, $logger, $userModel, $actionAuthorizator);
+$userAbsenceRepository = new UserAbsenceRepository($db, $logger, $userModel);
+
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
-$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent, $documentLockComponent);
+$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent, $documentLockComponent, $userRepository, $userAbsenceRepository);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 $archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
@@ -110,7 +115,6 @@ $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logge
 
 $documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator, $documentCommentModel);
-$userRepository = new UserRepository($db, $logger, $userModel, $actionAuthorizator);
 
 function start(string $name) {
     global $serviceModel, $logger;
@@ -118,7 +122,7 @@ function start(string $name) {
     $service = $serviceModel->getServiceByName($name);
     $serviceModel->updateService($service->getId(), ['status' => '1', 'pid' => getmypid()]);
     $logger->info('Service ' . $name . ' start...');
-    $logger->setType('service'); // will switch logging to service log file
+    $logger->setType(LogFileTypes::SERVICE); // will switch logging to service log file
 }
 
 function stop(string $name) {
@@ -127,8 +131,23 @@ function stop(string $name) {
     $service = $serviceModel->getServiceByName($name);
     $serviceModel->updateService($service->getId(), ['status' => '0', 'pid' => NULL]);
     $serviceModel->insertServiceLog(['name' => SERVICE_NAME, 'text' => 'Service ' . SERVICE_NAME . ' finished running.']);
-    $logger->setType('default'); // will switch logging back to normal log file
+    $logger->setType(LogFileTypes::DEFAULT); // will switch logging back to normal log file
     $logger->info('Service ' . $name . ' stop...');
+}
+
+function run(callable $run) {
+    global $logger;
+
+    $result = true;
+
+    try {
+        $run();
+    } catch(Exception $e) {
+        $logger->error($e->getMessage() . ' - Trace: ' . $e->getTraceAsString(), __METHOD__);
+        $result = false;
+    }
+
+    return $result;
 }
 
 ?>

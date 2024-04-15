@@ -11,7 +11,9 @@ start(SERVICE_NAME);
 
 $sss = new ShreddingSuggestionService($logger, $serviceModel, CacheManager::getTemporaryObject('ppp'), $documentAuthorizator, $documentModel, $processComponent);
 
-$sss->run();
+run(function() use ($sss) { $sss->run(); });
+
+//$sss->run();
 
 stop(SERVICE_NAME);
 

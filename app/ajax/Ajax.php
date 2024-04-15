@@ -41,6 +41,8 @@ use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserAbsenceRepository;
+use DMS\Repositories\UserRepository;
 
 session_start();
 
@@ -242,16 +244,19 @@ $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightMod
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 
+$userRepository = new UserRepository($db, $logger, $userModel, $actionAuthorizator, true);
+$userAbsenceRepository = new UserAbsenceRepository($db, $logger, $userModel);
+
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
-$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent, $documentLockComponent);
+$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent, $documentLockComponent, $userRepository, $userAbsenceRepository);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 $archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
 $documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent, $documentLockComponent);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
-$documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
 $documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator, $documentCommentModel);
+$documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
 
 $mailManager = new MailManager();
 

@@ -14,7 +14,9 @@ $fileStorageManager = new FileStorageManager($fm, $logger, $fileStorageModel);
 
 $fms = new FileManagerService($logger, $serviceModel, $fileStorageManager, $documentModel, CacheManager::getTemporaryObject('ppp'), $fileStorageModel);
 
-$fms->run();
+run(function() use ($fms) { $fms->run(); });
+
+//$fms->run();
 
 stop(SERVICE_NAME);
 

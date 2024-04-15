@@ -11,7 +11,9 @@ start(SERVICE_NAME);
 
 $ddrs = new DeclinedDocumentRemoverService($logger, $serviceModel, CacheManager::getTemporaryObject('ppp'), $documentModel, $documentAuthorizator, $documentMetadataHistoryModel, $documentLockComponent);
 
-$ddrs->run();
+run(function() use ($ddrs) { $ddrs->run(); });
+
+//$ddrs->run();
 
 stop(SERVICE_NAME);
 

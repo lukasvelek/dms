@@ -538,6 +538,7 @@ class SettingsPresenter extends APresenter {
         $widgets[] = LinkBuilder::createAdvLink(['page' => 'DocumentReports:showReportsForAllUsers'], 'Generated document reports');
         $widgets[] = LinkBuilder::createAdvLink(['page' => 'UserSettings:showLoginAttempts'], 'Login attempts');
         $widgets[] = LinkBuilder::createAdvLink(['page' => 'UserSettings:showBlockedUsers'], 'Blocked users');
+        $widgets[] = LinkBuilder::createAdvLink(['page' => 'UserSettings:showAbsentUsers'], 'Absent users');
 
         $widgetsCode = '<div class="row"><div class="col-md" id="center">';
 
