@@ -17,6 +17,7 @@ use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
 use DMS\Core\CryptManager;
 use DMS\Core\FileManager;
+use DMS\Core\Logger\LogFileTypes;
 use DMS\Core\Logger\Logger;
 
 /**
@@ -48,6 +49,8 @@ class DatabaseInstaller {
      * Installs the database
      */
     public function install() {
+        $this->logger->setType(LogFileTypes::INSTALL);
+
         $this->createTables();
         $this->createIndexes();
         $this->insertDefaultUsers();
@@ -72,6 +75,8 @@ class DatabaseInstaller {
         $this->insertDefaultFileStorageLocations();
 
         $this->insertSystemServices();
+        
+        $this->logger->setType(LogFileTypes::DEFAULT);
     }
 
     /**
@@ -466,13 +471,6 @@ class DatabaseInstaller {
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
                 'id_user' => 'INT(32) NOT NULL',
                 'id_substitute' => 'INT(32) NOT NULL'
-            ),
-            'process_user_substitution' => array(
-                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
-                'id_process' => 'INT(32) NOT NULL',
-                'workflow' => 'INT(32) NOT NULL',
-                'id_original_user' => 'INT(32) NOT NULL',
-                'id_new_user' => 'INT(32) NOT NULL'
             )
         );
 
@@ -691,7 +689,50 @@ class DatabaseInstaller {
                     'id_document',
                     'status'
                 ]
-            ]
+            ],
+            [
+                'table_name' => 'user_logins',
+                'columns' => [
+                    'username'
+                ]
+            ],
+            [
+                'table_name' => 'user_logins',
+                'columns' => [
+                    'result'
+                ]
+            ],
+            [
+                'table_name' => 'user_login_blocks',
+                'columns' => [
+                    'is_active'
+                ]
+            ],
+            [
+                'table_name' => 'user_login_blocks',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'user_absence',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'user_absence',
+                'columns' => [
+                    'date_from',
+                    'date_to'
+                ]
+            ],
+            [
+                'table_name' => 'user_substitutes',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
         ];
 
         $tables = [];

@@ -14,6 +14,7 @@ use DMS\Components\DocumentLockComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
+use DMS\Core\Logger\LogFileTypes;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentLockModel;
@@ -121,7 +122,7 @@ function start(string $name) {
     $service = $serviceModel->getServiceByName($name);
     $serviceModel->updateService($service->getId(), ['status' => '1', 'pid' => getmypid()]);
     $logger->info('Service ' . $name . ' start...');
-    $logger->setType('service'); // will switch logging to service log file
+    $logger->setType(LogFileTypes::SERVICE); // will switch logging to service log file
 }
 
 function stop(string $name) {
@@ -130,7 +131,7 @@ function stop(string $name) {
     $service = $serviceModel->getServiceByName($name);
     $serviceModel->updateService($service->getId(), ['status' => '0', 'pid' => NULL]);
     $serviceModel->insertServiceLog(['name' => SERVICE_NAME, 'text' => 'Service ' . SERVICE_NAME . ' finished running.']);
-    $logger->setType('default'); // will switch logging back to normal log file
+    $logger->setType(LogFileTypes::DEFAULT); // will switch logging back to normal log file
     $logger->info('Service ' . $name . ' stop...');
 }
 
