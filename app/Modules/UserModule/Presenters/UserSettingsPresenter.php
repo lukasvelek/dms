@@ -4,6 +4,7 @@ namespace DMS\Modules\UserModule;
 
 use DMS\Constants\UserLoginAttemptResults;
 use DMS\Core\ScriptLoader;
+use DMS\Entities\UserAbsenceEntity;
 use DMS\Entities\UserLoginAttemptEntity;
 use DMS\Entities\UserLoginBlockEntity;
 use DMS\Helpers\GridDataHelper;
@@ -19,6 +20,22 @@ class UserSettingsPresenter extends APresenter {
         parent::__construct('UserSettings', 'User settings');
 
         $this->getActionNamesFromClass($this);
+    }
+
+    protected function showAbsentUsers() {
+        $template = $this->loadTemplate(__DIR__ . '/templates/settings/settings-grid.html');
+
+        $data = [
+            '$PAGE_TITLE$' => 'Absent users',
+            '$LINKS$' => [],
+            '$SETTINGS_GRID$' => $this->internalCreateAbsentUsersGrid()
+        ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'Settings:showSystem'], '&larr;');
+
+        $this->fill($data, $template);
+
+        return $template;
     }
 
     protected function processBlockUserEditForm() {
@@ -71,6 +88,8 @@ class UserSettingsPresenter extends APresenter {
             '$LINKS$' => [],
             '$SETTINGS_GRID$' => $this->internalCreateBlockedUsersGrid()
         ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'Settings:showSystem'], '&larr;');
 
         $this->fill($data, $template);
 
@@ -158,6 +177,7 @@ class UserSettingsPresenter extends APresenter {
             '$SETTINGS_GRID$' => $this->internalCreateLoginAttemptsGrid($type)
         ];
 
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'Settings:showSystem'], '&larr;') . '&nbsp;&nbsp;';
         $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showLoginAttempts'], 'All attempts') . '&nbsp;&nbsp;';
         $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showLoginAttempts', 'type' => 'unsuccessful'], 'Unsuccessful attempts');
 
@@ -319,6 +339,30 @@ class UserSettingsPresenter extends APresenter {
         $fb->addJSScript($jsScript);
 
         return $fb->build();
+    }
+
+    private function internalCreateAbsentUsersGrid() {
+        global $app;
+
+        $userRepository = $app->userRepository;
+
+        $datasource = $app->userAbsenceRepository->getAbsentUsers();
+
+        $gb = new GridBuilder();
+
+        $gb->addDataSource($datasource);
+        $gb->addColumns(['user' => 'User', 'dateFrom' => 'From', 'dateTo' => 'To']);
+        $gb->addOnColumnRender('user', function(UserAbsenceEntity $uae) use ($userRepository) {
+            return $userRepository->getUserById($uae->getIdUser())->getFullname();
+        });
+        $gb->addOnColumnRender('dateFrom', function(UserAbsenceEntity $uae) {
+            return explode(' ', $uae->getDateFrom())[0];
+        });
+        $gb->addOnColumnRender('dateTo', function(UserAbsenceEntity $uae) {
+            return explode(' ', $uae->getDateTo())[0];
+        });
+        
+        return $gb->build();
     }
 }
 

@@ -82,6 +82,8 @@ class FileStorageSettingsPresenter extends APresenter {
             '$FOLDERS_GRID$' => $this->internalCreateLocationsGrid()
         ];
 
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'Settings:showSystem'], '&larr;') . '&nbsp;&nbsp;';
+
         if($app->actionAuthorizator->checkActionRight(UserActionRights::EDIT_FILE_STORAGE_LOCATIONS)) {
             $data['$LINKS$'][] = LinkBuilder::createLink('showNewLocationForm', 'New location');
         }

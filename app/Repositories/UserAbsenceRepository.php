@@ -19,6 +19,23 @@ class UserAbsenceRepository extends ARepository {
         $this->userModel = $userModel;
     }
 
+    public function getAbsentUsers() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_absence')
+            ->where('date_from <= ?', [date('Y-m-d')])
+            ->andWhere('date_to >= ?', [date('Y-m-d')])
+            ->execute();
+
+        $users = [];
+        while($row = $qb->fetchAssoc()) {
+            $users[] = $this->createUserAbsenceEntityFromDbRow($row);
+        }
+
+        return $users;
+    }
+
     public function getIdAbsentUsers() {
         $idUsers = [];
 
@@ -26,8 +43,8 @@ class UserAbsenceRepository extends ARepository {
 
         $qb ->select(['*'])
             ->from('user_absence')
-            ->where('date_from < ?', [date('Y-m-d')])
-            ->andWhere('date_to > ?', [date('Y-m-d')])
+            ->where('date_from <= ?', [date('Y-m-d')])
+            ->andWhere('date_to >= ?', [date('Y-m-d')])
             ->execute();
 
         while($row = $qb->fetchAssoc()) {
@@ -44,7 +61,7 @@ class UserAbsenceRepository extends ARepository {
             $dateFrom = $a->getDateFrom();
             $dateTo = $a->getDateTo();
 
-            if(strtotime($dateFrom) < time() && time() < strtotime($dateTo)) {
+            if(strtotime($dateFrom) <= time() && time() <= strtotime($dateTo)) {
                 return true;
             }
         }

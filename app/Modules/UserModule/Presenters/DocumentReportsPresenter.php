@@ -23,7 +23,7 @@ class DocumentReportsPresenter extends APresenter {
     protected function showReportsForAllUsers() {
         global $app;
 
-        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-grid.html');
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-metadata-history-grid.html');
 
         $documentModel = $app->documentModel;
         $userRepository = $app->userRepository;
@@ -53,10 +53,11 @@ class DocumentReportsPresenter extends APresenter {
 
         $data = [
             '$PAGE_TITLE$' => 'Document reports',
-            '$BULK_ACTION_CONTROLLER$' => '',
             '$LINKS$' => [],
-            '$FILTER_GRID$' => $gb->build()
+            '$METADATA_GRID$' => $gb->build()
         ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'Settings:showSystem'], '&larr;');
 
         $this->templateManager->fill($data, $template);
 

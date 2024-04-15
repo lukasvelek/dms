@@ -5,6 +5,7 @@ namespace DMS\Modules\UserModule;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Core\AppConfiguration;
 use DMS\Modules\APresenter;
+use DMS\UI\LinkBuilder;
 
 class DocumentGeneratorPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -32,8 +33,11 @@ class DocumentGeneratorPresenter extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Document generator',
-            '$PAGE_CONTENT$' => $this->internalCreateForm(AppConfiguration::getIsDebug())
+            '$PAGE_CONTENT$' => $this->internalCreateForm(AppConfiguration::getIsDebug()),
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'Settings:showSystem'], '&larr;');
 
         $this->templateManager->fill($data, $template);
 

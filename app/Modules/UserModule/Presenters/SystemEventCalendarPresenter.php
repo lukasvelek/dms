@@ -6,6 +6,7 @@ use DMS\Constants\CacheCategories;
 use DMS\Core\CacheManager;
 use DMS\Entities\CalendarEventEntity;
 use DMS\Modules\APresenter;
+use DMS\UI\LinkBuilder;
 
 class SystemEventCalendarPresenter extends APresenter {
     public const DRAW_TOPPANEL = true;
@@ -55,8 +56,11 @@ class SystemEventCalendarPresenter extends APresenter {
         $data = [
             '$CALENDAR$' => $calendar->build(),
             '$CONTROLLER$' => $controller,
-            '$PAGE_TITLE$' => 'System event calendar'
+            '$PAGE_TITLE$' => 'System event calendar',
+            '$LINKS$' => []
         ];
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'Settings:showSystem'], '&larr;');
 
         $this->fill($data, $template);
 
