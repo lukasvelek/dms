@@ -268,7 +268,12 @@ class UserAbsencePresenter extends APresenter {
 
         $substitute = $app->userAbsenceRepository->getSubstituteForIdUser($app->user->getId());
 
-        $users = [];
+        $users = [
+            [
+                'value' => '-1',
+                'text' => '-'
+            ]
+        ];
         foreach($dbUsers as $dbu) {
             $user = [
                 'value' => $dbu->getId(),

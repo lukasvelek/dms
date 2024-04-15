@@ -78,6 +78,7 @@ class UsersPresenter extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Settings for user <i>' . $user->getFullname() . '</i>',
+            '$LINKS$' => [],
             '$FORM$' => $this->internalCreateUserSettingsForm($user)
         );
 
