@@ -39,9 +39,9 @@ function getDropdownRibbonContent() {
     } else {
         foreach($childRibbons as $ribbon) {
             if($ribbon->hasImage()) {
-                $results[] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
+                $results[] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'toppanel-link', true);
             } else {
-                $results[] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'general-link', true);
+                $results[] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'toppanel-link', true);
             }
         }
     }

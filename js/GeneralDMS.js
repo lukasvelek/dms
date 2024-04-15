@@ -660,7 +660,7 @@ async function showDropdownMenu(_parentRibbonId, _ribbonId) {
     var _posY = _pos.top;
 
     var _dropdownMenuName = "dropdownmenu-ribbon-" + _ribbonId;
-    var _style = "left: " + _posX + "; top: " + _posY + "; background-color:";
+    var _style = "left: " + _posX + "; top: " + _posY + "; background-color:rgba(147, 215, 255)";
     var _code = "<div id=\"" + _dropdownMenuName + "\" style=\"" + _style + "\"></div>";
 
     if($(_dropdownMenuName).length) {

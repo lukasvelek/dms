@@ -122,6 +122,11 @@ class Panels {
         
         if($currentRibbon->hasParent()) {
             $currentIdRibbon = $currentRibbon->getIdParentRibbon();
+
+            $currentRibbon = $app->ribbonModel->getRibbonById($currentIdRibbon);
+            if($currentRibbon !== NULL && $currentRibbon->isJS()) {
+                $currentIdRibbon = $currentRibbon->getIdParentRibbon();
+            }
         }
 
         $subRibbons = $app->ribbonComponent->getChildrenRibbonsVisibleToUser($app->user->getId(), $currentIdRibbon);
@@ -135,7 +140,8 @@ class Panels {
                 $data['$LINKS$'][] = '&nbsp;|';
             } else {
                 if($ribbon->isJS()) {
-                    $data['$LINKS$'][] = '<a class="general-link" href="#" id="dropdown-ribbon-' . $ribbon->getId() . '" onclick="' . $ribbon->getJSMethodName() . '">' . $ribbon->getName() . '</a>';
+                    //$data['$LINKS$'][] = '<a class="general-link" href="#" id="dropdown-ribbon-' . $ribbon->getId() . '" onclick="' . $ribbon->getJSMethodName() . '">' . $ribbon->getName() . '</a>';
+                    $data['$LINKS$'][] = '<span class="toppanel-link" id="dropdown-ribbon-' . $ribbon->getId() . '" style="cursor: pointer" onclick="' . $ribbon->getJSMethodName() . '">' . $ribbon->getName() . '</span>';
                 } else {
                     if($ribbon->hasImage()) {
                         $data['$LINKS$'][] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId() . ((!is_null($idFolder)) ? ('&id_folder=' . $idFolder) : ''), $ribbon->getName(), $ribbon->getImage(), 'toppanel-link', true);

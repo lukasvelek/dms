@@ -42,8 +42,10 @@ class RibbonSettingsPresenter extends APresenter {
             '$LINKS$' => []
         );
 
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showAll'], '&larr;') . '&nbsp;&nbsp;';
+
         if($app->actionAuthorizator->checkActionRight(UserActionRights::CREATE_RIBBONS)) {
-            $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'is_dropdown' => '1', 'id_parent_ribbon' => $ribbon->getId()), 'New ribbon item');
+            $data['$LINKS$'][] = LinkBuilder::createAdvLink(array('page' => 'showNewForm', 'is_dropdown' => '1', 'id_parent_ribbon' => $ribbon->getId()), 'New ribbon item');
         }
 
         $this->templateManager->fill($data, $template);
@@ -483,8 +485,11 @@ class RibbonSettingsPresenter extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'New ' . ($isDropdown ? 'dropdown ' : '') . 'ribbon form',
-            '$FORM$' => $this->internalCreateNewRibbonForm($isDropdown, $idParentRibbon)
+            '$FORM$' => $this->internalCreateNewRibbonForm($isDropdown, $idParentRibbon),
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showAll'], '&larr;');
 
         $this->templateManager->fill($data, $template);
 
