@@ -274,26 +274,29 @@ class SingleDocumentPresenter extends APresenter {
         $app->flashMessageIfNotIsset(['id']);
 
         $id = $this->get('id');
+        $document = $app->documentRepository->getDocumentById($id);
 
         $data = [];
 
         $idGroup = $this->post('group');
         $idFolder = $this->post('folder');
         
-        $data[DocumentMetadata::NAME] = $this->post('name');
-        $data[DocumentMetadata::ID_MANAGER] = $this->post('manager');
-        $data[DocumentMetadata::STATUS] = $this->post('status');
-        $data[DocumentMetadata::ID_GROUP] = $idGroup;
-
-        if($idFolder != '-1') {
-            $data[DocumentMetadata::ID_FOLDER] = $idFolder;
+        if($document->getName() != $this->post('name')) {
+            $data[DocumentMetadata::NAME] = $this->post('name');
         }
-
-        unset($_POST['name']);
-        unset($_POST['manager']);
-        unset($_POST['status']);
-        unset($_POST['group']);
-        unset($_POST['folder']);
+        if($document->getIdManager() != $this->post('manager')) {
+            $data[DocumentMetadata::ID_MANAGER] = $this->post('manager');
+        }
+        if($document->getIdGroup() != $idGroup) {
+            $data[DocumentMetadata::ID_GROUP] = $idGroup;
+        }
+        if($document->getIdFolder() != $idFolder && ($document->getIdFolder() !== NULL) && ($idFolder != '-1')) {
+            if($idFolder != '-1') {
+                $data[DocumentMetadata::ID_FOLDER] = $idFolder;
+            } else {
+                $data[DocumentMetadata::ID_FOLDER] = NULL;
+            }
+        }
 
         ArrayHelper::deleteKeysFromArray($_POST, [
             'name',
@@ -305,15 +308,15 @@ class SingleDocumentPresenter extends APresenter {
 
         $customMetadata = ArrayHelper::formatArrayData($_POST);
 
-        $remove = [];
         foreach($customMetadata as $key => $value) {
-            if($value == 'null') {
-                $remove[] = $key;
+            if($document->getMetadata($key) != $value) {
+                if($value == 'null') {
+                    $data[$key] = NULL;
+                } else {
+                    $data[$key] = $value;
+                }
             }
         }
-
-        ArrayHelper::deleteKeysFromArray($customMetadata, $remove);
-        $data = array_merge($data, $customMetadata);
 
         $app->documentModel->updateDocument($id, $data);
         $app->documentMetadataHistoryModel->insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray($data, $id, $app->user->getId());
@@ -502,10 +505,6 @@ class SingleDocumentPresenter extends APresenter {
                                            ->setFor('manager'))
             ->addElement($fb->createSelect()->setName('manager')
                                             ->addOptionsBasedOnArray($managers))
-            ->addElement($fb->createLabel()->setText('Status')
-                                           ->setFor('status'))
-            ->addElement($fb->createSelect()->setName('status')
-                                            ->addOptionsBasedOnArray($statuses))
             ->addElement($fb->createLabel()->setText('Group')
                                            ->setFor('group'))
             ->addElement($fb->createSelect()->setName('group')

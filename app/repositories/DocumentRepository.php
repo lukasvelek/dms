@@ -37,6 +37,10 @@ class DocumentRepository extends ARepository {
         $this->documentCommentModel = $documentCommentModel;
     }
 
+    public function getDocumentById(int $id) {
+        return $this->documentModel->getDocumentById($id);
+    }
+
     /**
      * Adds a comment to given document
      * 
