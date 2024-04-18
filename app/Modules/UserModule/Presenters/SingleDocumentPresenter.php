@@ -898,48 +898,12 @@ class SingleDocumentPresenter extends APresenter {
 
         $gb->addColumns(['user' => 'User', 'metadataName' => 'Metadata name', 'valueFrom' => 'Value before', 'valueTo' => 'Value to', 'dateCreated' => 'Date']);
         $gb->addDataSourceCallback($dataSource);
-        $gb->addOnColumnRender('valueFrom', function(DocumentMetadataHistoryEntity $entity) use (&$valueBefore, $metadataModel, &$cachedMetadata) {
-            if(empty($valueBefore)) {
-                return '-';
-            } else {
-                if(!array_key_exists($entity->getMetadataName(), $valueBefore)) {
-                    return '-';
-                } else {
-                    $metadataValues = [];
-
-                    if(array_key_exists($entity->getMetadataName(), $cachedMetadata)) {
-                        $metadataValues = $cachedMetadata[$entity->getMetadataName()];
-                    } else {
-                        $metadataEntity = $metadataModel->getMetadataByName($entity->getMetadataName(), 'documents');
-                        
-                        if($metadataEntity === NULL) {
-                            return $valueBefore[$entity->getMetadataName()];
-                        }
-
-                        $metadataValues = $metadataModel->getAllValuesForIdMetadata($metadataEntity->getId());
-
-                        $cachedMetadata[$entity->getMetadataName()] = $metadataValues;
-                    }
-
-                    $value = $entity->getMetadataValue();
-                    foreach($metadataValues as $mv) {
-                        if($mv->getValue() == $entity->getMetadataValue()) {
-                            $value = $mv->getName();
-                        }
-                    }
-
-                    return $value;
-                }
-            }
-        });
         $gb->addOnColumnRender('valueTo', function(DocumentMetadataHistoryEntity $entity) use (&$valueBefore, $metadataModel, &$cachedMetadata) {
             $metadataValues = [];
             
-            if(array_key_exists($entity->getMetadataName(), $cachedMetadata)) {
-                $metadataValues = $cachedMetadata[$entity->getMetadataName()];
-            } else {
+            if(!array_key_exists($entity->getMetadataName(), $cachedMetadata)) {
                 $metadataEntity = $metadataModel->getMetadataByName($entity->getMetadataName(), 'documents');
-                        
+
                 if($metadataEntity === NULL) {
                     $valueBefore[$entity->getMetadataName()] = $entity->getMetadataValue();
                     return $entity->getMetadataValue();
@@ -948,6 +912,8 @@ class SingleDocumentPresenter extends APresenter {
                 $metadataValues = $metadataModel->getAllValuesForIdMetadata($metadataEntity->getId());
 
                 $cachedMetadata[$entity->getMetadataName()] = $metadataValues;
+            } else {
+                $metadataValues = $cachedMetadata[$entity->getMetadataName()];
             }
 
             $value = $entity->getMetadataValue();
@@ -959,6 +925,40 @@ class SingleDocumentPresenter extends APresenter {
 
             $valueBefore[$entity->getMetadataName()] = $entity->getMetadataValue();
             return $value;
+        });
+        $gb->addOnColumnRender('valueFrom', function(DocumentMetadataHistoryEntity $entity) use (&$valueBefore, $metadataModel, &$cachedMetadata) {
+            if(empty($valueBefore)) {
+                return '-';
+            } else {
+                if(!array_key_exists($entity->getMetadataName(), $valueBefore)) {
+                    return '-';
+                } else {
+                    $metadataValues = [];
+
+                    if(!array_key_exists($entity->getMetadataName(), $cachedMetadata)) {
+                        $metadataEntity = $metadataModel->getMetadataByName($entity->getMetadataName(), 'documents');
+
+                        if($metadataEntity === NULL) {
+                            return $valueBefore[$entity->getMetadataName()];
+                        }
+
+                        $metadataValues = $metadataModel->getAllValuesForIdMetadata($metadataEntity->getId());
+        
+                        $cachedMetadata[$entity->getMetadataName()] = $metadataValues;
+                    } else {
+                        $metadataValues = $cachedMetadata[$entity->getMetadataName()];
+                    }
+
+                    $value = $entity->getMetadataValue();
+                    foreach($metadataValues as $mv) {
+                        if($mv->getValue() == $valueBefore[$entity->getMetadataName()]) {
+                            $value = $mv->getName();
+                        }
+                    }
+
+                    return $value;
+                }
+            }
         });
         $gb->addOnColumnRender('user', function(DocumentMetadataHistoryEntity $entity) use (&$users, $userModel, $ucm) {
             if(array_key_exists($entity->getIdUser(), $users)) {
@@ -980,7 +980,7 @@ class SingleDocumentPresenter extends APresenter {
             }
         });
         $gb->reverseData();
-        
+
         return $gb->build();
     }
 }
