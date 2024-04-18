@@ -90,7 +90,7 @@ class Label implements IBuildable {
   public function build() {
     $script = '<label ' . $this->id . ' for="' . $this->for . '">' . $this->text;
 
-    if($this->text[strlen($this->text) - 1] != ':') {
+    if(strlen($this->text) > 0 && $this->text[strlen($this->text) - 1] != ':') {
       $script .= ':';
     }
 

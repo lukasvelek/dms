@@ -17,6 +17,8 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
         $metadata = parent::$defaultMetadata;
         $fileRow = [];
 
+        $result = [];
+
         $this->loadCustomMetadata();
 
         $headerRow = '';
@@ -72,14 +74,14 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
             $fileRow[] = $dataRow . "\r\n";
 
             if(($current % parent::UPDATE_COUNT_CONST) == 0 || ($current + 1) == $total) {
-                $this->saveFile($fileRow, $filename, self::FILE_EXTENSION);
+                $result = $this->saveFile($fileRow, $filename, self::FILE_EXTENSION);
                 $fileRow = [];
             }
 
             $current++;
         }
 
-        return true;
+        return $result;
     }
 }
 

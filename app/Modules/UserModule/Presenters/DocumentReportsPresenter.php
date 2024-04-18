@@ -6,6 +6,7 @@ use DMS\Constants\DocumentReportStatus;
 use DMS\Constants\FileStorageTypes;
 use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\UserActionRights;
+use DMS\Core\ScriptLoader;
 use DMS\Entities\DocumentReportEntity;
 use DMS\Modules\APresenter;
 use DMS\UI\GridBuilder;
@@ -83,7 +84,7 @@ class DocumentReportsPresenter extends APresenter {
     protected function showAll() {
         global $app;
 
-        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-filter-grid.html');
+        $template = $this->templateManager->loadTemplate(__DIR__ . '/templates/documents/document-report-grid.html');
 
         $idUser = $app->user->getId();
         $documentModel = $app->documentModel;
@@ -149,10 +150,16 @@ class DocumentReportsPresenter extends APresenter {
 
         $data = [
             '$PAGE_TITLE$' => 'My document reports',
-            '$BULK_ACTION_CONTROLLER$' => '',
             '$LINKS$' => [],
             '$FILTER_GRID$' => $gb->build()
         ];
+
+        if(isset($_GET['ar']) && $this->get('ar') == '1') {
+            $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => ':'], 'Disable auto refresh');
+            $data['$FILTER_GRID$'] .= '<script type="text/javascript">startup()</script>';
+        } else {
+            $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => ':', 'ar' => '1'], 'Enable auto refresh');
+        }
 
         $this->templateManager->fill($data, $template);
 
