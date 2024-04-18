@@ -269,7 +269,7 @@ class ArchivePresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Archive:processNewDocumentForm' . $idRibbon)
 
-            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
 
             ->addElement($fb->createSubmit('Create'))
@@ -288,7 +288,7 @@ class ArchivePresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Archive:processNewBoxForm' . $idRibbon)
 
-            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
 
             ->addElement($fb->createSubmit('Create'))

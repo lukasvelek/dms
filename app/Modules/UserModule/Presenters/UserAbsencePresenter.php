@@ -217,10 +217,10 @@ class UserAbsencePresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:UserAbsence:processNewAbsenceForm')
             
-            ->addLabel('Date from', 'date_from')
+            ->addLabel('Date from', 'date_from', true)
             ->addElement($fb->createInput()->setType('date')->setName('date_from')->require())
 
-            ->addLabel('Date to', 'date_to')
+            ->addLabel('Date to', 'date_to', true)
             ->addElement($fb->createInput()->setType('date')->setName('date_to')->require())
 
             ->addElement($fb->createSubmit('Create'))
@@ -245,10 +245,10 @@ class UserAbsencePresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:UserAbsence:processEditAbsenceForm&id=' . $id)
             
-            ->addLabel('Date from', 'date_from')
+            ->addLabel('Date from', 'date_from', true)
             ->addElement($fb->createInput()->setType('date')->setName('date_from')->require()->setValue($dateFrom))
 
-            ->addLabel('Date to', 'date_to')
+            ->addLabel('Date to', 'date_to', true)
             ->addElement($fb->createInput()->setType('date')->setName('date_to')->require()->setValue($dateTo))
 
             ->addElement($fb->createSubmit('Save'))

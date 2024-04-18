@@ -492,7 +492,8 @@ class SingleDocumentPresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:SingleDocument:updateDocument&id=' . $document->getId())
             ->addElement($fb->createLabel()->setText('Document name')
-                                           ->setFor('name'))
+                                           ->setFor('name')
+                                           ->setRequired())
             ->addElement($fb->createInput()->setType('text')
                                            ->setName('name')
                                            ->setValue($document->getName())
@@ -832,10 +833,10 @@ class SingleDocumentPresenter extends APresenter {
             ->addElement($fb->createLabel()->setText('User')->setFor('user'))
             ->addElement($fb->createSelect()->setName('user')->addOptionsBasedOnArray($users))
 
-            ->addElement($fb->createLabel()->setText('Date from')->setFor('date_from'))
+            ->addElement($fb->createLabel()->setText('Date from')->setFor('date_from')->setRequired())
             ->addElement($fb->createInput()->setType('date')->setName('date_from')->setValue(date('Y-m-d'))->require())
 
-            ->addElement($fb->createLabel()->setText('Date to')->setFor('date_to'))
+            ->addElement($fb->createLabel()->setText('Date to')->setFor('date_to')->setRequired())
             ->addElement($fb->createInput()->setType('date')->setName('date_to')->require())
 
             ->addElement($fb->createSubmit('Share'))

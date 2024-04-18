@@ -606,7 +606,7 @@ class DocumentFilterPresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:DocumentFilter:processEditFilterForm&id_filter=' . $filter->getId())
             
-            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require()->setValue($filter->getName()))
 
             ->addElement($fb->createLabel()->setText('Description')->setFor('description'))

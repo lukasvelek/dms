@@ -262,13 +262,13 @@ class UserSettingsPresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:UserSettings:processBlockUserForm&id_user=' . $idUser)
             
-            ->addLabel('Date from', 'date_from')
+            ->addLabel('Date from', 'date_from', true)
             ->addElement($fb->createInput()->setType('date')->setName('date_from')->setMin(date('Y-m-d'))->require())
 
             ->addLabel('Date to', 'date_to')
             ->addElement($fb->createInput()->setType('date')->setName('date_to'))
 
-            ->addLabel('Description', 'description')
+            ->addLabel('Description', 'description', true)
             ->addElement($fb->createTextArea()->setName('description')->require())
 
             ->addElement($fb->createSubmit('Block'))
@@ -322,13 +322,13 @@ class UserSettingsPresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:UserSettings:processBlockUserEditForm&id=' . $entity->getId())
             
-            ->addLabel('Date from', 'date_from')
+            ->addLabel('Date from', 'date_from', true)
             ->addElement($fb->createInput()->setType('date')->setName('date_from')->setMin(date('Y-m-d'))->require()->setValue($entity->getDateFrom()))
 
             ->addLabel('Date to', 'date_to')
             ->addElement($dateTo)
 
-            ->addLabel('Description', 'description')
+            ->addLabel('Description', 'description', true)
             ->addElement($fb->createTextArea()->setName('description')->require()->setText($entity->getDescription()))
 
             ->addElement($fb->createSubmit('Edit block'))

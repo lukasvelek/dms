@@ -282,13 +282,13 @@ class ServiceSettingsPresenter extends APresenter {
         }
 
         $fb ->setAction('?page=UserModule:ServiceSettings:processEditServiceForm&id=' . $service->getId())->setMethod('POST')
-            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
+            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('system_name')->require()->setValue($service->getSystemName())->readonlyIfBoolTrue($service->isSystem()))
 
-            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name'))
+            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('display_name')->require()->setValue($service->getDisplayName())->readonlyIfBoolTrue($service->isSystem()))
 
-            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('description')->require()->setValue($service->getDescription())->readonlyIfBoolTrue($service->isSystem()))
 
             ->addElement($fb->createLabel()->setFor('is_enabled')->setText('Enable'))
@@ -516,13 +516,13 @@ class ServiceSettingsPresenter extends APresenter {
         $fb = new FormBuilder();
 
         $fb ->setAction('?page=UserModule:Settings:processNewServiceForm')->setMethod('POST')
-            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name'))
+            ->addElement($fb->createLabel()->setFor('system_name')->setText('System name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('system_name')->require())
 
-            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name'))
+            ->addElement($fb->createLabel()->setFor('display_name')->setText('Display name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('display_name')->require())
 
-            ->addElement($fb->createLabel()->setFor('description')->setText('Description'))
+            ->addElement($fb->createLabel()->setFor('description')->setText('Description')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('description')->require())
 
             ->addElement($fb->createLabel()->setFor('is_enabled')->setText('Enable'))

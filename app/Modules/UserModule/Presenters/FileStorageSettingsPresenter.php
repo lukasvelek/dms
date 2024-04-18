@@ -244,13 +244,13 @@ class FileStorageSettingsPresenter extends APresenter {
         }
 
         $fb ->setAction('?page=UserModule:FileStorageSettings:processNewLocationForm')->setMethod('POST')
-            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('name')->require()->setPlaceHolder('File storage 1'))
 
-            ->addElement($fb->createLabel()->setText('Path')->setFor('path'))
+            ->addElement($fb->createLabel()->setText('Path')->setFor('path')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('path')->require()->setPlaceHolder('C:\\wwwroot\\' . (str_replace('/', '', AppConfiguration::getAbsoluteAppDir())) . '\\files\\'))
 
-            ->addElement($fb->createLabel()->setText('Absolute path')->setFor('absolute_path'))
+            ->addElement($fb->createLabel()->setText('Absolute path')->setFor('absolute_path')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('absolute_path')->require()->setPlaceHolder(AppConfiguration::getAbsoluteAppDir() . 'files/'))
 
             ->addElement($fb->createLabel()->setText('Storage type')->setFor('type'))

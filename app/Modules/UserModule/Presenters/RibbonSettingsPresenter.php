@@ -719,13 +719,13 @@ class RibbonSettingsPresenter extends APresenter {
             ->setAction('?page=UserModule:RibbonSettings:processNewForm' . ($isDropdown ? '&parent=' . $idParentRibbon : ''))
             ->setMethod('POST')
 
-            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require())
 
             ->addElement($fb->createLabel()->setText('Title (display name, can be same as Name)'))
             ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256'))
 
-            ->addElement($fb->createLabel()->setText('Code')->setFor('code'))
+            ->addElement($fb->createLabel()->setText('Code')->setFor('code')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('code')->setMaxLength('256')->require())
 
             ->addElement($fb->createLabel()->setText('Page URL')->setFor('page_url'))
@@ -799,13 +799,13 @@ class RibbonSettingsPresenter extends APresenter {
             ->setAction('?page=UserModule:RibbonSettings:processEditForm&id=' . $ribbon->getId())
             ->setMethod('POST')
 
-            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('name')->setMaxLength('256')->require()->setValue($ribbon->getName()))
             
             ->addElement($fb->createLabel()->setText('Title (display name, can be same as Name)'))
             ->addElement($fb->createInput()->setType('text')->setName('title')->setMaxLength('256')->setValue($ribbon->getTitle(true) ?? ''))
             
-            ->addElement($fb->createLabel()->setText('Code'))
+            ->addElement($fb->createLabel()->setText('Code')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('code')->setMaxLength('256')->require()->setValue($ribbon->getCode()))
             
             ->addElement($fb->createLabel()->setText('Page URL'))

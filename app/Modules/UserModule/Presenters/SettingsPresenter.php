@@ -882,7 +882,7 @@ class SettingsPresenter extends APresenter {
         $fb = FormBuilder::getTemporaryObject();
 
         $fb ->setAction('?page=UserModule:Settings:createNewGroup')->setMethod('POST')
-            ->addElement($fb->createLabel()->setFor('name')->setText('Group name'))
+            ->addElement($fb->createLabel()->setFor('name')->setText('Group name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('name')->require())
 
             ->addElement($fb->createLabel()->setFor('code')->setText('Code'))
@@ -900,22 +900,22 @@ class SettingsPresenter extends APresenter {
         $fb = FormBuilder::getTemporaryObject();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewUser')
-            ->addElement($fb->createLabel()->setFor('firstname')->setText('First name'))
+            ->addElement($fb->createLabel()->setFor('firstname')->setText('First name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('firstname')->require())
 
-            ->addElement($fb->createLabel()->setFor('lastname')->setText('Last name'))
+            ->addElement($fb->createLabel()->setFor('lastname')->setText('Last name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('lastname')->require())
 
             ->addElement($fb->createLabel()->setFor('email')->setText('Email'))
             ->addElement($fb->createInput()->setType('email')->setName('email'))
 
-            ->addElement($fb->createLabel()->setFor('username')->setText('Username'))
+            ->addElement($fb->createLabel()->setFor('username')->setText('Username')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('username')->require())
 
-            ->addElement($fb->createLabel()->setFor('password')->setText('Password'))
+            ->addElement($fb->createLabel()->setFor('password')->setText('Password')->setRequired())
             ->addElement($fb->createInput()->setType('password')->setName('password')->require())
             
-            ->addElement($fb->createLabel()->setFor('password2')->setText('Password again'))
+            ->addElement($fb->createLabel()->setFor('password2')->setText('Password again')->setRequired())
             ->addElement($fb->createInput()->setType('password')->setName('password2')->require())
 
             ->addElement($fb->createLabel()->setText('Address'))
@@ -947,10 +947,10 @@ class SettingsPresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Setttings:processEditMetadataForm&id_metadata=' . $metadata->getId())
 
-            ->addElement($fb->createLabel()->setText('Name')->setFor('name'))
+            ->addElement($fb->createLabel()->setText('Name')->setFor('name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('name')->setValue($metadata->getName())->disable()->require())
 
-            ->addElement($fb->createLabel()->setText('Text')->setFor('text'))
+            ->addElement($fb->createLabel()->setText('Text')->setFor('text')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('text')->setValue($metadata->getText())->require())
 
             ->addElement($fb->createLabel()->setFor('readonly')->setText('Readonly'))
@@ -998,10 +998,10 @@ class SettingsPresenter extends APresenter {
         }
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewMetadata')->setId('new_metadata_form')
-            ->addElement($fb->createLabel()->setFor('name')->setText('Name'))
+            ->addElement($fb->createLabel()->setFor('name')->setText('Name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('name')->require())
 
-            ->addElement($fb->createLabel()->setFor('text')->setText('Text'))
+            ->addElement($fb->createLabel()->setFor('text')->setText('Text')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('text')->require())
 
             ->addElement($fb->createLabel()->setFor('table_name')->setText('Database table'))
@@ -1010,7 +1010,7 @@ class SettingsPresenter extends APresenter {
             ->addElement($fb->createLabel()->setFor('input_type')->setText('Metadata input type'))
             ->addElement($fb->createSelect()->setName('input_type')->addOptionsBasedOnArray($metadataInputTypes)->setId('input_type'))
 
-            ->addElement($fb->createLabel()->setFor('length')->setText('Length'))
+            ->addElement($fb->createLabel()->setFor('length')->setText('Length')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('length')->require()->setId('length')->setValue(''))
 
             ->addElement($fb->createLabel()->setFor('select_external_enum')->setText('External select enumerator'))
@@ -1240,7 +1240,7 @@ class SettingsPresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:processUpdateFolderForm&id_folder=' . $idFolder)
 
-            ->addElement($fb->createLabel()->setFor(FolderMetadata::NAME)->setText('Name'))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::NAME)->setText('Name')->setRequired())
             ->addElement($fb->createInput()->setType('input')->setName(FolderMetadata::NAME)->setValue($folder->getName())->require())
 
             ->addElement($fb->createLabel()->setFor(FolderMetadata::ID_PARENT_FOLDER)->setText('Parent folder'))
@@ -1285,7 +1285,7 @@ class SettingsPresenter extends APresenter {
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewFolder')
 
-            ->addElement($fb->createLabel()->setFor(FolderMetadata::NAME)->setText('Name'))
+            ->addElement($fb->createLabel()->setFor(FolderMetadata::NAME)->setText('Name')->setRequired())
             ->addElement($fb->createInput()->setType('input')->setName(FolderMetadata::NAME)->require())
 
             ->addElement($fb->createLabel()->setFor(FolderMetadata::ID_PARENT_FOLDER)->setText('Parent folder'))

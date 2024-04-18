@@ -733,7 +733,8 @@ class DocumentsPresenter extends APresenter {
         $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')->setEncType()
 
             ->addElement($fb->createLabel()->setText('Document name')
-                                           ->setFor('name'))
+                                           ->setFor('name')
+                                           ->setRequired())
             ->addElement($name)
 
             ->addElement($fb->createLabel()->setText('Manager')

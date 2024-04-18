@@ -795,10 +795,10 @@ class UsersPresenter extends APresenter {
         $fb = FormBuilder::getTemporaryObject();
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Users:saveUserEdit&id=' . $user->getId())
-            ->addElement($fb->createLabel()->setFor('firstname')->setText('First name'))
+            ->addElement($fb->createLabel()->setFor('firstname')->setText('First name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('firstname')->require()->setValue($user->getFirstname() ?? ''))
 
-            ->addElement($fb->createLabel()->setFor('lastname')->setText('Last name'))
+            ->addElement($fb->createLabel()->setFor('lastname')->setText('Last name')->setRequired())
             ->addElement($fb->createInput()->setType('text')->setName('lastname')->require()->setValue($user->getLastname() ?? ''))
 
             ->addElement($fb->createlabel()->setFor('email')->setText('Email'))
@@ -838,13 +838,13 @@ class UsersPresenter extends APresenter {
         ->setMethod('POST')
         ->setAction('?page=UserModule:Users:changePassword&id=' . $user->getId())
 
-        ->addElement($fb->createLabel()->setFor('current_password')->setText('Current password'))
+        ->addElement($fb->createLabel()->setFor('current_password')->setText('Current password')->setRequired())
         ->addElement($fb->createInput()->setType('password')->setName('current_password')->require())
 
-        ->addElement($fb->createLabel()->setFor('password1')->setText('New password'))
+        ->addElement($fb->createLabel()->setFor('password1')->setText('New password')->setRequired())
         ->addElement($fb->createInput()->setType('password')->setName('password1')->require())
 
-        ->addElement($fb->createLabel()->setFor('password2')->setText('New password again'))
+        ->addElement($fb->createLabel()->setFor('password2')->setText('New password again')->setRequired())
         ->addElement($fb->createInput()->setType('password')->setName('password2')->require())
 
         ->addElement($fb->createSubmit('Save')->setId('submit'))

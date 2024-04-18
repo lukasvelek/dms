@@ -192,11 +192,11 @@ class UserReloginPresenter extends APresenter {
             ->addElement($fb->createLabel()->setText('User')->setFor('user'))
             ->addElement($fb->createSelect()->setName('user')->addOptionsBasedOnArray($usersArr))
 
-            ->addLabel('My password', 'my_password')
-            ->addPassword('my_password')
+            ->addLabel('My password', 'my_password', true)
+            ->addPassword('my_password', '', '', true)
 
-            ->addLabel('Connected user\'s password', 'user_password')
-            ->addPassword('user_password')
+            ->addLabel('Connected user\'s password', 'user_password', true)
+            ->addPassword('user_password', '', '', true)
 
             ->addElement($fb->createSubmit('Create'))
         ;
