@@ -15,6 +15,7 @@ use DMS\Constants\ProcessTypes;
 use DMS\Constants\Ribbons;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CryptManager;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\LogFileTypes;
@@ -2038,11 +2039,22 @@ class DatabaseInstaller {
             ]
         ];
 
+        if(empty(AppConfiguration::getMailServer()) || AppConfiguration::getMailServer() == '') {
+            $services['MailService']['is_enabled'] = '0';
+        }
+
         $this->db->beginTransaction();
 
         foreach($services as $serviceName => $serviceData) {
             $sql = "INSERT INTO `services` (`system_name`, `display_name`, `description`, `is_enabled`, `is_system`) VALUES (";
-            $sql .= "'$serviceName', '" . $serviceData['display_name'] . "', '" . $serviceData['description'] . "', '1', '1'";
+
+            $isEnabled = '1';
+
+            if(isset($serviceName['is_enabled']) && $serviceName['is_enabled'] == '0') {
+                $isEnabled = '0';
+            }
+
+            $sql .= "'$serviceName', '" . $serviceData['display_name'] . "', '" . $serviceData['description'] . "', '" . $isEnabled . "', '1'";
             $sql .= ")";
 
             $this->logger->sql($sql, __METHOD__);
