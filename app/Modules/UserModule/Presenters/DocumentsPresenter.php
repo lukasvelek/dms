@@ -595,34 +595,7 @@ class DocumentsPresenter extends APresenter {
             ScriptLoader::alert('No ranks found!', array('UserModule:Documents:showAll'));
         }
 
-        $dbFolders = $app->folderModel->getAllFolders();
-        $folders = array(
-            array(
-                'value' => '-1',
-                'text' => '-'
-            )
-        );
-
-        if(count($dbFolders) > 0) {
-            foreach($dbFolders as $dbf) {
-                $text = $dbf->getName();
-    
-                for($i = 0; $i < $dbf->getNestLevel(); $i++) {
-                    $text = '&nbsp;&nbsp;' . $text;
-                }
-    
-                $folder = array(
-                    'value' => $dbf->getId(),
-                    'text' => $text
-                );
-    
-                if($idFolder != null && $idFolder == $dbf->getId()) {
-                    $folder['selected'] = 'selected';
-                }
-    
-                $folders[] = $folder;
-            }
-        }
+        $folders = DocumentFolderListHelper::getSelectFolderList($app->folderModel, $idFolder);
 
         $shredYears = [];
         for($i = 1950; $i < 2200; $i++) {

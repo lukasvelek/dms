@@ -20,6 +20,7 @@ use DMS\Entities\DocumentLockEntity;
 use DMS\Entities\DocumentMetadataHistoryEntity;
 use DMS\Helpers\ArrayHelper;
 use DMS\Helpers\DatetimeFormatHelper;
+use DMS\Helpers\DocumentFolderListHelper;
 use DMS\Helpers\TextHelper;
 use DMS\Modules\APresenter;
 use DMS\UI\FormBuilder\FormBuilder;
@@ -401,32 +402,7 @@ class SingleDocumentPresenter extends APresenter {
             $ranks[] = $rank;
         }
 
-        $dbFolders = $app->folderModel->getAllFolders();
-
-        $folders = [];
-        $folders[] = array(
-            'value' => '-1',
-            'text' => '-'
-        );
-
-        foreach($dbFolders as $dbf) {
-            $text = $dbf->getName();
-
-            for($i = 0; $i < $dbf->getNestLevel(); $i++) {
-                $text = '&nbsp;&nbsp;' . $text;
-            }
-
-            $folder = array(
-                'value' => $dbf->getId(),
-                'text' => $text
-            );
-
-            if($document->getIdFolder() == $dbf->getId()) {
-                $folder['selected'] = 'selected';
-            }
-
-            $folders[] = $folder;
-        }
+        $folders = DocumentFolderListHelper::getSelectFolderList($app->folderModel, $document->getIdFolder());
 
         $customMetadata = $app->metadataModel->getAllMetadataForTableName('documents');
         // name = array('text' => 'text', 'options' => 'options from metadata_values')

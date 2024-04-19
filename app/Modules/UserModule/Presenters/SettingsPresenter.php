@@ -1268,22 +1268,7 @@ class SettingsPresenter extends APresenter {
             $foldersDb = $app->folderModel->getAllFolders();
         }, __METHOD__);
 
-        $foldersArr = array(array(
-            'value' => '-1',
-            'text' => 'None'
-        ));
-        foreach($foldersDb as $fdb) {
-            $temp = array(
-                'value' => $fdb->getId(),
-                'text' => $fdb->getName()
-            );
-
-            if(!is_null($idParentFolder) && $fdb->getId() == $idParentFolder) {
-                $temp['selected'] = 'selected';
-            }
-
-            $foldersArr[] = $temp;
-        }
+        $foldersArr = DocumentFolderListHelper::getSelectFolderList($app->folderModel, $idParentFolder);
 
         $fb ->setMethod('POST')->setAction('?page=UserModule:Settings:createNewFolder')
 
