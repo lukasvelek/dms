@@ -88,7 +88,7 @@ class FileStorageSettingsPresenter extends APresenter {
             $data['$LINKS$'][] = LinkBuilder::createLink('showNewLocationForm', 'New location');
         }
 
-        $data['$LINKS$'][] = '&nbsp;&nbsp;' . LinkBuilder::createLink(':', 'Refresh');
+        $data['$LINKS$'][] = '&nbsp;&nbsp;<span class="general-link" style="cursor: pointer" onclick="loadFileStorageLocations(false)">Refresh</span>';
 
         $this->templateManager->fill($data, $template);
 

@@ -853,10 +853,13 @@ async function loadMetadata(_page) {
     });
 }
 
-async function loadFileStorageLocations() {
+async function loadFileStorageLocations(sleepEnabled = true) {
     $('#grid-loading').show();
 
-    await sleep(general_sleep_length);
+    if(sleepEnabled == true) {
+        await sleep(general_sleep_length);
+    }
+
 
     $.ajax({
         url: 'app/ajax/FileStorageSettings.php',
