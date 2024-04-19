@@ -2,6 +2,19 @@
 
 namespace DMS\UI;
 
+/**
+ * Grid builder is a component used to create data grids or tables.
+ * 
+ * Functions supported:
+ * - adding checkboxes
+ * - data reversing
+ * - custom column definitions
+ * - custom value parsing (using functions defined by user)
+ * - row actions (info, edit, delete, etc.)
+ * 
+ * @author Lukas Velek
+ * @version 1.1
+ */
 class GridBuilder {
     private array $actions;
     private array $columns;
@@ -20,6 +33,9 @@ class GridBuilder {
     private bool $alwaysDrawHeaderCheckbox;
     private bool $displayNoEntriesMessage;
 
+    /**
+     * Grid builder constructor
+     */
     public function __construct() {
         $this->columns = [];
         $this->actions = [];
@@ -37,57 +53,109 @@ class GridBuilder {
         $this->displayNoEntriesMessage = true;
     }
 
-    public function reverseData() {
-        $this->reverse = true;
+    /**
+     * Reverses table data (rows)
+     * 
+     * @param bool $reverse True if reversing is enabled or false if not
+     */
+    public function reverseData(bool $reverse = true) {
+        $this->reverse = $reverse;
     }
 
+    /**
+     * Adds checkbox to the header of the table (column head names)
+     * 
+     * @param string $id HTML input element ID
+     * @param string $onChange HTML input element onchange JS function
+     * @param bool $drawAlways True if the header checkbox should be always drawn or false if not
+     */
     public function addHeaderCheckbox(string $id, string $onChange, bool $drawAlways = false) {
         $this->headerCheckbox = '<input type="checkbox" id="' . $id . '" onchange="' . $onChange . '">';
         $this->alwaysDrawHeaderCheckbox = $drawAlways;
     }
 
+    /**
+     * Adds checkbox to each table row
+     * 
+     * @param callable $renderRowCheckbox Method called when drawing the checkbox
+     */
     public function addRowCheckbox(callable $renderRowCheckbox) {
         $this->renderRowCheckbox = $renderRowCheckbox;
     }
 
+    /**
+     * Adds custom table element render
+     * 
+     * @param string $entityVarName Name of the column header
+     * @param callable $func Method called when rendering
+     */
     public function addOnColumnRender(string $entityVarName, callable $func) {
         $this->callbacks[$entityVarName] = $func;
     }
 
-    public function addColumn(string $entityVarName, string $title) {
-        $this->columns[$entityVarName] = $title;
-    }
-
+    /**
+     * Adds column headers
+     * 
+     * @param array $columns Column names
+     */
     public function addColumns(array $columns) {
         foreach($columns as $k => $v) {
             $this->columns[$k] = $v;
         }
     }
 
+    /**
+     * Adds row action
+     * 
+     * The internal function passes a entity object as a parameter to the function.
+     * 
+     * @param callable $createUrl Method used for rendering the action
+     */
     public function addAction(callable $createUrl) {
         $this->actions[] = $createUrl;
     }
 
+    /**
+     * Adds data source as an array
+     * 
+     * @param array $objectArray Array of objects
+     */
     public function addDataSource(array $objectArray) {
         $this->dataSourceArray = $objectArray;
     }
 
+    /**
+     * Adds data source as a callback
+     * 
+     * @param callable $dataSourceCallback Method used for obtaining table data
+     */
     public function addDataSourceCallback(callable $dataSourceCallback) {
         $this->dataSourceCallback = $dataSourceCallback;
     }
 
-    public function addEmptyDataSourceMessage(string $text) {
+    /**
+     * Sets custom message that is shown if the data source (or table respectively) is empty
+     * 
+     * @param string $text Custom message
+     */
+    public function setCustomEmptyDataSourceMessage(string $text) {
         $this->emptyDataSourceMessage = $text;
     }
 
+    /**
+     * Sets custom table border
+     * 
+     * @param int $border Table border
+     */
     public function setTableBorder(int $border) {
         $this->tableBorder = $border;
     }
 
-    public function setDisplayNoEntriesMessage(bool $display = true) {
-        $this->displayNoEntriesMessage = $display;
-    }
-
+    /**
+     * Method that builds the table and returns its HTML code
+     * 
+     * @return string HTML table code
+     */
     public function build() {
         $code = '<table border="' . $this->tableBorder . '" id="tablebuilder-table">';
 
@@ -202,17 +270,6 @@ class GridBuilder {
         $code .= '</table>';
 
         return $code;
-    }
-
-    public static function createEmptyGrid(array $columns, bool $displayNoDataMessage = false, bool $addHeaderCheckbox = false, string $headerCheckboxId = '', string $headerCheckboxAction = '') {
-        $gb = new self();
-        $gb->addColumns($columns);
-        $gb->addDataSource([]);
-        if($addHeaderCheckbox === TRUE) {
-            $gb->addHeaderCheckbox($headerCheckboxId, $headerCheckboxAction, true);
-        }
-        $gb->setDisplayNoEntriesMessage($displayNoDataMessage);
-        return $gb->build();
     }
 }
 
