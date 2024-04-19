@@ -257,13 +257,13 @@ class SettingsPresenter extends APresenter {
     protected function processUpdateFolderForm() {
         global $app;
 
-        $app->flashMessageIfNotIsset(['name', 'parent_folder', 'id_folder']);
+        $app->flashMessageIfNotIsset(['name', 'id_parent_folder', 'id_folder']);
 
         $idFolder = $this->get('id_folder');
         
         $data = [];
 
-        $parentFolder = $this->post('parent_folder');
+        $parentFolder = $this->post('id_parent_folder');
         $nestLevel = 0;
 
         $data[FolderMetadata::NAME] = $this->post('name');
