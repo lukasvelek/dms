@@ -165,7 +165,7 @@ class UsersPresenter extends APresenter {
             $id = $this->get('id');
         }
 
-        $user = $app->userModel->getUserById($id);
+        $user = $app->userRepository->getUserById($id);
 
         if(is_null($user)) {
             $app->flashMessage('User #' . $id . ' does not exist!', 'error');
