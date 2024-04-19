@@ -286,6 +286,10 @@ class SettingsPresenter extends APresenter {
             if($nestLevel == AppConfiguration::getFolderMaxNestLevel()) {
                 $create = false;
             }
+
+            $lastOrderForParentFolder = $app->folderModel->getLastOrderForParentFolder($parentFolder);
+
+            $data[FolderMetadata::ORDER] = $lastOrderForParentFolder + 1;
         }
 
         $data[FolderMetadata::NEST_LEVEL] = $nestLevel;
@@ -293,12 +297,10 @@ class SettingsPresenter extends APresenter {
         if($create == true) {
             $app->folderModel->updateFolder($idFolder, $data);
         }
-
-        $idFolder = $app->folderModel->getLastInsertedFolder()->getId();
         
-        $app->logger->info('Inserted new folder #' . $idFolder, __METHOD__);
+        $app->logger->info('Updated folder #' . $idFolder, __METHOD__);
 
-        if($parentFolder != '-1') {
+        if($parentFolder !== NULL) {
             $app->redirect('showFolders', array('id_folder' => $idFolder));
         } else {
             $app->redirect('showFolders');

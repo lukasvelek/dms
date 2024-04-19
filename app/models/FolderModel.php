@@ -12,6 +12,19 @@ class FolderModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getLastOrderForParentFolder(int $idFolder) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['ordering'])
+            ->from('folders')
+            ->where('id_parent_folder = ?', [$idFolder])
+            ->orderBy('ordering', 'DESC')
+            ->limit(1)
+            ->execute();
+
+        return $qb->fetch('ordering');
+    }
+
     public function getFolderByOrderAndParentFolder(?int $idFolder, int $order) {
         $qb = $this->qb(__METHOD__);
 

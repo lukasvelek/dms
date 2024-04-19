@@ -49,7 +49,7 @@ class DocumentFolderListHelper {
 
         $spaces = '&nbsp;&nbsp;';
 
-        if($level > 0) {
+        if($level >= 0) {
             for($i = 0; $i < $level; $i++) {
                 $spaces .= '&nbsp;&nbsp;';
             }
