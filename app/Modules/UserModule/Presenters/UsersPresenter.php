@@ -103,8 +103,11 @@ class UsersPresenter extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Update password for user <i>' . $user->getFullname() . '</i>',
-            '$FORM$' => $this->internalCreateChangePasswordForm($user)
+            '$FORM$' => $this->internalCreateChangePasswordForm($user),
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showProfile', 'id' => $id], '&larr;');
 
         $this->templateManager->fill($data, $template);
 
@@ -278,8 +281,11 @@ class UsersPresenter extends APresenter {
 
         $data = array(
             '$PAGE_TITLE$' => 'Edit user \'' . $user->getFullname() . '\'',
-            '$FORM$' => $this->internalCreateEditUserForm($user)
+            '$FORM$' => $this->internalCreateEditUserForm($user),
+            '$LINKS$' => []
         );
+
+        $data['$LINKS$'][] = LinkBuilder::createAdvLink(['page' => 'showProfile', 'id' => $id], '&larr;');
 
         $this->templateManager->fill($data, $template);
 
