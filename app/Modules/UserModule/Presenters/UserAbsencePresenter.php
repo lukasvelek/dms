@@ -170,7 +170,7 @@ class UserAbsencePresenter extends APresenter {
     }
 
     protected function showMyAbsence() {
-        $template = $this->loadTemplate(__DIR__ . '/templates/users/user-profile-grid.html');
+        $template = $this->loadTemplate(__DIR__ . '/templates/users/user-absence-grid.html');
 
         $data = [
             '$PAGE_TITLE$' => 'My absence',
