@@ -95,7 +95,7 @@ function loadProgress() {
         }
     });
 
-    echo $gb->build(); 
+    echo $gb->build();
 }
 
 ?>
