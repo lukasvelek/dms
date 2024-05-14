@@ -36,6 +36,16 @@ class ArrayHelper {
         $array = $temp;
         return $array;
     }
+
+    public static function escapeArrayData(array &$array) {
+        $temp = [];
+        foreach($array as $key => $value) {
+            $temp[$key] = str_replace('\\', '\\\\', $value);
+        }
+
+        $array = $temp;
+        return $array;
+    }
 }
 
 ?>

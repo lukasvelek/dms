@@ -9,10 +9,12 @@ use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentShreddingStatus;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\FileStorageTypes;
+use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\MetadataInputType;
 use DMS\Core\CacheManager;
 use DMS\Core\FileManager;
 use DMS\Core\FileStorageManager;
+use DMS\Entities\FileStorageLocation;
 
 abstract class ADocumentReport {
     public const SUPPORTED_EXTENSIONS = [
@@ -21,6 +23,9 @@ abstract class ADocumentReport {
         'json' => 'JSON'
     ];
 
+    protected const UPDATE_COUNT_CONST = 1000;
+    public const SYNCHRONOUS_COUNT_CONST = 1000;
+    
     protected static $defaultMetadata = [
         'id', 'id_folder', 'name', 'date_created', 'date_updated', 'id_officer', 'id_manager', 'status', 'id_group', 'is_deleted', 'rank', 'file', 'shred_year', 'after_shred_action', 'shredding_status', 'id_archive_document', 'id_archive_box', 'id_archive_archive'
     ];
@@ -34,6 +39,9 @@ abstract class ADocumentReport {
     protected int $idCallingUser;
     protected ?string $filename;
     protected array $customValues;
+    protected ?int $idReport;
+
+    private ?FileStorageLocation $reportStorageObj;
 
     protected array $customMetadataValues = [
         'id_folder',
@@ -50,7 +58,7 @@ abstract class ADocumentReport {
         'shredding_status'
     ];
 
-    protected function __construct(ExternalEnumComponent $eec, FileManager $fm, FileStorageManager $fsm, mixed $sqlResult, int $idCallingUser, array $models) {
+    protected function __construct(ExternalEnumComponent $eec, FileManager $fm, FileStorageManager $fsm, mixed $sqlResult, int $idCallingUser, array $models, ?int $idReport) {
         $this->eec = $eec;
         $this->fm = $fm;
         $this->fsm = $fsm;
@@ -59,6 +67,9 @@ abstract class ADocumentReport {
         $this->models = $models;
         $this->filename = null;
         $this->customValues = [];
+        $this->idReport = $idReport;
+
+        $this->reportStorageObj = null;
 
         $this->cacheManagers = [
             'users' => CacheManager::getTemporaryObject(CacheCategories::USERS),
@@ -75,8 +86,12 @@ abstract class ADocumentReport {
         }
     }
 
-    protected function generateFilename(int $idUser, string $extension) {
-        return $idUser . '_' . date('Y-m-d_H-i-s') . '_document_report.' . $extension;
+    protected function generateFilename(int $idUser, string $extension = '') {
+        if($extension !== '') {
+            return $idUser . '_' . date('Y-m-d_H-i-s') . '_document_report.' . $extension;
+        } else {
+            return $idUser . '_' . date('Y-m-d_H-i-s') . '_document_report';
+        }
     }
 
     protected function loadCustomMetadata() {
@@ -219,41 +234,59 @@ abstract class ADocumentReport {
         return $value;
     }
 
-    protected function saveFile(string|array $data, ?string $filename = null, ?string $fileextension = null) {
+    protected function saveFile(string|array $data, ?string $filename = null, ?string $fileextension = null, bool $append = true) {
         if($filename === NULL) {
-            $filename = $this->generateFilename($this->idCallingUser, $fileextension);
+            if($this->filename === NULL) {
+                $filename = $this->generateFilename($this->idCallingUser, $fileextension);
+                $this->filename = $filename;
+            } else {
+                $filename = $this->filename;
+            }
         }
 
-        $reportStorageObj = $this->fsm->getDefaultLocationForStorageType(FileStorageTypes::DOCUMENT_REPORTS);
+        if($this->reportStorageObj === NULL) {
+            $this->reportStorageObj = $this->fsm->getDefaultLocationForStorageType(FileStorageTypes::DOCUMENT_REPORTS);
+        }
 
-        if($reportStorageObj === NULL) {
+
+        if($this->reportStorageObj === NULL) {
             die('Report storage is null (DocumentReportGeneratorComponent::' . __METHOD__ . '())');
             exit;
         } else {
-            $reportStorage = $reportStorageObj->getPath();
+            $reportStorage = $this->reportStorageObj->getPath();
         }
 
-        $defaultFilename = $filename;
-        $i = 1;
-        while($this->fm->fileExists($reportStorage . $filename)) {
-            $filename = explode('.', $defaultFilename)[0];
-            $filename = $filename . ' (' . $i . ').' . $fileextension;
-            $i++;
+        if($append === FALSE) {
+            $defaultFilename = $filename;
+            $i = 1;
+            while($this->fm->fileExists($reportStorage . $filename)) {
+                $filename = explode('.', $defaultFilename)[0];
+                $filename = $filename . ' (' . $i . ').' . $fileextension;
+                $i++;
+            }
         }
 
-        $writeResult = $this->fm->write($reportStorage . $filename, $data, false);
+        $writeResult = $this->fm->write($reportStorage . $filename, $data, !$append);
 
         if($writeResult === TRUE) {
-            $path = $reportStorageObj->getPath();
+            $path = $this->reportStorageObj->getPath();
             $path = str_replace('\\', '\\\\', $path);
             return [
-                'file_src' => $reportStorageObj->getAbsolutePath() . $filename,
+                'file_src' => $this->reportStorageObj->getAbsolutePath() . $filename,
                 'file_name' => $filename,
-                'id_file_storage_location' => $reportStorageObj->getId()
+                'id_file_storage_location' => $this->reportStorageObj->getId()
             ];
         } else {
             return false;
         }
+    }
+
+    protected function calcFinishedPercent(int $current, int $total) {
+        return (int)(($current / $total) * 100);
+    }
+
+    protected function updateFinishedProcent(int $procent, int $idReport) {
+        return $this->models['documentModel']->updateDocumentReportQueueEntry($idReport, [DocumentReportMetadata::PERCENT_FINISHED => $procent]);
     }
 }
 

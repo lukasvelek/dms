@@ -14,6 +14,7 @@ class Label implements IBuildable {
   private string $for;
   private string $text;
   private string $id;
+  private bool $required;
 
   public string $script;
 
@@ -26,6 +27,7 @@ class Label implements IBuildable {
     $this->for = '';
     $this->text = '';
     $this->id = '';
+    $this->required = false;
 
     $this->script = '';
 
@@ -69,12 +71,34 @@ class Label implements IBuildable {
   }
 
   /**
+   * Sets the label as a label for a required element
+   * 
+   * @param bool $required True if the element is required or false if not
+   * @return self
+   */
+  public function setRequired(bool $required = true) {
+    $this->required = $required;
+    
+    return $this;
+  }
+
+  /**
    * Converts the label class to HTML code
    * 
    * @return self
    */
   public function build() {
-    $script = '<label ' . $this->id . ' for="' . $this->for . '">' . $this->text . '</label>';
+    $script = '<label ' . $this->id . ' for="' . $this->for . '">' . $this->text;
+
+    if(strlen($this->text) > 0 && $this->text[strlen($this->text) - 1] != ':') {
+      $script .= ':';
+    }
+
+    if($this->required === TRUE) {
+      $script .= '<span style="color: red"> *</span>';
+    }
+
+    $script .= '</label>';
 
     $this->script = $script;
 

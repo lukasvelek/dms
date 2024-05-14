@@ -62,6 +62,10 @@ body {
     background-color: lightgrey;
 }
 
+.page-supertitle {
+    font-size: 26px;
+}
+
 .page-title {
     font-size: 22px;
 }
@@ -73,7 +77,8 @@ body {
 #toppanel, #toppanel-right, #subpanel {
     padding: 5px;
 
-    background-color: rgb(212, 212, 212, 0.5);
+    /*background-color: rgb(212, 212, 212, 0.5);*/
+    background-color: rgba(147, 215, 255, 0.5);
     backdrop-filter: blur(5px);
 
     font-size: 20px;
@@ -167,12 +172,14 @@ body {
     
     border-radius: 25px;
 
-    background-color: rgb(212, 212, 212, 0.5);
+    /*background-color: rgb(212, 212, 212, 0.5);*/
+    background-color: rgba(147, 215, 255, 0.5);
     backdrop-filter: blur(5px);
 }
 
 .widget {
-    background-color: rgb(212, 212, 212, 0.5);
+    /*background-color: rgb(212, 212, 212, 0.5);*/
+    background-color: rgba(147, 215, 255, 0.5);
     backdrop-filter: blur(5px);
 
     padding: 10px;
@@ -192,7 +199,8 @@ body {
 
     top: 11%;
 
-    background-color: rgb(212, 212, 212, 0.5);
+    /*background-color: rgb(212, 212, 212, 0.5);*/
+    background-color: rgba(147, 215, 255, 0.5);
     backdrop-filter: blur(5px);
 
     padding: 10px;
@@ -236,7 +244,8 @@ div[id^="dropdownmenu-ribbon-"] {
     position: absolute;
     width: 150px;
     height: 150px;
-    background-color: rgb(212, 212, 212, 0.5);
+    /*background-color: rgb(212, 212, 212, 0.5);*/
+    background-color: rgba(147, 215, 255, 0.5);
     backdrop-filter: blur(5px);
 }
 

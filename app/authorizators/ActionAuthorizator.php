@@ -180,7 +180,7 @@ class ActionAuthorizator extends AAuthorizator {
     }
 
     public function throwExceptionIfCannotGenerateDocumentReports(?int $idCallingUser = null, bool $checkCache = true) {
-        if($this->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT, $idCallingUser, $checkCache) === TRUE) {
+        if($this->checkActionRight(UserActionRights::GENERATE_DOCUMENT_REPORT, $idCallingUser, $checkCache) !== TRUE) {
             throw new Exception('You are not authorized to generate document reports.');
         }
     }

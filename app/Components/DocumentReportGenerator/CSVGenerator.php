@@ -9,13 +9,15 @@ use DMS\Core\FileStorageManager;
 class CSVGenerator extends ADocumentReport implements IGeneratable {
     private const FILE_EXTENSION = 'csv';
 
-    public function __construct(ExternalEnumComponent $eec, FileManager $fm, FileStorageManager $fsm, mixed $sqlResult, int $idCallingUser, array $models) {
-        parent::__construct($eec, $fm, $fsm, $sqlResult, $idCallingUser, $models);
+    public function __construct(ExternalEnumComponent $eec, FileManager $fm, FileStorageManager $fsm, mixed $sqlResult, int $idCallingUser, array $models, ?int $idReport) {
+        parent::__construct($eec, $fm, $fsm, $sqlResult, $idCallingUser, $models, $idReport);
     }
 
     public function generate(?string $filename = null): array|bool {
         $metadata = parent::$defaultMetadata;
         $fileRow = [];
+
+        $result = [];
 
         $this->loadCustomMetadata();
 
@@ -33,7 +35,20 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
 
         $fileRow[] = $headerRow . "\r\n";
 
+        $total = $this->sqlResult->num_rows;
+        $current = 0;
+        $lastFinished = 0;
+
         foreach($this->sqlResult as $row) {
+            if(($current % ADocumentReport::UPDATE_COUNT_CONST) == 0) {
+                $finished = $this->calcFinishedPercent($current, $total);
+
+                if($finished > $lastFinished) {
+                    $this->updateFinishedProcent($finished, $this->idReport);
+                    $lastFinished = $finished;
+                }
+            }
+
             $dataRow = '';
 
             $i = 0;
@@ -57,9 +72,16 @@ class CSVGenerator extends ADocumentReport implements IGeneratable {
             }
 
             $fileRow[] = $dataRow . "\r\n";
+
+            if(($current % parent::UPDATE_COUNT_CONST) == 0 || ($current + 1) == $total) {
+                $result = $this->saveFile($fileRow, $filename, self::FILE_EXTENSION);
+                $fileRow = [];
+            }
+
+            $current++;
         }
 
-        return $this->saveFile($fileRow, $filename, self::FILE_EXTENSION);
+        return $result;
     }
 }
 

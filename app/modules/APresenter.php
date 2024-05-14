@@ -41,11 +41,19 @@ abstract class APresenter implements IPresenter {
     }
 
     protected function get(string $key, bool $escape = true) {
-        return FormDataHelper::get($key, $escape);
+        if(isset($_GET[$key])) {
+            return FormDataHelper::get($key, $escape);
+        } else {
+            return null;
+        }
     }
 
     protected function post(string $key, bool $escape = true) {
-        return FormDataHelper::post($key, $escape);
+        if(isset($_POST[$key])) {
+            return FormDataHelper::post($key, $escape);
+        } else {
+            return null;
+        }
     }
 
     public function getActions() {

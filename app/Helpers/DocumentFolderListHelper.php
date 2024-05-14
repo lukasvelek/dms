@@ -49,7 +49,7 @@ class DocumentFolderListHelper {
 
         $spaces = '&nbsp;&nbsp;';
 
-        if($level > 0) {
+        if($level >= 0) {
             for($i = 0; $i < $level; $i++) {
                 $spaces .= '&nbsp;&nbsp;';
             }
@@ -127,6 +127,55 @@ class DocumentFolderListHelper {
         }
 
         return ArrayStringHelper::createUnindexedStringFromUnindexedArray($list);
+    }
+
+    public static function getSelectFolderList(FolderModel $folderModel, ?int $idCurrentFolder, string $nullValueKey = '-1', string $nullValueText = '-') {
+        $list = [];
+
+        $list[] = [
+            'value' => $nullValueKey,
+            'text' => $nullValueText
+        ];
+
+        $folders = $folderModel->getAllFolders();
+
+        $tmp = [];
+        foreach($folders as $folder) {
+            if($folder->getIdParentFolder() === NULL) {
+                if(array_key_exists($folder->getId(), $tmp)) {
+                    array_unshift($tmp[$folder->getId()], $folder);
+                } else {
+                    $tmp[$folder->getId()][] = $folder;
+                }
+            } else {
+                $tmp[$folder->getIdParentFolder()][] = $folder;
+            }
+        }
+
+        foreach($tmp as $tm) {
+            foreach($tm as $t) {
+                $spaces = '';
+
+                for($i = 0; $i < $t->getNestLevel(); $i++) {
+                    $spaces .= '&nbsp;';
+                }
+
+                $l = [
+                    'value' => $t->getId(),
+                    'text' => $spaces . $t->getName()
+                ];
+
+                if($idCurrentFolder !== NULL) {
+                    if($t->getId() == $idCurrentFolder) {
+                        $l['selected'] = 'selected';
+                    }
+                }
+
+                $list[] = $l;
+            }
+        }
+
+        return $list;
     }
 }
 

@@ -11,6 +11,7 @@ use DMS\Core\AppConfiguration;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
+use DMS\Entities\DocumentReportEntity;
 use DMS\Helpers\ArrayHelper;
 use QueryBuilder\QueryBuilder;
 
@@ -19,7 +20,41 @@ class DocumentModel extends AModel {
         parent::__construct($db, $logger);
     }
 
+    public function getDocumentReportQueueEntries() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('document_reports')
+            ->orderBy(DocumentReportMetadata::DATE_UPDATED, 'DESC')
+            ->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $fileSrc = null;
+            if(isset($row[DocumentReportMetadata::FILE_SRC])) {
+                $fileSrc = $row[DocumentReportMetadata::FILE_SRC];
+            }
+
+            $entities[] = new DocumentReportEntity($row[DocumentReportMetadata::ID], $row[DocumentReportMetadata::ID_USER], $row[DocumentReportMetadata::DATE_CREATED], $row[DocumentReportMetadata::DATE_UPDATED], $row[DocumentReportMetadata::STATUS], $row[DocumentReportMetadata::SQL_STRING], $fileSrc, $row[DocumentReportMetadata::FILE_NAME], $row[DocumentReportMetadata::ID_FILE_STORAGE_LOCATION], $row[DocumentReportMetadata::PERCENT_FINISHED]);
+        }
+
+        return $entities;
+    }
+
+    public function getDocumentRowById(int $id) {
+        $qb = $this->composeQueryStandardDocuments(false);
+
+        $qb ->where('id = ?', [$id])
+            ->execute();
+
+        return $qb->fetch();
+    }
+
     public function updateDocumentsBulk(array $data, array $ids) {
+        if(!array_key_exists('date_updated', $data)) {
+            $data['date_updated'] = date('Y-m-d H:i:s');
+        }
+
         return $this->bulkUpdateExisting($data, $ids, 'documents');
     }
 
@@ -659,8 +694,20 @@ class DocumentModel extends AModel {
         return $qb->fetchAll();
     }
 
-    public function insertNewDocument(array $data) {
-        return $this->insertNew($data, 'documents');
+    public function insertNewDocument(array $data, bool $returnId = false) {
+        $result = $this->insertNew($data, 'documents');
+
+        if($returnId === FALSE) {
+            return $result;
+        }
+
+        $document = $this->getLastInsertedDocumentForIdUser($data['id_author']);
+
+        if($document instanceof Document) {
+            return $document->getId();
+        } else {
+            return $result;
+        }
     }
 
     public function getStandardFilteredDocuments(string $filter) {

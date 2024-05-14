@@ -4,23 +4,90 @@ namespace DMS\Repositories;
 
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Constants\DocumentShreddingStatus;
+use DMS\Constants\Metadata\DocumentCommentsMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
+use DMS\Models\DocumentCommentModel;
 use DMS\Models\DocumentModel;
 
+/**
+ * DocumentRepository is a repository that is used to perform actions on documents while checking the privileges.
+ * 
+ * @author Lukas Velek
+ */
 class DocumentRepository extends ARepository {
     private DocumentModel $documentModel;
     private DocumentAuthorizator $documentAuthorizator;
+    private DocumentCommentModel $documentCommentModel;
     
-    public function __construct(Database $db, Logger $logger, DocumentModel $documentModel, DocumentAuthorizator $documentAuthorizator) {
+    /**
+     * Class constructor
+     * 
+     * @param Database $db Database instance
+     * @param Logger $logger Logger instance
+     * @param DocumentModel $documentModel DocumentModel instance
+     * @param DocumentAuthorizator $documentAuthorizator DocumentAuthorizator instance
+     * @param DocumentCommentModel $documentCommentModel DocumentCommentModel instance
+     */
+    public function __construct(Database $db, Logger $logger, DocumentModel $documentModel, DocumentAuthorizator $documentAuthorizator, DocumentCommentModel $documentCommentModel) {
         parent::__construct($db, $logger);
 
         $this->documentModel = $documentModel;
         $this->documentAuthorizator = $documentAuthorizator;
+        $this->documentCommentModel = $documentCommentModel;
     }
 
-    public function createDocument(array $data) {
-        
+    public function getDocumentById(int $id) {
+        return $this->documentModel->getDocumentById($id);
+    }
+
+    /**
+     * Adds a comment to given document
+     * 
+     * @param int $idDocument Document ID
+     * @param string $text Comment text
+     * @param int $idAuthor Comment author
+     * @return mixed Database query result
+     */
+    public function addCommentToDocument(int $idDocument, string $text, int $idAuthor) {
+        $data = [
+            DocumentCommentsMetadata::ID_AUTHOR => $idAuthor,
+            DocumentCommentsMetadata::ID_DOCUMENT => $idDocument,
+            DocumentCommentsMetadata::TEXT => $text
+        ];
+
+        return $this->documentCommentModel->insertComment($data);
+    }
+
+    /**
+     * Duplicates given document
+     * 
+     * @param int $idDocument Original document ID
+     * @param bool $returnId True if the newly created document's ID should be returned or false if database query result should be returned
+     * @return int|mixed Document ID (int) if $returnId is true or mixed as the database query result
+     */
+    public function duplicateDocument(int $idDocument, bool $returnId = false) {
+        $docuRow = $this->documentModel->getDocumentRowById($idDocument);
+
+        $data = [];
+        foreach($docuRow as $key => $value) {
+            if(!in_array($key, ['id', 'date_created', 'date_updated']) && $value !== NULL) {
+                $data[$key] = $value;
+            }
+        }
+
+        return $this->createDocument($data, $returnId);
+    }
+
+    /**
+     * Creates a document with given metadata values
+     * 
+     * @param array $data Document data
+     * @param bool $returnId True if the newly created document's ID should be returned or false if database query result should be returned
+     * @return int|mixed Document ID (int) if $returnId is true or mixed as the database query result
+     */
+    public function createDocument(array $data, bool $returnId = false) {
+        return $this->documentModel->insertNewDocument($data, $returnId);
     }
 
     public static function composeCreateDocumentDataArray(array $post, int $idUser, mixed $file) {

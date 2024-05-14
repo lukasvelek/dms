@@ -42,20 +42,20 @@ class DocumentReportGeneratorComponent extends AComponent {
      * @param int $idUser ID of the user for whom the document report is generated
      * @param null|string $filename Explicit filename
      */
-    public function generateReport($sqlResult, int $idUser, string $fileFormat, ?string $filename = null) {
+    public function generateReport(?int $idReport, $sqlResult, int $idUser, string $fileFormat, ?string $filename = null) {
         $engine = null;
 
         switch($fileFormat) {
             case 'csv':
-                $engine = new CSVGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models);
+                $engine = new CSVGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models, $idReport);
                 break;
 
             case 'html':
-                $engine = new HTMLGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models);
+                $engine = new HTMLGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models, $idReport);
                 break;
 
             case 'json':
-                $engine = new JSONGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models);
+                $engine = new JSONGenerator($this->eec, $this->fm, $this->fsm, $sqlResult, $idUser, $this->models, $idReport);
                 break;
 
             default:

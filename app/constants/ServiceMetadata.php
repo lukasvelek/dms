@@ -16,6 +16,9 @@ class ServiceMetadata {
     public const NOTIFICATION_KEEP_UNSEEN_SERVICE_USER = 'notification_keep_unseen_service_user';
     public const SERVICE_RUN_PERIOD = 'service_run_period';
     public const ARCHIVE_OLD_LOGS = 'archive_old_logs';
+    public const EXTRACTION_PATH = 'extraction_path';
+    public const DELETE_EXTRACTED_FILES = 'delete_extracted_files';
+    public const DOCUMENT_FOLDER_FOR_IMPORTS = 'document_folder_for_imports';
 
     public static $texts = array(
         self::FILES_KEEP_LENGTH => 'Files keep length',
@@ -25,7 +28,10 @@ class ServiceMetadata {
         self::NOTIFICATION_KEEP_LENGTH => 'Notification keep length',
         self::NOTIFICATION_KEEP_UNSEEN_SERVICE_USER => 'Keep unseen service user\'s notifications',
         self::SERVICE_RUN_PERIOD => 'Run period',
-        self::ARCHIVE_OLD_LOGS => 'Archive old logs'
+        self::ARCHIVE_OLD_LOGS => 'Archive old logs',
+        self::EXTRACTION_PATH => 'Extraction path',
+        self::DELETE_EXTRACTED_FILES => 'Delete extracted path',
+        self::DOCUMENT_FOLDER_FOR_IMPORTS => 'Document folder for imports'
     );
 }
 

@@ -9,6 +9,8 @@ use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Entities\Archive;
 use DMS\Entities\Document;
+use DMS\Exceptions\AException;
+use DMS\Exceptions\ValueIsNullException;
 use DMS\UI\GridBuilder;
 use DMS\UI\LinkBuilder;
 
@@ -25,10 +27,15 @@ if(isset($_GET['action'])) {
 }
 
 if($action == null) {
-    exit;
+    throw new ValueIsNullException('$action');
 }
 
-echo($action());
+try {
+    echo($action());
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
 
 function getArchiveBulkActions() {
     global $user, $archiveModel, $archiveAuthorizator, $actionAuthorizator, $documentModel;

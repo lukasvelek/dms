@@ -39,6 +39,8 @@ $cfg['absolute_app_dir'] = ''; // the absolute server path to the app root (etc 
 $cfg['enable_service_auto_run'] = true; // true if services can be run automatically, false if not
 $cfg['is_debug'] = false; // true if debug is activated, false if not
 $cfg['document_report_keep_length'] = 7; // how many days generated documents will be kept
+$cfg['enable_document_duplication'] = true; // true if document duplication is allowed or false if not
+$cfg['app_dir'] = ''; // application server path
 
 
 /**
@@ -60,5 +62,11 @@ $cfg['mail_login_password'] = ''; // Mail server login password
 $cfg['grid_size'] = 25; // grid size (number of rows)
 $cfg['grid_main_folder_has_all_documents'] = true; // true if grid main folder contains all documents within all folders, false if it only displays documents located in main folder
 
+
+/**
+ * PHP CONFIGURATION
+ */
+
+$cfg['php_path'] = ''; // path to PHP directory
 
 ?>

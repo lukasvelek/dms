@@ -14,6 +14,8 @@ use QueryBuilder\ILoggerCallable;
 class Logger implements ILoggerCallable {
     private FileManager $fileManager;
 
+    private string $type;
+
     /**
      * Class constructor
      * 
@@ -21,6 +23,11 @@ class Logger implements ILoggerCallable {
      */
     public function __construct(FileManager $fm) {
         $this->fileManager = $fm;
+        $this->type = LogFileTypes::DEFAULT;
+    }
+
+    public function setType(string $type) {
+        $this->type = $type;
     }
 
     /**
@@ -174,7 +181,12 @@ class Logger implements ILoggerCallable {
      */
     private function saveLogEntry(?string $filename, string $text) {
         if(is_null($filename)) {
-            $filename = 'log_' . date('Y-m-d') . '.log';
+            $filename = '_' . date('Y-m-d') . '.log';
+            if($this->type != LogFileTypes::DEFAULT) {
+                $filename = $this->type . $filename;
+            } else {
+                $filename = 'log' . $filename;
+            }
         }
 
         return $this->fileManager->writeLog($filename, $text);

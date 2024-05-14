@@ -40,6 +40,7 @@ class Ribbons {
 
     public const CURRENT_USER_SETTINGS = 100;
     public const CURRENT_USER_DOCUMENT_REPORTS = 101;
+    public const CURRENT_USER_ABSENCE = 102;
 }
 
 ?>

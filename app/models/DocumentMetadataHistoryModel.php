@@ -44,6 +44,10 @@ class DocumentMetadataHistoryModel extends AModel {
 
     public function insertNewMetadataHistoryEntriesBasedOnDocumentMetadataArray(array $data, int $idDocument, int $idUser) {
         foreach($data as $metadata => $value) {
+            if($value === NULL) {
+                continue;
+            }
+            
             $tmp = [
                 DocumentMetadataHistoryMetadata::METADATA_NAME => $metadata,
                 DocumentMetadataHistoryMetadata::METADATA_VALUE => $value,

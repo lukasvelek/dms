@@ -5,6 +5,7 @@ namespace DMS\Services;
 use DMS\Components\DocumentReportGeneratorComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Constants\DocumentReportStatus;
+use DMS\Constants\Metadata\DocumentReportMetadata;
 use DMS\Constants\Notifications;
 use DMS\Core\CacheManager;
 use DMS\Core\DB\Database;
@@ -44,7 +45,7 @@ class DocumentReportGeneratorService extends AService {
 
             $sqlResult = $this->documentModel->query($q['sql_string']);
 
-            $result = $this->drgc->generateReport($sqlResult, $q['id_user'], $q['file_format']);
+            $result = $this->drgc->generateReport($q['id'], $sqlResult, $q['id_user'], $q['file_format']);
 
             if($result === FALSE) {
                 $this->updateStatusToError($id);
@@ -62,15 +63,15 @@ class DocumentReportGeneratorService extends AService {
     }
 
     private function updateStatusToInProgress(int $id) {
-        return $this->documentModel->updateDocumentReportQueueEntry($id, ['status' => DocumentReportStatus::IN_PROGRESS, 'date_updated' => date(Database::DB_DATE_FORMAT)]);
+        return $this->documentModel->updateDocumentReportQueueEntry($id, [DocumentReportMetadata::STATUS => DocumentReportStatus::IN_PROGRESS, DocumentReportMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)]);
     }
 
     private function updateStatusToFinished(int $id) {
-        return $this->documentModel->updateDocumentReportQueueEntry($id, ['status' => DocumentReportStatus::FINISHED, 'date_updated' => date(Database::DB_DATE_FORMAT)]);
+        return $this->documentModel->updateDocumentReportQueueEntry($id, [DocumentReportMetadata::STATUS => DocumentReportStatus::FINISHED, DocumentReportMetadata::PERCENT_FINISHED => '100', DocumentReportMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)]);
     }
 
     private function updateStatusToError(int $id) {
-        return $this->documentModel->updateDocumentReportQueueEntry($id, ['status' => DocumentReportStatus::ERROR, 'date_updated' => date(Database::DB_DATE_FORMAT)]);
+        return $this->documentModel->updateDocumentReportQueueEntry($id, [DocumentReportMetadata::STATUS => DocumentReportStatus::ERROR, DocumentReportMetadata::PERCENT_FINISHED => '0', DocumentReportMetadata::DATE_UPDATED => date(Database::DB_DATE_FORMAT)]);
     }
 }
 

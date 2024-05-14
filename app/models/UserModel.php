@@ -3,16 +3,132 @@
 namespace DMS\Models;
 
 use DMS\Constants\Metadata\DocumentMetadata;
+use DMS\Constants\Metadata\UserAbsenceMetadata;
 use DMS\Constants\Metadata\UserConnectionMetadata;
 use DMS\Constants\Metadata\UserMetadata;
 use DMS\Constants\Metadata\UserPasswordResetHashMetadata;
+use DMS\Constants\Metadata\UserSubstitutesMetadata;
 use DMS\Core\DB\Database;
 use DMS\Core\Logger\Logger;
 use DMS\Entities\User;
+use DMS\Entities\UserLoginBlockEntity;
 
 class UserModel extends AModel {
     public function __construct(Database $db, Logger $logger) {
         parent::__construct($db, $logger);
+    }
+
+    public function updateSubstitute(int $idUser, int $idSubstitute) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->update('user_substitutes')
+            ->set([UserSubstitutesMetadata::ID_SUBSTITUTE => $idSubstitute])
+            ->where(UserSubstitutesMetadata::ID_USER . ' = ?', [$idUser])
+            ->execute();
+
+        return $qb->fetch();
+    }
+
+    public function insertSubstitute(array $data) {
+        return $this->insertNew($data, 'user_substitutes');
+    }
+
+    public function deleteAbsence(int $id) {
+        return $this->deleteById($id, 'user_absence');
+    }
+
+    public function updateAbsence(int $id, array $data) {
+        return $this->updateExisting('user_absence', $id, $data);
+    }
+
+    public function getAbsenceById(int $id) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_absence')
+            ->where(UserAbsenceMetadata::ID . ' = ?', [$id])
+            ->execute();
+
+        return $qb->fetch();
+    }
+
+    public function insertAbsence(array $data) {
+        return $this->insertNew($data, 'user_absence');
+    }
+
+    public function getActiveBlockedIdUsers() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_login_blocks')
+            ->where('is_active = 1')
+            ->execute();
+
+        $idUsers = [];
+        while($row = $qb->fetchAssoc()) {
+            if(strtotime($row['date_from']) > time()) {
+                continue;
+            }
+
+            if(isset($row['date_to'])) {
+                if(strtotime($row['date_to']) < time() && $row['is_active'] == '1') {
+                    continue;
+                }
+            }
+
+            $idUsers[] = $row['id_user'];
+        }
+
+        return $idUsers;
+    }
+
+    public function getActiveUserLoginBlocks() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_login_blocks')
+            ->where('is_active = 1')
+            ->execute();
+
+        $entities = [];
+        while($row = $qb->fetchAssoc()) {
+            $entities[] = $this->createUserLoginBlockEntityFromDbRow($row);
+        }
+
+        return $entities;
+    }
+
+    public function getActiveUserLoginBlockByIdUser(int $idUser) {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_login_blocks')
+            ->where('id_user = ?', [$idUser])
+            ->andWhere('is_active = 1')
+            ->execute();
+
+        return $this->createUserLoginBlockEntityFromDbRow($qb->fetch());
+    }
+
+    public function updateUserLoginBlock(int $id, array $data) {
+        return $this->updateExisting('user_login_blocks', $id, $data);
+    }
+
+    public function insertUserLoginBlock(array $data) {
+        return $this->insertNew($data, 'user_login_blocks');
+    }
+
+    public function composeStandardLoginAttemptsQuery() {
+        $qb = $this->qb(__METHOD__);
+
+        $qb ->select(['*'])
+            ->from('user_logins');
+
+        return $qb;
+    }
+
+    public function insertUserLoginAttempt(array $data) {
+        return $this->insertNew($data, 'user_logins');
     }
 
     public function composeStandardUserQuery(array $selects = ['*']) {
@@ -50,13 +166,13 @@ class UserModel extends AModel {
 
         $docuUsers = [];
         while($row = $qb->fetchAssoc()) {
-            if(!in_array($row[DocumentMetadata::ID_AUTHOR], $docuUsers)) {
+            if($row[DocumentMetadata::ID_AUTHOR] !== NULL && !in_array($row[DocumentMetadata::ID_AUTHOR], $docuUsers)) {
                 $docuUsers[] = $row[DocumentMetadata::ID_AUTHOR];
             }
-            if(!in_array($row[DocumentMetadata::ID_OFFICER], $docuUsers)) {
+            if($row[DocumentMetadata::ID_OFFICER] !== NULL && !in_array($row[DocumentMetadata::ID_OFFICER], $docuUsers)) {
                 $docuUsers[] = $row[DocumentMetadata::ID_OFFICER];
             }
-            if(!in_array($row[DocumentMetadata::ID_MANAGER], $docuUsers)) {
+            if($row[DocumentMetadata::ID_MANAGER] !== NULL && !in_array($row[DocumentMetadata::ID_MANAGER], $docuUsers)) {
                 $docuUsers[] = $row[DocumentMetadata::ID_MANAGER];
             }
         }
@@ -376,6 +492,33 @@ class UserModel extends AModel {
         $user = User::createUserObjectFromArrayValues($values);
 
         return $user;
+    }
+    
+    private function createUserLoginBlockEntityFromDbRow($row) {
+        if($row === NULL) {
+            return null;
+        }
+
+        $id = $row['id'];
+        $idUser = $row['id_user'];
+        $idAuthor = $row['id_author'];
+        $description = $row['description'];
+        $dateFrom = explode(' ', $row['date_from'])[0];
+        $dateTo = null;
+        $dateCreated = $row['date_created'];
+        $isActive = $row['is_active'];
+
+        if($isActive == '1') {
+            $isActive = true;
+        } else {
+            $isActive = false;
+        }
+
+        if(isset($row['date_to'])) {
+            $dateTo = explode(' ', $row['date_to'])[0];
+        }
+
+        return new UserLoginBlockEntity($id, $dateCreated, $idUser, $idAuthor, $description, $dateFrom, $dateTo, $isActive);
     }
 }
 

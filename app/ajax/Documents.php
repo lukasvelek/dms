@@ -1,6 +1,7 @@
 <?php
 
 use DMS\Constants\CacheCategories;
+use DMS\Constants\DocumentLockType;
 use DMS\Constants\DocumentRank;
 use DMS\Constants\DocumentStatus;
 use DMS\Constants\Metadata\DocumentMetadata;
@@ -11,6 +12,8 @@ use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
 use DMS\Core\CypherManager;
 use DMS\Entities\Document;
+use DMS\Exceptions\AException;
+use DMS\Exceptions\ValueIsNullException;
 use DMS\Helpers\ArrayStringHelper;
 use DMS\Helpers\DatetimeFormatHelper;
 use DMS\Helpers\GridDataHelper;
@@ -32,10 +35,15 @@ if(isset($_GET['action'])) {
 }
 
 if($action == null) {
-    exit;
+    throw new ValueIsNullException('$action');
 }
 
-echo($action());
+try {
+    echo($action());
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
 
 function getBulkActions() {
     global $documentModel, $documentBulkActionAuthorizator, $user, $processModel;
@@ -211,7 +219,11 @@ function deleteComment() {
         $idCurrentUser = $_SESSION['id_current_user'];
     }
 
-    $documentCommentRepository->deleteComment($idComment, $idCurrentUser);
+    try {
+        $documentCommentRepository->deleteComment($idComment, $idCurrentUser);
+    } catch(Exception $e) {
+        return $e->getMessage();
+    }
 }
 
 function getComments() {
@@ -309,12 +321,12 @@ function sendComment() {
 }
 
 function search() {
-    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user, $processComponent;
+    global $documentModel, $userModel, $folderModel, $ucm, $fcm, $gridSize, $actionAuthorizator, $user, $documentLockModel, $documentLockComponent;
 
     $returnArray = [];
 
     if($user === NULL) {
-        die();
+        throw new ValueIsNullException('$user');
     }
 
     $idFolder = htmlspecialchars($_POST['idFolder']);
@@ -343,12 +355,35 @@ function search() {
 
         $documents = $documentModel->getDocumentsForName($query, $idFolder, $filter, $gridSize, (($page - 1) * $gridSize));
 
+        $idDocuments = [];
+        foreach($documents as $document) {
+            $idDocuments[] = $document->getId();
+        }
+
+        $documentLocks = $documentLockComponent->getBulkLocksForIdDocuments($idDocuments);
+
         $gb = new GridBuilder();
 
-        $gb->addColumns([/*'lock' => 'Lock',*/ 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
-        /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
-            return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked');
-        });*/
+        $gb->addColumns(['lock' => 'Lock', 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addOnColumnRender('lock', function(Document $document) use ($user, $documentLockComponent, $documentLocks, $idFolder) {
+            if(array_key_exists($document->getId(), $documentLocks)) {
+                $lock = $documentLocks[$document->getId()];
+
+                return $documentLockComponent->createLockText($lock, $user->getId(), true, $idFolder);
+            } else {
+                if(in_array($document->getStatus(), [DocumentStatus::DELETED, DocumentStatus::SHREDDED])) {
+                    return '-';
+                } else {
+                    $url = ['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()];
+
+                    if($idFolder !== NULL) {
+                        $url['id_folder'] = $idFolder;
+                    }
+                    
+                    return LinkBuilder::createAdvLink($url, GridDataHelper::renderBooleanValueWithColors(false, '-', 'Unlocked', 'red', 'green'));
+                }
+            }
+        });
         $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
         });
@@ -385,14 +420,42 @@ function search() {
         $gb->addAction(function(Document $document) {
             return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()], 'Info');
         });
-        $gb->addAction(function(Document $document) {
-            return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
+        $gb->addAction(function(Document $document) use ($documentLockComponent, $user) {
+            if($document->getStatus() == DocumentStatus::ARCHIVED) {
+                $lock = $documentLockComponent->isDocumentLocked($document->getId());
+
+                if($lock !== FALSE) {
+                    if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
+                        return '-';
+                    } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
+                        return '-';
+                    } else {
+                        return '-';
+                    }
+                }
+
+                return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
+            } else {
+                return '-';
+            }
         });
-        $gb->addAction(function(Document $document) use ($canShareDocuments) {
+        $gb->addAction(function(Document $document) use ($canShareDocuments, $user, $documentLocks) {
             if($canShareDocuments &&
                ($document->getStatus() == DocumentStatus::ARCHIVED) &&
                ($document->getRank() == DocumentRank::PUBLIC)) {
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
+                if(array_key_exists($document->getId(), $documentLocks)) {
+                    $lock = $documentLocks[$document->getId()];
+
+                    if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
+                        return '-';
+                    } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
+                        return '-';
+                    } else {
+                        return '-';
+                    }
+                } else {
+                    return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
+                }
             } else {
                 return '-';
             }
@@ -408,14 +471,37 @@ function search() {
     } else {
         $documents = $documentModel->getStandardDocumentsWithOffset($idFolder, $gridSize, (($page - 1) * $gridSize), $filter);
 
+        $idDocuments = [];
+        foreach($documents as $document) {
+            $idDocuments[] = $document->getId();
+        }
+
+        $documentLocks = $documentLockComponent->getBulkLocksForIdDocuments($idDocuments);
+
         $canShareDocuments = $actionAuthorizator->checkActionRight(UserActionRights::SHARE_DOCUMENT, null, false);
 
         $gb = new GridBuilder();
 
-        $gb->addColumns([/*'lock' => 'Lock',*/ 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
-        /*$gb->addOnColumnRender('lock', function(Document $document) use ($user, $processComponent) {
-            return GridDataHelper::renderBooleanValueWithColors($processComponent->checkIfDocumentIsInProcess($document->getId()), 'Locked', 'Unlocked', 'red', 'green');
-        });*/
+        $gb->addColumns(['lock' => 'Lock', 'name' => 'Name', 'idAuthor' => 'Author', 'status' => 'Status', 'idFolder' => 'Folder', 'dateCreated' => 'Date created', 'dateUpdated' => 'Date updated']);
+        $gb->addOnColumnRender('lock', function(Document $document) use ($user, $documentLockComponent, $documentLocks, $idFolder) {
+            if(array_key_exists($document->getId(), $documentLocks)) {
+                $lock = $documentLocks[$document->getId()];
+
+                return $documentLockComponent->createLockText($lock, $user->getId(), true, $idFolder);
+            } else {
+                if(in_array($document->getStatus(), [DocumentStatus::DELETED, DocumentStatus::SHREDDED])) {
+                    return '-';
+                } else {
+                    $url = ['page' => 'UserModule:Documents:lockDocumentForUser', 'id_document' => $document->getId(), 'id_user' => $user->getId()];
+
+                    if($idFolder !== NULL) {
+                        $url['id_folder'] = $idFolder;
+                    }
+                    
+                    return LinkBuilder::createAdvLink($url, GridDataHelper::renderBooleanValueWithColors(false, '-', 'Unlocked', 'red', 'green'));
+                }
+            }
+        });
         $gb->addOnColumnRender('dateUpdated', function(Document $document) use ($user) {
             return DatetimeFormatHelper::formatDateByUserDefaultFormat($document->getDateUpdated(), $user);
         });
@@ -452,18 +538,42 @@ function search() {
         $gb->addAction(function(Document $document) {
             return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showInfo', 'id' => $document->getId()], 'Info');
         });
-        $gb->addAction(function(Document $document) {
+        $gb->addAction(function(Document $document) use ($user, $documentLocks) {
             if($document->getStatus() == DocumentStatus::ARCHIVED) {
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
+                if(array_key_exists($document->getId(), $documentLocks)) {
+                    $lock = $documentLocks[$document->getId()];
+
+                    if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
+                        return '-';
+                    } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
+                        return '-';
+                    } else {
+                        return '-';
+                    }
+                } else {
+                    return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showEdit', 'id' => $document->getId()], 'Edit');
+                }
             } else {
                 return '-';
             }
         });
-        $gb->addAction(function(Document $document) use ($canShareDocuments) {
+        $gb->addAction(function(Document $document) use ($canShareDocuments, $user, $documentLocks) {
             if($canShareDocuments &&
                ($document->getStatus() == DocumentStatus::ARCHIVED) &&
                ($document->getRank() == DocumentRank::PUBLIC)) {
-                return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
+                if(array_key_exists($document->getId(), $documentLocks)) {
+                    $lock = $documentLocks[$document->getId()];
+
+                    if($lock->getType() == DocumentLockType::USER_LOCK && $lock->getIdUser() != $user->getId()) {
+                        return '-';
+                    } else if($lock->getType() == DocumentLockType::PROCESS_LOCK) {
+                        return '-';
+                    } else {
+                        return '-';
+                    }
+                } else {
+                    return LinkBuilder::createAdvLink(['page' => 'UserModule:SingleDocument:showShare', 'id' => $document->getId()], 'Share');
+                }
             } else {
                 return '-';
             }
@@ -473,6 +583,25 @@ function search() {
             return '<input type="checkbox" id="select" name="select[]" value="' . $document->getId() . '" onupdate="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')" onchange="drawDocumentBulkActions(\'' . ($document->getIdFolder() ?? 'null') . '\', \'' . ($filter ?? 'null') . '\')">';
         });
         $gb->addDataSource($documents);
+
+        if(AppConfiguration::getIsDocumentDuplicationEnabled()) {
+            $gb->addAction(function(Document $document) use ($documentLockComponent, $user, $documentLocks, $idFolder) {
+                if(($document->getStatus() == DocumentStatus::ARCHIVED) &&
+                   ($document->getRank() == DocumentRank::PUBLIC)) {
+                    if(array_key_exists($document->getId(), $documentLocks)) {
+                        $lock = $documentLocks[$document->getId()];
+
+                        if($lock->getType() == DocumentLockType::USER_LOCK) {
+                            return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:duplicateDocument', 'id' => $document->getId(), 'id_folder' => $idFolder], 'Duplicate');
+                        }
+                    } else {
+                        return LinkBuilder::createAdvLink(['page' => 'UserModule:Documents:duplicateDocument', 'id' => $document->getId(), 'id_folder' => $idFolder], 'Duplicate');
+                    }
+                }
+
+                return '-';
+            });
+        }
 
         $returnArray['grid'] = $gb->build();
         $returnArray['controls'] = _createGridPageControls($page, $filter, $idFolder, 'showAll', count($documents));
@@ -577,7 +706,7 @@ function searchDocumentsSharedWithMe() {
 }
 
 function generateDocuments() {
-    global $documentModel, $user, $logger;
+    global $documentModel, $user, $logger, $documentMetadataHistoryModel;
 
     if($user == null) {
         exit;
@@ -648,7 +777,11 @@ function generateDocuments() {
                 $data[DocumentMetadata::ID_FOLDER] = $id_folder;
             }
     
-            $documentModel->insertNewDocument($data);
+            $result = $documentModel->insertNewDocument($data);
+
+            if($result) {
+                $inserted++;
+            }
         }
     }
 
@@ -931,8 +1064,7 @@ function _createBulkFunctionLink(string $action, array $idDocuments, ?int $idFol
     $link = '?page=UserModule:Documents:performBulkAction&';
 
     if($user === NULL) {
-        die('User does not exist in AJAX');
-        exit;
+        throw new ValueIsNullException('$user');
     }
 
     $cm = CacheManager::getTemporaryObject(md5($user->getId() . 'bulk_action' . $action), true);

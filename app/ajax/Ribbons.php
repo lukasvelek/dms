@@ -1,5 +1,7 @@
 <?php
 
+use DMS\Exceptions\AException;
+use DMS\Exceptions\ValueIsNullException;
 use DMS\UI\LinkBuilder;
 
 require_once('Ajax.php');
@@ -12,11 +14,16 @@ if(isset($_GET['action'])) {
     $action = htmlspecialchars($_POST['action']);
 }
 
-if($action === NULL) {
-    exit;
+if($action == null) {
+    throw new ValueIsNullException('$action');
 }
 
-echo($action());
+try {
+    echo($action());
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
 
 function getDropdownRibbonContent() {
     global $ribbonModel;
@@ -32,9 +39,9 @@ function getDropdownRibbonContent() {
     } else {
         foreach($childRibbons as $ribbon) {
             if($ribbon->hasImage()) {
-                $results[] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'general-link', true);
+                $results[] = LinkBuilder::createImgLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), $ribbon->getImage(), 'toppanel-link', true);
             } else {
-                $results[] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'general-link', true);
+                $results[] = LinkBuilder::createLink($ribbon->getPageUrl() . '&id_ribbon=' . $ribbon->getId(), $ribbon->getName(), 'toppanel-link', true);
             }
         }
     }

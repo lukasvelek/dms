@@ -13,6 +13,7 @@ class DocumentReportMetadata {
     public const FILE_FORMAT = 'file_format';
     public const FILE_NAME = 'file_name';
     public const ID_FILE_STORAGE_LOCATION = 'id_file_storage_location';
+    public const PERCENT_FINISHED = 'percent_finished';
 }
 
 ?>

@@ -11,6 +11,7 @@ use DMS\Core\Logger\Logger;
 use DMS\Entities\Document;
 use DMS\Entities\User;
 use DMS\Models\DocumentModel;
+use QueryBuilder\QueryBuilder;
 
 /**
  * DocumentBulkActionAuthorizator checks if a bulk action can be displayed.
@@ -20,6 +21,8 @@ use DMS\Models\DocumentModel;
 class DocumentBulkActionAuthorizator extends AAuthorizator {
     private DocumentAuthorizator $documentAuthorizator;
     private BulkActionAuthorizator $bulkActionAuthorizator;
+
+    private array $idDocumentsWithNotOverridableLocks;
 
     /**
      * The DocumentBulkActionAuthorizator constructor creates an object
@@ -32,6 +35,8 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
 
         $this->documentAuthorizator = $documentAuthorizator;
         $this->bulkActionAuthorizator = $bulkActionAuthorizator;
+
+        $this->idDocumentsWithNotOverridableLocks = [];
     }
 
     /**
@@ -52,7 +57,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             return false;
         }
 
-        if(!$this->documentAuthorizator->canMoveFromArchiveDocument($document, $checkForExistingProcess)) {
+        if(!$this->documentAuthorizator->canMoveFromArchiveDocument($document, $idUser, $checkForExistingProcess)) {
             return false;
         }
 
@@ -73,12 +78,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             ->andWhere(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' IS NOT NULL')
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -120,12 +120,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             ->andWhere(DocumentMetadata::ID_ARCHIVE_DOCUMENT . ' IS NULL')
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-        
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -166,12 +161,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::NEW])
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-        
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -212,12 +202,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::NEW])
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-        
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -245,12 +230,12 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         return true;
     }
 
-    public function getAllDocumentIdsForArchive(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true) {
-        if(!$this->assignUser($idUser)) {
+    public function getAllDocumentIdsForArchive(DocumentModel $dm, ?int $idUser = null, bool $checkCache = true, bool $checkBulkActionRights = true) {
+        if($checkBulkActionRights === TRUE && !$this->assignUser($idUser)) {
             return false;
         }
 
-        if(!$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::ARCHIVE, $idUser, $checkCache)) {
+        if($checkBulkActionRights === TRUE && !$this->bulkActionAuthorizator->checkBulkActionRight(BulkActionRights::ARCHIVE, $idUser, $checkCache)) {
             return false;
         }
 
@@ -258,12 +243,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         $qb ->andWhere(DocumentMetadata::STATUS . ' = ?', [DocumentStatus::ARCHIVATION_APPROVED])
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-        
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -304,12 +284,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         $qb ->andWhere($qb->getColumnInValues(DocumentMetadata::STATUS, [DocumentStatus::ARCHIVED, DocumentStatus::SHREDDED]))
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -352,12 +327,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             ->andWhere(DocumentMetadata::SHRED_YEAR . ' >= ?', [date('Y')])
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -399,12 +369,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             ->andWhere(DocumentMetadata::SHREDDING_STATUS . ' = ?', [DocumentShreddingStatus::IN_APPROVAL])
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -447,12 +412,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             ->andWhere(DocumentMetadata::SHRED_YEAR . ' >= ?', [date('Y')])
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -495,12 +455,7 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
             ->andWhere(DocumentMetadata::SHRED_YEAR . ' >= ?', [date('Y')])
             ->execute();
 
-        $ids = [];
-        while($row = $qb->fetchAssoc()) {
-            $ids[] = $row[DocumentMetadata::ID];
-        }
-
-        return $ids;
+        return $this->commonGetIdsFromQb($qb, $idUser);
     }
 
     /**
@@ -521,6 +476,29 @@ class DocumentBulkActionAuthorizator extends AAuthorizator {
         }
 
         return true;
+    }
+
+    private function commonGetIdsFromQb(QueryBuilder $qb, ?int $idUser = null) {
+        if($idUser !== NULL) {
+            if(empty($this->idDocumentsWithNotOverridableLocks)) {
+                $this->idDocumentsWithNotOverridableLocks = $this->documentAuthorizator->getDocumentLocksNotOverridableByUser($idUser);
+            }
+        }
+
+        $ids = [];
+        while($row = $qb->fetchAssoc()) {
+            $id = $row[DocumentMetadata::ID];
+
+            if($idUser === NULL) {
+                $ids[] = $id;
+            } else {
+                if(!in_array($id, $this->idDocumentsWithNotOverridableLocks)) {
+                    $ids[] = $id;
+                }
+            }
+        }
+
+        return $ids;
     }
 }
 

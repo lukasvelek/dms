@@ -4,6 +4,21 @@ This website application is used for managing documents. It can manage documents
 It also enables users to manage metadata and their values.
 
 ## Changelog
+### v1.11
+- added document locks
+- added document duplication action
+    - configurable
+- added exceptions
+- added login attempts overview
+- added user login blocking
+- added user absence and substitutes
+- updated login page
+- updated background services
+    - they are now being run fully independently as a different process
+- updated document report generator
+    - now as the service progresses user can see how many percent is finished
+- fixed bugs
+
 ### v1.10
 - added database indexes
 - added option to manage ribbon rights for a user or a group

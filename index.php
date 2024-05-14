@@ -3,13 +3,19 @@
 use DMS\Constants\CacheCategories;
 use DMS\Constants\FlashMessageTypes;
 use DMS\Constants\UserPasswordChangeStatus;
-use DMS\Core\AppConfiguration;
 use DMS\Core\CacheManager;
+use DMS\Exceptions\AException;
 use DMS\Panels\Panels;
 
 session_start();
 
-include('app/dms_loader.php');
+try {
+    include('app/dms_loader.php');
+} catch(AException $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
+
 
 if(isset($_GET['page'])) {
     $page = htmlspecialchars($_GET['page']);
@@ -32,19 +38,19 @@ if(isset($_SESSION['id_current_user'])) {
             $app->redirect($app::URL_LOGIN_PAGE);
         }
     } else {
-        $ucm = new CacheManager(CacheCategories::USERS, AppConfiguration::getLogDir(), AppConfiguration::getCacheDir());
+        if($app->userRepository->isUserBlocked($_SESSION['id_current_user']) === TRUE) {
+            // blocked
+            unset($_SESSION['last_login_hash']);
+            unset($_SESSION['id_current_user']);
+            unset($_SESSION['session_end_date']);
 
-        $user = null;
-
-        $cacheUser = $ucm->loadUserByIdFromCache($_SESSION['id_current_user']);
-
-        if(is_null($cacheUser)) {
-            $user = $app->userModel->getUserById($_SESSION['id_current_user']);
-
-            $ucm->saveUserToCache($user);
-        } else {
-            $user = $cacheUser;
+            if($app->currentUrl != $app::URL_LOGIN_PAGE) {
+                $app->flashMessage('Your account has been blocked.', 'error');
+                $app->redirect($app::URL_LOGIN_PAGE);
+            }
         }
+
+        $user = $app->userRepository->getUserById($_SESSION['id_current_user']);
 
         if(isset($_SESSION['last_login_hash'])) {
             $isRelogin = false;
@@ -124,8 +130,13 @@ if($app->user !== NULL) {
     }
 }
 
-$app->loadPages();
-$app->renderPage();
+try {
+    $app->loadPages();
+    $app->renderPage();
+} catch(Exception $e) {
+    echo('<b>Exception: </b>' . $e->getMessage() . '<br><b>Stack trace: </b>' . $e->getTraceAsString());
+    exit;
+}
 
 $title = 'DMS | ' . $app->currentPresenter->getTitle();
 

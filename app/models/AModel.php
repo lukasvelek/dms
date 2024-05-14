@@ -37,7 +37,7 @@ abstract class AModel {
      * @param string $methodName Calling method name
      * @return QueryBuilder QueryBuilder instance
      */
-    protected function qb(string $methodName) {
+    public function qb(string $methodName) {
         $qb = $this->db->createQueryBuilder();
         $qb->setCallingMethod($methodName);
         return $qb;
@@ -48,7 +48,7 @@ abstract class AModel {
      * 
      * @return ExpressionBuilder ExpressionBuilder instance
      */
-    protected function xb() {
+    public function xb() {
         return new ExpressionBuilder();
     }
 
@@ -62,6 +62,22 @@ abstract class AModel {
      */
     protected function updateExisting(string $tableName, int $id, array $data) {
         $qb = $this->qb(__METHOD__);
+
+        $updateToNull = [];
+        $updateNormally = [];
+        foreach($data as $k => $v) {
+            if($v === NULL) {
+                $updateToNull[] = $k;
+            } else {
+                $updateNormally[$k] = $v;
+            }
+        }
+
+        if(!empty($updateToNull)) {
+            $this->updateToNull($tableName, $id, $updateToNull);
+        }
+
+        $data = $updateNormally;
 
         $qb ->update($tableName)
             ->set($data)
@@ -322,7 +338,7 @@ abstract class AModel {
      * @param array $data Data to update
      * @param array $ids Entry IDs
      * @param string $tableName Database table name
-     * @return null|mixed Result of SQl query
+     * @return null|mixed Result of SQL query
      */
     public function bulkUpdateExisting(array $data, array $ids, string $tableName) {
         $qb = $this->qb(__METHOD__);

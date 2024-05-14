@@ -30,7 +30,14 @@ class LogRotateService extends AService {
         foreach($files as $f) {
             $filename = explode('/', $f)[1];
             $filename = explode('.', $filename)[0];
-            $date = explode('_', $filename)[1];
+            $date = '';
+
+            if(count(explode('_', $filename)) > 2) {
+                // service
+                $date = explode('_', $filename)[2];
+            } else {
+                $date = explode('_', $filename)[1];
+            }
 
             $days = $this->scfg['files_keep_length'];
 

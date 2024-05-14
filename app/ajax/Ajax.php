@@ -6,6 +6,7 @@ use DMS\Authorizators\BulkActionAuthorizator;
 use DMS\Authorizators\DocumentAuthorizator;
 use DMS\Authorizators\DocumentBulkActionAuthorizator;
 use DMS\Authorizators\MetadataAuthorizator;
+use DMS\Components\DocumentLockComponent;
 use DMS\Components\NotificationComponent;
 use DMS\Components\ProcessComponent;
 use DMS\Components\SharingComponent;
@@ -16,8 +17,10 @@ use DMS\Core\DB\Database;
 use DMS\Core\FileManager;
 use DMS\Core\Logger\Logger;
 use DMS\Core\MailManager;
+use DMS\Exceptions\SystemFileDoesNotExistException;
 use DMS\Models\ArchiveModel;
 use DMS\Models\DocumentCommentModel;
+use DMS\Models\DocumentLockModel;
 use DMS\Models\DocumentModel;
 use DMS\Models\FileStorageModel;
 use DMS\Models\FilterModel;
@@ -38,6 +41,8 @@ use DMS\Models\UserRightModel;
 use DMS\Models\WidgetModel;
 use DMS\Repositories\DocumentCommentRepository;
 use DMS\Repositories\DocumentRepository;
+use DMS\Repositories\UserAbsenceRepository;
+use DMS\Repositories\UserRepository;
 
 session_start();
 
@@ -58,9 +63,10 @@ function loadDependencies2(array &$dependencies, string $dir) {
     $skip = array(
         $dir . '\\dms_loader.php',
         $dir . '\\install',
-        $dir . '\\Modules',
-        $dir . '\\Ajax',
-        $dir . '\\PHPMailer'
+        $dir . '\\modules',
+        $dir . '\\ajax',
+        $dir . '\\PHPMailer',
+        $dir . '\\dms_loader2.php'
     );
 
     $extensionsToSkip = array(
@@ -70,7 +76,8 @@ function loadDependencies2(array &$dependencies, string $dir) {
         'png',
         'gif',
         'jpg',
-        'svg'
+        'svg',
+        'sql'
     );
 
     foreach($content as $c) {
@@ -161,7 +168,7 @@ require_once('../Core/Vendor/PHPMailer/SMTP.php');
 // END OF VENDOR DENEPENDENCIES
 
 if(!file_exists('../../config.local.php')) {
-    die('Config file does not exist!');
+    throw new SystemFileDoesNotExistException('config.local.php');
 }
 
 $user = null;
@@ -191,6 +198,7 @@ $filterModel = new FilterModel($db, $logger);
 $ribbonModel = new RibbonModel($db, $logger);
 $archiveModel = new ArchiveModel($db, $logger);
 $fileStorageModel = new FileStorageModel($db, $logger);
+$documentLockModel = new DocumentLockModel($db, $logger);
 
 $models = array(
     'userModel' => $userModel,
@@ -212,7 +220,8 @@ $models = array(
     'ribbonModel' => $ribbonModel,
     'filterModel' => $filterModel,
     'archiveModel' => $archiveModel,
-    'fileStorageModel' => $fileStorageModel
+    'fileStorageModel' => $fileStorageModel,
+    'documentLockModel' => $documentLockModel
 );
 
 if(isset($_SESSION['id_current_user'])) {
@@ -229,20 +238,25 @@ if(isset($_SESSION['id_current_user'])) {
 
 }
 
+$documentLockComponent = new DocumentLockComponent($db, $logger, $documentLockModel, $userModel);
+
 $bulkActionAuthorizator = new BulkActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $actionAuthorizator = new ActionAuthorizator($db, $logger, $userRightModel, $groupUserModel, $groupRightModel, $user);
 $metadataAuthorizator = new MetadataAuthorizator($db, $logger, $user, $userModel, $groupUserModel);
 
+$userRepository = new UserRepository($db, $logger, $userModel, $actionAuthorizator, true);
+$userAbsenceRepository = new UserAbsenceRepository($db, $logger, $userModel);
+
 $notificationComponent = new NotificationComponent($db, $logger, $notificationModel);
-$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent);
+$processComponent = new ProcessComponent($db, $logger, $models, $notificationComponent, $documentLockComponent, $userRepository, $userAbsenceRepository);
 $sharingComponent = new SharingComponent($db, $logger, $documentModel);
 
 $archiveAuthorizator = new ArchiveAuthorizator($db, $logger, $archiveModel, $user, $processComponent);
-$documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent);
+$documentAuthorizator = new DocumentAuthorizator($db, $logger, $documentModel, $userModel, $processModel, $user, $processComponent, $documentLockComponent);
 $documentBulkActionAuthorizator = new DocumentBulkActionAuthorizator($db, $logger, $user, $documentAuthorizator, $bulkActionAuthorizator);
 
+$documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator, $documentCommentModel);
 $documentCommentRepository = new DocumentCommentRepository($db, $logger, $documentCommentModel, $documentModel);
-$documentRepository = new DocumentRepository($db, $logger, $documentModel, $documentAuthorizator);
 
 $mailManager = new MailManager();
 

@@ -15,7 +15,10 @@ use DMS\Constants\ProcessTypes;
 use DMS\Constants\Ribbons;
 use DMS\Constants\UserActionRights;
 use DMS\Constants\UserStatus;
+use DMS\Core\AppConfiguration;
 use DMS\Core\CryptManager;
+use DMS\Core\FileManager;
+use DMS\Core\Logger\LogFileTypes;
 use DMS\Core\Logger\Logger;
 
 /**
@@ -47,6 +50,8 @@ class DatabaseInstaller {
      * Installs the database
      */
     public function install() {
+        $this->logger->setType(LogFileTypes::INSTALL);
+
         $this->createTables();
         $this->createIndexes();
         $this->insertDefaultUsers();
@@ -71,6 +76,8 @@ class DatabaseInstaller {
         $this->insertDefaultFileStorageLocations();
 
         $this->insertSystemServices();
+        
+        $this->logger->setType(LogFileTypes::DEFAULT);
     }
 
     /**
@@ -379,7 +386,8 @@ class DatabaseInstaller {
                 'file_src' => 'VARCHAR(256) NULL',
                 'file_format' => 'VARCHAR(256) NOT NULL',
                 'file_name' => 'VARCHAR(256) NULL',
-                'id_file_storage_location' => 'INT(32) NULL'
+                'id_file_storage_location' => 'INT(32) NULL',
+                'percent_finished' => 'INT(32) NOT NULL DEFAULT 0'
             ),
             'file_storage_locations' => array(
                 'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
@@ -415,6 +423,8 @@ class DatabaseInstaller {
                 'description' => 'VARCHAR(256) NOT NULL',
                 'is_enabled' => 'INT(2) NOT NULL DEFAULT 1',
                 'is_system' => 'INT(2) NOT NULL DEFAULT 0',
+                'status' => 'INT(2) NOT NULL DEFAULT 0',
+                'pid' => 'VARCHAR(32) NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
             ),
             'document_metadata_history' => array(
@@ -424,6 +434,44 @@ class DatabaseInstaller {
                 'metadata_name' => 'VARCHAR(256) NOT NULL',
                 'metadata_value' => 'VARCHAR(256) NULL',
                 'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'document_locks' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_document' => 'INT(32) NOT NULL',
+                'id_user' => 'INT(32) NULL',
+                'id_process' => 'INT(32) NULL',
+                'description' => 'TEXT NOT NULL',
+                'status' => 'INT(2) NOT NULL DEFAULT 1',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()',
+                'date_updated' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_logins' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'username' => 'VARCHAR(256) NOT NULL',
+                'result' => 'INT(2) NOT NULL DEFAULT 1',
+                'description' => 'VARCHAR(256) NOT NULL',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_login_blocks' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'id_author' => 'INT(32) NOT NULL',
+                'description' => 'TEXT NOT NULL',
+                'date_from' => 'DATETIME NOT NULL',
+                'date_to' => 'DATETIME NULL',
+                'is_active' => 'INT(2) NOT NULL DEFAULT 1',
+                'date_created' => 'DATETIME NOT NULL DEFAULT current_timestamp()'
+            ),
+            'user_absence' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'date_from' => 'DATETIME NOT NULL',
+                'date_to' => 'DATETIME NOT NULL'
+            ),
+            'user_substitutes' => array(
+                'id' => 'INT(32) NOT NULL PRIMARY KEY AUTO_INCREMENT',
+                'id_user' => 'INT(32) NOT NULL',
+                'id_substitute' => 'INT(32) NOT NULL'
             )
         );
 
@@ -634,6 +682,56 @@ class DatabaseInstaller {
                 'table_name' => 'document_metadata_history',
                 'columns' => [
                     'id_document'
+                ]
+            ],
+            [
+                'table_name' => 'document_locks',
+                'columns' => [
+                    'id_document',
+                    'status'
+                ]
+            ],
+            [
+                'table_name' => 'user_logins',
+                'columns' => [
+                    'username'
+                ]
+            ],
+            [
+                'table_name' => 'user_logins',
+                'columns' => [
+                    'result'
+                ]
+            ],
+            [
+                'table_name' => 'user_login_blocks',
+                'columns' => [
+                    'is_active'
+                ]
+            ],
+            [
+                'table_name' => 'user_login_blocks',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'user_absence',
+                'columns' => [
+                    'id_user'
+                ]
+            ],
+            [
+                'table_name' => 'user_absence',
+                'columns' => [
+                    'date_from',
+                    'date_to'
+                ]
+            ],
+            [
+                'table_name' => 'user_substitutes',
+                'columns' => [
+                    'id_user'
                 ]
             ],
         ];
@@ -1349,19 +1447,10 @@ class DatabaseInstaller {
                 'service_run_period' => '7',
                 'archive_old_logs' => '1'
             ),
-            'PasswordPolicyService' => array(
-                'password_change_period' => '30',
-                'password_change_force_administrators' => '0',
-                'password_change_force' => '0',
-                'service_run_period' => '30'
-            ),
             'NotificationManagerService' => array(
                 'notification_keep_length' => '1',
                 'service_run_period' => '7',
                 'notification_keep_unseen_service_user' => '1'
-            ),
-            'CacheRotateService' => array(
-                'service_run_period' => '1'
             ),
             'FileManagerService' => array(
                 'service_run_period' => '30'
@@ -1380,7 +1469,19 @@ class DatabaseInstaller {
             ),
             'DocumentReportGeneratorService' => array(
                 'service_run_period' => '1'
-            )
+            ),
+            'ExtractionService' => [
+                'service_run_period' => '7',
+                'extraction_path' => '',
+                'delete_extracted_files' => '1',
+                'document_folder_for_imports' => ''
+            ],
+            'UserLoginBlockingManagerService' => [
+                'service_run_period' => '1'
+            ],
+            'UserSubstitutionProcessService' => [
+                'service_run_period' => '1'
+            ]
         );
 
         $this->db->beginTransaction();
@@ -1625,7 +1726,7 @@ class DatabaseInstaller {
                     'name' => 'Services',
                     'code' => 'settings.services',
                     'is_visible' => '1',
-                    'page_url' => '?page=UserModule:Settings:showServices',
+                    'page_url' => '?page=UserModule:ServiceSettings:showServices',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::SETTINGS_SERVICES
                 ),
@@ -1688,6 +1789,14 @@ class DatabaseInstaller {
                     'page_url' => '?page=UserModule:DocumentReports:showAll&id=current_user',
                     'is_system' => '1',
                     'ribbon_right' => Ribbons::CURRENT_USER_DOCUMENT_REPORTS
+                ),
+                array(
+                    'name' => 'Absence',
+                    'code' => 'current_user.absence',
+                    'is_visible' => '1',
+                    'page_url' => '?page=UserModule:UserAbsence:showMyAbsence',
+                    'is_system' => '1',
+                    'ribbon_right' => Ribbons::CURRENT_USER_ABSENCE
                 )
             )
         );
@@ -1888,10 +1997,6 @@ class DatabaseInstaller {
                 'display_name' => 'Log rotate',
                 'description' => 'Deletes old log files'
             ],
-            'CacheRotateService' => [
-                'display_name' => 'Cache rotate',
-                'description' => 'Deletes old cache files'
-            ],
             'FileManagerService' => [
                 'display_name' => 'File manager',
                 'description' => 'Deletes old unused files'
@@ -1899,10 +2004,6 @@ class DatabaseInstaller {
             'ShreddingSuggestionService' => [
                 'display_name' => 'Shredding suggestion',
                 'description' => 'Suggests documents for shredding'
-            ],
-            'PasswordPolicyService' => [
-                'display_name' => 'Password policy',
-                'description' => 'Checks if passwords have been changed in a period of time'
             ],
             'MailService' => [
                 'display_name' => 'Mail service',
@@ -1923,14 +2024,37 @@ class DatabaseInstaller {
             'DocumentReportGeneratorService' => [
                 'display_name' => 'Document report generator',
                 'description' => 'Generates document reports'
+            ],
+            'ExtractionService' => [
+                'display_name' => 'Extraction service',
+                'description' => 'Imports documents from files'
+            ],
+            'UserLoginBlockingManagerService' => [
+                'display_name' => 'User login blocking manager',
+                'description' => 'Manages user login blockings'
+            ],
+            'UserSubstitutionProcessService' => [
+                'display_name' => 'User substitution process service',
+                'description' => 'Updates users in process workflows during absence'
             ]
         ];
+
+        if(empty(AppConfiguration::getMailServer()) || AppConfiguration::getMailServer() == '') {
+            $services['MailService']['is_enabled'] = '0';
+        }
 
         $this->db->beginTransaction();
 
         foreach($services as $serviceName => $serviceData) {
             $sql = "INSERT INTO `services` (`system_name`, `display_name`, `description`, `is_enabled`, `is_system`) VALUES (";
-            $sql .= "'$serviceName', '" . $serviceData['display_name'] . "', '" . $serviceData['description'] . "', '1', '1'";
+
+            $isEnabled = '1';
+
+            if(isset($serviceName['is_enabled']) && $serviceName['is_enabled'] == '0') {
+                $isEnabled = '0';
+            }
+
+            $sql .= "'$serviceName', '" . $serviceData['display_name'] . "', '" . $serviceData['description'] . "', '" . $isEnabled . "', '1'";
             $sql .= ")";
 
             $this->logger->sql($sql, __METHOD__);

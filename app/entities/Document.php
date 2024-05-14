@@ -171,6 +171,8 @@ class Document extends AEntity {
         if($key != '') {
             if(array_key_exists($key, $this->metadata)) {
                 return $this->metadata[$key];
+            } else if(isset($this->{$key})) {
+                return $this->{$key};
             } else {
                 return null;
             }

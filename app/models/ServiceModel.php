@@ -156,6 +156,8 @@ class ServiceModel extends AModel {
         $description = $row[ServiceMetadata::DESCRIPTION];
         $isEnabled = $row[ServiceMetadata::IS_ENABLED];
         $isSystem = $row[ServiceMetadata::IS_SYSTEM];
+        $status = $row['status'];
+        $pid = null;
 
         if($isEnabled == '1') {
             $isEnabled = true;
@@ -169,7 +171,11 @@ class ServiceModel extends AModel {
             $isSystem = false;
         }
 
-        return new ServiceEntity($id, $dateCreated, $systemName, $displayName, $description, $isEnabled, $isSystem);
+        if(isset($row['pid'])) {
+            $pid = $row['pid'];
+        }
+
+        return new ServiceEntity($id, $dateCreated, $systemName, $displayName, $description, $isEnabled, $isSystem, $status, $pid);
     }
 }
 
