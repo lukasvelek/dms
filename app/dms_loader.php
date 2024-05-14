@@ -38,7 +38,7 @@ function loadDependencies(array &$dependencies, string $dir) {
     $skip = array(
         $dir . '\\dms_loader.php',
         $dir . '\\install',
-        $dir . '\\Ajax',
+        $dir . '\\ajax',
         $dir . '\\PHPMailer',
         $dir . '\\dms_loader2.php'
     );
@@ -144,8 +144,8 @@ if(!DMS\Core\FileManager::fileExists('config.local.php')) {
     throw new SystemFileDoesNotExistException('config.local.php');
 }
 
-if(!DMS\Core\FileManager::fileExists('app/Modules/modules.php')) {
-    throw new SystemFileDoesNotExistException('app/Modules/modules.php');
+if(!DMS\Core\FileManager::fileExists('app/modules/modules.php')) {
+    throw new SystemFileDoesNotExistException('app/modules/modules.php');
 }
 
 include('Modules/modules.php');

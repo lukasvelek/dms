@@ -63,8 +63,8 @@ function loadDependencies2(array &$dependencies, string $dir) {
     $skip = array(
         $dir . '\\dms_loader.php',
         $dir . '\\install',
-        $dir . '\\Modules',
-        $dir . '\\Ajax',
+        $dir . '\\modules',
+        $dir . '\\ajax',
         $dir . '\\PHPMailer',
         $dir . '\\dms_loader2.php'
     );
