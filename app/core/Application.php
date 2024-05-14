@@ -82,9 +82,9 @@ class Application {
     public const SYSTEM_VERSION_PATCH = 0;
     public const SYSTEM_VERSION_PATCH_DISPLAY = false;
 
-    public const SYSTEM_IS_BETA = true;
+    public const SYSTEM_IS_BETA = false;
     public const SYSTEM_VERSION = self::SYSTEM_VERSION_MAJOR . '.' . self::SYSTEM_VERSION_MINOR . (self::SYSTEM_VERSION_PATCH_DISPLAY ? ('.' . self::SYSTEM_VERSION_PATCH) : '') . (self::SYSTEM_IS_BETA ? ' beta' : '');
-    public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2024/04/02';
+    public const SYSTEM_BUILD_DATE = self::SYSTEM_IS_BETA ? '- (This is beta version)' : '2024/05/14';
 
     public ?string $currentUrl;
     
