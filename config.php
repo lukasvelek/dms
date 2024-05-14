@@ -66,7 +66,7 @@ $cfg['grid_main_folder_has_all_documents'] = true; // true if grid main folder c
 /**
  * PHP CONFIGURATION
  */
-$cfg['php_path'] = ''; // path to PHP directory
 
+$cfg['php_path'] = ''; // path to PHP directory
 
 ?>
