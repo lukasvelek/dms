@@ -703,6 +703,8 @@ class DocumentsPresenter extends APresenter {
                                     ->setName('name')
                                     ->require();
 
+        $fb->loadJSScript(AppConfiguration::getAbsoluteAppDir() . 'js/DocumentForm.js');
+
         $fb ->setMethod('POST')->setAction('?page=UserModule:Documents:createNewDocument')->setEncType()
 
             ->addElement($fb->createLabel()->setText('Document name')
@@ -718,7 +720,8 @@ class DocumentsPresenter extends APresenter {
             ->addElement($fb->createLabel()->setText('Status')
                                            ->setFor('status'))
             ->addElement($fb->createSelect()->setName('status')
-                                            ->addOptionsBasedOnArray($statuses))
+                                            ->addOptionsBasedOnArray($statuses)
+                                            ->readonly())
 
             ->addElement($fb->createLabel()->setText('Group')
                                            ->setFor('group'))
