@@ -6,13 +6,14 @@ abstract class APresenter implements IUIRenderable {
     private ?string $action;
     private string $name;
     private bool $isAjax;
+    private ?string $moduleName;
 
     protected function __construct(string $name) {
         $this->name = $name;
 
         $this->action = null;
-
         $this->isAjax = false;
+        $this->moduleName = null;
     }
 
     public function setAction(string $action) {
@@ -21,6 +22,10 @@ abstract class APresenter implements IUIRenderable {
 
     public function setAjax() {
         $this->isAjax = true;
+    }
+
+    public function setModuleName(string $name) {
+        $this->moduleName = $name;
     }
 
     public function render() {
@@ -38,7 +43,7 @@ abstract class APresenter implements IUIRenderable {
             }
 
             $renderAction = 'render' . ucfirst($this->action);
-            if(method_exists($this, $renderAction)) {
+            if(method_exists($this, $renderAction) && file_exists(__DIR__ . '\\' . $this->moduleName . '\\Presenters\\templates\\' . $this->action . '.html')) {
                 return $this->$renderAction();
             }
         }

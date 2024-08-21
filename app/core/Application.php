@@ -49,6 +49,7 @@ class Application {
 
         $this->currentPresenter = $this->uiHelper->createPresenterInstance($presenter, $this->currentModule);
         $this->currentPresenter->setAction($action);
+        $this->currentPresenter->setModuleName($module . 'Module');
 
         $this->currentModule->setPresenter($this->currentPresenter);
     }
