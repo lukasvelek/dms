@@ -2,7 +2,3 @@ logs/*
 cache/*
 config.local.php
 app/core/install
-flow diagrams/
-files*/
-app/enums/custom/
-document_reports_storage/
