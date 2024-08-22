@@ -3,17 +3,27 @@
 namespace App\UI;
 
 abstract class APresenter implements IUIRenderable {
+    public string $name;
     private ?string $action;
-    private string $name;
     private bool $isAjax;
     private ?string $moduleName;
+
+    private TemplateHelper $templateHelper;
+
+    public TemplateEntity $template;
 
     protected function __construct(string $name) {
         $this->name = $name;
 
+        $this->templateHelper = new TemplateHelper();
+
         $this->action = null;
         $this->isAjax = false;
         $this->moduleName = null;
+    }
+
+    public function getCleanName() {
+        return substr($this->name, 0, (strlen($this->name) - strlen('Presenter')));
     }
 
     public function setAction(string $action) {
@@ -29,6 +39,8 @@ abstract class APresenter implements IUIRenderable {
     }
 
     public function render() {
+        $this->beforeRender();
+
         // do - handle - render
         if($this->isAjax) {
             $doAction = 'do' . ucfirst($this->action);
@@ -49,8 +61,16 @@ abstract class APresenter implements IUIRenderable {
         }
     }
 
+    private function beforeRender() {
+        $this->template = $this->prepareTemplate();
+    }
+
     private function createAjaxResponse(array $response) {
         return json_encode($response);
+    }
+
+    private function prepareTemplate() {
+        return $this->templateHelper->loadPresenterActionTemplate($this->action, $this->name, $this->moduleName);
     }
 }
 

@@ -14,12 +14,16 @@ class Application {
 
     private UIHelper $uiHelper;
 
+    private DatabaseConnection $db;
+
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
 
         $this->currentModule = null;
 
         $this->uiHelper = new UIHelper($this->cfg);
+
+        $this->db = new DatabaseConnection($this->cfg);
     }
 
     public function run() {
