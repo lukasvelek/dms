@@ -11,9 +11,7 @@ try {
     }
 
     require_once('config.local.php');
-    require_once('app/AppLoader.php');
-
-    AppLoader::loadApplication($cfg);
+    require_once('app/app_loader.php');
 
     $app = new Application($cfg);
     echo($app->run());

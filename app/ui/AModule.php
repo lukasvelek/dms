@@ -19,6 +19,10 @@ abstract class AModule implements IUIRenderable {
     public function render() {
         return $this->presenter->render();
     }
+
+    private function prepareTemplate() {
+
+    }
 }
 
 ?>
