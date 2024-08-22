@@ -55,10 +55,12 @@ abstract class APresenter implements IUIRenderable {
             }
 
             $renderAction = 'render' . ucfirst($this->action);
-            if(method_exists($this, $renderAction) && file_exists(__DIR__ . '\\' . $this->moduleName . '\\Presenters\\templates\\' . $this->action . '.html')) {
-                return $this->$renderAction();
+            if(method_exists($this, $renderAction) && file_exists(__DIR__ . '\\' . $this->moduleName . '\\Presenters\\templates\\' . $this->name . '\\' . $this->action . '.html')) {
+                $this->$renderAction();
             }
         }
+
+        return $this->template->render();
     }
 
     private function beforeRender() {

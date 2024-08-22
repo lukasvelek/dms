@@ -19,7 +19,13 @@ class TemplateEntity {
 
             $e = '$' . $e . '$';
 
-            $this->__templateCode = str_replace($e, $this->$originalE, $this->__templateCode);
+            $data = $this->$originalE;
+
+            if($data instanceof IUIRenderable) {
+                $data = $data->render();
+            }
+
+            $this->__templateCode = str_replace($e, $data, $this->__templateCode);
         }
 
         return $this->__templateCode;

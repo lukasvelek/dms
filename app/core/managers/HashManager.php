@@ -27,6 +27,10 @@ class HashManager {
     public static function createExceptionHash() {
         return self::createHash(8);
     }
+
+    public static function hashString(string $stringToHash) {
+        return md5($stringToHash);
+    }
 }
 
 ?>

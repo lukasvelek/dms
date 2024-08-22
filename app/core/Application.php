@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Core\Helpers\UIHelper;
+use App\Core\Managers\CacheManager;
 use App\Core\Managers\FileManager;
 use App\UI\AModule;
 use App\UI\APresenter;
@@ -18,6 +19,7 @@ class Application {
     private DatabaseConnection $db;
     public Logger $logger;
     public FileManager $fileManager;
+    public CacheManager $cacheManager;
 
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
@@ -29,6 +31,15 @@ class Application {
         $this->db = new DatabaseConnection($this->cfg);
         $this->fileManager = new FileManager($this->cfg);
         $this->logger = new Logger($this->cfg, $this->fileManager);
+        $this->cacheManager = new CacheManager($this->fileManager);
+    }
+
+    public function __set(string $name, mixed $value) {
+        $this->$name = $value;
+    }
+
+    public function __get(string $name) {
+        return $this->$name;
     }
 
     public function run() {
@@ -41,6 +52,7 @@ class Application {
         }
 
         $this->getInstances(explode(':', $page)[0], explode(':', $page)[1], $action);
+        $this->getRepositories();
 
         // auth user
         // redirect if needed
@@ -61,6 +73,10 @@ class Application {
         $this->currentPresenter->setModuleName($module . 'Module');
 
         $this->currentModule->setPresenter($this->currentPresenter);
+
+        if($this->getQueryParam('isAjax') !== null) {
+            $this->currentPresenter->setAjax();
+        }
     }
 
     private function getQueryParam(string $name) {
@@ -116,6 +132,26 @@ class Application {
         $url .= implode('&', $tmp);
 
         return $url;
+    }
+
+    private function getRepositories() {
+        $classes = get_declared_classes();
+
+        foreach($classes as $class) {
+            if(str_contains($class, 'Repository')) {
+                if(!str_contains($class, 'ARepository')) {
+                    $parts = explode('\\', $class);
+
+                    $name = $parts[count($parts) - 1];
+
+                    $afterFirstLetter = substr($name, 1);
+
+                    $name = strtolower($name[0]) . $afterFirstLetter;
+
+                    $this->$name = new $class($this->db, $this->logger, $this->cacheManager);
+                }
+            }
+        }
     }
 }
 

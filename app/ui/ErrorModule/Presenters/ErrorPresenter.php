@@ -9,8 +9,12 @@ class ErrorPresenter extends APresenter {
         parent::__construct('ErrorPresenter');
     }
 
+    public function handleError() {
+        global $app;
+    }
+
     public function renderError() {
-        return 'hello';
+        
     }
 }
 

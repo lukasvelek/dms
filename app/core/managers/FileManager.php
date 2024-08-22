@@ -3,7 +3,7 @@
 namespace App\Core\Managers;
 
 class FileManager {
-    private array $cfg;
+    public array $cfg;
 
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
@@ -38,6 +38,14 @@ class FileManager {
         }
 
         return file_get_contents($path);
+    }
+
+    public function dirExists(string $path) {
+        return is_dir($path);
+    }
+
+    public function createDir(string $path) {
+        return mkdir($path);
     }
 }
 
