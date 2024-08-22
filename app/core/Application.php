@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Core\Helpers\UIHelper;
+use App\Core\Managers\FileManager;
 use App\UI\AModule;
 use App\UI\APresenter;
 
@@ -15,6 +16,8 @@ class Application {
     private UIHelper $uiHelper;
 
     private DatabaseConnection $db;
+    public Logger $logger;
+    public FileManager $fileManager;
 
     public function __construct(array $cfg) {
         $this->cfg = $cfg;
@@ -24,6 +27,8 @@ class Application {
         $this->uiHelper = new UIHelper($this->cfg);
 
         $this->db = new DatabaseConnection($this->cfg);
+        $this->fileManager = new FileManager($this->cfg);
+        $this->logger = new Logger($this->cfg, $this->fileManager);
     }
 
     public function run() {
